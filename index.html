@@ -588,6 +588,7 @@ background-size:200% 100%;animation:skel 1.4s infinite}
       <button class="nav-item" data-view="achievements"><span class="nav-icon">🔒</span><span class="nav-label">Achievements</span></button>
       <button class="nav-item" data-view="review"><span class="nav-icon">🔒</span><span class="nav-label">Weekly Review</span></button>
       <button class="nav-item" data-view="premium"><span class="nav-icon">💎</span><span class="nav-label">Premium</span></button>
+      <button class="nav-item" data-view="feedback"><span class="nav-icon">💬</span><span class="nav-label">Feedback</span></button>
       <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
     </nav>
     <div class="sb-footer">
@@ -1006,7 +1007,91 @@ background-size:200% 100%;animation:skel 1.4s infinite}
           <div id="paymentHistory" class="list"></div>
         </div>
       </section>
+      <!-- FEEDBACK -->
+<section class="view" id="view-feedback">
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <span class="card-title-lg">💬 Send Feedback</span>
+        <div style="font-size:.82rem;color:var(--text-3);margin-top:3px">
+          Help us improve! Apne suggestions, features ya bugs batayein.
+        </div>
+      </div>
+    </div>
 
+    <div class="feedback-form">
+      <div class="form-grid">
+        <div class="field">
+          <label>Category</label>
+          <select id="fbCategory">
+            <option value="feature">💡 Feature Request — Naya feature chahiye</option>
+            <option value="improvement">✨ Improvement — Existing feature better ho</option>
+            <option value="bug">🐛 Bug Report — Kuch kaam nahi kar raha</option>
+            <option value="other">💭 Other — Kuch aur</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Overall Rating</label>
+          <select id="fbRating">
+            <option value="5">⭐⭐⭐⭐⭐ Excellent</option>
+            <option value="4">⭐⭐⭐⭐ Good</option>
+            <option value="3" selected>⭐⭐⭐ Average</option>
+            <option value="2">⭐⭐ Could be better</option>
+            <option value="1">⭐ Needs work</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Your message</label>
+        <textarea id="fbMessage" rows="6"
+          placeholder="Example: Please add a weekly study report feature that shows my progress across subjects."
+          style="min-height:140px"></textarea>
+        <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
+          <span id="fbCharCount">0</span> / 1000 characters
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn btn-primary" id="fbSubmitBtn">
+          📤 Send Feedback
+        </button>
+        <span style="font-size:.78rem;color:var(--text-3);align-self:center">
+          We read every single message. Thank you! 🙏
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px">
+    <div class="card-header">
+      <span class="card-title-lg">My Previous Feedback</span>
+      <span class="pill s-progress" id="fbCountBadge">0</span>
+    </div>
+    <div id="feedbackHistory" class="list"></div>
+  </div>
+
+  <!-- ADMIN SECTION -->
+  <div class="card" id="adminFeedbackSection" style="margin-top:16px;display:none">
+    <div class="card-header">
+      <div>
+        <span class="card-title-lg">👑 All User Feedback (Admin)</span>
+        <div style="font-size:.82rem;color:var(--text-3);margin-top:3px">
+          Users ke saare feedback yahan dikhenge
+        </div>
+      </div>
+      <select id="adminFbFilter" style="background:var(--card-2);border:1px solid var(--border);
+        border-radius:8px;padding:8px 12px;font-size:.82rem">
+        <option value="">All</option>
+        <option value="new">🆕 New</option>
+        <option value="read">👁 Read</option>
+        <option value="planned">📌 Planned</option>
+        <option value="done">✅ Done</option>
+      </select>
+    </div>
+    <div id="adminFeedbackList" class="list"></div>
+  </div>
+</section>
       <section class="view" id="view-settings">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Profile</span></div>
@@ -2191,7 +2276,7 @@ async function logout() {
 /* =========================== VIEWS =========================== */
 const FREE_VIEWS = new Set([
   'study', 'dashboard', 'syllabus', 'subjects', 'revision',
-  'notes', 'pyq', 'mocks', 'current-affairs', 'settings', 'premium'
+  'notes', 'pyq', 'mocks', 'current-affairs', 'settings', 'premium', 'feedback'
 ]);
 const PREMIUM_VIEWS = new Set([
   'calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'achievements', 'review'
@@ -2229,6 +2314,7 @@ function renderView(name) {
     case 'achievements': renderAchievements(); break;
     case 'review': renderReview(); break;
     case 'premium': renderPremiumPage(); break;
+    case 'feedback': renderFeedback(); break;
     case 'settings': renderSettings(); break;
   }
 }
@@ -3870,7 +3956,299 @@ function renderReview() {
   }
   drawBarChart($('#reviewChart'), labels, values, { unit: 'h', minMax: 4 });
 }
+/* =========================== FEEDBACK =========================== */
+async function renderFeedback() {
+  const form = $('#fbMessage');
+  if (form) {
+    form.oninput = () => {
+      const count = form.value.length;
+      $('#fbCharCount').textContent = count;
+      if (count > 1000) form.value = form.value.slice(0, 1000);
+    };
+  }
 
+  const submitBtn = $('#fbSubmitBtn');
+  if (submitBtn) submitBtn.onclick = submitFeedback;
+
+  // Show admin section if admin
+  const adminSection = $('#adminFeedbackSection');
+  if (adminSection) {
+    adminSection.style.display = isAdminUser() ? 'block' : 'none';
+    if (isAdminUser()) {
+      const filter = $('#adminFbFilter');
+      if (filter) filter.onchange = loadAdminFeedback;
+    }
+  }
+
+  await loadUserFeedback();
+  if (isAdminUser()) await loadAdminFeedback();
+}
+
+async function submitFeedback() {
+  if (!supa || !state.user) {
+    toast('Please sign in first.', 'err');
+    return;
+  }
+
+  const category = $('#fbCategory').value;
+  const rating = parseInt($('#fbRating').value, 10);
+  const message = $('#fbMessage').value.trim();
+
+  if (!message || message.length < 10) {
+    toast('Please write at least 10 characters.', 'err');
+    return;
+  }
+  if (message.length > 1000) {
+    toast('Message too long (max 1000 chars).', 'err');
+    return;
+  }
+
+  const btn = $('#fbSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending...';
+
+  try {
+    const { error } = await supa.from('feedback').insert({
+      user_id: state.user.id,
+      user_email: state.user.email,
+      user_name: state.profile.name || state.user.email.split('@')[0],
+      category,
+      rating,
+      message,
+      status: 'new'
+    });
+    if (error) throw error;
+
+    // Clear form
+    $('#fbMessage').value = '';
+    $('#fbCharCount').textContent = '0';
+
+    toast('🎉 Thank you! Your feedback has been sent.', 'ok', 4000);
+    await loadUserFeedback();
+  } catch (e) {
+    console.error('Feedback error:', e);
+    toast('Failed to send: ' + (e.message || 'Try again'), 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '📤 Send Feedback';
+  }
+}
+
+async function loadUserFeedback() {
+  const el = $('#feedbackHistory');
+  if (!el) return;
+  if (!supa || !state.user) {
+    el.innerHTML = '<div class="empty" style="padding:20px"><p>Sign in to view your feedback.</p></div>';
+    return;
+  }
+
+  el.innerHTML = '<div class="skel" style="height:60px;border-radius:10px"></div>';
+
+  try {
+    const { data, error } = await supa.from('feedback')
+      .select('*')
+      .eq('user_id', state.user.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+
+    const badge = $('#fbCountBadge');
+    if (badge) badge.textContent = (data || []).length;
+
+    if (!data || !data.length) {
+      el.innerHTML = `<div class="empty" style="padding:30px">
+        <div class="em">💬</div>
+        <h4>No feedback yet</h4>
+        <p>Aapki pehli feedback yahan dikhegi</p>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = data.map(f => {
+      const statusMap = {
+        new: { label: 'New', cls: 's-progress' },
+        read: { label: 'Read', cls: 's-todo' },
+        planned: { label: 'Planned', cls: 's-rev' },
+        done: { label: 'Done', cls: 's-completed' }
+      };
+      const s = statusMap[f.status] || statusMap.new;
+      const catMap = {
+        feature: '💡 Feature',
+        improvement: '✨ Improvement',
+        bug: '🐛 Bug',
+        other: '💭 Other'
+      };
+
+      return `<div class="item-row" style="cursor:default">
+        <div class="item-body">
+          <div class="item-meta" style="margin-top:0;margin-bottom:6px">
+            <span class="pill s-progress">${catMap[f.category] || '💭'}</span>
+            <span class="pill ${s.cls}">${s.label}</span>
+            ${f.rating ? `<span>${'⭐'.repeat(f.rating)}</span>` : ''}
+            <span style="margin-left:auto">${fmtRelDate(f.created_at?.slice(0, 10))}</span>
+          </div>
+          <div class="item-title" style="font-weight:500;white-space:pre-wrap;line-height:1.5">${esc(f.message)}</div>
+          ${f.admin_reply ? `<div style="margin-top:10px;padding:10px;background:var(--accent-soft);
+            border-radius:8px;border-left:3px solid var(--accent);font-size:.82rem">
+            <strong>👑 Admin reply:</strong> ${esc(f.admin_reply)}
+          </div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('Feedback load error:', e);
+    el.innerHTML = `<div class="empty" style="padding:20px">
+      <p style="color:var(--danger)">Could not load feedback. Please try again.</p>
+    </div>`;
+  }
+}
+
+async function loadAdminFeedback() {
+  const el = $('#adminFeedbackList');
+  if (!el || !isAdminUser()) return;
+
+  el.innerHTML = '<div class="skel" style="height:60px;border-radius:10px"></div>';
+
+  try {
+    const filter = $('#adminFbFilter')?.value || '';
+    let query = supa.from('feedback').select('*').order('created_at', { ascending: false }).limit(100);
+    if (filter) query = query.eq('status', filter);
+    const { data, error } = await query;
+    if (error) throw error;
+
+    if (!data || !data.length) {
+      el.innerHTML = `<div class="empty" style="padding:30px">
+        <div class="em">📭</div>
+        <h4>No feedback</h4>
+        <p>Users abhi tak kuch nahi bheje</p>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = data.map(f => {
+      const statusMap = {
+        new: { label: 'New', cls: 's-progress' },
+        read: { label: 'Read', cls: 's-todo' },
+        planned: { label: 'Planned', cls: 's-rev' },
+        done: { label: 'Done', cls: 's-completed' }
+      };
+      const s = statusMap[f.status] || statusMap.new;
+      const catMap = {
+        feature: '💡 Feature',
+        improvement: '✨ Improvement',
+        bug: '🐛 Bug',
+        other: '💭 Other'
+      };
+
+      return `<div class="item-row" style="cursor:default;display:block">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px">
+          <div>
+            <div style="font-weight:700;font-size:.88rem">${esc(f.user_name || 'User')}</div>
+            <div style="font-size:.72rem;color:var(--text-3)">${esc(f.user_email || '')} · ${fmtRelDate(f.created_at?.slice(0, 10))}</div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <span class="pill s-progress">${catMap[f.category] || '💭'}</span>
+            <span class="pill ${s.cls}">${s.label}</span>
+          </div>
+        </div>
+        ${f.rating ? `<div style="margin-bottom:8px">${'⭐'.repeat(f.rating)}</div>` : ''}
+        <div style="font-size:.85rem;line-height:1.5;white-space:pre-wrap;margin-bottom:10px">${esc(f.message)}</div>
+        ${f.admin_reply ? `<div style="padding:8px 10px;background:var(--accent-soft);border-radius:8px;
+          margin-bottom:10px;font-size:.8rem"><strong>Your reply:</strong> ${esc(f.admin_reply)}</div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <select class="admin-status-sel" data-fb-id="${f.id}"
+            style="background:var(--card-2);border:1px solid var(--border);border-radius:6px;
+            padding:5px 8px;font-size:.75rem">
+            <option value="new" ${f.status === 'new' ? 'selected' : ''}>New</option>
+            <option value="read" ${f.status === 'read' ? 'selected' : ''}>Read</option>
+            <option value="planned" ${f.status === 'planned' ? 'selected' : ''}>Planned</option>
+            <option value="done" ${f.status === 'done' ? 'selected' : ''}>Done</option>
+          </select>
+          <button class="btn btn-secondary btn-sm" data-fb-reply="${f.id}">
+            ${f.admin_reply ? '✏️ Edit Reply' : '💬 Reply'}
+          </button>
+          <button class="btn btn-ghost btn-sm" data-fb-del="${f.id}" style="color:var(--danger)">🗑 Delete</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Wire up buttons
+    el.querySelectorAll('.admin-status-sel').forEach(sel => {
+      sel.onchange = async () => {
+        try {
+          await supa.from('feedback').update({ status: sel.value }).eq('id', sel.dataset.fbId);
+          toast('Status updated', 'ok');
+          loadAdminFeedback();
+        } catch (e) { toast('Failed to update', 'err'); }
+      };
+    });
+
+    el.querySelectorAll('[data-fb-reply]').forEach(b => {
+      b.onclick = () => openAdminReplyModal(b.dataset.fbReply, data);
+    });
+
+    el.querySelectorAll('[data-fb-del]').forEach(b => {
+      b.onclick = async () => {
+        if (!confirm('Delete this feedback permanently?')) return;
+        try {
+          await supa.from('feedback').delete().eq('id', b.dataset.fbDel);
+          toast('Deleted', 'ok');
+          loadAdminFeedback();
+        } catch (e) { toast('Failed to delete', 'err'); }
+      };
+    });
+  } catch (e) {
+    console.error('Admin feedback load error:', e);
+    el.innerHTML = `<div class="empty" style="padding:20px">
+      <p style="color:var(--danger)">Could not load. Please refresh.</p>
+    </div>`;
+  }
+}
+
+function openAdminReplyModal(fbId, allFeedback) {
+  const f = allFeedback.find(x => x.id === fbId);
+  if (!f) return;
+
+  const body = `
+    <div style="padding:12px;background:var(--card-2);border-radius:10px;margin-bottom:12px">
+      <div style="font-size:.75rem;color:var(--text-3);margin-bottom:4px">From: ${esc(f.user_name || f.user_email)}</div>
+      <div style="font-size:.85rem;white-space:pre-wrap">${esc(f.message)}</div>
+    </div>
+    <div class="field">
+      <label>Your Reply</label>
+      <textarea id="adminReplyText" rows="4" placeholder="Type your reply... (user will see this)"
+        style="min-height:100px">${esc(f.admin_reply || '')}</textarea>
+    </div>
+  `;
+
+  openModal(modalShell({
+    title: 'Reply to Feedback',
+    body,
+    actions: `
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-primary" id="saveReplyBtn">Save Reply</button>
+    `
+  }), {
+    onMount() {
+      $('#saveReplyBtn').onclick = async () => {
+        const reply = $('#adminReplyText').value.trim();
+        const btn = $('#saveReplyBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Saving...';
+        try {
+          await supa.from('feedback').update({ admin_reply: reply || null }).eq('id', fbId);
+          toast('Reply saved', 'ok');
+          closeModal();
+          loadAdminFeedback();
+        } catch (e) {
+          toast('Failed to save', 'err');
+          btn.disabled = false;
+          btn.textContent = 'Save Reply';
+        }
+      };
+    }
+  });
+}
 /* =========================== SETTINGS =========================== */
 function renderSettings() {
   $('#setName').value = state.profile.name || '';
