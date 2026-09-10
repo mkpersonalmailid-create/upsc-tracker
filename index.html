@@ -102,20 +102,6 @@ display:flex;flex-direction:column;padding:16px 12px;overflow-y:auto;transition:
 letter-spacing:-.02em;font-size:1.05rem;border-bottom:1px solid var(--border);margin-bottom:12px}
 .logo-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#5E9EFF,#A78BFA);
 display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:.9rem;flex-shrink:0}
-/* Logo text wrapper with tagline */
-.logo-text-wrap{display:flex;flex-direction:column;line-height:1.2;min-width:0}
-.logo-text{font-size:.85rem;font-weight:900;letter-spacing:.02em;
-  background:linear-gradient(135deg,var(--accent),var(--accent-2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.logo-tagline{font-size:.6rem;color:var(--text-3);font-weight:600;
-  letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
-.logo-mark.has-image{background:transparent!important;box-shadow:none!important;padding:0;overflow:hidden}
-.logo-mark img{width:100%;height:100%;object-fit:contain;display:block;border-radius:8px}
-@media(max-width:600px){
-  .logo-text-wrap{display:none}
-  .logo-mark{width:36px!important;height:36px!important}
-}
 .nav{display:flex;flex-direction:column;gap:2px;flex:1}
 .sb-section-title{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
 color:var(--text-3);padding:14px 10px 6px}
@@ -582,8 +568,110 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   .logo{justify-content:center;padding:6px}
 }
 
-/* Collapsed sidebar - existing overrides */
-.sidebar.collapsed .logo-text{display:none}
+/* ============ LOGO RESET — CLEAN ============ */
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:8px 8px 18px;
+  font-weight:800;
+  letter-spacing:-.02em;
+  border-bottom:1px solid var(--border);
+  margin-bottom:12px;
+  min-height:52px;
+}
+.logo-mark{
+  width:34px;
+  height:34px;
+  border-radius:9px;
+  background:linear-gradient(135deg,#5E9EFF,#A78BFA);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  color:#fff;
+  font-size:.9rem;
+  flex-shrink:0;
+}
+.logo-mark.has-image{
+  background:transparent!important;
+  box-shadow:none!important;
+  padding:0;
+  overflow:hidden;
+}
+.logo-mark img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
+.logo-text-wrap{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.logo-text-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+.logo-text{
+  font-size:.66rem;
+  font-weight:900;
+  letter-spacing:.02em;
+  color:var(--text);
+  white-space:nowrap;
+  line-height:1.1;
+}
+.logo-tagline{
+  font-size:.52rem;
+  color:var(--text-3);
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  line-height:1.1;
+}
+.plan-badge-sidebar{
+  font-size:.5rem;
+  font-weight:800;
+  padding:2px 6px;
+  border-radius:20px;
+  flex-shrink:0;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  background:var(--card-2);
+  color:var(--text-3);
+  border:1px solid var(--border);
+}
+.plan-badge-sidebar.free{
+  background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,146,60,.1));
+  color:#FBBF24;
+  border-color:rgba(251,191,36,.35);
+}
+.plan-badge-sidebar.premium{
+  background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(244,114,182,.12));
+  color:#FBBF24;
+  border-color:rgba(251,191,36,.4);
+}
+.plan-badge-sidebar.admin{
+  background:linear-gradient(135deg,rgba(167,139,250,.18),rgba(94,158,255,.12));
+  color:#A78BFA;
+  border-color:rgba(167,139,250,.4);
+}
+
+/* Sidebar collapsed */
+.sidebar.collapsed .logo-text-wrap{display:none}
+.sidebar.collapsed .logo{justify-content:center;padding:8px 4px 18px}
+
+/* Mobile */
+@media(max-width:600px){
+  .logo-text-wrap{display:none}
+  .logo{justify-content:center;padding:8px 4px 16px}
+}
 </style>
 </head>
 <body>
@@ -628,14 +716,17 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   <aside class="sidebar" id="sidebar">
 <div class="logo">
   <div class="logo-mark has-image" id="logoMark">
-  <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Study Tracker Logo">
-</div>
+    <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
+  </div>
   <div class="logo-text-wrap">
-        <div class="logo-text-row">
-    <div class="logo-text">UPSC STUDY TRACKER</div>
+    <div class="logo-text-row">
+      <div class="logo-text">UPSC STUDY TRACKER</div>
+      <div class="plan-badge-sidebar" id="sidebarPlanBadge">Free</div>
+    </div>
     <div class="logo-tagline">Track · Analyze · Crack</div>
   </div>
-</div>    <nav class="nav">
+</div>
+      <nav class="nav">
       <div class="sb-section-title">Focus</div>
       <button class="nav-item active" data-view="study"><span class="nav-icon">⏱</span><span class="nav-label">Study</span></button>
       <button class="nav-item" data-view="dashboard"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></button>
