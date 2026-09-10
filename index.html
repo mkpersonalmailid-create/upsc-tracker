@@ -1141,17 +1141,22 @@ const APP_VERSION = '3.0';
 const LOCAL_KEY = 'upsc_tracker_v3_state';
 const UI_KEY = 'upsc_tracker_v3_ui';
 
+// Paste your Razorpay Plan ID (created in Razorpay dashboard)
+const RAZORPAY_PLAN_ID_MONTHLY = 'plan_TaOc0r72B2FnsZ'; // ⚠️ Replace with your real Plan ID
+
 const PLANS = {
   monthly: {
-    id: 'monthly', name: 'Monthly', price: 50, currency: 'INR', period: '1 month', days: 30,
+    id: 'monthly', name: 'Monthly', price: 50, currency: 'INR',
+    period: '1 month', type: 'subscription',
     description: 'UPSC Tracker Premium — Monthly',
     features: ['All core study features', 'Advanced analytics', 'Unlimited export/import', 'Priority support']
   },
   yearly: {
-    id: 'yearly', name: 'Yearly', price: 599, currency: 'INR', period: '12 months', days: 365,
+    id: 'yearly', name: 'Yearly', price: 500, currency: 'INR',
+    period: '12 months', type: 'one_time',
     description: 'UPSC Tracker Premium — Yearly',
     features: ['All core study features', 'Advanced analytics', 'Unlimited export/import',
-      'Priority support', '2 months free (save ₹289)'],
+      'Priority support', 'Save ₹100 vs monthly'],
     badge: 'BEST VALUE'
   }
 };
@@ -1825,34 +1830,43 @@ async function startUpgrade(planId) {
   const { data: { session } } = await supa.auth.getSession();
   if (!session?.access_token) { toast('Session expired. Sign in again.', 'err'); return; }
 
-  const btn = $('#upgradeNowBtn'); if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating order…'; }
+  const btn = $('#upgradeNowBtn'); if (btn) { btn.disabled = true; btn.textContent = '⏳ Creating payment…'; }
 
   try {
-    // 1. Create order server-side
-    const res = await fetch('/api/create-order', {
+    const plan = PLANS[planId];
+    const res = await fetch('/api/create-payment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
-      body: JSON.stringify({ plan_id: planId })
+      body: JSON.stringify({
+        plan_id: planId,
+        type: plan.type,
+        razorpay_plan_id: planId === 'monthly' ? RAZORPAY_PLAN_ID_MONTHLY : null
+      })
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Order creation failed');
+    if (!res.ok) throw new Error(json.error || 'Payment creation failed');
 
-    // 2. Open Razorpay checkout
     if (typeof Razorpay === 'undefined') { toast('Razorpay SDK not loaded.', 'err'); return; }
+
     const options = {
       key: json.key_id,
-      amount: json.amount,
-      currency: json.currency,
+      currency: json.currency || 'INR',
       name: 'UPSC Tracker',
       description: json.description,
-      order_id: json.order_id,
       prefill: { email: state.user.email || '', name: state.profile.name || '' },
       theme: { color: '#5E9EFF' },
-      handler: async (response) => {
-        await verifyPayment(response, planId);
-      },
+      handler: async (response) => { await verifyPayment(response, planId); },
       modal: { ondismiss: () => { toast('Payment cancelled.', 'info'); restoreUpgradeBtn(); } }
     };
+
+    // Attach either order_id (one-time) or subscription_id (recurring)
+    if (plan.type === 'subscription') {
+      options.subscription_id = json.subscription_id;
+    } else {
+      options.order_id = json.order_id;
+      options.amount = json.amount;
+    }
+
     const rzp = new Razorpay(options);
     rzp.on('payment.failed', (resp) => {
       toast('Payment failed: ' + (resp.error?.description || 'Unknown'), 'err');
@@ -1863,6 +1877,7 @@ async function startUpgrade(planId) {
     toast(e.message, 'err');
     restoreUpgradeBtn();
   }
+}
 }
 function restoreUpgradeBtn() {
   const btn = $('#upgradeNowBtn');
