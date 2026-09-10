@@ -1788,10 +1788,70 @@ function openUpgradeModal(reason) {
     }
   });
 }
-async function startUpgrade(planId) {
+/* ============ DEVICE CHECK + MOBILE MODAL ============ */
+function isMobileDevice() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || window.innerWidth < 768;
+}
+
+function openMobileOnlyModal() {
+  const body = `
+    <div style="text-align:center;padding:20px 0">
+      <div style="font-size:4rem;margin-bottom:16px">📱</div>
+      <h3 style="font-size:1.3rem;font-weight:800;margin-bottom:10px;line-height:1.3">
+        Please use your phone to subscribe
+      </h3>
+      <p style="font-size:.92rem;color:var(--text-2);line-height:1.7;max-width:360px;margin:0 auto 20px">
+        Monthly subscription uses <strong>UPI Autopay</strong>. 
+        Razorpay requires you to approve the payment from your mobile device.
+      </p>
+      <div style="padding:14px;background:var(--card-2);border-radius:12px;margin-bottom:16px;text-align:left">
+        <div style="font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:8px">
+          How to subscribe:
+        </div>
+        <ol style="font-size:.85rem;color:var(--text-2);line-height:1.8;padding-left:18px;margin:0">
+          <li>Open <strong>upsctrackertime.pages.dev</strong> on your phone</li>
+          <li>Login with the same account</li>
+          <li>Go to <strong>Premium</strong> → choose <strong>Monthly</strong></li>
+          <li>Approve UPI Autopay from your phone</li>
+        </ol>
+      </div>
+      <p style="font-size:.82rem;color:var(--text-3);line-height:1.5">
+        💡 <strong>Or</strong> choose <strong>Yearly plan</strong> — it works on desktop too!
+      </p>
+    </div>
+  `;
+
+  openModal(modalShell({
+    title: 'Mobile Required',
+    body,
+    actions: `
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-primary" id="switchToYearlyBtn">💎 Choose Yearly (₹500)</button>
+    `
+  }), {
+    onMount() {
+      $('#switchToYearlyBtn').onclick = () => {
+        closeModal();
+        setTimeout(() => startUpgrade('yearly'), 300);
+      };
+    }
+  });
+}
+
+  async function startUpgrade(planId) {
   if (!supa || !state.user) { toast('Please sign in first.', 'err'); return; }
+  
+  // NEW: Check if mobile required for monthly subscription
+  const plan = PLANS[planId];
+  if (plan?.type === 'subscription' && !isMobileDevice()) {
+    openMobileOnlyModal();
+    return;
+  }
+  
   if (isPremiumUser()) { toast('You are already Premium.', 'ok'); return; }
   if (!PLANS[planId]) { toast('Invalid plan.', 'err'); return; }
+
 
   const { data: { session } } = await supa.auth.getSession();
   if (!session?.access_token) { toast('Session expired. Sign in again.', 'err'); return; }
