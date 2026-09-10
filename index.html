@@ -1072,7 +1072,7 @@ background-size:200% 100%;animation:skel 1.4s infinite}
           <div class="card-header"><span class="card-title-lg">Account</span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn btn-secondary" id="signOutBtn">Sign Out</button>
-            <button class="btn btn-danger" id="deleteDataBtn">Delete All My Data</button>
+            <!--<button class="btn btn-danger" id="deleteDataBtn">Delete All My Data</button>// -->
           </div>
           <p style="font-size:.78rem;color:var(--text-3);margin-top:10px">Version 3.0 · Built with Supabase + Razorpay</p>
         </div>
@@ -4054,11 +4054,11 @@ function wireEvents() {
   $('#importBtn').onclick = () => $('#importFile').click();
   $('#importFile').onchange = e => { if (e.target.files[0]) importJSON(e.target.files[0]); };
   $('#signOutBtn').onclick = () => { if (confirm('Sign out?')) logout(); };
-  $('#deleteDataBtn').onclick = () => {
+  /*$('#deleteDataBtn').onclick = () => {
     if (!confirm('This will delete ALL local data. Cloud data is not affected. Continue?')) return;
     if (!confirm('Really sure? This cannot be undone.')) return;
     localStorage.removeItem(LOCAL_KEY); location.reload();
-  };
+  };*/
   window.addEventListener('resize', () => { if (window.innerWidth > 900) $('#sidebar').classList.remove('open'); });
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (state.settings.theme === 'system') applyTheme('system');
