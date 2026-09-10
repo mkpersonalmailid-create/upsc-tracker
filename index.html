@@ -1958,13 +1958,78 @@ async function handleAuthSubmit(e) {
   finally { btn.disabled = false; $('#authSubmitText').textContent = orig; }
 }
 async function handleForgotPassword() {
-  const email = $('#authEmail').value.trim();
-  if (!email) { authMsg('Enter your email first.', 'err'); return; }
-  try {
-    const { error } = await supa.auth.resetPasswordForEmail(email, { redirectTo: location.origin });
-    if (error) throw error;
-    authMsg('Password reset email sent. Check your inbox.', 'ok');
-  } catch (e) { authMsg(e.message, 'err'); }
+  // Check karo ki email field mein pehle se kuch hai ya nahi
+  let email = $('#authEmail').value.trim();
+
+  if (!email) {
+    // Email khali hai → popup kholo aur email maango
+    const body = `
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="resetEmailInput" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <p style="font-size:.82rem;color:var(--text-3);margin-top:4px">
+        We'll send you a password reset link to this email.
+      </p>
+    `;
+    openModal(modalShell({
+      title: 'Reset Password',
+      subtitle: 'Enter your registered email address',
+      body,
+      actions: `
+        <button class="btn btn-ghost" data-close>Cancel</button>
+        <button class="btn btn-primary" id="resetSendBtn">Send Reset Link</button>
+      `
+    }), {
+      onMount() {
+        setTimeout(() => $('#resetEmailInput').focus(), 100);
+
+        const doSend = async () => {
+          const inputEmail = $('#resetEmailInput').value.trim();
+          if (!inputEmail || !inputEmail.includes('@')) {
+            toast('Please enter a valid email.', 'err');
+            return;
+          }
+
+          const btn = $('#resetSendBtn');
+          btn.disabled = true;
+          btn.textContent = '⏳ Sending...';
+
+          try {
+            const { error } = await supa.auth.resetPasswordForEmail(inputEmail, {
+              redirectTo: 'https://upsctrackertime.pages.dev/'
+            });
+            if (error) throw error;
+
+            closeModal();
+            authMsg('Password reset email sent to ' + inputEmail + '. Please check your inbox (and spam folder).', 'ok');
+            toast('Reset email sent!', 'ok', 4000);
+          } catch (e) {
+            toast(e.message || 'Failed to send reset email.', 'err');
+            btn.disabled = false;
+            btn.textContent = 'Send Reset Link';
+          }
+        };
+
+        $('#resetSendBtn').onclick = doSend;
+        $('#resetEmailInput').onkeydown = (e) => {
+          if (e.key === 'Enter') doSend();
+        };
+      }
+    });
+  } else {
+    // Email pehle se hai → seedha bhej do
+    try {
+      const { error } = await supa.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://upsctrackertime.pages.dev/'
+      });
+      if (error) throw error;
+      authMsg('Password reset email sent to ' + email + '. Please check your inbox.', 'ok');
+      toast('Reset email sent!', 'ok', 4000);
+    } catch (e) {
+      authMsg(e.message || 'Failed to send reset email.', 'err');
+    }
+  }
 }
 async function bootAfterLogin(session) {
   state.user = session.user; state.session = session;
