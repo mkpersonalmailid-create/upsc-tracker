@@ -102,6 +102,20 @@ display:flex;flex-direction:column;padding:16px 12px;overflow-y:auto;transition:
 letter-spacing:-.02em;font-size:1.05rem;border-bottom:1px solid var(--border);margin-bottom:12px}
 .logo-mark{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#5E9EFF,#A78BFA);
 display:flex;align-items:center;justify-content:center;font-weight:900;color:#fff;font-size:.9rem;flex-shrink:0}
+/* Logo text wrapper with tagline */
+.logo-text-wrap{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.logo-text{font-size:.85rem;font-weight:900;letter-spacing:.02em;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo-tagline{font-size:.6rem;color:var(--text-3);font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;margin-top:2px}
+.logo-mark.has-image{background:transparent!important;box-shadow:none!important;padding:0;overflow:hidden}
+.logo-mark img{width:100%;height:100%;object-fit:contain;display:block;border-radius:8px}
+@media(max-width:600px){
+  .logo-text-wrap{display:none}
+  .logo-mark{width:36px!important;height:36px!important}
+}
 .nav{display:flex;flex-direction:column;gap:2px;flex:1}
 .sb-section-title{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
 color:var(--text-3);padding:14px 10px 6px}
@@ -559,8 +573,15 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 
 <div id="app" class="app hidden">
   <aside class="sidebar" id="sidebar">
-    <div class="logo"><div class="logo-mark">U</div><div class="logo-text">UPSC Tracker</div></div>
-    <nav class="nav">
+<div class="logo">
+  <div class="logo-mark has-image" id="logoMark">
+  <img src="https://i.ibb.co/abc123/logo.png" alt="UPSC Study Tracker Logo">
+</div>
+  <div class="logo-text-wrap">
+    <div class="logo-text">UPSC STUDY TRACKER</div>
+    <div class="logo-tagline">Track · Analyze · Crack</div>
+  </div>
+</div>    <nav class="nav">
       <div class="sb-section-title">Focus</div>
       <button class="nav-item active" data-view="study"><span class="nav-icon">⏱</span><span class="nav-label">Study</span></button>
       <button class="nav-item" data-view="dashboard"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></button>
