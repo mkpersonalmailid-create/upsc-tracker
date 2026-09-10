@@ -152,6 +152,61 @@ border-color:rgba(251,191,36,.4);color:#FBBF24}
 color:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;
 transition:var(--t);flex-shrink:0}
 .avatar-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(94,158,255,.4)}
+/* PLAN BADGE BUTTON */
+.plan-badge-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:20px;
+  font-size:.75rem;font-weight:800;letter-spacing:.02em;
+  border:1px solid var(--border);
+  background:var(--card-2);color:var(--text-2);
+  transition:var(--t);cursor:pointer;white-space:nowrap;
+}
+.plan-badge-btn:hover{transform:translateY(-1px);border-color:var(--border-strong);color:var(--text)}
+.plan-badge-btn.free{
+  background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(251,146,60,.08));
+  border-color:rgba(251,191,36,.35);color:#FBBF24;
+}
+.plan-badge-btn.free:hover{
+  background:linear-gradient(135deg,rgba(251,191,36,.2),rgba(251,146,60,.15));
+  box-shadow:0 4px 14px rgba(251,191,36,.25);
+}
+.plan-badge-btn.premium{
+  background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(244,114,182,.12));
+  border-color:rgba(251,191,36,.45);color:#FBBF24;
+}
+.plan-badge-btn.admin{
+  background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(94,158,255,.12));
+  border-color:rgba(167,139,250,.4);color:#A78BFA;
+}
+.plan-badge-btn.admin{
+  background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(94,158,255,.12));
+  border-color:rgba(167,139,250,.4);color:#A78BFA;
+}
+.plan-badge-btn { position: relative; }
+.plan-badge-btn.free::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 8px;
+  height: 8px;
+  background: #FBBF24;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(251,191,36,.8);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.3); }
+}
+@media(max-width:600px){
+  .plan-badge-btn{padding:5px 9px;font-size:.7rem}
+  .plan-badge-btn .full-text{display:none}
+}
+@media(max-width:600px){
+  .plan-badge-btn{padding:5px 9px;font-size:.7rem}
+  .plan-badge-btn .full-text{display:none}
+}
 .content{flex:1;overflow-y:auto;padding:24px;scroll-behavior:smooth}
 .view{display:none;animation:fadeIn .25s ease}
 .view.active{display:block;max-width:1400px;margin:0 auto}
@@ -557,6 +612,7 @@ background-size:200% 100%;animation:skel 1.4s infinite}
       <div class="topbar-right">
         <button class="icon-btn" id="notifBtn" title="Notifications">🔔</button>
         <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙</button>
+        <button class="plan-badge-btn" id="planBadgeBtn" title="Your plan">Free</button>
         <button class="avatar-btn" id="topAvatar" title="Account">U</button>
       </div>
     </header>
@@ -1651,6 +1707,7 @@ function updatePremiumUI() {
   renderPremiumBanner();
   renderSubscriptionInfo();
   updatePremiumIcons();
+  updatePlanBadge();
 }
 function updatePremiumIcons() {
   const icons = { calendar: '▤', analytics: '◔', history: '☰', goals: '🎯',
@@ -2067,6 +2124,31 @@ async function bootAfterLogin(session) {
   renderAll();
   try { await loadCloudData(); } catch (e) { console.warn(e); }
   updateSidebarUser(); updatePremiumUI(); renderAll();
+}
+/* ============ TOP-RIGHT PLAN BADGE ============ */
+function updatePlanBadge() {
+  const badge = $('#planBadgeBtn');
+  if (!badge) return;
+  
+  // Remove existing classes
+  badge.className = 'plan-badge-btn';
+  
+  if (isAdminUser()) {
+    badge.classList.add('admin');
+    badge.innerHTML = '👑 <span class="full-text">Admin</span>';
+    badge.title = 'Administrator — full access';
+    badge.onclick = () => switchView('settings');
+  } else if (isPremiumUser()) {
+    badge.classList.add('premium');
+    badge.innerHTML = '💎 <span class="full-text">Premium</span>';
+    badge.title = 'You are Premium!';
+    badge.onclick = () => switchView('settings');
+  } else {
+    badge.classList.add('free');
+    badge.innerHTML = '⚡ <span class="full-text">Free Plan</span>';
+    badge.title = 'Upgrade to unlock all features';
+    badge.onclick = () => openUpgradeModal('Unlock all features');
+  }
 }
 function updateSidebarUser() {
   const name = state.profile.name || state.user?.email?.split('@')[0] || 'Student';
@@ -3945,6 +4027,8 @@ function wireEvents() {
   };
   $('#sbUser').onclick = () => switchView('settings');
   $('#topAvatar').onclick = () => switchView('settings');
+    // Plan badge will be initialized after login
+  updatePlanBadge();
   $('#themeBtn').onclick = () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   $$('.theme-opt').forEach(b => b.onclick = () => { applyTheme(b.dataset.theme); renderSettings(); });
   $('#notifBtn').onclick = () => { renderNotifications(); $('#notifOverlay').classList.add('active'); };
