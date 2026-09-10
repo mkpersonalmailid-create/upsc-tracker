@@ -2,7 +2,7 @@
 // Handles both one-time orders and recurring subscriptions
 
 const ONE_TIME_PLANS = {
-  yearly: { amount: 599, description: 'UPSC Tracker Premium — Yearly' } // ₹500 in paise
+  yearly: { amount: 59900, description: 'UPSC Tracker Premium — Yearly' } // ₹500 in paise
 };
 const SUBSCRIPTION_PLANS = {
   monthly: { plan_id_env: 'RAZORPAY_PLAN_ID_MONTHLY', description: 'UPSC Tracker Premium — Monthly', total_count: 120 }
