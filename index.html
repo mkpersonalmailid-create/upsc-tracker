@@ -756,11 +756,7 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 </div>
 
 <div id="app" class="app hidden">
-  <div id="announcementBanner" class="announcement-banner info hidden">
-  <span class="ann-icon">📢</span>
-  <span class="ann-text" id="announcementText"></span>
-  <button class="ann-close" id="announcementClose" title="Dismiss">✕</button>
-</div>
+
   <aside class="sidebar" id="sidebar">
 <div class="logo">
   <div class="logo-mark has-image" id="logoMark">
@@ -816,6 +812,11 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   </aside>
 
   <main class="main">
+        <div id="announcementBanner" class="announcement-banner hidden">
+      <span class="ann-icon">📢</span>
+      <span class="ann-text" id="announcementText"></span>
+      <button class="ann-close" id="announcementClose" title="Dismiss">✕</button>
+    </div>
     <header class="topbar">
       <div class="topbar-left">
         <button class="collapse-btn" id="collapseBtn">☰</button>
@@ -2447,6 +2448,8 @@ async function bootAfterLogin(session) {
   renderAll();
   try { await loadCloudData(); } catch (e) { console.warn(e); }
   updateSidebarUser(); updatePremiumUI(); renderAll();
+    // Load announcement banner
+  setTimeout(() => loadAnnouncement(), 500);
 }
 /* ============ TOP-RIGHT PLAN BADGE ============ */
 function updatePlanBadge() {
@@ -2509,6 +2512,8 @@ async function logout() {
   $('#bottomNav').classList.add('hidden');
   $('#fab').classList.add('hidden');
   $('#authScreen').classList.remove('hidden');
+    const banner = $('#announcementBanner');
+  if (banner) banner.classList.add('hidden');
   setAuthMode('signin');
 }
 
@@ -4669,6 +4674,13 @@ function renderSettings() {
   $('#setDefaultSubject').innerHTML = state.subjects.map(s => `<option ${state.settings.default_subject === s.name ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
   $$('.theme-opt').forEach(b => { b.style.borderColor = b.dataset.theme === state.settings.theme ? 'var(--accent)' : ''; });
   renderSubscriptionInfo();
+    // Admin announcement card
+  const adminCard = $('#adminAnnouncementCard');
+  if (adminCard) {
+    adminCard.style.display = isAdminUser() ? 'block' : 'none';
+    const btn = $('#manageAnnouncementBtn');
+    if (btn) btn.onclick = openAnnouncementEditor;
+  }
 }
 
 /* =========================== NOTIFICATIONS =========================== */
