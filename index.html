@@ -545,25 +545,29 @@ background-size:200% 100%;animation:skel 1.4s infinite}
       <div class="sb-section-title">Focus</div>
       <button class="nav-item active" data-view="study"><span class="nav-icon">⏱</span><span class="nav-label">Study</span></button>
       <button class="nav-item" data-view="dashboard"><span class="nav-icon">◈</span><span class="nav-label">Dashboard</span></button>
-      <button class="nav-item" data-view="calendar"><span class="nav-icon">▤</span><span class="nav-label">Calendar</span></button>
-      <button class="nav-item" data-view="analytics"><span class="nav-icon">◔</span><span class="nav-label">Analytics</span></button>
-      <button class="nav-item" data-view="history"><span class="nav-icon">☰</span><span class="nav-label">History</span></button>
+      <button class="nav-item" data-view="calendar"><span class="nav-icon">🔒</span><span class="nav-label">Calendar</span></button>
+      <button class="nav-item" data-view="analytics"><span class="nav-icon">🔒</span><span class="nav-label">Analytics</span></button>
+      <button class="nav-item" data-view="history"><span class="nav-icon">🔒</span><span class="nav-label">History</span></button>
+
       <div class="sb-section-title">Preparation</div>
       <button class="nav-item" data-view="syllabus"><span class="nav-icon">📖</span><span class="nav-label">Syllabus</span></button>
       <button class="nav-item" data-view="subjects"><span class="nav-icon">◎</span><span class="nav-label">Subjects</span></button>
       <button class="nav-item" data-view="revision"><span class="nav-icon">↻</span><span class="nav-label">Revision</span><span class="nav-badge danger hidden" id="revisionBadge">0</span></button>
+
       <div class="sb-section-title">Plan</div>
-      <button class="nav-item" data-view="goals"><span class="nav-icon">🎯</span><span class="nav-label">Goals</span></button>
-      <button class="nav-item" data-view="tasks"><span class="nav-icon">✓</span><span class="nav-label">Tasks</span><span class="nav-badge hidden" id="tasksBadge">0</span></button>
-      <button class="nav-item" data-view="planner"><span class="nav-icon">🗓</span><span class="nav-label">Planner</span></button>
+      <button class="nav-item" data-view="goals"><span class="nav-icon">🔒</span><span class="nav-label">Goals</span></button>
+      <button class="nav-item" data-view="tasks"><span class="nav-icon">🔒</span><span class="nav-label">Tasks</span><span class="nav-badge hidden" id="tasksBadge">0</span></button>
+      <button class="nav-item" data-view="planner"><span class="nav-icon">🔒</span><span class="nav-label">Planner</span></button>
+
       <div class="sb-section-title">Library</div>
       <button class="nav-item" data-view="notes"><span class="nav-icon">✎</span><span class="nav-label">Notes</span></button>
       <button class="nav-item" data-view="pyq"><span class="nav-icon">📝</span><span class="nav-label">PYQs</span></button>
       <button class="nav-item" data-view="mocks"><span class="nav-icon">📋</span><span class="nav-label">Mock Tests</span></button>
       <button class="nav-item" data-view="current-affairs"><span class="nav-icon">📰</span><span class="nav-label">Current Affairs</span></button>
+
       <div class="sb-section-title">More</div>
-      <button class="nav-item" data-view="achievements"><span class="nav-icon">🏆</span><span class="nav-label">Achievements</span></button>
-      <button class="nav-item" data-view="review"><span class="nav-icon">📊</span><span class="nav-label">Weekly Review</span></button>
+      <button class="nav-item" data-view="achievements"><span class="nav-icon">🔒</span><span class="nav-label">Achievements</span></button>
+      <button class="nav-item" data-view="review"><span class="nav-icon">🔒</span><span class="nav-label">Weekly Review</span></button>
       <button class="nav-item" data-view="premium"><span class="nav-icon">💎</span><span class="nav-label">Premium</span></button>
       <button class="nav-item" data-view="settings"><span class="nav-icon">⚙</span><span class="nav-label">Settings</span></button>
     </nav>
@@ -1878,7 +1882,7 @@ async function startUpgrade(planId) {
     restoreUpgradeBtn();
   }
 }
-}
+
 function restoreUpgradeBtn() {
   const btn = $('#upgradeNowBtn');
   if (btn) { btn.disabled = false; btn.innerHTML = '💎 Upgrade Now'; }
@@ -1891,9 +1895,10 @@ async function verifyPayment(response, planId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
       body: JSON.stringify({
-        razorpay_order_id: response.razorpay_order_id,
+        razorpay_order_id: response.razorpay_order_id || null,
         razorpay_payment_id: response.razorpay_payment_id,
         razorpay_signature: response.razorpay_signature,
+        razorpay_subscription_id: response.razorpay_subscription_id || null,
         plan_id: planId
       })
     });
@@ -1993,7 +1998,19 @@ async function logout() {
 }
 
 /* =========================== VIEWS =========================== */
-function switchView(name) {
+/* ============ FREE vs PREMIUM GATING ============ */
+const FREE_VIEWS = new Set([
+  'study', 'dashboard', 'syllabus', 'subjects', 'revision',
+  'notes', 'pyq', 'mocks', 'current-affairs', 'settings', 'premium'
+]);
+const PREMIUM_VIEWS = new Set([
+  'calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'achievements', 'review'
+]);
+function switchView(name) {  // Premium gate
+  if (PREMIUM_VIEWS.has(name) && !isPremiumUser()) {
+    openUpgradeModal(name.charAt(0).toUpperCase() + name.slice(1) + ' is a Premium feature');
+    return;
+  }
   state.view = name;
   $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
   $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === name));
