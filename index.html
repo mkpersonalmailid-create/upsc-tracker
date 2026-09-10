@@ -672,6 +672,49 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   .logo-text-wrap{display:none}
   .logo{justify-content:center;padding:8px 4px 16px}
 }
+/* ============ ANNOUNCEMENT BANNER ============ */
+.announcement-banner{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 20px;
+  font-size:.85rem;
+  font-weight:600;
+  border-bottom:1px solid var(--border);
+  position:relative;
+  z-index:50;
+  transition:var(--t);
+}
+.announcement-banner.info{
+  background:linear-gradient(90deg,rgba(94,158,255,.12),rgba(94,158,255,.05));
+  color:var(--accent);
+  border-bottom-color:rgba(94,158,255,.25);
+}
+.announcement-banner.success{
+  background:linear-gradient(90deg,rgba(52,211,153,.12),rgba(52,211,153,.05));
+  color:#34D399;
+  border-bottom-color:rgba(52,211,153,.25);
+}
+.announcement-banner.warning{
+  background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(251,191,36,.05));
+  color:#FBBF24;
+  border-bottom-color:rgba(251,191,36,.25);
+}
+.announcement-banner.danger{
+  background:linear-gradient(90deg,rgba(248,113,113,.12),rgba(248,113,113,.05));
+  color:#F87171;
+  border-bottom-color:rgba(248,113,113,.25);
+}
+.announcement-banner .ann-icon{font-size:1.1rem;flex-shrink:0}
+.announcement-banner .ann-text{flex:1;color:var(--text);line-height:1.4}
+.announcement-banner .ann-link{
+  color:inherit;font-weight:800;text-decoration:underline;margin-left:6px;
+}
+.announcement-banner .ann-close{
+  background:transparent;border:none;color:inherit;opacity:.6;
+  font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:var(--t);
+}
+.announcement-banner .ann-close:hover{opacity:1;background:rgba(255,255,255,.08)}
 </style>
 </head>
 <body>
@@ -713,6 +756,11 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 </div>
 
 <div id="app" class="app hidden">
+  <div id="announcementBanner" class="announcement-banner info hidden">
+  <span class="ann-icon">📢</span>
+  <span class="ann-text" id="announcementText"></span>
+  <button class="ann-close" id="announcementClose" title="Dismiss">✕</button>
+</div>
   <aside class="sidebar" id="sidebar">
 <div class="logo">
   <div class="logo-mark has-image" id="logoMark">
@@ -1319,12 +1367,24 @@ background-size:200% 100%;animation:skel 1.4s infinite}
           </p>
         </div>
 
+                <!-- ADMIN: Announcement Manager -->
+        <div class="card" id="adminAnnouncementCard" style="margin-top:16px;display:none">
+          <div class="card-header"><span class="card-title-lg">👑 Admin Controls</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="manageAnnouncementBtn">📢 Manage Announcement</button>
+          </div>
+          <p style="font-size:.78rem;color:var(--text-3);margin-top:10px">
+            Top banner message that all users see. Change anytime.
+          </p>
+        </div>
+
+        <!-- Account Card -->
         <div class="card" style="margin-top:16px">
           <div class="card-header"><span class="card-title-lg">Account</span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn btn-secondary" id="signOutBtn">Sign Out</button>
           </div>
-          <p style="font-size:.78rem;color:var(--text-3);margin-top:10px">Version 3.0 · For UPSC Aspirants</p>
+          <p style="font-size:.78rem;color:var(--text-3);margin-top:10px">Version 3.0 · Built with Supabase + Razorpay</p>
         </div>
       </section>
 
@@ -4425,6 +4485,169 @@ function openAdminReplyModal(fbId, allFeedback) {
           btn.textContent = 'Save Reply';
         }
       };
+    }
+  });
+}/* =========================== ANNOUNCEMENTS =========================== */
+async function loadAnnouncement() {
+  if (!supa) return;
+  try {
+    const { data, error } = await supa.from('site_announcements')
+      .select('*').eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1).maybeSingle();
+    
+    const banner = $('#announcementBanner');
+    if (!banner) return;
+    
+    if (error || !data) {
+      banner.classList.add('hidden');
+      return;
+    }
+
+    // Check if user has dismissed this specific announcement
+    const dismissed = localStorage.getItem('dismissed_announcement');
+    if (dismissed === data.id) {
+      banner.classList.add('hidden');
+      return;
+    }
+
+    // Render
+    const iconMap = { info: '📢', success: '✅', warning: '⚠️', danger: '🚨' };
+    banner.className = 'announcement-banner ' + (data.type || 'info');
+    banner.querySelector('.ann-icon').textContent = iconMap[data.type] || '📢';
+    
+    const textEl = $('#announcementText');
+    let html = esc(data.message);
+    if (data.link_url && data.link_text) {
+      html += ` <a href="${esc(data.link_url)}" target="_blank" class="ann-link">${esc(data.link_text)} →</a>`;
+    }
+    textEl.innerHTML = html;
+
+    // Close handler
+    $('#announcementClose').onclick = () => {
+      localStorage.setItem('dismissed_announcement', data.id);
+      banner.classList.add('hidden');
+    };
+  } catch (e) {
+    console.warn('Announcement load error:', e);
+  }
+}
+
+/* ============ ADMIN — MANAGE ANNOUNCEMENT ============ */
+async function openAnnouncementEditor() {
+  if (!isAdminUser()) return;
+  
+  // Load current announcement
+  let current = null;
+  try {
+    const { data } = await supa.from('site_announcements')
+      .select('*').eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1).maybeSingle();
+    current = data;
+  } catch (e) {}
+
+  const body = `
+    <div class="field">
+      <label>Announcement Message</label>
+      <textarea id="annMessage" rows="3" maxlength="300"
+        placeholder="Example: New feature added! Analytics page now shows weekly comparison."
+        style="min-height:80px">${esc(current?.message || '')}</textarea>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Type</label>
+        <select id="annType">
+          <option value="info" ${current?.type === 'info' ? 'selected' : ''}>📢 Info (Blue)</option>
+          <option value="success" ${current?.type === 'success' ? 'selected' : ''}>✅ Success (Green)</option>
+          <option value="warning" ${current?.type === 'warning' ? 'selected' : ''}>⚠️ Warning (Yellow)</option>
+          <option value="danger" ${current?.type === 'danger' ? 'selected' : ''}>🚨 Danger (Red)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="annActive">
+          <option value="true" ${current?.active !== false ? 'selected' : ''}>Active (visible)</option>
+          <option value="false" ${current?.active === false ? 'selected' : ''}>Inactive (hidden)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Link URL (optional)</label>
+        <input type="url" id="annLinkUrl" placeholder="https://..." value="${esc(current?.link_url || '')}">
+      </div>
+      <div class="field">
+        <label>Link Text (optional)</label>
+        <input type="text" id="annLinkText" placeholder="Learn more" maxlength="30" value="${esc(current?.link_text || '')}">
+      </div>
+    </div>
+    <p style="font-size:.78rem;color:var(--text-3);margin-top:6px">
+      💡 Tip: 300 characters tak likh sakte hain. Users ise dismiss kar sakte hain.
+    </p>
+  `;
+
+  openModal(modalShell({
+    title: '📢 Manage Announcement',
+    subtitle: current ? 'Update the top banner message' : 'Create a new announcement',
+    body,
+    actions: `
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      ${current ? `<button class="btn btn-danger" id="annDelete">🗑 Remove</button>` : ''}
+      <button class="btn btn-primary" id="annSave">💾 Save & Publish</button>
+    `
+  }), {
+    onMount() {
+      $('#annSave').onclick = async () => {
+        const message = $('#annMessage').value.trim();
+        if (!message) { toast('Please enter a message.', 'err'); return; }
+        
+        const btn = $('#annSave');
+        btn.disabled = true;
+        btn.textContent = '⏳ Saving...';
+        
+        try {
+          // Deactivate old ones
+          if (current && current.id) {
+            await supa.from('site_announcements').update({ active: false }).eq('id', current.id);
+          }
+          
+          // Insert new
+          const payload = {
+            message,
+            type: $('#annType').value,
+            active: $('#annActive').value === 'true',
+            link_url: $('#annLinkUrl').value.trim() || null,
+            link_text: $('#annLinkText').value.trim() || null
+          };
+          
+          const { error } = await supa.from('site_announcements').insert(payload);
+          if (error) throw error;
+          
+          // Clear local dismissed flag so users see new one
+          localStorage.removeItem('dismissed_announcement');
+          
+          closeModal();
+          toast('✅ Announcement published!', 'ok');
+          await loadAnnouncement();
+        } catch (e) {
+          console.error(e);
+          toast('Failed to save: ' + (e.message || 'Try again'), 'err');
+          btn.disabled = false;
+          btn.textContent = '💾 Save & Publish';
+        }
+      };
+
+      if (current) {
+        $('#annDelete').onclick = async () => {
+          if (!confirm('Remove this announcement?')) return;
+          await supa.from('site_announcements').update({ active: false }).eq('id', current.id);
+          localStorage.removeItem('dismissed_announcement');
+          closeModal();
+          toast('Announcement removed.', 'ok');
+          await loadAnnouncement();
+        };
+      }
     }
   });
 }
