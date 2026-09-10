@@ -5,7 +5,7 @@ const ONE_TIME_PLANS = {
   yearly: { amount: 599, description: 'UPSC Tracker Premium — Yearly' } // ₹500 in paise
 };
 const SUBSCRIPTION_PLANS = {
-  monthly: { plan_id_env: 'plan_TaOc0r72B2FnsZ', description: 'UPSC Tracker Premium — Monthly', total_count: 120 }
+  monthly: { plan_id_env: 'RAZORPAY_PLAN_ID_MONTHLY', description: 'UPSC Tracker Premium — Monthly', total_count: 120 }
 };
 
 function json(o, s = 200) {
