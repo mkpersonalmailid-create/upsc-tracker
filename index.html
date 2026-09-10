@@ -45,8 +45,6 @@ a{color:var(--accent);text-decoration:none}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
 ::-webkit-scrollbar-thumb:hover{background:var(--border-strong)}
-
-/* AUTH */
 .auth-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
 padding:20px;z-index:500;background:radial-gradient(circle at 15% 15%,rgba(94,158,255,.15),transparent 45%),
 radial-gradient(circle at 85% 85%,rgba(167,139,250,.15),transparent 45%),var(--bg);overflow-y:auto}
@@ -94,8 +92,6 @@ box-shadow:0 10px 28px rgba(94,158,255,.55)}
 .auth-tabs{display:flex;background:var(--bg);border-radius:10px;padding:4px;gap:4px;margin-bottom:20px}
 .auth-tab{flex:1;padding:9px;border-radius:7px;font-weight:700;font-size:.83rem;color:var(--text-3);transition:var(--t)}
 .auth-tab.active{background:var(--card-2);color:var(--text);box-shadow:var(--shadow-sm)}
-
-/* SHELL */
 .app{display:flex;height:100dvh;width:100vw;overflow:hidden}
 .sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--bg-elev);border-right:1px solid var(--border);
 display:flex;flex-direction:column;padding:16px 12px;overflow-y:auto;transition:width .25s}
@@ -130,7 +126,6 @@ display:flex;align-items:center;justify-content:center;font-weight:800;color:#ff
 .sb-user-info{flex:1;min-width:0}
 .sb-user-name{font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sb-user-status{font-size:.68rem;color:var(--text-3)}
-
 .main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
 .topbar{display:flex;align-items:center;gap:12px;padding:14px 24px;border-bottom:1px solid var(--border);
 background:var(--bg-elev);flex-shrink:0}
@@ -157,13 +152,10 @@ border-color:rgba(251,191,36,.4);color:#FBBF24}
 color:#fff;font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center;
 transition:var(--t);flex-shrink:0}
 .avatar-btn:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(94,158,255,.4)}
-
 .content{flex:1;overflow-y:auto;padding:24px;scroll-behavior:smooth}
 .view{display:none;animation:fadeIn .25s ease}
 .view.active{display:block;max-width:1400px;margin:0 auto}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
-/* CARDS / BTNS */
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:20px;box-shadow:var(--shadow-sm)}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap}
 .card-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3)}
@@ -183,8 +175,6 @@ box-shadow:0 6px 20px rgba(251,191,36,.4)}
 .btn-premium:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 10px 28px rgba(251,191,36,.55)}
 .btn-sm{padding:6px 12px;font-size:.78rem}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
-
-/* KPI */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
 .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;
 position:relative;overflow:hidden;transition:var(--t)}
@@ -197,8 +187,6 @@ font-size:1rem;background:var(--cb,rgba(94,158,255,.12));color:var(--c,var(--acc
 font-weight:800;margin-bottom:6px}
 .kpi-value{font-size:1.6rem;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.05}
 .kpi-sub{font-size:.72rem;color:var(--text-3);margin-top:4px}
-
-/* STUDY */
 .study-top{display:grid;grid-template-columns:1.6fr 1fr;gap:18px}
 @media(max-width:900px){.study-top{grid-template-columns:1fr}}
 .greeting-card{background:linear-gradient(135deg,rgba(94,158,255,.12),rgba(167,139,250,.08));
@@ -239,8 +227,6 @@ border-radius:var(--r-full);margin:0 auto 20px;width:fit-content;flex-wrap:wrap}
 .timer-mode.active{background:var(--card-2);color:var(--text);box-shadow:var(--shadow-sm)}
 .timer-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .timer-actions .btn{padding:12px 26px;font-size:.9rem}
-
-/* CHARTS */
 .chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:18px;margin-bottom:16px}
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .chart-header h3{font-size:.95rem;font-weight:800}
@@ -262,8 +248,6 @@ border-radius:var(--r-full);margin:0 auto 20px;width:fit-content;flex-wrap:wrap}
 .hm-cell[data-l="4"]{background:linear-gradient(135deg,#5E9EFF,#A78BFA)}
 .hm-legend{display:flex;align-items:center;gap:6px;margin-top:12px;font-size:.72rem;color:var(--text-3);justify-content:flex-end}
 .hm-legend .hm-cell{width:11px;height:11px;aspect-ratio:auto}
-
-/* CALENDAR */
 .cal-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:18px}
 .cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
 .cal-head h3{font-size:1.05rem;font-weight:800}
@@ -283,8 +267,6 @@ cursor:pointer;transition:var(--t);position:relative;display:flex;flex-direction
 .cal-day[data-l="2"]{background:rgba(94,158,255,.16)}
 .cal-day[data-l="3"]{background:rgba(94,158,255,.26)}
 .cal-day[data-l="4"]{background:linear-gradient(135deg,rgba(94,158,255,.32),rgba(167,139,250,.28))}
-
-/* LISTS */
 .list{display:flex;flex-direction:column;gap:8px}
 .row-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--card);
 border:1px solid var(--border);border-radius:10px;transition:var(--t)}
@@ -343,8 +325,6 @@ cursor:pointer;transition:var(--t);display:flex;flex-direction:column;gap:8px;mi
 -webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:1}
 .note-meta{font-size:.7rem;color:var(--text-3);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .note-tag{background:var(--card-2);padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700}
-
-/* MODALS */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);
 display:none;align-items:center;justify-content:center;z-index:900;padding:20px;overflow-y:auto}
 .modal-overlay.active{display:flex}
@@ -361,8 +341,6 @@ align-items:center;justify-content:center;font-size:1.1rem;transition:var(--t);f
 .modal-body{display:flex;flex-direction:column;gap:14px}
 .modal-foot{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;flex-wrap:wrap}
 .modal-foot .btn{min-width:100px}
-
-/* FAB */
 .fab{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;
 background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;font-size:1.6rem;font-weight:300;
 box-shadow:0 12px 32px rgba(94,158,255,.5);z-index:200;display:flex;align-items:center;
@@ -374,8 +352,6 @@ justify-content:center;transition:var(--t)}
 border:1px solid var(--border);border-radius:var(--r-full);font-size:.84rem;font-weight:700;
 box-shadow:var(--shadow-md);transition:var(--t);white-space:nowrap}
 .fab-item:hover{background:var(--card-2);transform:translateX(-4px);border-color:var(--border-strong)}
-
-/* SEARCH */
 .search-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);
 z-index:600;display:none;padding-top:12vh;align-items:flex-start;justify-content:center}
 .search-overlay.active{display:flex;animation:fadeIn .2s}
@@ -395,8 +371,6 @@ display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shri
 .search-result .s-title{font-weight:700;font-size:.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .search-result .s-meta{font-size:.72rem;color:var(--text-3);margin-top:1px}
 .search-empty{padding:40px 20px;text-align:center;color:var(--text-3);font-size:.85rem}
-
-/* TOASTS */
 .toasts{position:fixed;bottom:90px;right:24px;display:flex;flex-direction:column;gap:8px;z-index:700;pointer-events:none}
 .toast{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 16px;
 font-size:.85rem;font-weight:600;box-shadow:var(--shadow-md);display:flex;align-items:center;gap:10px;
@@ -405,8 +379,6 @@ animation:toastIn .3s;pointer-events:auto;max-width:340px}
 .toast.err{border-left:3px solid var(--danger)}
 .toast.info{border-left:3px solid var(--accent)}
 @keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
-
-/* MOBILE NAV */
 .bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--glass);
 backdrop-filter:blur(20px);border-top:1px solid var(--border);
 padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:150;justify-content:space-around}
@@ -414,8 +386,6 @@ padding:6px 8px calc(6px + env(safe-area-inset-bottom));z-index:150;justify-cont
 border-radius:10px;color:var(--text-3);font-size:.62rem;font-weight:800;transition:var(--t);flex:1}
 .bnav-item .ico{font-size:1.2rem}
 .bnav-item.active{color:var(--accent);background:var(--accent-soft)}
-
-/* PREMIUM */
 .plans-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:500px){.plans-grid{grid-template-columns:1fr}}
 .plan-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-md);padding:20px;
@@ -452,13 +422,9 @@ gap:10px;z-index:10;padding:20px;text-align:center}
 border:1px solid var(--border);border-radius:10px;font-size:.82rem}
 .sub-history-item .sh-id{font-family:var(--mono);font-size:.7rem;color:var(--text-3)}
 .sub-history-item .sh-amt{margin-left:auto;font-weight:800;color:var(--success)}
-
-/* Skeleton */
 .skel{background:linear-gradient(90deg,var(--card-2) 25%,var(--card) 50%,var(--card-2) 75%);
 background-size:200% 100%;animation:skel 1.4s infinite}
 @keyframes skel{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* Responsive */
 @media(max-width:900px){
 .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:300;transform:translateX(-100%);box-shadow:var(--shadow-lg)}
 .sidebar.open{transform:translateX(0)}
@@ -500,7 +466,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 </head>
 <body>
 
-<!-- AUTH -->
 <div id="authScreen" class="auth-screen">
   <div class="auth-card">
     <div class="auth-logo">
@@ -537,7 +502,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   </div>
 </div>
 
-<!-- APP -->
 <div id="app" class="app hidden">
   <aside class="sidebar" id="sidebar">
     <div class="logo"><div class="logo-mark">U</div><div class="logo-text">UPSC Tracker</div></div>
@@ -599,7 +563,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 
     <div class="content" id="content">
 
-      <!-- STUDY -->
       <section class="view active" id="view-study">
         <div class="study-layout">
           <div>
@@ -685,7 +648,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- DASHBOARD -->
       <section class="view" id="view-dashboard">
         <div class="kpi-grid" id="dashKpis"></div>
         <div class="chart-card" style="margin-top:16px">
@@ -723,7 +685,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- CALENDAR -->
       <section class="view" id="view-calendar">
         <div class="cal-wrap">
           <div class="cal-head">
@@ -750,7 +711,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- ANALYTICS -->
       <section class="view" id="view-analytics">
         <div class="filter-bar">
           <div class="chart-tabs" id="anRangeTabs">
@@ -791,7 +751,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- HISTORY -->
       <section class="view" id="view-history">
         <div class="card">
           <div class="filter-bar">
@@ -807,7 +766,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- SYLLABUS -->
       <section class="view" id="view-syllabus">
         <div class="card">
           <div class="card-header">
@@ -827,7 +785,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- SUBJECTS -->
       <section class="view" id="view-subjects">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Subjects</span>
@@ -836,7 +793,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- GOALS -->
       <section class="view" id="view-goals">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Goals</span>
@@ -855,7 +811,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- TASKS -->
       <section class="view" id="view-tasks">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Tasks</span>
@@ -875,7 +830,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- PLANNER -->
       <section class="view" id="view-planner">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Study Plan</span>
@@ -888,7 +842,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- REVISION -->
       <section class="view" id="view-revision">
         <div class="kpi-grid" id="revisionKpis"></div>
         <div class="card" style="margin-top:16px">
@@ -907,7 +860,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- NOTES -->
       <section class="view" id="view-notes">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Notes</span>
@@ -921,7 +873,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- PYQ -->
       <section class="view" id="view-pyq">
         <div class="kpi-grid" id="pyqKpis"></div>
         <div class="card" style="margin-top:16px">
@@ -931,7 +882,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- MOCKS -->
       <section class="view" id="view-mocks">
         <div class="kpi-grid" id="mockKpis"></div>
         <div class="card" style="margin-top:16px">
@@ -941,7 +891,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- CURRENT AFFAIRS -->
       <section class="view" id="view-current-affairs">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Current Affairs</span>
@@ -958,7 +907,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- ACHIEVEMENTS -->
       <section class="view" id="view-achievements">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Achievements</span></div>
@@ -966,7 +914,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- WEEKLY REVIEW -->
       <section class="view" id="view-review">
         <div class="card">
           <div class="card-header">
@@ -981,7 +928,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- PREMIUM -->
       <section class="view" id="view-premium">
         <div class="premium-banner" id="premiumBanner"></div>
         <div style="margin-top:18px" id="premiumPlansWrap">
@@ -1005,7 +951,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         </div>
       </section>
 
-      <!-- SETTINGS -->
       <section class="view" id="view-settings">
         <div class="card">
           <div class="card-header"><span class="card-title-lg">Profile</span></div>
@@ -1072,7 +1017,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
           <div class="card-header"><span class="card-title-lg">Account</span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <button class="btn btn-secondary" id="signOutBtn">Sign Out</button>
-            <!--<button class="btn btn-danger" id="deleteDataBtn">Delete All My Data</button>// -->
           </div>
           <p style="font-size:.78rem;color:var(--text-3);margin-top:10px">Version 3.0 · Built with Supabase + Razorpay</p>
         </div>
@@ -1082,7 +1026,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   </main>
 </div>
 
-<!-- BOTTOM NAV -->
 <nav class="bottom-nav hidden" id="bottomNav">
   <button class="bnav-item active" data-view="study"><span class="ico">⏱</span>Study</button>
   <button class="bnav-item" data-view="dashboard"><span class="ico">◈</span>Home</button>
@@ -1091,7 +1034,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   <button class="bnav-item" data-view="settings"><span class="ico">⚙</span>More</button>
 </nav>
 
-<!-- FAB -->
 <button class="fab hidden" id="fab" aria-label="Quick actions">＋</button>
 <div class="fab-menu" id="fabMenu">
   <button class="fab-item" data-action="start-study"><span class="ico">▶</span> Start Study</button>
@@ -1133,8 +1075,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 <script>
 /* ============================================================
    UPSC TRACKER v3 · Complete Client
-   Sections: CONFIG · SUPABASE · AUTH · STATE · DB · TIMER
-   · UI · PAGES · PREMIUM/RAZORPAY · UTILITIES
 ============================================================ */
 'use strict';
 
@@ -1145,8 +1085,7 @@ const APP_VERSION = '3.0';
 const LOCAL_KEY = 'upsc_tracker_v3_state';
 const UI_KEY = 'upsc_tracker_v3_ui';
 
-// Paste your Razorpay Plan ID (created in Razorpay dashboard)
-const RAZORPAY_PLAN_ID_MONTHLY = 'plan_TaOc0r72B2FnsZ'; // ⚠️ Replace with your real Plan ID
+const RAZORPAY_PLAN_ID_MONTHLY = 'plan_TaOc0r72B2FnsZ';
 
 const PLANS = {
   monthly: {
@@ -1241,7 +1180,7 @@ const getGreeting = () => { const hr = new Date().getHours(); return hr < 12 ? '
 /* =========================== STATE =========================== */
 const state = {
   user: null, session: null, subscription: null, isPremium: false,
-  profile: { name: '', exam: 'UPSC Civil Services Examination', exam_date: '', prep_year: '', membership: 'free' },
+  profile: { name: '', exam: 'UPSC Civil Services Examination', exam_date: '', prep_year: '', membership: 'free', is_admin: false },
   settings: { daily_target: 8, weekly_target: 50, monthly_target: 200, min_session_minutes: 10,
     pomodoro_work: 25, pomodoro_break: 5, theme: 'dark', time_format: '12h', default_subject: 'History' },
   subjects: [], sessions: [], syllabus: [], goals: [], tasks: [], revisions: [],
@@ -1545,27 +1484,29 @@ async function loadCloudData() {
   if (!supa || !state.user) return;
   const uid = state.user.id;
 
-  // Profile
   try {
     const { data: prof } = await supa.from('profiles').select('*').eq('id', uid).maybeSingle();
     if (prof) {
-      state.profile = { ...state.profile, name: prof.name || state.profile.name, exam: prof.exam || state.profile.exam,
-        exam_date: prof.exam_date || state.profile.exam_date, prep_year: prof.preparation_year || state.profile.prep_year,
-        membership: prof.membership || 'free' };
-        is_admin: prof.is_admin === true };
+      state.profile = {
+        ...state.profile,
+        name: prof.name || state.profile.name,
+        exam: prof.exam || state.profile.exam,
+        exam_date: prof.exam_date || state.profile.exam_date,
+        prep_year: prof.preparation_year || state.profile.prep_year,
+        membership: prof.membership || 'free',
+        is_admin: prof.is_admin === true
+      };
     } else {
       await supa.from('profiles').upsert({ id: uid, name: state.profile.name || state.user.email?.split('@')[0] || 'Student',
         exam: state.profile.exam, membership: 'free' }, { onConflict: 'id' });
     }
   } catch (e) { console.warn('profile', e.message); }
 
-  // Settings
   try {
     const { data: s } = await supa.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
     if (s?.settings) Object.assign(state.settings, s.settings);
   } catch (e) { }
 
-  // Subjects
   try {
     const { data } = await supa.from('subjects').select('*').eq('user_id', uid);
     if (data && data.length) state.subjects = data.map(x => ({ id: x.id, name: x.name, color: x.color, target_hours: x.target_hours, archived: x.archived }));
@@ -1576,7 +1517,6 @@ async function loadCloudData() {
     }
   } catch (e) { }
 
-  // Sessions
   try {
     const { data } = await supa.from('study_sessions').select('*').eq('user_id', uid).order('start_time', { ascending: true });
     if (data && data.length) {
@@ -1594,7 +1534,6 @@ async function loadCloudData() {
     }
   } catch (e) { }
 
-  // Syllabus
   try {
     const { data } = await supa.from('syllabus_topics').select('*').eq('user_id', uid);
     if (data && data.length) state.syllabus = data.map(x => ({
@@ -1604,7 +1543,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Goals
   try {
     const { data } = await supa.from('goals').select('*').eq('user_id', uid);
     if (data) state.goals = data.map(x => ({
@@ -1613,7 +1551,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Tasks
   try {
     const { data } = await supa.from('tasks').select('*').eq('user_id', uid);
     if (data) state.tasks = data.map(x => ({
@@ -1622,7 +1559,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Revisions
   try {
     const { data } = await supa.from('revisions').select('*').eq('user_id', uid);
     if (data) state.revisions = data.map(x => ({
@@ -1632,7 +1568,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Notes
   try {
     const { data } = await supa.from('notes').select('*').eq('user_id', uid);
     if (data) state.notes = data.map(x => ({
@@ -1641,7 +1576,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // PYQs
   try {
     const { data } = await supa.from('pyqs').select('*').eq('user_id', uid);
     if (data) state.pyqs = data.map(x => ({
@@ -1650,7 +1584,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Mocks
   try {
     const { data } = await supa.from('mock_tests').select('*').eq('user_id', uid);
     if (data) state.mocks = data.map(x => ({
@@ -1660,7 +1593,6 @@ async function loadCloudData() {
     }));
   } catch (e) { }
 
-  // Current Affairs
   try {
     const { data } = await supa.from('current_affairs').select('*').eq('user_id', uid);
     if (data) state.currentAffairs = data.map(x => ({
@@ -1679,25 +1611,11 @@ async function loadSubscription() {
   try {
     const { data } = await supa.from('subscriptions').select('*')
       .eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(1).maybeSingle();
-    
     state.subscription = data;
-    
-    // STRICT CHECK: status must be active OR authenticated AND not expired
-    if (!data) {
-      state.isPremium = false;
-    } else if (data.status !== 'active' && data.status !== 'authenticated') {
-      state.isPremium = false;  // halted, cancelled, expired, completed
-    } else if (data.expiry_date && new Date(data.expiry_date) < new Date()) {
-      state.isPremium = false;  // Expired
-    } else {
-      state.isPremium = true;
-    }
-    
-    console.log('[Premium check]', {
-      status: data?.status,
-      expiry: data?.expiry_date,
-      isPremium: state.isPremium
-    });
+    if (!data) state.isPremium = false;
+    else if (data.status !== 'active' && data.status !== 'authenticated') state.isPremium = false;
+    else if (data.expiry_date && new Date(data.expiry_date) < new Date()) state.isPremium = false;
+    else state.isPremium = true;
   } catch (e) {
     console.warn('subscription load', e.message);
     state.subscription = null; state.isPremium = false;
@@ -1712,13 +1630,10 @@ async function loadPaymentHistory() {
     return data || [];
   } catch (e) { return []; }
 }
-/* ============ ADMIN CHECK ============ */
 function isAdminUser() {
   return state.profile?.is_admin === true;
 }
-
 function isPremiumUser() {
-  // Admin always gets premium
   if (isAdminUser()) return true;
   return state.isPremium === true;
 }
@@ -1727,7 +1642,6 @@ function requirePremium(featureName, onAllow) {
   openUpgradeModal(featureName);
 }
 function updatePremiumUI() {
-  // Sidebar avatar decoration
   const av = $('#sbAvatar');
   if (av) av.classList.toggle('premium', isPremiumUser());
   const status = $('#sbUserStatus');
@@ -1736,20 +1650,36 @@ function updatePremiumUI() {
   if (mem) mem.value = isPremiumUser() ? '💎 Premium' : 'Free';
   renderPremiumBanner();
   renderSubscriptionInfo();
+  updatePremiumIcons();
+}
+function updatePremiumIcons() {
+  const icons = { calendar: '▤', analytics: '◔', history: '☰', goals: '🎯',
+    tasks: '✓', planner: '🗓', achievements: '🏆', review: '📊' };
+  Object.entries(icons).forEach(([v, icon]) => {
+    const el = document.querySelector(`.nav-item[data-view="${v}"] .nav-icon`);
+    if (el) el.textContent = isPremiumUser() ? icon : '🔒';
+  });
 }
 function renderPremiumBanner() {
   const el = $('#premiumBanner'); if (!el) return;
   if (isPremiumUser()) {
     const sub = state.subscription;
-    el.innerHTML = `<div class="pb-info">
-      <h4>💎 You're Premium</h4>
-      <p>Plan: <strong>${esc(sub.plan || 'Premium')}</strong> · Active until <strong>${sub.expiry_date ? fmtDate(sub.expiry_date) : '—'}</strong></p>
-    </div>
-    <button class="btn btn-secondary" onclick="switchView('settings')">Manage</button>`;
+    if (isAdminUser() && !sub) {
+      el.innerHTML = `<div class="pb-info">
+        <h4>👑 Admin Access</h4>
+        <p>You have full access as the site administrator.</p>
+      </div>`;
+    } else {
+      el.innerHTML = `<div class="pb-info">
+        <h4>💎 You're Premium</h4>
+        <p>Plan: <strong>${esc(sub?.plan || 'Premium')}</strong> · Active until <strong>${sub?.expiry_date ? fmtDate(sub.expiry_date) : '—'}</strong></p>
+      </div>
+      <button class="btn btn-secondary" onclick="switchView('settings')">Manage</button>`;
+    }
   } else {
     el.innerHTML = `<div class="pb-info">
       <h4>💎 Unlock Premium</h4>
-      <p>Advanced analytics, unlimited export, priority support. From <strong>₹99/month</strong>.</p>
+      <p>Advanced analytics, unlimited export, priority support. From <strong>₹50/month</strong>.</p>
     </div>
     <button class="btn btn-premium" id="premiumCtaBtn">Upgrade Now</button>`;
     const b = $('#premiumCtaBtn'); if (b) b.onclick = () => openUpgradeModal();
@@ -1758,6 +1688,13 @@ function renderPremiumBanner() {
 function renderSubscriptionInfo() {
   const el = $('#subscriptionInfo'); if (!el) return;
   if (!state.user) { el.innerHTML = `<div class="empty" style="padding:20px"><p>Sign in to view subscription.</p></div>`; return; }
+  if (isAdminUser()) {
+    el.innerHTML = `<div style="padding:14px;background:var(--card-2);border-radius:10px;border-left:3px solid var(--gold)">
+      <div style="font-weight:800;font-size:1rem;margin-bottom:4px">👑 Administrator</div>
+      <div style="font-size:.85rem;color:var(--text-2)">You have lifetime premium access as the site owner.</div>
+    </div>`;
+    return;
+  }
   if (isPremiumUser()) {
     const s = state.subscription;
     el.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
@@ -1802,7 +1739,7 @@ function renderPremiumPage() {
       ${plan.badge ? `<div class="plan-badge">${plan.badge}</div>` : ''}
       <div class="plan-name">${plan.name}</div>
       <div class="plan-price"><span class="cur">₹</span>${plan.price}<span class="period">/ ${plan.period}</span></div>
-      ${plan.id === 'yearly' ? '<div class="plan-save">Save ₹289</div>' : ''}
+      ${plan.id === 'yearly' ? '<div class="plan-save">Save ₹100 vs monthly</div>' : ''}
       <ul class="plan-features">${plan.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
     </div>`).join('');
   grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
@@ -1838,7 +1775,7 @@ function openUpgradeModal(reason) {
             ${plan.badge ? `<div class="plan-badge">${plan.badge}</div>` : ''}
             <div class="plan-name">${plan.name}</div>
             <div class="plan-price"><span class="cur">₹</span>${plan.price}<span class="period">/ ${plan.period}</span></div>
-            ${plan.id === 'yearly' ? '<div class="plan-save">Save ₹289</div>' : ''}
+            ${plan.id === 'yearly' ? '<div class="plan-save">Save ₹100 vs monthly</div>' : ''}
             <ul class="plan-features">${plan.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>
           </div>`).join('');
         grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
@@ -1851,7 +1788,6 @@ function openUpgradeModal(reason) {
     }
   });
 }
-
 async function startUpgrade(planId) {
   if (!supa || !state.user) { toast('Please sign in first.', 'err'); return; }
   if (isPremiumUser()) { toast('You are already Premium.', 'ok'); return; }
@@ -1889,7 +1825,6 @@ async function startUpgrade(planId) {
       modal: { ondismiss: () => { toast('Payment cancelled.', 'info'); restoreUpgradeBtn(); } }
     };
 
-    // Attach either order_id (one-time) or subscription_id (recurring)
     if (plan.type === 'subscription') {
       options.subscription_id = json.subscription_id;
     } else {
@@ -1908,7 +1843,6 @@ async function startUpgrade(planId) {
     restoreUpgradeBtn();
   }
 }
-
 function restoreUpgradeBtn() {
   const btn = $('#upgradeNowBtn');
   if (btn) { btn.disabled = false; btn.innerHTML = '💎 Upgrade Now'; }
@@ -1949,7 +1883,6 @@ function setAuthMode(mode) {
   $('#nameField').style.display = mode === 'signup' ? 'flex' : 'none';
   $('#authSubmitText').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
 
-  // NEW: Change autocomplete based on mode
   const pwField = $('#authPassword');
   if (pwField) {
     pwField.setAttribute('autocomplete', mode === 'signup' ? 'new-password' : 'current-password');
@@ -1965,41 +1898,48 @@ function authMsg(text, type = 'info') {
 }
 async function handleAuthSubmit(e) {
   e.preventDefault();
-  
-  // ... existing validation ...
-  
+  if (!supa) { authMsg('Supabase not ready.', 'err'); return; }
+
+  const email = $('#authEmail').value.trim();
+  const password = $('#authPassword').value;
+  const name = $('#authName').value.trim();
+
+  if (!email || !password) { authMsg('Please enter email and password.', 'err'); return; }
+  if (password.length < 6) { authMsg('Password must be at least 6 characters.', 'err'); return; }
+
   const btn = $('#authSubmit'); btn.disabled = true;
   const orig = $('#authSubmitText').textContent;
   $('#authSubmitText').textContent = authMode === 'signin' ? 'Signing in…' : 'Creating account…';
   authMsg('');
-  
+
   try {
     if (authMode === 'signin') {
       const { error } = await supa.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      
-      // NEW: Ask browser to save password (Credential Management API)
+
       if (window.PasswordCredential && navigator.credentials) {
         try {
-          const cred = new PasswordCredential({
-            id: email,
-            password: password,
-            name: email
-          });
-          await navigator.credentials.store(cred);
-        } catch (e) { /* silent fail */ }
+          await navigator.credentials.store(new PasswordCredential({
+            id: email, password: password, name: email
+          }));
+        } catch (e) { /* silent */ }
       }
-      
-      // Sign in successful — reload happens via onAuthStateChange
     } else {
-      // ... signup code ...
+      const { data, error } = await supa.auth.signUp({
+        email, password,
+        options: { data: { full_name: name || email.split('@')[0] } }
+      });
+      if (error) throw error;
+      if (data.user && !data.session) {
+        authMsg('Account created. Check your email to confirm, then sign in.', 'ok');
+        setAuthMode('signin');
+      }
     }
-  } catch (err) { 
-    authMsg(err.message || 'Authentication failed.', 'err'); 
-  }
-  finally { 
-    btn.disabled = false; 
-    $('#authSubmitText').textContent = orig; 
+  } catch (err) {
+    authMsg(err.message || 'Authentication failed.', 'err');
+  } finally {
+    btn.disabled = false;
+    $('#authSubmitText').textContent = orig;
   }
 }
 async function handleForgotPassword() {
@@ -2071,10 +2011,16 @@ async function bootAfterLogin(session) {
 function updateSidebarUser() {
   const name = state.profile.name || state.user?.email?.split('@')[0] || 'Student';
   $('#sbUserName').textContent = name;
-  $('#sbUserStatus').textContent = state.user ? (isPremiumUser() ? '💎 Premium' : 'Free plan') : 'Local mode';
+  if (isAdminUser()) {
+    $('#sbUserStatus').textContent = '👑 Admin';
+  } else if (state.user) {
+    $('#sbUserStatus').textContent = isPremiumUser() ? '💎 Premium' : 'Free plan';
+  } else {
+    $('#sbUserStatus').textContent = 'Local mode';
+  }
   $('#sbAvatar').textContent = name[0]?.toUpperCase() || 'U';
   $('#topAvatar').textContent = name[0]?.toUpperCase() || 'U';
-  $('#sbAvatar').classList.toggle('premium', isPremiumUser());
+  $('#sbAvatar').classList.toggle('premium', isPremiumUser() || isAdminUser());
 }
 async function logout() {
   if (state.timer) { toast('Finish or discard the running timer first.', 'err'); return; }
@@ -2088,7 +2034,6 @@ async function logout() {
 }
 
 /* =========================== VIEWS =========================== */
-/* ============ FREE vs PREMIUM GATING ============ */
 const FREE_VIEWS = new Set([
   'study', 'dashboard', 'syllabus', 'subjects', 'revision',
   'notes', 'pyq', 'mocks', 'current-affairs', 'settings', 'premium'
@@ -2096,7 +2041,7 @@ const FREE_VIEWS = new Set([
 const PREMIUM_VIEWS = new Set([
   'calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'achievements', 'review'
 ]);
-function switchView(name) {  // Premium gate
+function switchView(name) {
   if (PREMIUM_VIEWS.has(name) && !isPremiumUser()) {
     openUpgradeModal(name.charAt(0).toUpperCase() + name.slice(1) + ' is a Premium feature');
     return;
@@ -2192,8 +2137,6 @@ function updateTopicSelect() {
   ).join('');
   sel.onchange = () => { state.timerDraft.topicId = sel.value || null; };
 }
-
-/* TIMER */
 function timerState() {
   const t = state.timer;
   if (!t) return { active: false, seconds: 0 };
@@ -3321,8 +3264,7 @@ function renderRevisions() {
 }
 async function completeRevision(id) {
   const r = state.revisions.find(x => x.id === id); if (!r) return;
-  r.status = 'completed';
-  saveLocal();
+  r.status = 'completed'; saveLocal();
   if (supa && state.user) { try { await supa.from('revisions').update({ status: 'completed' }).eq('id', r.id); } catch (e) { } }
   const session = { id: uuid(), date: todayKey(), start_time: Date.now() - 600 * 1000, end_time: Date.now(),
     duration: 600, subject: r.subject, topic: r.topic, study_type: 'Revision',
@@ -4099,11 +4041,6 @@ function wireEvents() {
   $('#importBtn').onclick = () => $('#importFile').click();
   $('#importFile').onchange = e => { if (e.target.files[0]) importJSON(e.target.files[0]); };
   $('#signOutBtn').onclick = () => { if (confirm('Sign out?')) logout(); };
-  /*$('#deleteDataBtn').onclick = () => {
-    if (!confirm('This will delete ALL local data. Cloud data is not affected. Continue?')) return;
-    if (!confirm('Really sure? This cannot be undone.')) return;
-    localStorage.removeItem(LOCAL_KEY); location.reload();
-  };*/
   window.addEventListener('resize', () => { if (window.innerWidth > 900) $('#sidebar').classList.remove('open'); });
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (state.settings.theme === 'system') applyTheme('system');
@@ -4111,19 +4048,14 @@ function wireEvents() {
 }
 
 /* =========================== BOOT =========================== */
-/* ============ PASSWORD RECOVERY HANDLER ============ */
 function detectRecoveryLink() {
-  // Hash-based flow (older): #access_token=xxx&type=recovery
   const hash = window.location.hash || '';
   if (hash.includes('type=recovery')) return { type: 'hash', hash };
-
-  // PKCE flow (newer): ?code=xxx
   const search = window.location.search || '';
   if (search) {
     const params = new URLSearchParams(search);
     if (params.get('code')) return { type: 'pkce', code: params.get('code') };
   }
-
   return null;
 }
 
@@ -4172,10 +4104,8 @@ function openResetPasswordModal() {
           if (error) throw error;
 
           history.replaceState(null, '', window.location.pathname);
-
           closeModal();
           toast('Password updated! Please sign in with your new password.', 'ok', 4000);
-
           await supa.auth.signOut();
           setTimeout(() => location.reload(), 1500);
         } catch (e) {
@@ -4191,7 +4121,6 @@ function openResetPasswordModal() {
   });
 }
 async function boot() {
-  // NEW: Check if this is a password recovery link
   const recovery = detectRecoveryLink();
   if (recovery) {
     $('#authScreen').classList.add('hidden');
@@ -4205,11 +4134,9 @@ async function boot() {
         const { error } = await supa.auth.exchangeCodeForSession(recovery.code);
         if (error) throw error;
       }
-
       await new Promise(r => setTimeout(r, 500));
       const { data: { session } } = await supa.auth.getSession();
       if (!session) throw new Error('No session — link may have expired');
-
       openResetPasswordModal();
     } catch (e) {
       console.error('Recovery failed:', e);
