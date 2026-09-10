@@ -4066,7 +4066,113 @@ function wireEvents() {
 }
 
 /* =========================== BOOT =========================== */
+/* ============ PASSWORD RECOVERY HANDLER ============ */
+function detectRecoveryLink() {
+  // Hash-based flow (older): #access_token=xxx&type=recovery
+  const hash = window.location.hash || '';
+  if (hash.includes('type=recovery')) return { type: 'hash', hash };
+
+  // PKCE flow (newer): ?code=xxx
+  const search = window.location.search || '';
+  if (search) {
+    const params = new URLSearchParams(search);
+    if (params.get('code')) return { type: 'pkce', code: params.get('code') };
+  }
+
+  return null;
+}
+
+function openResetPasswordModal() {
+  const body = `
+    <div class="field">
+      <label>New Password</label>
+      <input type="password" id="newPwInput" placeholder="At least 6 characters" minlength="6" autocomplete="new-password">
+    </div>
+    <div class="field">
+      <label>Confirm New Password</label>
+      <input type="password" id="confirmPwInput" placeholder="Re-enter new password" minlength="6" autocomplete="new-password">
+    </div>
+    <p style="font-size:.82rem;color:var(--text-3);margin-top:4px">
+      Choose a strong password you haven't used before.
+    </p>
+  `;
+  openModal(modalShell({
+    title: 'Reset Your Password',
+    subtitle: 'Enter a new password for your account',
+    body,
+    actions: `<button class="btn btn-primary" id="saveNewPwBtn" style="width:100%">Set New Password</button>`
+  }), {
+    onMount() {
+      setTimeout(() => $('#newPwInput').focus(), 100);
+
+      const doSave = async () => {
+        const pw1 = $('#newPwInput').value;
+        const pw2 = $('#confirmPwInput').value;
+
+        if (!pw1 || pw1.length < 6) {
+          toast('Password must be at least 6 characters.', 'err');
+          return;
+        }
+        if (pw1 !== pw2) {
+          toast('Passwords do not match.', 'err');
+          return;
+        }
+
+        const btn = $('#saveNewPwBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Saving...';
+
+        try {
+          const { error } = await supa.auth.updateUser({ password: pw1 });
+          if (error) throw error;
+
+          history.replaceState(null, '', window.location.pathname);
+
+          closeModal();
+          toast('Password updated! Please sign in with your new password.', 'ok', 4000);
+
+          await supa.auth.signOut();
+          setTimeout(() => location.reload(), 1500);
+        } catch (e) {
+          toast(e.message || 'Failed to update password.', 'err');
+          btn.disabled = false;
+          btn.textContent = 'Set New Password';
+        }
+      };
+
+      $('#saveNewPwBtn').onclick = doSave;
+      $('#confirmPwInput').onkeydown = (e) => { if (e.key === 'Enter') doSave(); };
+    }
+  });
+}
 async function boot() {
+  // NEW: Check if this is a password recovery link
+  const recovery = detectRecoveryLink();
+  if (recovery) {
+    $('#authScreen').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    $('#bottomNav').classList.remove('hidden');
+    $('#fab').classList.remove('hidden');
+    if (!supa) initSupabase();
+
+    try {
+      if (recovery.type === 'pkce') {
+        const { error } = await supa.auth.exchangeCodeForSession(recovery.code);
+        if (error) throw error;
+      }
+
+      await new Promise(r => setTimeout(r, 500));
+      const { data: { session } } = await supa.auth.getSession();
+      if (!session) throw new Error('No session — link may have expired');
+
+      openResetPasswordModal();
+    } catch (e) {
+      console.error('Recovery failed:', e);
+      toast('Reset link expired or invalid. Please request a new one.', 'err', 5000);
+      setTimeout(() => location.href = location.origin, 2000);
+    }
+    return;
+  }
   loadLocal(); loadTimerLocal();
   if (!state.subjects.length) state.subjects = DEFAULT_SUBJECTS.map(s => ({ id: uuid(), name: s.name, color: s.color, archived: false }));
   applyTheme(state.settings.theme || 'dark');
