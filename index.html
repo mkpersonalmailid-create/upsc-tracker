@@ -531,6 +531,59 @@ background-size:200% 100%;animation:skel 1.4s infinite}
 .form-grid-3{grid-template-columns:repeat(3,1fr)}
 @media(max-width:600px){.form-grid,.form-grid-3{grid-template-columns:1fr}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+/* ============ LOGO FIX + SIDEBAR BADGE ============ */
+.logo{display:flex;align-items:center;gap:8px;padding:6px 6px 16px;
+  font-weight:800;letter-spacing:-.02em;font-size:1.05rem;
+  border-bottom:1px solid var(--border);margin-bottom:12px}
+.logo-mark{width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#5E9EFF,#A78BFA);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;color:#fff;font-size:.9rem;flex-shrink:0}
+.logo-text-wrap{display:flex;flex-direction:column;line-height:1.15;min-width:0;flex:1}
+.logo-text-row{display:flex;align-items:center;gap:6px;min-width:0}
+.logo-text{font-size:.68rem;font-weight:900;letter-spacing:.01em;
+  background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;white-space:nowrap}
+.logo-tagline{font-size:.52rem;color:var(--text-3);font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
+.logo-mark.has-image{background:transparent!important;box-shadow:none!important;
+  padding:0;overflow:hidden}
+.logo-mark img{width:34px;height:34px;object-fit:contain;
+  display:block;border-radius:9px}
+
+/* Sidebar Plan Badge */
+.plan-badge-sidebar{
+  font-size:.5rem;font-weight:800;padding:2px 5px;border-radius:20px;
+  background:var(--card-2);color:var(--text-3);flex-shrink:0;
+  letter-spacing:.03em;text-transform:uppercase;
+  border:1px solid var(--border);transition:var(--t);white-space:nowrap;
+}
+.plan-badge-sidebar.free{
+  background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(251,146,60,.1));
+  color:#FBBF24;border-color:rgba(251,191,36,.35);
+}
+.plan-badge-sidebar.premium{
+  background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(244,114,182,.12));
+  color:#FBBF24;border-color:rgba(251,191,36,.4);
+}
+.plan-badge-sidebar.admin{
+  background:linear-gradient(135deg,rgba(167,139,250,.18),rgba(94,158,255,.12));
+  color:#A78BFA;border-color:rgba(167,139,250,.4);
+}
+
+/* Collapsed sidebar adjustments */
+.sidebar.collapsed .logo-text-wrap{display:none}
+.sidebar.collapsed .logo{justify-content:center}
+
+/* Mobile */
+@media(max-width:600px){
+  .logo-text-wrap{display:none}
+  .logo{justify-content:center;padding:6px}
+}
+
+/* Collapsed sidebar - existing overrides */
+.sidebar.collapsed .logo-text{display:none}
 </style>
 </head>
 <body>
@@ -578,6 +631,7 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Study Tracker Logo">
 </div>
   <div class="logo-text-wrap">
+        <div class="logo-text-row">
     <div class="logo-text">UPSC STUDY TRACKER</div>
     <div class="logo-tagline">Track · Analyze · Crack</div>
   </div>
@@ -2267,6 +2321,20 @@ function updatePlanBadge() {
     badge.innerHTML = '⚡ <span class="full-text">Free Plan</span>';
     badge.title = 'Upgrade to unlock all features';
     badge.onclick = () => openUpgradeModal('Unlock all features');
+  }  // Sidebar badge update
+  const sb = document.getElementById('sidebarPlanBadge');
+  if (sb) {
+    sb.className = 'plan-badge-sidebar';
+    if (isAdminUser()) {
+      sb.classList.add('admin');
+      sb.textContent = '👑 Admin';
+    } else if (isPremiumUser()) {
+      sb.classList.add('premium');
+      sb.textContent = '💎 Pro';
+    } else {
+      sb.classList.add('free');
+      sb.textContent = 'Free';
+    }
   }
 }
 function updateSidebarUser() {
