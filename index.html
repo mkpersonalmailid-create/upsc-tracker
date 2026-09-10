@@ -684,38 +684,85 @@ background-size:200% 100%;animation:skel 1.4s infinite}
   position:relative;
   z-index:50;
   transition:var(--t);
+  overflow:hidden;
+  background-size:200% 100%;
+  animation:bannerSlideIn .6s cubic-bezier(.2,0,0,1), bannerShimmer 4s ease-in-out infinite;
 }
 .announcement-banner.info{
-  background:linear-gradient(90deg,rgba(94,158,255,.12),rgba(94,158,255,.05));
-  color:var(--accent);
+  background:linear-gradient(90deg,rgba(94,158,255,.12),rgba(94,158,255,.05),rgba(94,158,255,.12));
   border-bottom-color:rgba(94,158,255,.25);
 }
 .announcement-banner.success{
-  background:linear-gradient(90deg,rgba(52,211,153,.12),rgba(52,211,153,.05));
-  color:#34D399;
+  background:linear-gradient(90deg,rgba(52,211,153,.12),rgba(52,211,153,.05),rgba(52,211,153,.12));
   border-bottom-color:rgba(52,211,153,.25);
 }
 .announcement-banner.warning{
-  background:linear-gradient(90deg,rgba(251,191,36,.12),rgba(251,191,36,.05));
-  color:#FBBF24;
-  border-bottom-color:rgba(251,191,36,.25);
+  background:linear-gradient(90deg,rgba(251,191,36,.15),rgba(251,191,36,.05),rgba(251,191,36,.15));
+  border-bottom-color:rgba(251,191,36,.3);
 }
 .announcement-banner.danger{
-  background:linear-gradient(90deg,rgba(248,113,113,.12),rgba(248,113,113,.05));
-  color:#F87171;
-  border-bottom-color:rgba(248,113,113,.25);
+  background:linear-gradient(90deg,rgba(248,113,113,.15),rgba(248,113,113,.05),rgba(248,113,113,.15));
+  border-bottom-color:rgba(248,113,113,.3);
 }
-.announcement-banner .ann-icon{font-size:1.1rem;flex-shrink:0}
-.announcement-banner .ann-text{flex:1;color:var(--text);line-height:1.4}
-.announcement-banner .ann-link{
-  color:inherit;font-weight:800;text-decoration:underline;margin-left:6px;
+.announcement-banner.info .ann-icon,
+.announcement-banner.info .ann-text{color:var(--accent)}
+.announcement-banner.success .ann-icon,
+.announcement-banner.success .ann-text{color:#34D399}
+.announcement-banner.warning .ann-icon,
+.announcement-banner.warning .ann-text{color:#FBBF24}
+.announcement-banner.danger .ann-icon,
+.announcement-banner.danger .ann-text{color:#F87171}
+
+.announcement-banner .ann-icon{
+  font-size:1.1rem;
+  flex-shrink:0;
+  animation:iconBob 2s ease-in-out infinite;
 }
+.announcement-banner .ann-text{
+  flex:1;
+  line-height:1.4;
+  color:var(--text);
+}
+
+/* Shimmer animation — gradient moves */
+@keyframes bannerShimmer {
+  0% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
+  100% { background-position: 0% 0%; }
+}
+
+/* Slide-in animation */
+@keyframes bannerSlideIn {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Icon bobbing */
+@keyframes iconBob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-2px) scale(1.08); }
+}
+
+/* Dismiss button (agar rakhna hai) */
 .announcement-banner .ann-close{
-  background:transparent;border:none;color:inherit;opacity:.6;
-  font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:var(--t);
+  background:transparent;
+  border:none;
+  color:inherit;
+  opacity:.6;
+  font-size:1rem;
+  cursor:pointer;
+  padding:4px 8px;
+  border-radius:6px;
+  transition:var(--t);
+  flex-shrink:0;
 }
-.announcement-banner .ann-close:hover{opacity:1;background:rgba(255,255,255,.08)}
-</style>
+.announcement-banner .ann-close:hover{opacity:1;background:rgba(255,255,255,.1)}</style>
 </head>
 <body>
 
@@ -815,7 +862,6 @@ background-size:200% 100%;animation:skel 1.4s infinite}
         <div id="announcementBanner" class="announcement-banner hidden">
       <span class="ann-icon">📢</span>
       <span class="ann-text" id="announcementText"></span>
-      <button class="ann-close" id="announcementClose" title="Dismiss">✕</button>
     </div>
     <header class="topbar">
       <div class="topbar-left">
@@ -4509,16 +4555,16 @@ async function loadAnnouncement() {
       return;
     }
 
-    // Check if user has dismissed this specific announcement
-    const dismissed = localStorage.getItem('dismissed_announcement');
-    if (dismissed === data.id) {
-      banner.classList.add('hidden');
-      return;
-    }
-
-    // Render
+    // ALWAYS VISIBLE - no localStorage check
     const iconMap = { info: '📢', success: '✅', warning: '⚠️', danger: '🚨' };
     banner.className = 'announcement-banner ' + (data.type || 'info');
+    
+    // Re-trigger animation by removing and re-adding
+    banner.style.animation = 'none';
+    setTimeout(() => {
+      banner.style.animation = '';
+    }, 10);
+    
     banner.querySelector('.ann-icon').textContent = iconMap[data.type] || '📢';
     
     const textEl = $('#announcementText');
@@ -4528,15 +4574,15 @@ async function loadAnnouncement() {
     }
     textEl.innerHTML = html;
 
-    // Close handler
-    $('#announcementClose').onclick = () => {
-      localStorage.setItem('dismissed_announcement', data.id);
-      banner.classList.add('hidden');
-    };
+    // Hide the close button (since always visible)
+    const closeBtn = $('#announcementClose');
+    if (closeBtn) closeBtn.style.display = 'none';
+    
   } catch (e) {
     console.warn('Announcement load error:', e);
   }
 }
+
 
 /* ============ ADMIN — MANAGE ANNOUNCEMENT ============ */
 async function openAnnouncementEditor() {
