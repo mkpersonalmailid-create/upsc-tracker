@@ -28,13 +28,14 @@ jobs:
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: node scripts/generate-blog.js
-      - name: 📰 Update blog index page
+
+      - name: 📰 Update blog index
         run: node scripts/update-blog-index.js
 
       - name: 📝 Update sitemap.xml
         run: |
           # Latest blog post ka URL nikal
-          LATEST=$(ls -t blog/*.html | head -1 | sed 's|^|https://upscstudytracker.co.in/|')
+          LATEST=$(ls -t blog/*.html | grep -v "blog/index.html" | head -1 | sed 's|^|https://upscstudytracker.co.in/|')
           echo "Latest post: $LATEST"
           
           # Sitemap me entry add karo agar nahi hai
