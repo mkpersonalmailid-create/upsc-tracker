@@ -1,0 +1,25 @@
+# Environment
+.env
+.env.local
+.dev.vars
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Node
+node_modules/
+package-lock.json
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Build
+dist/
+build/
+.cache/
+.wrangler/
