@@ -8,16 +8,8 @@
   "name": "UPSC Study Tracker",
   "applicationCategory": "EducationalApplication",
   "operatingSystem": "Web",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "INR"
-  },
-  "aggregateRating": {
-    "@type": "AggregateRating",
-    "ratingValue": "4.9",
-    "reviewCount": "247"
-  },
+  "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"},
+  "aggregateRating": {"@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "247"},
   "description": "Free study tracker for UPSC aspirants with timer, syllabus, revisions and analytics.",
   "url": "https://upscstudytracker.co.in"
 }
@@ -33,219 +25,530 @@
 <meta property="og:image" content="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
 <link rel="icon" href="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════
+   ROOT — EXACT MATCH WITH APP
+   ═══════════════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
---bg:#08090D;--bg-2:#0F1118;--card:#141824;--card-2:#1C2130;
---border:#232838;--border-2:#3A4560;
---text:#F5F7FB;--text-2:#98A2B8;--text-3:#5F6A82;
---accent:#5E9EFF;--accent-2:#A78BFA;--accent-3:#F472B6;
---gold:#FBBF24;--success:#34D399;--emerald:#10B981;
---shadow:0 12px 32px rgba(0,0,0,.5);--shadow-lg:0 24px 64px rgba(0,0,0,.6);
+  /* App-matched palette */
+  --bg:#0A0612;
+  --bg-2:#120A1E;
+  --card:#171026;
+  --card-2:#1F1633;
+  --border:#2A1E42;
+  --border-2:#3D2C5E;
+  --text:#FFFFFF;
+  --text-2:#B8A8D9;
+  --text-3:#6E5F8C;
+  --pink:#EC4899;
+  --purple:#A855F7;
+  --violet:#8B5CF6;
+  --indigo:#6366F1;
+  --orange:#F97316;
+  --amber:#FBBF24;
+  --yellow:#FACC15;
+  --teal:#14B8A6;
+  --cyan:#06B6D4;
+  --green:#10B981;
+  --emerald:#34D399;
+  --red:#EF4444;
+  --rose:#F43F5E;
+  
+  /* App gradients */
+  --grad-1:linear-gradient(135deg,#8B5CF6,#EC4899);
+  --grad-2:linear-gradient(135deg,#F97316,#FBBF24);
+  --grad-3:linear-gradient(135deg,#14B8A6,#06B6D4);
+  --grad-4:linear-gradient(135deg,#10B981,#34D399);
+  --grad-hero:linear-gradient(135deg,#8B5CF6 0%,#EC4899 50%,#F97316 100%);
+  
+  /* Shadows */
+  --shadow-sm:0 2px 12px rgba(139,92,246,.08);
+  --shadow-md:0 12px 32px rgba(0,0,0,.4);
+  --shadow-lg:0 24px 64px rgba(0,0,0,.55);
+  --shadow-glow:0 0 40px rgba(168,85,247,.35);
+  --shadow-glow-pink:0 0 40px rgba(236,72,153,.35);
+  
+  /* Radius */
+  --r-sm:10px;--r:14px;--r-md:18px;--r-lg:24px;--r-xl:32px;--r-full:999px;
+  
+  /* Buttery smooth iOS easing */
+  --ios-ease:cubic-bezier(0.32,0.72,0,1);
+  --ios-spring:cubic-bezier(0.34,1.56,0.64,1);
+  --ios-smooth:cubic-bezier(0.4,0,0.2,1);
+  --t:.25s cubic-bezier(.2,0,0,1);
 }
-html{scroll-behavior:smooth}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
-background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  background:var(--bg);color:var(--text);
+  line-height:1.6;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;position:relative;
+  font-feature-settings:"cv11","ss01";
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%),
+    radial-gradient(circle at 50% 50%,rgba(249,115,22,.05),transparent 60%);
+}
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
-.container{max-width:1240px;margin:0 auto;padding:0 24px}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.container{max-width:1240px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
 .hidden{display:none!important}
 
+::selection{background:rgba(168,85,247,.4);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--pink));border-radius:10px;border:2px solid var(--bg)}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS — BUTTERY SMOOTH
+   ═══════════════════════════════════════════════ */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInDown{from{opacity:0;transform:translateY(-24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(1.2)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes floatSlow{0%,100%{transform:translate(0,0) rotate(0)}50%{transform:translate(40px,-30px) rotate(3deg)}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes glow{0%,100%{box-shadow:0 0 24px rgba(168,85,247,.4)}50%{box-shadow:0 0 56px rgba(236,72,153,.6)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes barGrow{from{height:0!important;opacity:0}to{opacity:1}}
+@keyframes ripple{0%{transform:scale(0);opacity:.6}100%{transform:scale(4);opacity:0}}
+@keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(251,191,36,.7)}50%{box-shadow:0 0 0 8px rgba(251,191,36,0)}}
+
 /* Scroll progress */
-.scroll-progress{position:fixed;top:0;left:0;height:3px;z-index:999;
-background:linear-gradient(90deg,#5E9EFF,#A78BFA,#F472B6);width:0%;transition:width .1s}
+.scroll-progress{
+  position:fixed;top:0;left:0;height:3px;z-index:9999;
+  background:var(--grad-hero);background-size:200% 100%;
+  width:0%;transition:width .15s var(--ios-ease);
+  animation:gradientShift 3s ease infinite;
+}
 
 /* Background orbs */
 .bg-orbs{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.bg-orbs .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4}
-.bg-orbs .orb-1{top:-10%;left:-10%;width:600px;height:600px;
-background:radial-gradient(circle,rgba(94,158,255,.35),transparent 70%);animation:float1 20s ease-in-out infinite}
-.bg-orbs .orb-2{top:30%;right:-15%;width:700px;height:700px;
-background:radial-gradient(circle,rgba(167,139,250,.3),transparent 70%);animation:float2 25s ease-in-out infinite}
-.bg-orbs .orb-3{bottom:-10%;left:20%;width:500px;height:500px;
-background:radial-gradient(circle,rgba(244,114,182,.25),transparent 70%);animation:float3 22s ease-in-out infinite}
-@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(60px,40px)}}
-@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-80px,60px)}}
-@keyframes float3{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,-60px)}}
+.bg-orbs .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.5}
+.bg-orbs .orb-1{
+  top:-10%;left:-10%;width:600px;height:600px;
+  background:radial-gradient(circle,rgba(168,85,247,.35),transparent 70%);
+  animation:floatSlow 20s ease-in-out infinite;
+}
+.bg-orbs .orb-2{
+  top:30%;right:-15%;width:700px;height:700px;
+  background:radial-gradient(circle,rgba(236,72,153,.3),transparent 70%);
+  animation:floatSlow 25s ease-in-out infinite reverse;
+}
+.bg-orbs .orb-3{
+  bottom:-10%;left:20%;width:500px;height:500px;
+  background:radial-gradient(circle,rgba(249,115,22,.25),transparent 70%);
+  animation:floatSlow 22s ease-in-out infinite;
+}
 
-/* Navbar */
-.navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 0;
-background:rgba(8,9,13,.7);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-border-bottom:1px solid transparent;transition:.3s}
-.navbar.scrolled{background:rgba(8,9,13,.95);border-bottom-color:var(--border)}
+/* ═══════════════════════════════════════════════
+   NAVBAR — GLASSMORPHIC
+   ═══════════════════════════════════════════════ */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:16px 0;
+  background:rgba(10,6,18,.6);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid transparent;
+  transition:all .4s var(--ios-ease);
+}
+.navbar.scrolled{
+  background:rgba(10,6,18,.92);
+  border-bottom-color:var(--border);
+  padding:10px 0;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
 .nav-inner{display:flex;justify-content:space-between;align-items:center}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;letter-spacing:-.02em}
-.nav-logo img{width:36px;height:36px;border-radius:9px}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:1.05rem;letter-spacing:-.02em;
+  transition:transform .3s var(--ios-spring);
+}
+.nav-logo:hover{transform:scale(1.02)}
+.nav-logo img{
+  width:36px;height:36px;border-radius:10px;
+  box-shadow:0 4px 12px rgba(168,85,247,.3);
+}
 .nav-links{display:flex;align-items:center;gap:28px}
-.nav-links a{font-size:.88rem;color:var(--text-2);font-weight:600;transition:.2s;position:relative}
+.nav-links a{
+  font-size:.88rem;color:var(--text-2);font-weight:600;
+  transition:color .25s var(--ios-smooth);position:relative;
+}
 .nav-links a:not(.nav-cta):hover{color:var(--text)}
-.nav-links a:not(.nav-cta)::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;
-background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:.25s}
+.nav-links a:not(.nav-cta)::after{
+  content:'';position:absolute;bottom:-4px;left:0;
+  width:0;height:2px;background:var(--grad-1);
+  transition:width .35s var(--ios-ease);
+}
 .nav-links a:not(.nav-cta):hover::after{width:100%}
-.nav-cta{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff!important;
-padding:10px 20px;border-radius:10px;font-weight:800;font-size:.85rem;
-box-shadow:0 4px 14px rgba(94,158,255,.35);transition:.25s;position:relative;overflow:hidden}
-.nav-cta::before{content:'';position:absolute;inset:0;
-background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
-transform:translateX(-100%);transition:.6s}
-.nav-cta:hover::before{transform:translateX(100%)}
-.nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(94,158,255,.5)}
+.nav-cta{
+  background:var(--grad-1);color:#fff!important;
+  padding:10px 20px;border-radius:11px;
+  font-weight:800;font-size:.85rem;
+  box-shadow:0 6px 18px rgba(168,85,247,.35);
+  transition:all .3s var(--ios-spring);
+  position:relative;overflow:hidden;
+}
+.nav-cta:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 26px rgba(236,72,153,.5);
+  filter:brightness(1.08);
+}
+.nav-cta:active{transform:translateY(0) scale(.97)}
 @media(max-width:900px){.nav-links a:not(.nav-cta){display:none}}
 
-/* Hero */
-.hero{padding:140px 0 60px;position:relative;z-index:1}
+/* ═══════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════ */
+.hero{padding:160px 0 80px;position:relative;z-index:1}
 .hero-inner{text-align:center;max-width:960px;margin:0 auto}
-.hero-badge{display:inline-flex;align-items:center;gap:8px;
-background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(244,114,182,.1));
-border:1px solid rgba(251,191,36,.35);color:#FBBF24;padding:7px 16px;
-border-radius:50px;font-size:.78rem;font-weight:800;letter-spacing:.03em;margin-bottom:28px;
-animation:fadeInDown .8s ease both}
-.hero-badge .pulse-dot{width:6px;height:6px;border-radius:50%;background:#FBBF24;
-box-shadow:0 0 10px #FBBF24;animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(236,72,153,.1));
+  border:1px solid rgba(251,191,36,.35);
+  color:var(--amber);padding:8px 18px;border-radius:50px;
+  font-size:.78rem;font-weight:800;letter-spacing:.03em;
+  margin-bottom:28px;
+  animation:fadeInDown .8s var(--ios-ease) both;
+  backdrop-filter:blur(10px);
+}
+.hero-badge .pulse-dot{
+  width:6px;height:6px;border-radius:50%;background:var(--amber);
+  animation:dotPulse 1.8s ease-in-out infinite;
+}
 
-.hero h1{font-size:clamp(2.4rem,6vw,4.5rem);font-weight:900;letter-spacing:-.04em;
-line-height:1.05;margin-bottom:24px;animation:fadeInUp .8s ease .1s both}
-.hero h1 .grad{background:linear-gradient(135deg,#5E9EFF,#A78BFA,#F472B6);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-background-size:200% auto;animation:gradientShift 4s ease infinite}
-@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+.hero h1{
+  font-size:clamp(2.4rem,6vw,4.5rem);
+  font-weight:900;letter-spacing:-.04em;line-height:1.05;
+  margin-bottom:24px;
+  animation:fadeInUp .9s var(--ios-ease) .1s both;
+}
+.hero h1 .grad{
+  background:var(--grad-hero);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:gradientShift 4s ease infinite;
+}
 
-.hero p.sub{font-size:clamp(1rem,2vw,1.2rem);color:var(--text-2);max-width:680px;
-margin:0 auto 36px;line-height:1.7;animation:fadeInUp .8s ease .2s both}
-.hero-ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
-animation:fadeInUp .8s ease .3s both}
-.btn-hero{display:inline-flex;align-items:center;gap:10px;padding:16px 34px;border-radius:12px;
-font-size:1rem;font-weight:800;transition:.25s;cursor:pointer;border:none;font-family:inherit;
-position:relative;overflow:hidden}
-.btn-hero.primary{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;
-box-shadow:0 8px 28px rgba(94,158,255,.45)}
-.btn-hero.primary::before{content:'';position:absolute;inset:0;
-background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
-transform:translateX(-100%);transition:.8s}
+.hero p.sub{
+  font-size:clamp(1rem,2vw,1.15rem);color:var(--text-2);
+  max-width:680px;margin:0 auto 40px;line-height:1.7;
+  animation:fadeInUp .9s var(--ios-ease) .2s both;
+}
+
+.hero-ctas{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  animation:fadeInUp .9s var(--ios-ease) .3s both;
+}
+.btn-hero{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 34px;border-radius:13px;
+  font-size:1rem;font-weight:800;
+  transition:all .35s var(--ios-spring);
+  cursor:pointer;position:relative;overflow:hidden;
+}
+.btn-hero.primary{
+  background:var(--grad-1);color:#fff;
+  box-shadow:0 10px 32px rgba(168,85,247,.4);
+}
+.btn-hero.primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  transform:translateX(-100%);transition:transform .8s var(--ios-ease);
+}
 .btn-hero.primary:hover::before{transform:translateX(100%)}
-.btn-hero.primary:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(94,158,255,.65)}
-.btn-hero.secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border)}
-.btn-hero.secondary:hover{background:rgba(255,255,255,.1);border-color:var(--border-2);transform:translateY(-2px)}
+.btn-hero.primary:hover{
+  transform:translateY(-3px);
+  box-shadow:0 16px 44px rgba(236,72,153,.6);
+  filter:brightness(1.06);
+}
+.btn-hero.primary:active{transform:translateY(0) scale(.97)}
+.btn-hero.secondary{
+  background:rgba(255,255,255,.06);color:var(--text);
+  border:1.5px solid var(--border);
+  backdrop-filter:blur(10px);
+}
+.btn-hero.secondary:hover{
+  background:rgba(255,255,255,.1);
+  border-color:var(--purple);
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(168,85,247,.2);
+}
 
-.hero-trust{margin-top:32px;font-size:.82rem;color:var(--text-3);
-display:flex;justify-content:center;gap:24px;flex-wrap:wrap;animation:fadeInUp .8s ease .4s both}
+.hero-trust{
+  margin-top:36px;font-size:.82rem;color:var(--text-3);
+  display:flex;justify-content:center;gap:24px;flex-wrap:wrap;
+  animation:fadeInUp .9s var(--ios-ease) .4s both;
+}
 .hero-trust span{display:inline-flex;align-items:center;gap:6px}
 .hero-trust strong{color:var(--text-2)}
 
-@keyframes fadeInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-@keyframes fadeInDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+/* ═══════════════════════════════════════════════
+   INTERACTIVE DEMO
+   ═══════════════════════════════════════════════ */
+.demo-section{padding:60px 0 100px;position:relative;z-index:1}
+.section-tag{
+  font-size:.72rem;font-weight:800;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--purple);margin-bottom:14px;
+}
+.demo-title{
+  font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;
+  letter-spacing:-.03em;margin-bottom:12px;line-height:1.15;
+}
+.demo-title .grad{
+  background:var(--grad-hero);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:gradientShift 4s ease infinite;
+}
+.demo-sub{color:var(--text-2);max-width:600px;margin:0 auto;font-size:1rem}
 
-/* INTERACTIVE APP DEMO */
-.demo-section{padding:40px 0 90px;position:relative;z-index:1}
-.demo-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
-.demo-tab{padding:11px 22px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);
-font-size:.85rem;font-weight:700;color:var(--text-2);cursor:pointer;transition:.25s;font-family:inherit;
-display:inline-flex;align-items:center;gap:8px}
-.demo-tab:hover{border-color:var(--border-2);color:var(--text);transform:translateY(-2px)}
-.demo-tab.active{background:linear-gradient(135deg,rgba(94,158,255,.2),rgba(167,139,250,.12));
-border-color:var(--accent);color:#fff;box-shadow:0 6px 20px rgba(94,158,255,.25)}
+.demo-tabs{
+  display:flex;justify-content:center;gap:8px;
+  margin:32px 0 28px;flex-wrap:wrap;
+}
+.demo-tab{
+  padding:11px 22px;border-radius:12px;
+  background:var(--card);border:1.5px solid var(--border);
+  font-size:.85rem;font-weight:700;color:var(--text-2);
+  transition:all .35s var(--ios-spring);
+  display:inline-flex;align-items:center;gap:8px;
+  position:relative;overflow:hidden;
+}
+.demo-tab:hover{
+  border-color:var(--border-2);color:var(--text);
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,.3);
+}
+.demo-tab.active{
+  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(236,72,153,.12));
+  border-color:var(--purple);color:#fff;
+  box-shadow:0 6px 24px rgba(168,85,247,.3);
+}
+.demo-tab.active::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at center,rgba(168,85,247,.15),transparent 70%);
+  animation:fadeIn .5s var(--ios-ease);
+}
 
-.demo-window{background:linear-gradient(180deg,var(--card),var(--card-2));
-border:1px solid var(--border-2);border-radius:20px;padding:14px;
-box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 60px rgba(94,158,255,.15);
-position:relative;overflow:hidden;max-width:1000px;margin:0 auto;transition:.4s}
-.demo-window:hover{transform:translateY(-6px);
-box-shadow:0 50px 120px rgba(0,0,0,.7),0 0 80px rgba(94,158,255,.25)}
-.demo-window::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-background:linear-gradient(90deg,transparent,rgba(94,158,255,.5),transparent)}
+.demo-window{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid var(--border-2);border-radius:22px;
+  padding:14px;max-width:1000px;margin:0 auto;
+  box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 80px rgba(168,85,247,.15);
+  position:relative;overflow:hidden;
+  transition:all .6s var(--ios-ease);
+}
+.demo-window:hover{
+  transform:translateY(-6px);
+  box-shadow:0 50px 120px rgba(0,0,0,.7),0 0 100px rgba(168,85,247,.25);
+}
+.demo-window::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(168,85,247,.5),transparent);
+}
 .demo-dots{display:flex;gap:6px;padding:6px 8px 12px}
 .demo-dots span{width:10px;height:10px;border-radius:50%}
 .demo-dots span:nth-child(1){background:#FF5F56}
 .demo-dots span:nth-child(2){background:#FFBD2E}
 .demo-dots span:nth-child(3){background:#27C93F}
-.demo-body{padding:6px;background:var(--bg);border-radius:14px;min-height:540px;
-overflow:hidden;position:relative}
-
-/* Demo panels */
-.demo-panel{display:none;animation:fadeIn .4s}
+.demo-body{
+  padding:6px;background:var(--bg);border-radius:16px;
+  min-height:560px;overflow:hidden;position:relative;
+}
+.demo-panel{display:none;animation:fadeIn .5s var(--ios-ease)}
 .demo-panel.active{display:block}
 
-/* Mock app shell */
-.mock-app{display:grid;grid-template-columns:200px 1fr;width:100%;height:100%;min-height:520px;
-background:var(--bg);font-family:inherit;overflow:hidden;border-radius:10px}
+/* Mock App Shell */
+.mock-app{
+  display:grid;grid-template-columns:210px 1fr;
+  width:100%;min-height:540px;
+  background:var(--bg);overflow:hidden;border-radius:12px;
+  font-family:inherit;
+}
 @media(max-width:700px){.mock-app{grid-template-columns:1fr}.mock-sidebar{display:none}}
 
-.mock-sidebar{background:var(--bg-2);border-right:1px solid var(--border);padding:14px 10px;
-display:flex;flex-direction:column;gap:2px;overflow:hidden}
-.mock-logo{display:flex;align-items:center;gap:8px;padding:6px 8px 14px;
-border-bottom:1px solid var(--border);margin-bottom:10px}
-.mock-logo-icon{width:24px;height:24px;border-radius:6px;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA);display:flex;align-items:center;
-justify-content:center;color:#fff;font-weight:900;font-size:.7rem;flex-shrink:0}
-.mock-logo-text{font-size:.7rem;font-weight:800;color:var(--text)}
-.mock-nav-section{font-size:.55rem;font-weight:800;letter-spacing:.1em;color:var(--text-3);
-padding:10px 8px 4px;text-transform:uppercase}
-.mock-nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;
-font-size:.7rem;color:var(--text-3);font-weight:600;transition:.2s;cursor:default}
-.mock-nav-item.active{background:linear-gradient(135deg,rgba(94,158,255,.15),rgba(167,139,250,.08));
-color:var(--accent);font-weight:700}
-.mock-nav-icon{width:14px;text-align:center;font-size:.75rem}
+.mock-sidebar{
+  background:var(--bg-2);border-right:1px solid var(--border);
+  padding:16px 12px;display:flex;flex-direction:column;gap:2px;
+  overflow:hidden;position:relative;
+}
+.mock-sidebar::before{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:1px;
+  background:linear-gradient(180deg,transparent,var(--purple),var(--pink),transparent);
+  opacity:.4;
+}
+.mock-logo{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 8px 14px;border-bottom:1px solid var(--border);
+  margin-bottom:10px;
+}
+.mock-logo-icon{
+  width:26px;height:26px;border-radius:7px;
+  background:var(--grad-1);display:flex;align-items:center;
+  justify-content:center;color:#fff;font-weight:900;font-size:.72rem;
+  box-shadow:0 4px 12px rgba(168,85,247,.4);
+}
+.mock-logo-text{font-size:.72rem;font-weight:800;color:var(--text)}
+.mock-nav-section{
+  font-size:.55rem;font-weight:800;letter-spacing:.12em;
+  color:var(--text-3);padding:10px 8px 4px;text-transform:uppercase;
+}
+.mock-nav-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 9px;border-radius:8px;
+  font-size:.72rem;color:var(--text-3);font-weight:600;
+  transition:all .3s var(--ios-ease);
+}
+.mock-nav-item.active{
+  background:linear-gradient(90deg,rgba(168,85,247,.2),rgba(236,72,153,.08));
+  color:#fff;box-shadow:inset 0 0 0 1px rgba(168,85,247,.3);
+}
+.mock-nav-icon{width:14px;text-align:center;font-size:.78rem}
 
-.mock-main{background:var(--bg);display:flex;flex-direction:column;overflow:hidden;position:relative}
-.mock-topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;
-border-bottom:1px solid var(--border);background:var(--bg-2);flex-shrink:0}
-.mock-search{flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--border);
-border-radius:6px;font-size:.68rem;color:var(--text-3);max-width:300px}
-.mock-topbar-icons{display:flex;gap:6px;margin-left:auto}
-.mock-icon-btn{width:24px;height:24px;border-radius:50%;background:var(--card);
-border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem}
-.mock-avatar{width:24px;height:24px;border-radius:50%;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA);display:flex;align-items:center;
-justify-content:center;color:#fff;font-weight:800;font-size:.65rem}
+.mock-main{background:var(--bg);display:flex;flex-direction:column;overflow:hidden}
+.mock-topbar{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg-2);flex-shrink:0;
+}
+.mock-search{
+  flex:1;padding:7px 11px;background:var(--bg);
+  border:1px solid var(--border);border-radius:7px;
+  font-size:.68rem;color:var(--text-3);max-width:300px;
+}
+.mock-topbar-icons{display:flex;gap:6px;margin-left:auto;align-items:center}
+.mock-icon-btn{
+  width:26px;height:26px;border-radius:50%;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:.72rem;
+}
+.mock-avatar{
+  width:26px;height:26px;border-radius:50%;background:var(--grad-1);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-weight:800;font-size:.66rem;
+  box-shadow:0 4px 12px rgba(168,85,247,.35);
+}
 
-.mock-content{padding:16px;overflow:hidden;display:flex;flex-direction:column;gap:12px;
-flex:1;min-height:0}
-.mock-greet-text{font-size:1rem;font-weight:800;letter-spacing:-.01em;text-align:center}
-.mock-greet-sub{font-size:.72rem;color:var(--text-3);margin-top:2px;text-align:center;margin-bottom:8px}
+.mock-content{
+  padding:18px;overflow:hidden;
+  display:flex;flex-direction:column;gap:14px;flex:1;min-height:0;
+}
+.mock-greet{
+  text-align:center;
+  animation:fadeInUp .6s var(--ios-ease) both;
+}
+.mock-greet-text{
+  font-size:1.05rem;font-weight:800;letter-spacing:-.01em;
+  background:linear-gradient(135deg,#fff 0%,#C4B5FD 60%,#F9A8D4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.mock-greet-sub{font-size:.74rem;color:var(--text-3);margin-top:3px}
 
-.mock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mock-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
 @media(max-width:600px){.mock-kpis{grid-template-columns:repeat(2,1fr)}}
-.mock-kpi{background:var(--card);border:1px solid var(--border);border-radius:8px;
-padding:8px 10px;position:relative;overflow:hidden}
-.mock-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--kc)}
-.mock-kpi-label{font-size:.55rem;color:var(--text-3);text-transform:uppercase;
-letter-spacing:.06em;font-weight:800}
-.mock-kpi-value{font-size:.95rem;font-weight:800;margin:3px 0 6px;font-variant-numeric:tabular-nums;
-letter-spacing:-.02em}
-.mock-kpi-bar{height:3px;background:var(--card-2);border-radius:10px;overflow:hidden}
-.mock-kpi-bar>div{height:100%;border-radius:10px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.mock-kpi{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:11px;padding:10px 12px;position:relative;overflow:hidden;
+  animation:cardIn .5s var(--ios-ease) both;
+}
+.mock-kpi::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--kc);
+}
+.mock-kpi::after{
+  content:'';position:absolute;top:-30%;right:-20%;width:120px;height:120px;
+  background:radial-gradient(circle,var(--kc),transparent 70%);
+  opacity:.15;pointer-events:none;
+}
+.mock-kpi-label{
+  font-size:.56rem;color:var(--text-3);text-transform:uppercase;
+  letter-spacing:.08em;font-weight:800;position:relative;z-index:1;
+}
+.mock-kpi-value{
+  font-size:1rem;font-weight:900;margin:4px 0 7px;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  position:relative;z-index:1;
+}
+.mock-kpi-bar{
+  height:4px;background:var(--card-2);border-radius:10px;
+  overflow:hidden;position:relative;z-index:1;
+}
+.mock-kpi-bar>div{
+  height:100%;border-radius:10px;
+  transition:width 1.4s var(--ios-ease);
+}
 
-.mock-timer{background:var(--card);border:1px solid var(--border);border-radius:10px;
-padding:14px;text-align:center;position:relative;overflow:hidden;flex-shrink:0}
-.mock-timer::before{content:'';position:absolute;inset:0;
-background:radial-gradient(circle at 50% 0%,rgba(94,158,255,.12),transparent 70%);pointer-events:none}
-.mock-timer-mode{display:inline-flex;gap:2px;background:var(--bg);padding:2px;
-border-radius:20px;font-size:.6rem;margin-bottom:10px;position:relative}
-.mock-timer-mode>span{padding:3px 10px;border-radius:20px;color:var(--text-3);font-weight:700}
-.mock-timer-mode>span.active{background:var(--card-2);color:var(--text)}
-.mock-timer-display{font-size:2.2rem;font-weight:200;letter-spacing:-.03em;
-font-variant-numeric:tabular-nums;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA,#F472B6);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-line-height:1;position:relative}
-.mock-timer-sub{font-size:.68rem;color:var(--text-3);margin:8px 0 12px;position:relative}
+.mock-timer{
+  background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(236,72,153,.08));
+  border:1px solid rgba(168,85,247,.25);
+  border-radius:14px;padding:16px;text-align:center;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.mock-timer::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 0%,rgba(168,85,247,.18),transparent 70%);
+  pointer-events:none;
+}
+.mock-timer-mode{
+  display:inline-flex;gap:3px;background:rgba(0,0,0,.3);
+  padding:3px;border-radius:20px;font-size:.6rem;
+  margin-bottom:12px;position:relative;backdrop-filter:blur(10px);
+}
+.mock-timer-mode>span{
+  padding:4px 12px;border-radius:20px;color:var(--text-3);font-weight:700;
+  transition:all .3s var(--ios-ease);
+}
+.mock-timer-mode>span.active{
+  background:var(--grad-1);color:#fff;
+  box-shadow:0 4px 14px rgba(168,85,247,.4);
+}
+.mock-timer-display{
+  font-size:2.4rem;font-weight:200;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;
+  background:var(--grad-hero);background-size:200% 200%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;line-height:1;position:relative;
+  animation:gradientShift 4s ease infinite;
+}
+.mock-timer-sub{font-size:.72rem;color:var(--text-3);margin:8px 0 14px;position:relative}
 .mock-timer-btns{display:flex;gap:8px;justify-content:center;position:relative}
-.mock-btn-primary,.mock-btn-secondary{font-size:.7rem;font-weight:800;padding:7px 16px;
-border-radius:20px;cursor:default}
-.mock-btn-primary{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;
-box-shadow:0 4px 14px rgba(94,158,255,.4)}
-.mock-btn-secondary{background:var(--card-2);color:var(--text);border:1px solid var(--border)}
+.mock-btn-primary,.mock-btn-secondary{
+  font-size:.72rem;font-weight:800;padding:8px 18px;
+  border-radius:20px;cursor:default;
+}
+.mock-btn-primary{
+  background:var(--grad-1);color:#fff;
+  box-shadow:0 6px 18px rgba(168,85,247,.4);
+}
+.mock-btn-secondary{
+  background:var(--card-2);color:var(--text);border:1px solid var(--border);
+}
 
-.mock-charts{display:grid;grid-template-columns:1.6fr 1fr;gap:8px;flex:1;min-height:0}
-.mock-chart{background:var(--card);border:1px solid var(--border);border-radius:10px;
-padding:10px 12px;display:flex;flex-direction:column;min-height:0}
-.mock-chart-title{font-size:.65rem;font-weight:800;margin-bottom:8px;color:var(--text-2)}
-
-.mock-bars{display:flex;align-items:flex-end;gap:4px;flex:1;height:100%;padding-top:4px}
-.mock-bars>div{flex:1;border-radius:3px 3px 0 0;
-background:linear-gradient(180deg,#5E9EFF,#A78BFA);min-height:8%;animation:barGrow 1.2s ease-out both}
+.mock-charts{display:grid;grid-template-columns:1.6fr 1fr;gap:10px;flex:1;min-height:0}
+.mock-chart{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;
+  display:flex;flex-direction:column;min-height:0;
+}
+.mock-chart-title{font-size:.68rem;font-weight:800;margin-bottom:10px;color:var(--text-2)}
+.mock-bars{display:flex;align-items:flex-end;gap:5px;flex:1;padding-top:6px}
+.mock-bars>div{
+  flex:1;border-radius:4px 4px 0 0;
+  background:var(--grad-1);min-height:8%;
+  animation:barGrow 1.2s var(--ios-ease) both;
+}
 .mock-bars>div:nth-child(1){animation-delay:.1s}
 .mock-bars>div:nth-child(2){animation-delay:.2s}
 .mock-bars>div:nth-child(3){animation-delay:.3s}
@@ -253,246 +556,469 @@ background:linear-gradient(180deg,#5E9EFF,#A78BFA);min-height:8%;animation:barGr
 .mock-bars>div:nth-child(5){animation-delay:.5s}
 .mock-bars>div:nth-child(6){animation-delay:.6s}
 .mock-bars>div:nth-child(7){animation-delay:.7s}
-@keyframes barGrow{from{height:0 !important;opacity:0}to{opacity:1}}
 
 .mock-donut{flex:1;display:flex;align-items:center;justify-content:center;position:relative}
-.mock-donut-ring{width:80%;aspect-ratio:1;max-width:90px;border-radius:50%;
-background:conic-gradient(#5E9EFF 0deg 130deg,#A78BFA 130deg 230deg,#F472B6 230deg 290deg,
-#34D399 290deg 340deg,#FBBF24 340deg 360deg);position:relative;
-animation:donutSpin 1.2s ease-out both}
-.mock-donut-ring::after{content:'';position:absolute;inset:26%;border-radius:50%;background:var(--card)}
+.mock-donut-ring{
+  width:80%;aspect-ratio:1;max-width:100px;border-radius:50%;
+  background:conic-gradient(
+    #A855F7 0deg 130deg,
+    #EC4899 130deg 230deg,
+    #F97316 230deg 290deg,
+    #14B8A6 290deg 340deg,
+    #FBBF24 340deg 360deg
+  );
+  position:relative;
+  animation:donutSpin 1.2s var(--ios-ease) both;
+  box-shadow:0 0 30px rgba(168,85,247,.3);
+}
+.mock-donut-ring::after{
+  content:'';position:absolute;inset:26%;border-radius:50%;background:var(--card);
+}
 @keyframes donutSpin{from{transform:rotate(-90deg) scale(.5);opacity:0}to{transform:rotate(0) scale(1);opacity:1}}
-.mock-donut-center{position:absolute;font-size:.75rem;font-weight:900;color:var(--text)}
+.mock-donut-center{position:absolute;font-size:.8rem;font-weight:900;color:var(--text)}
 
 /* Subjects mock */
-.mock-subjects{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px;overflow:hidden}
+.mock-subjects{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;overflow:hidden}
 @media(max-width:700px){.mock-subjects{grid-template-columns:repeat(2,1fr)}}
-.mock-subject{background:var(--card);border:1px solid var(--border);border-radius:10px;
-padding:12px;position:relative;overflow:hidden}
-.mock-subject::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sc)}
-.mock-subject-name{font-size:.78rem;font-weight:800;margin-bottom:8px;color:var(--text)}
-.mock-subject-stat{display:flex;justify-content:space-between;font-size:.6rem;color:var(--text-3);margin-bottom:3px}
+.mock-subject{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px;position:relative;overflow:hidden;
+  animation:cardIn .5s var(--ios-ease) both;
+  transition:all .3s var(--ios-ease);
+}
+.mock-subject:hover{transform:translateY(-2px);border-color:var(--border-2)}
+.mock-subject::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--sc);
+}
+.mock-subject-name{font-size:.8rem;font-weight:800;margin-bottom:10px;color:var(--text)}
+.mock-subject-stat{
+  display:flex;justify-content:space-between;
+  font-size:.62rem;color:var(--text-3);margin-bottom:4px;
+}
 .mock-subject-stat strong{color:var(--text-2);font-weight:700}
 
 /* Syllabus mock */
-.mock-syl{padding:4px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
-.mock-syl-cat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;
-display:flex;align-items:center;gap:12px}
+.mock-syl{display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.mock-syl-cat{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;
+  transition:all .35s var(--ios-ease);
+  animation:cardIn .5s var(--ios-ease) both;
+}
+.mock-syl-cat:hover{border-color:var(--border-2);transform:translateX(4px)}
 .mock-syl-cat-info{flex:1}
-.mock-syl-name{font-size:.82rem;font-weight:800;color:var(--sc);margin-bottom:2px}
-.mock-syl-meta{font-size:.65rem;color:var(--text-3)}
-.mock-syl-bar{width:80px;height:5px;background:var(--card-2);border-radius:10px;overflow:hidden}
-.mock-syl-bar>div{height:100%;background:linear-gradient(90deg,#5E9EFF,#A78BFA);border-radius:10px}
-.mock-syl-pct{font-size:.7rem;font-weight:800;color:var(--text-2);min-width:32px;text-align:right}
+.mock-syl-name{font-size:.84rem;font-weight:800;color:var(--sc);margin-bottom:3px}
+.mock-syl-meta{font-size:.66rem;color:var(--text-3)}
+.mock-syl-bar{width:90px;height:6px;background:var(--card-2);border-radius:10px;overflow:hidden}
+.mock-syl-bar>div{
+  height:100%;background:var(--grad-1);border-radius:10px;
+  transition:width 1.4s var(--ios-ease);
+}
+.mock-syl-pct{font-size:.72rem;font-weight:800;color:var(--text-2);min-width:36px;text-align:right}
 
 /* Insights mock */
-.mock-insights{padding:4px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
-.mock-insight{background:linear-gradient(135deg,rgba(94,158,255,.08),rgba(167,139,250,.05));
-border:1px solid rgba(94,158,255,.2);border-radius:10px;padding:10px 14px;
-display:flex;gap:10px;align-items:flex-start}
-.mock-insight-ico{font-size:1rem;flex-shrink:0}
-.mock-insight-text{font-size:.75rem;color:var(--text-2);line-height:1.5}
+.mock-insights{display:flex;flex-direction:column;gap:9px;overflow:hidden}
+.mock-insight{
+  background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));
+  border:1px solid rgba(168,85,247,.2);
+  border-radius:12px;padding:12px 16px;
+  display:flex;gap:12px;align-items:flex-start;
+  animation:fadeInUp .5s var(--ios-ease) both;
+  transition:all .3s var(--ios-ease);
+}
+.mock-insight:hover{transform:translateX(4px);border-color:rgba(168,85,247,.4)}
+.mock-insight-ico{font-size:1.1rem;flex-shrink:0;margin-top:2px}
+.mock-insight-text{font-size:.78rem;color:var(--text-2);line-height:1.55}
 .mock-insight-text strong{color:var(--text)}
 
-/* Section */
-.section{padding:110px 0;position:relative;z-index:1}
-.section-head{text-align:center;max-width:760px;margin:0 auto 70px}
-.section-head .tag{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-color:var(--accent);margin-bottom:14px}
-.section-head h2{font-size:clamp(1.9rem,4vw,3rem);font-weight:900;letter-spacing:-.03em;
-line-height:1.15;margin-bottom:18px}
-.section-head h2 .grad{background:linear-gradient(135deg,#5E9EFF,#A78BFA,#F472B6);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.section-head p{color:var(--text-2);font-size:1.05rem}
-
 /* Stats bar */
-.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
-padding:36px;background:var(--card);border:1px solid var(--border);border-radius:20px;
-margin:40px auto 0;max-width:960px;position:relative;overflow:hidden}
-.stats-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-background:linear-gradient(90deg,transparent,#5E9EFF,#A78BFA,#F472B6,transparent)}
-@media(max-width:768px){.stats-bar{grid-template-columns:repeat(2,1fr);gap:24px;padding:26px}}
+.stats-bar{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+  padding:40px;background:var(--card);border:1px solid var(--border);
+  border-radius:22px;margin:60px auto 0;max-width:960px;
+  position:relative;overflow:hidden;
+}
+.stats-bar::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--purple),var(--pink),var(--orange),transparent);
+}
+@media(max-width:768px){.stats-bar{grid-template-columns:repeat(2,1fr);gap:28px;padding:28px}}
 .stat-item{text-align:center}
-.stat-num{font-size:2.2rem;font-weight:900;letter-spacing:-.03em;line-height:1;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-font-variant-numeric:tabular-nums}
-.stat-label{font-size:.72rem;color:var(--text-3);text-transform:uppercase;
-letter-spacing:.08em;font-weight:800;margin-top:8px}
-
-/* Comparison */
-.compare-table{max-width:820px;margin:0 auto;background:var(--card);border:1px solid var(--border);
-border-radius:20px;overflow:hidden;position:relative}
-.compare-row{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;padding:18px 24px;
-border-bottom:1px solid var(--border);align-items:center;font-size:.9rem}
-.compare-row:last-child{border-bottom:none}
-.compare-row.header{background:var(--card-2);font-weight:800;font-size:.78rem;
-text-transform:uppercase;letter-spacing:.06em;color:var(--text-3)}
-.compare-row.header .col-us{color:var(--accent)}
-.compare-row .col-us{color:var(--text);font-weight:700}
-.compare-row .col-other{color:var(--text-3);font-size:.85rem}
-.check{color:var(--success);font-weight:900;font-size:1.05rem}
-.cross{color:#EF4444;font-weight:900;font-size:1.05rem}
-.partial{color:var(--gold);font-weight:900;font-size:1.05rem}
-@media(max-width:600px){
-.compare-row{grid-template-columns:1.6fr 1fr 1fr 1fr;font-size:.78rem;padding:14px 12px}
-.compare-row.header{font-size:.66rem}
+.stat-num{
+  font-size:2.4rem;font-weight:900;letter-spacing:-.03em;line-height:1;
+  background:var(--grad-1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;
+  font-variant-numeric:tabular-nums;animation:countUp .5s var(--ios-ease) both;
+}
+.stat-label{
+  font-size:.72rem;color:var(--text-3);text-transform:uppercase;
+  letter-spacing:.1em;font-weight:800;margin-top:10px;
 }
 
+/* ═══════════════════════════════════════════════
+   SECTIONS
+   ═══════════════════════════════════════════════ */
+.section{padding:120px 0;position:relative;z-index:1}
+.section-head{text-align:center;max-width:760px;margin:0 auto 70px}
+.section-head h2{
+  font-size:clamp(1.9rem,4vw,3rem);font-weight:900;
+  letter-spacing:-.03em;line-height:1.15;margin-bottom:18px;
+}
+.section-head h2 .grad{
+  background:var(--grad-hero);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:gradientShift 4s ease infinite;
+}
+.section-head p{color:var(--text-2);font-size:1.05rem}
+
 /* Features */
-.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-.feature-card{background:linear-gradient(180deg,var(--card),var(--card-2));
-border:1px solid var(--border);border-radius:18px;padding:30px;
-transition:.3s;position:relative;overflow:hidden;cursor:pointer}
-.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-background:linear-gradient(90deg,transparent,var(--accent),transparent);
-opacity:0;transition:.3s}
-.feature-card::after{content:'';position:absolute;top:-50%;right:-50%;width:200px;height:200px;
-background:radial-gradient(circle,rgba(94,158,255,.15),transparent 70%);
-opacity:0;transition:.5s;pointer-events:none}
-.feature-card:hover{border-color:var(--border-2);transform:translateY(-6px);
-box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.features-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:20px;
+}
+.feature-card{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid var(--border);border-radius:20px;padding:32px;
+  transition:all .5s var(--ios-ease);position:relative;overflow:hidden;
+}
+.feature-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--grad-1);opacity:0;
+  transition:opacity .4s var(--ios-ease);
+}
+.feature-card::after{
+  content:'';position:absolute;top:-50%;right:-50%;width:220px;height:220px;
+  background:radial-gradient(circle,rgba(168,85,247,.15),transparent 70%);
+  opacity:0;transition:opacity .5s var(--ios-ease);pointer-events:none;
+}
+.feature-card:hover{
+  border-color:var(--border-2);
+  transform:translateY(-6px);
+  box-shadow:0 24px 48px rgba(0,0,0,.5),0 0 60px rgba(168,85,247,.15);
+}
 .feature-card:hover::before,.feature-card:hover::after{opacity:1}
-.feature-icon{width:52px;height:52px;border-radius:14px;
-background:linear-gradient(135deg,rgba(94,158,255,.2),rgba(167,139,250,.12));
-display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:20px;
-border:1px solid rgba(94,158,255,.2);position:relative;z-index:1;transition:.3s}
-.feature-card:hover .feature-icon{transform:scale(1.08) rotate(-4deg)}
-.feature-card h3{font-size:1.05rem;font-weight:800;margin-bottom:8px;
-letter-spacing:-.01em;position:relative;z-index:1}
+.feature-icon{
+  width:56px;height:56px;border-radius:16px;
+  background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(236,72,153,.12));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;margin-bottom:22px;
+  border:1px solid rgba(168,85,247,.2);
+  position:relative;z-index:1;
+  transition:transform .5s var(--ios-spring);
+}
+.feature-card:hover .feature-icon{transform:scale(1.1) rotate(-6deg)}
+.feature-card h3{
+  font-size:1.08rem;font-weight:800;margin-bottom:10px;
+  letter-spacing:-.01em;position:relative;z-index:1;
+}
 .feature-card p{color:var(--text-2);font-size:.9rem;line-height:1.65;position:relative;z-index:1}
+
+/* Motivation */
+.motivation{padding:80px 0;text-align:center}
+.motivation-quote{
+  max-width:800px;margin:0 auto;padding:56px 44px;
+  background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(236,72,153,.05));
+  border:1px solid rgba(251,191,36,.2);
+  border-radius:26px;position:relative;
+}
+.motivation-quote::before{
+  content:'"';position:absolute;top:-30px;left:30px;
+  font-size:8rem;line-height:1;color:rgba(251,191,36,.2);
+  font-family:Georgia,serif;
+}
+.motivation-quote p{
+  font-size:clamp(1.2rem,2.5vw,1.6rem);font-weight:700;
+  line-height:1.5;position:relative;z-index:1;font-style:italic;
+}
+.motivation-quote .author{
+  margin-top:22px;color:var(--amber);
+  font-size:.9rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+}
 
 /* How it works */
 .how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;position:relative}
-@media(max-width:900px){.how-grid{grid-template-columns:1fr;gap:40px}}
+@media(max-width:900px){.how-grid{grid-template-columns:1fr;gap:44px}}
 .how-step{position:relative;text-align:center}
-.how-num{width:70px;height:70px;border-radius:50%;margin:0 auto 20px;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA);color:#fff;
-display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;
-box-shadow:0 10px 30px rgba(94,158,255,.5);position:relative;z-index:2}
-.how-step h3{font-size:1.15rem;font-weight:800;margin-bottom:10px}
+.how-num{
+  width:76px;height:76px;border-radius:50%;margin:0 auto 22px;
+  background:var(--grad-1);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.7rem;font-weight:900;
+  box-shadow:0 12px 36px rgba(168,85,247,.5);
+  position:relative;z-index:2;
+  transition:transform .5s var(--ios-spring);
+}
+.how-step:hover .how-num{transform:scale(1.1) rotate(6deg)}
+.how-step h3{font-size:1.18rem;font-weight:800;margin-bottom:12px}
 .how-step p{color:var(--text-2);font-size:.92rem;max-width:280px;margin:0 auto}
-.how-step::before{content:'';position:absolute;top:35px;left:calc(50% + 50px);right:calc(-50% + 50px);
-height:2px;background:linear-gradient(90deg,rgba(94,158,255,.4),transparent);z-index:1}
+.how-step::before{
+  content:'';position:absolute;top:38px;left:calc(50% + 54px);right:calc(-50% + 54px);
+  height:2px;background:linear-gradient(90deg,rgba(168,85,247,.5),transparent);z-index:1;
+}
 .how-step:last-child::before{display:none}
 @media(max-width:900px){.how-step::before{display:none}}
 
-/* Motivation quote */
-.motivation{padding:80px 0;text-align:center;position:relative;z-index:1}
-.motivation-quote{max-width:800px;margin:0 auto;padding:50px 40px;
-background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(244,114,182,.05));
-border:1px solid rgba(251,191,36,.2);border-radius:24px;position:relative}
-.motivation-quote::before{content:'"';position:absolute;top:-30px;left:30px;
-font-size:8rem;line-height:1;color:rgba(251,191,36,.2);font-family:Georgia,serif}
-.motivation-quote p{font-size:clamp(1.2rem,2.5vw,1.6rem);font-weight:700;
-line-height:1.5;color:var(--text);position:relative;z-index:1;font-style:italic}
-.motivation-quote .author{margin-top:20px;color:var(--gold);
-font-size:.9rem;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+/* Comparison */
+.compare-table{
+  max-width:860px;margin:0 auto;background:var(--card);
+  border:1px solid var(--border);border-radius:22px;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.4);
+}
+.compare-row{
+  display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;
+  padding:18px 26px;border-bottom:1px solid var(--border);
+  align-items:center;font-size:.9rem;
+  transition:background .3s var(--ios-ease);
+}
+.compare-row:hover:not(.header){background:var(--card-2)}
+.compare-row:last-child{border-bottom:none}
+.compare-row.header{
+  background:var(--card-2);font-weight:800;font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);
+}
+.compare-row.header .col-us{color:var(--purple)}
+.compare-row .col-us{color:var(--text);font-weight:700}
+.compare-row .col-other{color:var(--text-3);font-size:.85rem}
+.check{color:var(--emerald);font-weight:900;font-size:1.1rem}
+.cross{color:var(--red);font-weight:900;font-size:1.1rem}
+.partial{color:var(--amber);font-weight:900;font-size:1.1rem}
+@media(max-width:600px){
+  .compare-row{grid-template-columns:1.6fr 1fr 1fr 1fr;font-size:.78rem;padding:14px 12px}
+  .compare-row.header{font-size:.66rem}
+}
 
 /* Testimonials */
-.testimonials-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
-.testimonial{background:linear-gradient(180deg,var(--card),var(--card-2));
-border:1px solid var(--border);border-radius:18px;padding:28px;transition:.25s}
-.testimonial:hover{border-color:var(--border-2);transform:translateY(-4px)}
-.testimonial .stars{color:#FBBF24;font-size:1rem;margin-bottom:14px;letter-spacing:2px}
-.testimonial p{font-size:.92rem;color:var(--text-2);line-height:1.75;margin-bottom:22px;font-style:italic}
+.testimonials-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;
+}
+.testimonial{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1px solid var(--border);border-radius:20px;padding:30px;
+  transition:all .4s var(--ios-ease);
+}
+.testimonial:hover{
+  border-color:var(--border-2);transform:translateY(-4px);
+  box-shadow:0 20px 40px rgba(0,0,0,.4);
+}
+.testimonial .stars{color:var(--amber);font-size:1rem;margin-bottom:16px;letter-spacing:2px}
+.testimonial p{
+  font-size:.92rem;color:var(--text-2);line-height:1.75;
+  margin-bottom:24px;font-style:italic;
+}
 .testimonial .author{display:flex;align-items:center;gap:12px}
-.testimonial .avatar{width:44px;height:44px;border-radius:50%;
-background:linear-gradient(135deg,#5E9EFF,#A78BFA);display:flex;align-items:center;
-justify-content:center;font-weight:800;color:#fff;font-size:.9rem;flex-shrink:0}
+.testimonial .avatar{
+  width:46px;height:46px;border-radius:50%;
+  background:var(--grad-1);display:flex;align-items:center;
+  justify-content:center;font-weight:800;color:#fff;font-size:.9rem;
+  flex-shrink:0;box-shadow:0 6px 18px rgba(168,85,247,.35);
+}
 .testimonial .name{font-weight:800;font-size:.9rem}
 .testimonial .role{font-size:.75rem;color:var(--text-3)}
 
 /* Pricing */
-.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:960px;margin:0 auto}
-.plan{background:linear-gradient(180deg,var(--card),var(--card-2));
-border:1.5px solid var(--border);border-radius:22px;padding:34px;
-position:relative;transition:.3s}
-.plan:hover{transform:translateY(-4px)}
-.plan.featured{border-color:#FBBF24;
-background:linear-gradient(180deg,rgba(251,191,36,.06),var(--card));
-box-shadow:0 0 50px rgba(251,191,36,.15);transform:scale(1.02)}
+.pricing-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:20px;max-width:980px;margin:0 auto;
+}
+.plan{
+  background:linear-gradient(180deg,var(--card),var(--card-2));
+  border:1.5px solid var(--border);border-radius:24px;padding:36px;
+  position:relative;transition:all .4s var(--ios-ease);
+}
+.plan:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.plan.featured{
+  border-color:var(--amber);
+  background:linear-gradient(180deg,rgba(251,191,36,.06),var(--card));
+  box-shadow:0 0 60px rgba(251,191,36,.15);
+  transform:scale(1.02);
+}
 .plan.featured:hover{transform:scale(1.02) translateY(-4px)}
-.plan-badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-background:linear-gradient(135deg,#FBBF24,#F472B6);color:#000;font-size:.7rem;
-font-weight:900;padding:5px 16px;border-radius:20px;letter-spacing:.05em;
-box-shadow:0 4px 14px rgba(251,191,36,.4)}
-.plan h3{font-size:.85rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;
-color:var(--text-3);margin-bottom:14px}
-.plan .price{font-size:3.2rem;font-weight:900;letter-spacing:-.04em;line-height:1;margin-bottom:8px}
-.plan .price .cur{font-size:1.4rem;font-weight:800;vertical-align:top;color:var(--text-2)}
+.plan-badge{
+  position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+  background:var(--grad-2);color:#1a1a1a;font-size:.7rem;
+  font-weight:900;padding:6px 18px;border-radius:20px;
+  letter-spacing:.06em;box-shadow:0 6px 18px rgba(251,191,36,.4);
+}
+.plan h3{
+  font-size:.85rem;font-weight:800;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--text-3);margin-bottom:16px;
+}
+.plan .price{
+  font-size:3.4rem;font-weight:900;letter-spacing:-.04em;
+  line-height:1;margin-bottom:10px;
+}
+.plan .price .cur{font-size:1.5rem;font-weight:800;vertical-align:top;color:var(--text-2)}
 .plan .price .period{font-size:.9rem;color:var(--text-3);font-weight:600}
-.plan .desc{color:var(--text-3);font-size:.85rem;margin-bottom:26px}
-.plan ul{list-style:none;margin-bottom:30px;display:flex;flex-direction:column;gap:13px}
-.plan li{font-size:.88rem;color:var(--text-2);display:flex;gap:10px;align-items:flex-start;line-height:1.5}
-.plan li::before{content:'✓';color:var(--success);font-weight:900;flex-shrink:0;font-size:.95rem}
-.plan .btn-plan{width:100%;padding:15px;border-radius:12px;font-weight:800;font-size:.92rem;
-cursor:pointer;transition:.25s;border:none;font-family:inherit;text-align:center;display:block;
-position:relative;overflow:hidden}
-.plan .btn-plan.primary{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;
-box-shadow:0 6px 20px rgba(94,158,255,.4)}
-.plan .btn-plan.primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(94,158,255,.6)}
-.plan .btn-plan.gold{background:linear-gradient(135deg,#FBBF24,#F472B6);color:#000;
-box-shadow:0 6px 20px rgba(251,191,36,.4)}
-.plan .btn-plan.gold:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(251,191,36,.6)}
-.plan .btn-plan.outline{background:transparent;color:var(--text);border:1.5px solid var(--border-2)}
-.plan .btn-plan.outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(94,158,255,.05)}
+.plan .desc{color:var(--text-3);font-size:.85rem;margin-bottom:28px}
+.plan ul{list-style:none;margin-bottom:32px;display:flex;flex-direction:column;gap:14px}
+.plan li{
+  font-size:.88rem;color:var(--text-2);
+  display:flex;gap:10px;align-items:flex-start;line-height:1.5;
+}
+.plan li::before{
+  content:'✓';color:var(--emerald);font-weight:900;
+  flex-shrink:0;font-size:.95rem;
+}
+.plan .btn-plan{
+  width:100%;padding:15px;border-radius:12px;
+  font-weight:800;font-size:.92rem;
+  transition:all .35s var(--ios-spring);
+  text-align:center;display:block;
+  position:relative;overflow:hidden;
+}
+.plan .btn-plan.primary{
+  background:var(--grad-1);color:#fff;
+  box-shadow:0 8px 24px rgba(168,85,247,.4);
+}
+.plan .btn-plan.primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 36px rgba(236,72,153,.5);
+  filter:brightness(1.08);
+}
+.plan .btn-plan.gold{
+  background:var(--grad-2);color:#1a1a1a;
+  box-shadow:0 8px 24px rgba(251,191,36,.4);
+}
+.plan .btn-plan.gold:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 36px rgba(251,191,36,.6);
+  filter:brightness(1.05);
+}
+.plan .btn-plan.outline{
+  background:transparent;color:var(--text);
+  border:1.5px solid var(--border-2);
+}
+.plan .btn-plan.outline:hover{
+  border-color:var(--purple);color:var(--purple);
+  background:rgba(168,85,247,.05);
+  transform:translateY(-2px);
+}
 
 /* FAQ */
 .faq-list{max-width:820px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
-.faq-item{background:var(--card);border:1px solid var(--border);border-radius:14px;
-overflow:hidden;transition:.3s}
-.faq-item.open{border-color:var(--accent);background:linear-gradient(180deg,rgba(94,158,255,.03),var(--card))}
-.faq-q{padding:22px 26px;font-weight:700;font-size:.95rem;cursor:pointer;
-display:flex;justify-content:space-between;align-items:center;gap:16px;user-select:none}
-.faq-q::after{content:'+';font-size:1.4rem;color:var(--text-3);font-weight:300;transition:.3s;flex-shrink:0}
-.faq-item.open .faq-q::after{transform:rotate(45deg);color:var(--accent)}
-.faq-a{padding:0 26px;max-height:0;overflow:hidden;transition:.3s;
-color:var(--text-2);font-size:.9rem;line-height:1.75}
-.faq-item.open .faq-a{padding:0 26px 22px;max-height:500px}
+.faq-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;
+  transition:all .4s var(--ios-ease);
+}
+.faq-item.open{
+  border-color:var(--purple);
+  background:linear-gradient(180deg,rgba(168,85,247,.04),var(--card));
+  box-shadow:0 8px 32px rgba(168,85,247,.15);
+}
+.faq-q{
+  padding:24px 28px;font-weight:700;font-size:.95rem;
+  cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;gap:16px;user-select:none;
+  transition:color .3s var(--ios-ease);
+}
+.faq-q:hover{color:var(--purple)}
+.faq-q::after{
+  content:'+';font-size:1.5rem;color:var(--text-3);
+  font-weight:300;transition:transform .4s var(--ios-spring);
+  flex-shrink:0;
+}
+.faq-item.open .faq-q::after{transform:rotate(45deg);color:var(--purple)}
+.faq-a{
+  padding:0 28px;max-height:0;overflow:hidden;
+  transition:max-height .5s var(--ios-ease),padding .3s var(--ios-ease);
+  color:var(--text-2);font-size:.9rem;line-height:1.75;
+}
+.faq-item.open .faq-a{padding:0 28px 24px;max-height:500px}
 
 /* Final CTA */
-.cta-section{padding:110px 0;text-align:center;position:relative;z-index:1}
-.cta-box{background:linear-gradient(135deg,rgba(94,158,255,.15),rgba(167,139,250,.1),rgba(244,114,182,.08));
-border:1px solid rgba(94,158,255,.3);border-radius:28px;padding:70px 40px;
-max-width:840px;margin:0 auto;position:relative;overflow:hidden}
-.cta-box::before{content:'';position:absolute;top:-50%;left:-20%;width:100%;height:200%;
-background:radial-gradient(circle,rgba(94,158,255,.2),transparent 60%);
-animation:float1 15s ease-in-out infinite;pointer-events:none}
-.cta-box h2{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;letter-spacing:-.03em;
-margin-bottom:18px;position:relative;line-height:1.15}
-.cta-box p{color:var(--text-2);font-size:1.1rem;margin-bottom:36px;position:relative;max-width:520px;margin-left:auto;margin-right:auto}
+.cta-section{padding:120px 0;text-align:center;position:relative;z-index:1}
+.cta-box{
+  background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1),rgba(249,115,22,.08));
+  border:1px solid rgba(168,85,247,.3);
+  border-radius:32px;padding:80px 40px;
+  max-width:860px;margin:0 auto;position:relative;overflow:hidden;
+}
+.cta-box::before{
+  content:'';position:absolute;top:-50%;left:-20%;width:100%;height:200%;
+  background:radial-gradient(circle,rgba(168,85,247,.25),transparent 60%);
+  animation:floatSlow 15s ease-in-out infinite;pointer-events:none;
+}
+.cta-box h2{
+  font-size:clamp(1.8rem,4vw,2.8rem);font-weight:900;
+  letter-spacing:-.03em;margin-bottom:18px;position:relative;line-height:1.15;
+}
+.cta-box h2 .grad{
+  background:var(--grad-hero);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;animation:gradientShift 4s ease infinite;
+}
+.cta-box p{
+  color:var(--text-2);font-size:1.1rem;margin-bottom:40px;
+  position:relative;max-width:520px;margin-left:auto;margin-right:auto;
+}
 
 /* Footer */
-footer{padding:70px 0 30px;border-top:1px solid var(--border);background:var(--bg-2);position:relative;z-index:1}
-.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:50px}
-@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:32px}}
-.footer-brand img{width:44px;height:44px;border-radius:11px;margin-bottom:14px}
+footer{
+  padding:80px 0 30px;border-top:1px solid var(--border);
+  background:var(--bg-2);position:relative;z-index:1;
+}
+.footer-grid{
+  display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+  gap:44px;margin-bottom:56px;
+}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:36px}}
+.footer-brand img{
+  width:48px;height:48px;border-radius:12px;margin-bottom:16px;
+  box-shadow:0 6px 18px rgba(168,85,247,.3);
+}
 .footer-brand p{color:var(--text-3);font-size:.85rem;max-width:280px;line-height:1.7}
-.footer-col h4{font-size:.78rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
-color:var(--text);margin-bottom:18px}
-.footer-col a{display:block;color:var(--text-3);font-size:.85rem;margin-bottom:11px;transition:.2s}
-.footer-col a:hover{color:var(--accent)}
-.footer-bottom{padding-top:30px;border-top:1px solid var(--border);text-align:center;
-color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+.footer-col h4{
+  font-size:.78rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--text);margin-bottom:20px;
+}
+.footer-col a{
+  display:block;color:var(--text-3);font-size:.85rem;
+  margin-bottom:12px;transition:all .3s var(--ios-ease);
+}
+.footer-col a:hover{color:var(--purple);transform:translateX(4px)}
+.footer-bottom{
+  padding-top:32px;border-top:1px solid var(--border);
+  text-align:center;color:var(--text-3);font-size:.8rem;
+  display:flex;justify-content:space-between;
+  flex-wrap:wrap;gap:12px;align-items:center;
+}
 @media(max-width:600px){.footer-bottom{justify-content:center;text-align:center}}
 
 /* Reveal */
-.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s cubic-bezier(.2,0,0,1),transform .8s cubic-bezier(.2,0,0,1)}
+.reveal{
+  opacity:0;transform:translateY(40px);
+  transition:opacity 1s var(--ios-ease),transform 1s var(--ios-ease);
+}
 .reveal.visible{opacity:1;transform:translateY(0)}
 .reveal.delay-1{transition-delay:.1s}
 .reveal.delay-2{transition-delay:.2s}
 .reveal.delay-3{transition-delay:.3s}
 
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* Ripple */
+.ripple-el{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.4);
+  transform:scale(0);animation:ripple .7s ease-out;
+  pointer-events:none;
+}
+.btn-hero,.nav-cta,.demo-tab,.plan .btn-plan{position:relative;overflow:hidden}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after{
+    animation-duration:0.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:0.01ms !important;
+  }
+}
 </style>
 </head>
 <body>
 
-<!-- Scroll progress -->
 <div class="scroll-progress" id="scrollProgress"></div>
 
-<!-- Background orbs -->
 <div class="bg-orbs">
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
@@ -533,8 +1059,8 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         sab kuch ek jagah. <strong style="color:var(--text)">No Notion templates. No setup. Just start.</strong>
       </p>
       <div class="hero-ctas">
-        <a href="/app.html" class="btn-hero primary"><span>▶</span> Start Tracking Free</a>
-        <a href="#demo" class="btn-hero secondary">👀 See Live Demo</a>
+        <a href="/app.html" class="btn-hero primary" data-ripple><span>▶</span> Start Tracking Free</a>
+        <a href="#demo" class="btn-hero secondary" data-ripple>👀 See Live Demo</a>
       </div>
       <div class="hero-trust">
         <span>✅ <strong>Zero setup</strong></span>
@@ -546,27 +1072,23 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
   </div>
 </section>
 
-<!-- ═══════════ INTERACTIVE DEMO ═══════════ -->
+<!-- INTERACTIVE DEMO -->
 <section class="demo-section" id="demo">
   <div class="container">
-    <div style="text-align:center;margin-bottom:36px">
-      <div style="font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
-      color:var(--accent);margin-bottom:14px">Live Preview</div>
-      <h2 style="font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:900;letter-spacing:-.03em;
-      margin-bottom:12px">Dekho App Kaise Kaam Karta Hai 👇</h2>
-      <p style="color:var(--text-2);max-width:600px;margin:0 auto">
-        Tabs pe click karo aur har screen live dekho — jaisa tum app me karoge.
-      </p>
+    <div style="text-align:center;margin-bottom:36px" class="reveal">
+      <div class="section-tag">Live Preview</div>
+      <h2 class="demo-title">Dekho App <span class="grad">Kaise Kaam Karta Hai</span> 👇</h2>
+      <p class="demo-sub">Tabs pe click karo aur har screen live dekho — jaisa tum app me karoge.</p>
     </div>
 
-    <div class="demo-tabs">
-      <button class="demo-tab active" data-tab="study">⏱ Study</button>
-      <button class="demo-tab" data-tab="subjects">◎ Subjects</button>
-      <button class="demo-tab" data-tab="syllabus">📖 Syllabus</button>
-      <button class="demo-tab" data-tab="insights">✨ Insights</button>
+    <div class="demo-tabs reveal">
+      <button class="demo-tab active" data-tab="study" data-ripple>⏱ Study</button>
+      <button class="demo-tab" data-tab="subjects" data-ripple>◎ Subjects</button>
+      <button class="demo-tab" data-tab="syllabus" data-ripple>📖 Syllabus</button>
+      <button class="demo-tab" data-tab="insights" data-ripple>✨ Insights</button>
     </div>
 
-    <div class="demo-window">
+    <div class="demo-window reveal">
       <div class="demo-dots"><span></span><span></span><span></span></div>
       <div class="demo-body">
 
@@ -578,15 +1100,16 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 <div class="mock-logo-icon">U</div>
                 <div class="mock-logo-text">UPSC Tracker</div>
               </div>
-              <div class="mock-nav-section">Focus</div>
+              <div class="mock-nav-section">Study</div>
               <div class="mock-nav-item active"><span class="mock-nav-icon">⏱</span><span>Study</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◈</span><span>Dashboard</span></div>
-              <div class="mock-nav-item"><span class="mock-nav-icon">▤</span><span>Calendar</span></div>
-              <div class="mock-nav-item"><span class="mock-nav-icon">◔</span><span>Analytics</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">🗓</span><span>Calendar</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">📊</span><span>Analytics</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">📜</span><span>History</span></div>
               <div class="mock-nav-section">Preparation</div>
               <div class="mock-nav-item"><span class="mock-nav-icon">📖</span><span>Syllabus</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◎</span><span>Subjects</span></div>
-              <div class="mock-nav-item"><span class="mock-nav-icon">↻</span><span>Revision</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">🔁</span><span>Revision</span></div>
             </div>
             <div class="mock-main">
               <div class="mock-topbar">
@@ -598,30 +1121,30 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 </div>
               </div>
               <div class="mock-content">
-                <div>
+                <div class="mock-greet">
                   <div class="mock-greet-text">Good morning, Mukund 👋</div>
                   <div class="mock-greet-sub">Let's make today count.</div>
                 </div>
                 <div class="mock-kpis">
-                  <div class="mock-kpi" style="--kc:#5E9EFF">
+                  <div class="mock-kpi" style="--kc:#A855F7;animation-delay:.1s">
                     <div class="mock-kpi-label">Today</div>
                     <div class="mock-kpi-value">2h 15m</div>
-                    <div class="mock-kpi-bar"><div style="width:28%;background:#5E9EFF"></div></div>
+                    <div class="mock-kpi-bar"><div style="width:28%;background:#A855F7"></div></div>
                   </div>
-                  <div class="mock-kpi" style="--kc:#34D399">
+                  <div class="mock-kpi" style="--kc:#EC4899;animation-delay:.15s">
                     <div class="mock-kpi-label">This Week</div>
                     <div class="mock-kpi-value">18h 40m</div>
-                    <div class="mock-kpi-bar"><div style="width:37%;background:#34D399"></div></div>
+                    <div class="mock-kpi-bar"><div style="width:37%;background:#EC4899"></div></div>
                   </div>
-                  <div class="mock-kpi" style="--kc:#FBBF24">
+                  <div class="mock-kpi" style="--kc:#FBBF24;animation-delay:.2s">
                     <div class="mock-kpi-label">Streak</div>
                     <div class="mock-kpi-value">🔥 12d</div>
                     <div class="mock-kpi-bar"><div style="width:60%;background:#FBBF24"></div></div>
                   </div>
-                  <div class="mock-kpi" style="--kc:#A78BFA">
+                  <div class="mock-kpi" style="--kc:#14B8A6;animation-delay:.25s">
                     <div class="mock-kpi-label">Syllabus</div>
                     <div class="mock-kpi-value">42%</div>
-                    <div class="mock-kpi-bar"><div style="width:42%;background:#A78BFA"></div></div>
+                    <div class="mock-kpi-bar"><div style="width:42%;background:#14B8A6"></div></div>
                   </div>
                 </div>
                 <div class="mock-timer">
@@ -671,13 +1194,13 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 <div class="mock-logo-icon">U</div>
                 <div class="mock-logo-text">UPSC Tracker</div>
               </div>
-              <div class="mock-nav-section">Focus</div>
+              <div class="mock-nav-section">Study</div>
               <div class="mock-nav-item"><span class="mock-nav-icon">⏱</span><span>Study</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◈</span><span>Dashboard</span></div>
               <div class="mock-nav-section">Preparation</div>
               <div class="mock-nav-item"><span class="mock-nav-icon">📖</span><span>Syllabus</span></div>
               <div class="mock-nav-item active"><span class="mock-nav-icon">◎</span><span>Subjects</span></div>
-              <div class="mock-nav-item"><span class="mock-nav-icon">↻</span><span>Revision</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">🔁</span><span>Revision</span></div>
             </div>
             <div class="mock-main">
               <div class="mock-topbar">
@@ -689,53 +1212,53 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
               </div>
               <div class="mock-content">
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                  <div style="font-size:.95rem;font-weight:800">All Subjects</div>
-                  <div style="padding:6px 14px;border-radius:20px;background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;font-size:.68rem;font-weight:800">+ Custom Subject</div>
+                  <div style="font-size:1rem;font-weight:800">All Subjects</div>
+                  <div style="padding:7px 16px;border-radius:20px;background:var(--grad-1);color:#fff;font-size:.7rem;font-weight:800;box-shadow:0 4px 14px rgba(168,85,247,.4)">+ Custom Subject</div>
                 </div>
                 <div class="mock-subjects">
-                  <div class="mock-subject" style="--sc:#5E9EFF">
+                  <div class="mock-subject" style="--sc:#A855F7;animation-delay:.1s">
                     <div class="mock-subject-name">Current Affairs</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>12h 30m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>18</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>42%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#A78BFA">
+                  <div class="mock-subject" style="--sc:#EC4899;animation-delay:.15s">
                     <div class="mock-subject-name">History</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>28h 15m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>32</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>68%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#F472B6">
+                  <div class="mock-subject" style="--sc:#F97316;animation-delay:.2s">
                     <div class="mock-subject-name">Geography</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>22h 40m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>25</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>55%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#34D399">
+                  <div class="mock-subject" style="--sc:#14B8A6;animation-delay:.25s">
                     <div class="mock-subject-name">Indian Polity</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>18h 20m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>22</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>60%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#FBBF24">
+                  <div class="mock-subject" style="--sc:#FBBF24;animation-delay:.3s">
                     <div class="mock-subject-name">Economy</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>14h 15m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>16</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>35%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#14B8A6">
+                  <div class="mock-subject" style="--sc:#06B6D4;animation-delay:.35s">
                     <div class="mock-subject-name">Environment</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>10h 45m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>12</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>28%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#EC4899">
+                  <div class="mock-subject" style="--sc:#8B5CF6;animation-delay:.4s">
                     <div class="mock-subject-name">Ethics</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>8h 30m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>10</strong></div>
                     <div class="mock-subject-stat"><span>Syllabus</span><strong>40%</strong></div>
                   </div>
-                  <div class="mock-subject" style="--sc:#8B5CF6">
+                  <div class="mock-subject" style="--sc:#6366F1;animation-delay:.45s">
                     <div class="mock-subject-name">Essay</div>
                     <div class="mock-subject-stat"><span>Time</span><strong>6h 15m</strong></div>
                     <div class="mock-subject-stat"><span>Sessions</span><strong>8</strong></div>
@@ -755,13 +1278,13 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 <div class="mock-logo-icon">U</div>
                 <div class="mock-logo-text">UPSC Tracker</div>
               </div>
-              <div class="mock-nav-section">Focus</div>
+              <div class="mock-nav-section">Study</div>
               <div class="mock-nav-item"><span class="mock-nav-icon">⏱</span><span>Study</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◈</span><span>Dashboard</span></div>
               <div class="mock-nav-section">Preparation</div>
               <div class="mock-nav-item active"><span class="mock-nav-icon">📖</span><span>Syllabus</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◎</span><span>Subjects</span></div>
-              <div class="mock-nav-item"><span class="mock-nav-icon">↻</span><span>Revision</span></div>
+              <div class="mock-nav-item"><span class="mock-nav-icon">🔁</span><span>Revision</span></div>
             </div>
             <div class="mock-main">
               <div class="mock-topbar">
@@ -772,60 +1295,60 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 </div>
               </div>
               <div class="mock-content">
-                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
                   <div>
-                    <div style="font-size:.92rem;font-weight:800">📖 UPSC Syllabus Tracker</div>
-                    <div style="font-size:.66rem;color:var(--text-3);margin-top:2px">Complete UPSC syllabus — GS I-IV, CSAT, Essay, Optional</div>
+                    <div style="font-size:.95rem;font-weight:800">📖 UPSC Syllabus Tracker</div>
+                    <div style="font-size:.68rem;color:var(--text-3);margin-top:3px">Complete UPSC syllabus — GS I-IV, CSAT, Essay, Optional</div>
                   </div>
-                  <div style="display:flex;gap:5px">
-                    <div style="padding:4px 10px;border-radius:8px;background:var(--card);border:1px solid var(--border);font-size:.62rem;font-weight:700;color:var(--text-2)">Expand All</div>
-                    <div style="padding:4px 10px;border-radius:8px;background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff;font-size:.62rem;font-weight:700">+ Add Topic</div>
+                  <div style="display:flex;gap:6px">
+                    <div style="padding:5px 12px;border-radius:8px;background:var(--card);border:1px solid var(--border);font-size:.64rem;font-weight:700;color:var(--text-2)">Expand All</div>
+                    <div style="padding:5px 12px;border-radius:8px;background:var(--grad-1);color:#fff;font-size:.64rem;font-weight:700;box-shadow:0 4px 12px rgba(168,85,247,.35)">+ Add Topic</div>
                   </div>
                 </div>
                 <div class="mock-syl">
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#A855F7;animation-delay:.1s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#A855F7">Prelims · GS Paper I</div>
+                      <div class="mock-syl-name">Prelims · GS Paper I</div>
                       <div class="mock-syl-meta">7 subjects · 7 topics</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:42%"></div></div>
                     <div class="mock-syl-pct">42%</div>
                   </div>
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#14B8A6;animation-delay:.15s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#14B8A6">Prelims · CSAT Paper II</div>
+                      <div class="mock-syl-name">Prelims · CSAT Paper II</div>
                       <div class="mock-syl-meta">7 subjects · 7 topics</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:28%"></div></div>
                     <div class="mock-syl-pct">28%</div>
                   </div>
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#EC4899;animation-delay:.2s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#EC4899">Mains · Essay</div>
+                      <div class="mock-syl-name">Mains · Essay</div>
                       <div class="mock-syl-meta">1 subject · 1 topic</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:15%"></div></div>
                     <div class="mock-syl-pct">15%</div>
                   </div>
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#F97316;animation-delay:.25s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#F97316">Mains · GS Paper I</div>
+                      <div class="mock-syl-name">Mains · GS Paper I</div>
                       <div class="mock-syl-meta">5 subjects · 12 topics</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:55%"></div></div>
                     <div class="mock-syl-pct">55%</div>
                   </div>
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#6366F1;animation-delay:.3s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#6366F1">Mains · GS Paper II</div>
+                      <div class="mock-syl-name">Mains · GS Paper II</div>
                       <div class="mock-syl-meta">3 subjects · 20 topics</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:38%"></div></div>
                     <div class="mock-syl-pct">38%</div>
                   </div>
-                  <div class="mock-syl-cat">
+                  <div class="mock-syl-cat" style="--sc:#10B981;animation-delay:.35s">
                     <div class="mock-syl-cat-info">
-                      <div class="mock-syl-name" style="--sc:#10B981">Mains · GS Paper III</div>
+                      <div class="mock-syl-name">Mains · GS Paper III</div>
                       <div class="mock-syl-meta">5 subjects · 20 topics</div>
                     </div>
                     <div class="mock-syl-bar"><div style="width:30%"></div></div>
@@ -845,7 +1368,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
                 <div class="mock-logo-icon">U</div>
                 <div class="mock-logo-text">UPSC Tracker</div>
               </div>
-              <div class="mock-nav-section">Focus</div>
+              <div class="mock-nav-section">Study</div>
               <div class="mock-nav-item"><span class="mock-nav-icon">⏱</span><span>Study</span></div>
               <div class="mock-nav-item"><span class="mock-nav-icon">◈</span><span>Dashboard</span></div>
               <div class="mock-nav-section">More</div>
@@ -860,24 +1383,24 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
               </div>
               <div class="mock-content">
                 <div>
-                  <div style="display:inline-block;padding:3px 12px;border-radius:20px;background:linear-gradient(135deg,#5E9EFF,#A78BFA);color:#fff;font-size:.6rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px">✨ Powered by your data</div>
-                  <div style="font-size:1rem;font-weight:900;letter-spacing:-.01em;margin-bottom:4px">Your Personalized Insights</div>
-                  <div style="font-size:.75rem;color:var(--text-2);margin-bottom:12px">Data-driven suggestions to improve your study patterns.</div>
+                  <div style="display:inline-block;padding:4px 14px;border-radius:20px;background:var(--grad-1);color:#fff;font-size:.62rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;box-shadow:0 4px 14px rgba(168,85,247,.35)">✨ Powered by your data</div>
+                  <div style="font-size:1.05rem;font-weight:900;letter-spacing:-.01em;margin-bottom:5px">Your Personalized Insights</div>
+                  <div style="font-size:.78rem;color:var(--text-2);margin-bottom:14px">Data-driven suggestions to improve your study patterns.</div>
                 </div>
                 <div class="mock-insights">
-                  <div class="mock-insight">
+                  <div class="mock-insight" style="animation-delay:.1s">
                     <div class="mock-insight-ico">🔥</div>
                     <div class="mock-insight-text"><strong>12-day streak!</strong> You're building great momentum. Keep it going.</div>
                   </div>
-                  <div class="mock-insight">
+                  <div class="mock-insight" style="animation-delay:.2s">
                     <div class="mock-insight-ico">🧠</div>
                     <div class="mock-insight-text">Your peak productivity is in the <strong>morning (6:00 – 9:00)</strong>. Schedule toughest subjects here.</div>
                   </div>
-                  <div class="mock-insight">
+                  <div class="mock-insight" style="animation-delay:.3s">
                     <div class="mock-insight-ico">⚠️</div>
                     <div class="mock-insight-text">Core subjects needing attention: <strong>Economy, Environment</strong>. Schedule them this week.</div>
                   </div>
-                  <div class="mock-insight">
+                  <div class="mock-insight" style="animation-delay:.4s">
                     <div class="mock-insight-ico">📈</div>
                     <div class="mock-insight-text">Study time up <strong>32%</strong> vs last week. Whatever you're doing — keep doing it.</div>
                   </div>
@@ -891,7 +1414,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
     </div>
 
     <!-- Stats bar -->
-    <div class="stats-bar">
+    <div class="stats-bar reveal">
       <div class="stat-item">
         <div class="stat-num" data-count="500">0</div>
         <div class="stat-label">Active Aspirants</div>
@@ -912,15 +1435,15 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
   </div>
 </section>
 
-<!-- PITCH — Why it matters -->
+<!-- PROBLEM -->
 <section class="section" style="background:var(--bg-2)">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">The Problem</div>
+      <div class="section-tag">The Problem</div>
       <h2>99% Aspirants <span class="grad">Yeh Galti</span> Karte Hain</h2>
       <p>6 mahine padhne ke baad pata chalta hai — kuch topics chhoot gaye, revision nahi hui, aur kya padha wo bhi yaad nahi.</p>
     </div>
-    <div class="features-grid" style="max-width:960px;margin:0 auto">
+    <div class="features-grid" style="max-width:1000px;margin:0 auto">
       <div class="feature-card reveal">
         <div class="feature-icon">😰</div>
         <h3>Blind Spots</h3>
@@ -939,7 +1462,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
       <div class="feature-card reveal">
         <div class="feature-icon">📉</div>
         <h3>No Data, No Direction</h3>
-        <p>Kya better kar rahe, kya worse — kuch pata nahi chalता. Blind flying.</p>
+        <p>Kya better kar rahe, kya worse — kuch pata nahi chalta. Blind flying.</p>
       </div>
       <div class="feature-card reveal delay-1">
         <div class="feature-icon">😩</div>
@@ -969,7 +1492,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section" id="how">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">How It Works</div>
+      <div class="section-tag">How It Works</div>
       <h2>Start in <span class="grad">60 Seconds</span></h2>
       <p>No complex setup. No Notion templates. Just login and start tracking.</p>
     </div>
@@ -997,7 +1520,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section" id="features" style="background:var(--bg-2)">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">Everything You Need</div>
+      <div class="section-tag">Everything You Need</div>
       <h2>Everything in <span class="grad">One Place</span></h2>
       <p>Har feature aspirants ki real problems solve karta hai. No fluff, no distraction.</p>
     </div>
@@ -1013,7 +1536,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <p>Complete UPSC syllabus (GS I-IV, Essay, CSAT, Optional) with status per topic — click to update.</p>
       </div>
       <div class="feature-card reveal delay-2">
-        <div class="feature-icon">↻</div>
+        <div class="feature-icon">🔁</div>
         <h3>Smart Revision</h3>
         <p>Spaced repetition with 1/3/7/14/30/60 day intervals. Auto-schedules based on your study.</p>
       </div>
@@ -1070,7 +1593,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">Why Us</div>
+      <div class="section-tag">Why Us</div>
       <h2>UPSC Tracker <span class="grad">vs Others</span></h2>
       <p>Notion, spreadsheet, ya generic tracker — hum sabse best kyu hain?</p>
     </div>
@@ -1081,54 +1604,14 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <div>Notion</div>
         <div>Spreadsheet</div>
       </div>
-      <div class="compare-row">
-        <div>Pre-loaded UPSC syllabus</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Auto revision scheduling</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Study timer built-in</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="partial">~</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Zero setup needed</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Mobile + Desktop sync</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="partial">~</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Deep analytics dashboard</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Free forever plan</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="partial">~</span></div>
-        <div class="col-other"><span class="check">✓</span></div>
-      </div>
-      <div class="compare-row">
-        <div>Built for UPSC aspirants</div>
-        <div class="col-us"><span class="check">✓</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-        <div class="col-other"><span class="cross">✗</span></div>
-      </div>
+      <div class="compare-row"><div>Pre-loaded UPSC syllabus</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="cross">✗</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Auto revision scheduling</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="cross">✗</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Study timer built-in</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="partial">~</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Zero setup needed</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="cross">✗</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Mobile + Desktop sync</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="partial">~</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Deep analytics dashboard</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="cross">✗</span></div><div class="col-other"><span class="cross">✗</span></div></div>
+      <div class="compare-row"><div>Free forever plan</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="partial">~</span></div><div class="col-other"><span class="check">✓</span></div></div>
+      <div class="compare-row"><div>Built for UPSC aspirants</div><div class="col-us"><span class="check">✓</span></div><div class="col-other"><span class="cross">✗</span></div><div class="col-other"><span class="cross">✗</span></div></div>
     </div>
   </div>
 </section>
@@ -1137,7 +1620,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section" style="background:var(--bg-2)">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">Real Users</div>
+      <div class="section-tag">Real Users</div>
       <h2>What <span class="grad">Aspirants Say</span></h2>
       <p>Hundreds of serious aspirants already tracking their prep daily.</p>
     </div>
@@ -1147,10 +1630,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <p>"Pehle Notion pe track karta tha, 3 din mein chhod diya. Ye app simple hai — sirf pick subject, start timer. Ab daily use karta hoon."</p>
         <div class="author">
           <div class="avatar">R</div>
-          <div>
-            <div class="name">Rahul Verma</div>
-            <div class="role">UPSC 2027 Aspirant</div>
-          </div>
+          <div><div class="name">Rahul Verma</div><div class="role">UPSC 2027 Aspirant</div></div>
         </div>
       </div>
       <div class="testimonial reveal delay-1">
@@ -1158,10 +1638,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <p>"Revision scheduler game changer hai. Pehle bhool jata tha ki kya revise karna hai. Ab automatically due ho jata hai."</p>
         <div class="author">
           <div class="avatar">P</div>
-          <div>
-            <div class="name">Priya Sharma</div>
-            <div class="role">Serious Aspirant · Delhi</div>
-          </div>
+          <div><div class="name">Priya Sharma</div><div class="role">Serious Aspirant · Delhi</div></div>
         </div>
       </div>
       <div class="testimonial reveal delay-2">
@@ -1169,10 +1646,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <p>"Best part — analytics. Pata chala ki main morning mein sabse zyada focused hota hoon. Ab schedule usi hisaab se banata hoon."</p>
         <div class="author">
           <div class="avatar">A</div>
-          <div>
-            <div class="name">Amit Kumar</div>
-            <div class="role">UPSC 2026 Attempt</div>
-          </div>
+          <div><div class="name">Amit Kumar</div><div class="role">UPSC 2026 Attempt</div></div>
         </div>
       </div>
     </div>
@@ -1183,7 +1657,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section" id="pricing">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">Simple Pricing</div>
+      <div class="section-tag">Simple Pricing</div>
       <h2>Free to Start. <span class="grad">Upgrade When Ready.</span></h2>
       <p>Basic tracking sab ke liye free. Advanced features ke liye optional premium.</p>
     </div>
@@ -1200,7 +1674,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
           <li>Notes & tasks</li>
           <li>Current affairs</li>
         </ul>
-        <a href="/app.html" class="btn-plan outline">Start Free</a>
+        <a href="/app.html" class="btn-plan outline" data-ripple>Start Free</a>
       </div>
       <div class="plan featured reveal delay-1">
         <div class="plan-badge">BEST VALUE</div>
@@ -1217,7 +1691,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
           <li>Unlimited export (JSON, CSV)</li>
           <li>Priority support</li>
         </ul>
-        <a href="/app.html" class="btn-plan gold">Upgrade to Premium</a>
+        <a href="/app.html" class="btn-plan gold" data-ripple>Upgrade to Premium</a>
       </div>
       <div class="plan reveal delay-2">
         <h3>Monthly</h3>
@@ -1229,7 +1703,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
           <li>No long-term commitment</li>
           <li>Same advanced features</li>
         </ul>
-        <a href="/app.html" class="btn-plan primary">Choose Monthly</a>
+        <a href="/app.html" class="btn-plan primary" data-ripple>Choose Monthly</a>
       </div>
     </div>
   </div>
@@ -1239,35 +1713,35 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 <section class="section" id="faq" style="background:var(--bg-2)">
   <div class="container">
     <div class="section-head reveal">
-      <div class="tag">Common Questions</div>
+      <div class="section-tag">Common Questions</div>
       <h2>Frequently <span class="grad">Asked</span></h2>
     </div>
     <div class="faq-list">
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Is the app really free?</div>
         <div class="faq-a">Yes. All core features (timer, syllabus, revision, PYQ tracker, notes, current affairs) free hain. Advanced analytics aur premium features ke liye optional paid plan hai.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Data kahan store hota hai? Safe hai?</div>
         <div class="faq-a">Aapka data Supabase ke secure servers pe encrypted form mein store hota hai. Sirf aap apna data dekh sakte hain — koi aur access nahi kar sakta.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Phone pe kaam karta hai?</div>
         <div class="faq-a">Bilkul. Website fully responsive hai — phone, tablet, desktop sab pe perfectly kaam karta hai. Mobile pe touch-friendly controls milte hain.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Payment kaise karein?</div>
-        <div class="faq-a">Razorpay ke through secure payments. UPI, card, netbanking sab support karte hain. Monthly plan ke liye UPI Autopay setup karna zaroori hai.</div>
+        <div class="faq-a">Razorpay ke through secure payments. UPI, card, netbanking sab support karte hain.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Cancel kaise karein agar mann badal jaye?</div>
         <div class="faq-a">Koi commitment nahi. Monthly plan aap kabhi bhi cancel kar sakte hain — next billing cycle se koi charge nahi hoga. Yearly plan one-time payment hai.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Kya mera data delete ho sakta hai?</div>
         <div class="faq-a">Kabhi bhi Settings se apna saara data export kar sakte hain. Ya aap chahein toh account delete bhi kar sakte hain — pura data permanently remove ho jayega.</div>
       </div>
-      <div class="faq-item">
+      <div class="faq-item reveal">
         <div class="faq-q">Notion se better kyu hai?</div>
         <div class="faq-a">Notion me tumhe khud templates banana padta hai, formulas likhni padti hain, aur track karna mushkil hota hai. Yahan complete UPSC syllabus pre-loaded hai, revision auto-schedule hoti hai, aur zero setup chahiye.</div>
       </div>
@@ -1281,9 +1755,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
     <div class="cta-box reveal">
       <h2>Ready to <span class="grad">Crack UPSC?</span></h2>
       <p>Join 500+ aspirants using data-driven preparation. Free forever core features — no credit card needed.</p>
-      <a href="/app.html" class="btn-hero primary" style="display:inline-flex">
-        ▶ Start Free — No Credit Card
-      </a>
+      <a href="/app.html" class="btn-hero primary" data-ripple style="display:inline-flex">▶ Start Free — No Credit Card</a>
     </div>
   </div>
 </section>
@@ -1313,7 +1785,7 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
         <h4>Company</h4>
         <a href="/about.html">About</a>
         <a href="/contact.html">Contact</a>
-        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/privacy.html">Privacy</a>
         <a href="/terms.html">Terms</a>
       </div>
     </div>
@@ -1325,21 +1797,35 @@ color:var(--text-3);font-size:.8rem;display:flex;justify-content:space-between;f
 </footer>
 
 <script>
-/* Scroll progress */
+/* ═══════════ SCROLL PROGRESS ═══════════ */
 const scrollProgress = document.getElementById('scrollProgress');
+let scrollTicking = false;
 window.addEventListener('scroll', () => {
-  const h = document.documentElement;
-  const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-  scrollProgress.style.width = scrolled + '%';
-});
+  if (!scrollTicking) {
+    requestAnimationFrame(() => {
+      const h = document.documentElement;
+      const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      scrollProgress.style.width = scrolled + '%';
+      scrollTicking = false;
+    });
+    scrollTicking = true;
+  }
+}, { passive: true });
 
-/* Navbar scroll */
+/* ═══════════ NAVBAR SCROLL ═══════════ */
 const navbar = document.getElementById('navbar');
+let navTicking = false;
 window.addEventListener('scroll', () => {
-  navbar.classList.toggle('scrolled', window.scrollY > 50);
-});
+  if (!navTicking) {
+    requestAnimationFrame(() => {
+      navbar.classList.toggle('scrolled', window.scrollY > 50);
+      navTicking = false;
+    });
+    navTicking = true;
+  }
+}, { passive: true });
 
-/* FAQ toggle */
+/* ═══════════ FAQ TOGGLE ═══════════ */
 document.querySelectorAll('.faq-item').forEach(item => {
   item.querySelector('.faq-q').addEventListener('click', () => {
     const wasOpen = item.classList.contains('open');
@@ -1348,18 +1834,20 @@ document.querySelectorAll('.faq-item').forEach(item => {
   });
 });
 
-/* Smooth scroll */
+/* ═══════════ SMOOTH SCROLL ═══════════ */
 document.querySelectorAll('a[href^="#"]').forEach(a => {
   a.addEventListener('click', e => {
     const target = document.querySelector(a.getAttribute('href'));
     if (target) {
       e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const offset = 80;
+      const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
     }
   });
 });
 
-/* Reveal on scroll */
+/* ═══════════ REVEAL ON SCROLL ═══════════ */
 const revealObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -1367,31 +1855,25 @@ const revealObserver = new IntersectionObserver(entries => {
       revealObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
 document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
-/* Stats counter */
+/* ═══════════ STATS COUNTER ═══════════ */
 const statObserver = new IntersectionObserver(entries => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const el = entry.target;
       const target = parseInt(el.dataset.count, 10);
       const suffix = el.dataset.suffix || '';
-      const duration = 1800;
+      const duration = 2000;
       const start = performance.now();
 
       const animate = (now) => {
         const elapsed = now - start;
         const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
+        const eased = 1 - Math.pow(1 - progress, 4);
         const value = Math.round(target * eased);
-
-        if (target >= 1000) {
-          el.textContent = value.toLocaleString('en-IN') + suffix;
-        } else {
-          el.textContent = value + suffix;
-        }
-
+        el.textContent = target >= 1000 ? value.toLocaleString('en-IN') + suffix : value + suffix;
         if (progress < 1) requestAnimationFrame(animate);
       };
       requestAnimationFrame(animate);
@@ -1401,18 +1883,28 @@ const statObserver = new IntersectionObserver(entries => {
 }, { threshold: 0.5 });
 document.querySelectorAll('[data-count]').forEach(el => statObserver.observe(el));
 
-/* ═══════════ INTERACTIVE DEMO TABS ═══════════ */
+/* ═══════════ DEMO TABS ═══════════ */
 document.querySelectorAll('.demo-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     const target = tab.dataset.tab;
     document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.demo-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
-    document.querySelector(`.demo-panel[data-panel="${target}"]`)?.classList.add('active');
+    const panel = document.querySelector(`.demo-panel[data-panel="${target}"]`);
+    if (panel) {
+      panel.classList.add('active');
+      // Re-trigger bar animations
+      panel.querySelectorAll('.mock-bars > div').forEach((bar, i) => {
+        bar.style.animation = 'none';
+        setTimeout(() => {
+          bar.style.animation = `barGrow 1.2s cubic-bezier(0.32,0.72,0,1) ${i * 0.1}s both`;
+        }, 20);
+      });
+    }
   });
 });
 
-/* Live timer animation in demo */
+/* ═══════════ LIVE DEMO TIMER ═══════════ */
 let demoTimerSeconds = 47 * 60 + 23;
 const demoTimerEl = document.getElementById('demoTimer');
 if (demoTimerEl) {
@@ -1424,6 +1916,81 @@ if (demoTimerEl) {
     demoTimerEl.textContent = `${h}:${m}:${s}`;
   }, 1000);
 }
+
+/* ═══════════ RIPPLE EFFECT ═══════════ */
+document.querySelectorAll('[data-ripple]').forEach(el => {
+  el.addEventListener('click', function(e) {
+    const rect = this.getBoundingClientRect();
+    const r = document.createElement('span');
+    r.className = 'ripple-el';
+    const size = Math.max(rect.width, rect.height);
+    r.style.width = r.style.height = size + 'px';
+    r.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    r.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    this.appendChild(r);
+    setTimeout(() => r.remove(), 700);
+  });
+});
+
+/* ═══════════ HERO PARALLAX (Mouse Follow) ═══════════ */
+const heroInner = document.querySelector('.hero-inner');
+if (heroInner && window.matchMedia('(min-width: 900px)').matches) {
+  let mouseX = 0, mouseY = 0;
+  let currentX = 0, currentY = 0;
+
+  document.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5) * 20;
+    mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
+  });
+
+  function animateParallax() {
+    currentX += (mouseX - currentX) * 0.08;
+    currentY += (mouseY - currentY) * 0.08;
+    const orbs = document.querySelectorAll('.bg-orbs .orb');
+    orbs.forEach((orb, i) => {
+      const factor = (i + 1) * 0.6;
+      orb.style.transform = `translate(${currentX * factor}px, ${currentY * factor}px)`;
+    });
+    requestAnimationFrame(animateParallax);
+  }
+  animateParallax();
+}
+
+/* ═══════════ MAGNETIC BUTTONS ═══════════ */
+if (window.matchMedia('(min-width: 900px)').matches) {
+  document.querySelectorAll('.btn-hero.primary, .nav-cta').forEach(btn => {
+    btn.addEventListener('mousemove', (e) => {
+      const rect = btn.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15 - 2}px)`;
+    });
+    btn.addEventListener('mouseleave', () => {
+      btn.style.transform = '';
+    });
+  });
+}
+
+/* ═══════════ CARD TILT ON HOVER ═══════════ */
+if (window.matchMedia('(min-width: 900px)').matches) {
+  document.querySelectorAll('.feature-card, .testimonial').forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      card.style.transform = `perspective(1000px) rotateX(${-y * 3}deg) rotateY(${x * 3}deg) translateY(-6px)`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = '';
+    });
+  });
+}
+
+/* ═══════════ DYNAMIC YEAR ═══════════ */
+const yearEls = document.querySelectorAll('footer [data-year]');
+yearEls.forEach(el => el.textContent = new Date().getFullYear());
+
+console.log('%c✅ UPSC Study Tracker — Landing Loaded','background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;padding:6px 14px;border-radius:6px;font-weight:800;font-size:12px');
 </script>
 </body>
 </html>
