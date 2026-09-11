@@ -2525,33 +2525,31 @@ const state = {
 let supa = null;
 
 /* ═══════════════ PERSISTENCE ═══════════════ */
+/* ═══════════════ PERSISTENCE ═══════════════ */
+// Only UI preferences stored locally. User data always from Supabase.
+
 function saveLocal() {
   try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify({
-      profile: state.profile, settings: state.settings, subjects: state.subjects,
-      sessions: state.sessions, syllabus: state.syllabus, goals: state.goals, tasks: state.tasks,
-      revisions: state.revisions, notes: state.notes, pyqs: state.pyqs, mocks: state.mocks,
-      currentAffairs: state.currentAffairs, plans: state.plans
+    // Sirf theme + UI prefs save karo (user-specific data NAHI)
+    localStorage.setItem(UI_KEY, JSON.stringify({
+      theme: state.settings.theme
     }));
   } catch(e) { console.warn('saveLocal', e); }
 }
+
 function loadLocal() {
   try {
-    const s = JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}');
-    if (s.profile) Object.assign(state.profile, s.profile);
-    if (s.settings) Object.assign(state.settings, s.settings);
-    state.subjects = s.subjects || [];
-    state.sessions = s.sessions || [];
-    state.syllabus = s.syllabus || [];
-    state.goals = s.goals || [];
-    state.tasks = s.tasks || [];
-    state.revisions = s.revisions || [];
-    state.notes = s.notes || [];
-    state.pyqs = s.pyqs || [];
-    state.mocks = s.mocks || [];
-    state.currentAffairs = s.currentAffairs || [];
-    state.plans = s.plans || [];
+    // Sirf UI prefs load karo
+    const ui = JSON.parse(localStorage.getItem(UI_KEY) || '{}');
+    if (ui.theme) state.settings.theme = ui.theme;
   } catch(e) { console.warn('loadLocal', e); }
+}
+
+// Purana user cache clear karne ke liye helper
+function clearLegacyUserCache() {
+  try {
+    localStorage.removeItem(LOCAL_KEY);
+  } catch(e) {}
 }
 
 /* ═══════════════ SUPABASE ═══════════════ */
@@ -2570,29 +2568,39 @@ async function loadCloudData() {
   const uid = state.user.id;
 
   try {
-    const { data: prof } = await supa.from('profiles').select('*').eq('id', uid).maybeSingle();
-    if (prof) {
-      state.profile = {
-        ...state.profile,
-        name: prof.name || '',
-        exam: prof.exam || 'UPSC Civil Services Examination',
-        exam_date_prelims: prof.exam_date_prelims || '',
-        exam_date_mains: prof.exam_date_mains || '',
-        prep_year: prof.preparation_year || '',
-        membership: prof.membership || 'free',
-        is_admin: prof.is_admin === true,
-        optional_subject: prof.optional_subject || 'Sociology'
-      };
-    } else {
-      await supa.from('profiles').upsert({
-        id: uid,
-        name: state.profile.name || state.user.email?.split('@')[0] || 'Student',
-        exam: 'UPSC Civil Services Examination',
-        membership: 'free',
-        optional_subject: 'Sociology'
-      }, { onConflict: 'id' });
-    }
-  } catch(e) { console.warn('profile load', e.message); }
+  const { data: prof } = await supa.from('profiles').select('*').eq('id', uid).maybeSingle();
+  
+  // Signup metadata se name lo — stale state se nahi
+  const signupName = state.user.user_metadata?.full_name
+    || state.user.email?.split('@')[0]
+    || 'Student';
+  
+  if (prof) {
+    state.profile = {
+      name: prof.name || signupName,
+      exam: prof.exam || 'UPSC Civil Services Examination',
+      exam_date_prelims: prof.exam_date_prelims || '',
+      exam_date_mains: prof.exam_date_mains || '',
+      prep_year: prof.preparation_year || '',
+      membership: prof.membership || 'free',
+      is_admin: prof.is_admin === true,
+      optional_subject: prof.optional_subject || 'Sociology'
+    };
+  } else {
+    // Naya user — metadata se name lo
+    await supa.from('profiles').upsert({
+      id: uid,
+      name: signupName,
+      email: state.user.email,
+      exam: 'UPSC Civil Services Examination',
+      membership: 'free',
+      optional_subject: 'Sociology'
+    }, { onConflict: 'id' });
+    
+    state.profile.name = signupName;
+    state.profile.email = state.user.email;
+  }
+} catch(e) { console.warn('profile load', e.message); }
 
   try {
     const { data: s } = await supa.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
@@ -3497,6 +3505,7 @@ async function bootAfterLogin(session) {
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
   $('#fab').classList.remove('hidden');
+   clearLegacyUserCache();
   // ⬇️ YE ADD KARO — sidebar pe loading state
   const sidebar = $('#sidebar');
   if (sidebar) {
@@ -3540,6 +3549,8 @@ async function logout() {
   if (state.pip.floating) state.pip.floating.remove();
   state.pip = { active: false, window: null, floating: null };
   try { await supa.auth.signOut(); } catch(e) {}
+  // ⬇️ Poori local storage clean
+  try { localStorage.clear(); } catch(e) {}
   state.user = null; state.session = null; state.isPremium = false;
   $('#app').classList.add('hidden');
   $('#fab').classList.add('hidden');
