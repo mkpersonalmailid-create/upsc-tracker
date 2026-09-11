@@ -4026,6 +4026,15 @@ function updateTimerUI() {
     if (pauseBtn) {
       const pauseLabel = timer.paused ? '▶ Resume' : '⏸ Pause';
       if (pauseBtn.textContent.trim() !== pauseLabel) pauseBtn.textContent = pauseLabel;
+      // ═══ Update PiP button text/class if PiP toggled mid-session ═══
+    const pipB = $('#pipBtn');
+    if (pipB) {
+      const pipLabel = state.pip.active ? '📌 PiP ON' : '📌 PiP';
+      if (pipB.textContent.trim() !== pipLabel) {
+        pipB.textContent = pipLabel;
+        pipB.className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
+      }
+    }
     }
     // Update countdown "left" text if countdown mode
     if (timer.mode === 'countdown' && timer.countdownSeconds) {
