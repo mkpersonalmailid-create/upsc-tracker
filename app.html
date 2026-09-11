@@ -1905,6 +1905,45 @@ button.fab.hidden,
           </div>
           <input type="text" id="adminUserSearch" placeholder="Search by name or email…" style="width:100%;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:14px">
           <div id="adminUsersList" class="list"></div>
+          <!-- ═════════ REVENUE DASHBOARD ═════════ -->
+<div class="card" style="margin-top:18px">
+  <div class="card-header">
+    <span class="card-title-lg">💰 Revenue Dashboard</span>
+    <span class="pill s-completed" style="font-size:.7rem">Live</span>
+  </div>
+  <div class="kpi-grid" id="revenueKpis"></div>
+</div>
+
+<div class="chart-card" style="margin-top:18px">
+  <div class="chart-header">
+    <h3>📈 Monthly Revenue</h3>
+    <div class="chart-tabs" id="revRangeTabs">
+      <button class="chart-tab" data-range="3">3M</button>
+      <button class="chart-tab" data-range="6">6M</button>
+      <button class="chart-tab active" data-range="12">12M</button>
+    </div>
+  </div>
+  <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+</div>
+
+<div class="chart-grid-2" style="margin-top:18px">
+  <div class="card">
+    <div class="card-header"><span class="card-title">💎 Active Subscriptions</span></div>
+    <div id="activeSubsList" class="list"></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><span class="card-title">🏆 Top Paying Users</span></div>
+    <div id="topPayersList" class="list"></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:18px">
+  <div class="card-header">
+    <span class="card-title-lg">💳 All Payments</span>
+    <button class="btn btn-secondary btn-sm" id="exportRevenueBtn">⬇ Export CSV</button>
+  </div>
+  <div id="allPaymentsList" class="list"></div>
+</div>
         </div>
       </section>
 
@@ -5241,6 +5280,7 @@ try {
           </div>
         </div>
       `;
+    
     }).join('');
   };
   renderUsers();
@@ -5275,6 +5315,7 @@ try {
     renderUsers();
     $('#adminUserSearch').oninput = e => renderUsers(e.target.value);
   } catch(e) {}
+    await loadRevenueData();
 }
 async function loadAdminTickets() {
   const el = $('#adminTicketsList'); if (!el) return;
@@ -5376,6 +5417,221 @@ async function loadAdminFeedback() {
       toast('Updated', 'ok');
     });
   } catch(e) { el.innerHTML = `<div class="empty"><p style="color:var(--red)">${esc(e.message)}</p></div>`; }
+}
+/* ═══════════════ REVENUE DASHBOARD (admin) ═══════════════ */
+let currentRevRange = 12;
+
+async function loadRevenueData() {
+  if (!isAdminUser()) return;
+  
+  try {
+    // Fetch all payments
+    const { data: payments } = await supa.from('payments')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    // Fetch active subscriptions
+    const { data: subs } = await supa.from('subscriptions')
+      .select('*')
+      .eq('status', 'active');
+    
+    // Fetch profiles for names
+    const { data: profiles } = await supa.from('profiles').select('id, name, email');
+    const profileMap = {};
+    (profiles || []).forEach(p => { profileMap[p.id] = p; });
+    
+    const paymentsList = payments || [];
+    const subsList = subs || [];
+    
+    // ═══ Calculate metrics ═══
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    
+    let totalRevenue = 0;
+    let thisMonthRevenue = 0;
+    let lastMonthRevenue = 0;
+    
+    paymentsList.forEach(p => {
+      const amt = p.amount || 0;
+      const d = new Date(p.created_at);
+      totalRevenue += amt;
+      if (d >= thisMonthStart) thisMonthRevenue += amt;
+      else if (d >= lastMonthStart && d <= lastMonthEnd) lastMonthRevenue += amt;
+    });
+    
+    // MRR — from active subscriptions
+    let mrr = 0;
+    subsList.forEach(s => {
+      if (s.plan === 'monthly') mrr += (s.amount || 0);
+      else if (s.plan === 'yearly') mrr += Math.round((s.amount || 0) / 12);
+    });
+    
+    const avgPayment = paymentsList.length ? totalRevenue / paymentsList.length : 0;
+    const growth = lastMonthRevenue > 0 ? ((thisMonthRevenue - lastMonthRevenue) / lastMonthRevenue * 100) : 0;
+    
+    // ═══ Render KPIs ═══
+    const kpis = [
+      { label: 'Total Revenue', value: '₹' + (totalRevenue/100).toFixed(0), sub: `${paymentsList.length} payments`, icon: '💰', color: 'var(--emerald)' },
+      { label: 'This Month', value: '₹' + (thisMonthRevenue/100).toFixed(0), sub: lastMonthRevenue > 0 ? `${growth >= 0 ? '↑' : '↓'} ${Math.abs(Math.round(growth))}% vs last month` : 'No prior data', icon: '📅', color: 'var(--purple)' },
+      { label: 'Last Month', value: '₹' + (lastMonthRevenue/100).toFixed(0), sub: 'Previous month', icon: '📆', color: 'var(--pink)' },
+      { label: 'MRR', value: '₹' + (mrr/100).toFixed(0), sub: 'Monthly recurring', icon: '🔄', color: 'var(--amber)' },
+      { label: 'Active Subs', value: subsList.length, sub: `${subsList.filter(s => s.plan === 'yearly').length} yearly · ${subsList.filter(s => s.plan === 'monthly').length} monthly`, icon: '💎', color: 'var(--teal)' },
+      { label: 'Avg Payment', value: '₹' + (avgPayment/100).toFixed(0), sub: 'Per transaction', icon: '📊', color: 'var(--orange)' }
+    ];
+    
+    const revEl = $('#revenueKpis');
+    if (revEl) {
+      revEl.innerHTML = kpis.map(k => `
+        <div class="kpi" style="--c:${k.color};--cb:color-mix(in srgb, ${k.color} 15%, transparent)">
+          <div class="kpi-top"><div class="kpi-icon">${k.icon}</div></div>
+          <div class="kpi-label">${k.label}</div>
+          <div class="kpi-value">${k.value}</div>
+          <div class="kpi-sub">${k.sub}</div>
+        </div>
+      `).join('');
+    }
+    
+    // ═══ Monthly chart ═══
+    drawRevenueChart(paymentsList, currentRevRange);
+    
+    // ═══ Active subscriptions ═══
+    const subsEl = $('#activeSubsList');
+    if (subsEl) {
+      if (!subsList.length) {
+        subsEl.innerHTML = '<div class="empty" style="padding:20px"><p>No active subscriptions</p></div>';
+      } else {
+        subsEl.innerHTML = subsList.slice(0, 10).map(s => {
+          const p = profileMap[s.user_id] || {};
+          const daysLeft = s.expiry_date ? Math.ceil((new Date(s.expiry_date) - now) / 86400000) : 0;
+          return `
+            <div class="row-item" style="cursor:default">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--grad-2);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0">💎</div>
+              <div class="row-info">
+                <div class="row-title">${esc(p.name || 'Unknown')}</div>
+                <div class="row-meta">${s.plan === 'yearly' ? 'Yearly' : 'Monthly'} · ${daysLeft}d left</div>
+              </div>
+              <span class="pill s-completed">₹${((s.amount || 0)/100).toFixed(0)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+    
+    // ═══ Top payers ═══
+    const payersMap = {};
+    paymentsList.forEach(p => {
+      if (!payersMap[p.user_id]) payersMap[p.user_id] = { total: 0, count: 0 };
+      payersMap[p.user_id].total += p.amount || 0;
+      payersMap[p.user_id].count++;
+    });
+    const topPayers = Object.entries(payersMap).sort((a, b) => b[1].total - a[1].total).slice(0, 10);
+    
+    const topEl = $('#topPayersList');
+    if (topEl) {
+      if (!topPayers.length) {
+        topEl.innerHTML = '<div class="empty" style="padding:20px"><p>No payments yet</p></div>';
+      } else {
+        topEl.innerHTML = topPayers.map(([uid, stats], idx) => {
+          const p = profileMap[uid] || {};
+          const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx+1}.`;
+          return `
+            <div class="row-item" style="cursor:default">
+              <div style="width:32px;height:32px;border-radius:50%;background:var(--grad-1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem;flex-shrink:0">${(p.name||'U')[0].toUpperCase()}</div>
+              <div class="row-info">
+                <div class="row-title">${medal} ${esc(p.name || 'Unknown')}</div>
+                <div class="row-meta">${stats.count} payment${stats.count > 1 ? 's' : ''}</div>
+              </div>
+              <span class="row-value">₹${(stats.total/100).toFixed(0)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+    
+    // ═══ All payments ═══
+    const allEl = $('#allPaymentsList');
+    if (allEl) {
+      if (!paymentsList.length) {
+        allEl.innerHTML = '<div class="empty"><p>No payments</p></div>';
+      } else {
+        allEl.innerHTML = paymentsList.slice(0, 50).map(p => {
+          const profile = profileMap[p.user_id] || {};
+          return `
+            <div class="row-item" style="cursor:default;flex-wrap:wrap">
+              <span class="row-dot" style="background:${p.status === 'captured' || p.status === 'authorized' ? 'var(--emerald)' : 'var(--amber)'}"></span>
+              <div class="row-info" style="min-width:150px">
+                <div class="row-title">
+                  ${esc(profile.name || 'Unknown')} 
+                  <span class="pill ${p.plan === 'yearly' ? 's-premium' : 's-progress'}" style="font-size:.6rem">${esc(p.plan || '—')}</span>
+                </div>
+                <div class="row-meta">${fmtRelDate(p.created_at?.slice(0,10))} · <span style="font-family:var(--mono);font-size:.68rem">${esc(p.razorpay_payment_id || '—')}</span></div>
+              </div>
+              <span class="row-value">₹${((p.amount || 0)/100).toFixed(0)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+    
+    // ═══ Export button ═══
+    const exportBtn = $('#exportRevenueBtn');
+    if (exportBtn) {
+      exportBtn.onclick = () => {
+        const rows = [['Date', 'User', 'Email', 'Plan', 'Amount (₹)', 'Payment ID', 'Status']];
+        paymentsList.forEach(p => {
+          const prof = profileMap[p.user_id] || {};
+          rows.push([
+            p.created_at?.slice(0,10) || '',
+            prof.name || '',
+            prof.email || '',
+            p.plan || '',
+            ((p.amount || 0) / 100).toFixed(2),
+            p.razorpay_payment_id || '',
+            p.status || ''
+          ]);
+        });
+        const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `revenue-${todayKey()}.csv`;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      };
+    }
+  } catch(e) {
+    console.error('Revenue load error:', e);
+  }
+}
+
+function drawRevenueChart(payments, months = 12) {
+  const canvas = document.querySelector('#revenueChart'); 
+  if (!canvas) return;
+  
+  const now = new Date();
+  const monthlyData = [];
+  const labels = [];
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+    const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+    
+    const total = payments
+      .filter(p => {
+        const pd = new Date(p.created_at);
+        return pd >= monthStart && pd <= monthEnd;
+      })
+      .reduce((a, p) => a + (p.amount || 0), 0);
+    
+    monthlyData.push(total / 100); // convert to rupees
+    labels.push(d.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }));
+  }
+  
+  drawBarChart(canvas, labels, monthlyData, { unit: '₹', minMax: 10 });
 }
 
 /* ═══════════════ ANNOUNCEMENT EDITOR (admin) ═══════════════ */
@@ -5620,6 +5876,16 @@ function wireEvents() {
 
   // Admin
   $('#refreshAdminBtn').onclick = refreshAdmin;
+    // Revenue chart range tabs
+  const revTabs = document.getElementById('revRangeTabs');
+  if (revTabs) {
+    revTabs.addEventListener('click', e => {
+      const b = e.target.closest('[data-range]'); if (!b) return;
+      revTabs.querySelectorAll('.chart-tab').forEach(x => x.classList.toggle('active', x === b));
+      currentRevRange = parseInt(b.dataset.range, 10);
+      loadRevenueData();
+    });
+  }
   $('#adminTicketFilter').onchange = loadAdminTickets;
   $('#adminFbFilter').onchange = loadAdminFeedback;
   $('#manageAnnBtn').onclick = openAnnouncementEditor;
