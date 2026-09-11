@@ -2620,7 +2620,72 @@ async function renderPaymentHistoryInto(sel) {
 }
 function renderPremiumPage() {
   renderPremiumBanner();
-  const grid = $('#plansGrid'); if (!grid) return;
+  
+  const grid = $('#plansGrid'); 
+  const upgradeBtn = $('#upgradeNowBtn');
+  const planHeading = document.querySelector('#view-premium h3');
+  const planSub = planHeading ? planHeading.nextElementSibling : null;
+  
+  // ═══ PREMIUM USER — hide plans, show subscription details ═══
+  if (isPremiumUser()) {
+    if (planHeading) planHeading.textContent = isAdminUser() ? '👑 Admin Access' : '💎 Your Premium Plan';
+    if (planSub) planSub.textContent = isAdminUser() 
+      ? 'Full lifetime access as site administrator.' 
+      : 'Aap already premium ho — advanced features sab unlocked hain.';
+    
+    // Replace plan cards with subscription summary
+    if (grid) {
+      const sub = state.subscription;
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;padding:22px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.35);border-radius:16px">
+          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+            <div style="width:52px;height:52px;border-radius:14px;background:var(--grad-2);display:flex;align-items:center;justify-content:center;font-size:1.6rem">
+              ${isAdminUser() ? '👑' : '💎'}
+            </div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-size:1.1rem;font-weight:900;letter-spacing:-.02em">
+                ${isAdminUser() ? 'Administrator Access' : `${(sub?.plan || 'yearly').charAt(0).toUpperCase() + (sub?.plan || 'yearly').slice(1)} Plan`}
+              </div>
+              <div style="font-size:.85rem;color:var(--text-2);margin-top:3px">
+                ${isAdminUser() ? 'Lifetime access · All features' : `Active since ${sub?.start_date ? fmtDate(sub.start_date.slice(0,10)) : '—'}`}
+              </div>
+            </div>
+            <span class="pill s-completed" style="font-size:.72rem;padding:5px 14px">
+              ${isAdminUser() ? 'LIFETIME' : 'ACTIVE'}
+            </span>
+          </div>
+          
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
+            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Valid Till</div>
+              <div style="font-weight:800;font-size:.95rem">${sub?.expiry_date ? fmtDate(sub.expiry_date.slice(0,10)) : (isAdminUser() ? 'Never expires' : '—')}</div>
+            </div>
+            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Amount Paid</div>
+              <div style="font-weight:800;font-size:.95rem">${sub?.amount ? '₹' + (sub.amount / 100).toFixed(0) : '—'}</div>
+            </div>
+            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Payment ID</div>
+              <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;word-break:break-all">${esc(sub?.razorpay_payment_id || '—')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Hide upgrade button
+    if (upgradeBtn) upgradeBtn.style.display = 'none';
+    
+    renderPaymentHistoryInto('#paymentHistory');
+    return;
+  }
+  
+  // ═══ FREE USER — show plans normally ═══
+  if (planHeading) planHeading.textContent = 'Choose Your Plan';
+  if (planSub) planSub.textContent = 'Unlock advanced analytics, unlimited exports and priority support.';
+  if (upgradeBtn) upgradeBtn.style.display = '';
+  
+  if (!grid) return;
   let selected = grid.dataset.selected || 'monthly';
   grid.dataset.selected = selected;
   grid.innerHTML = Object.values(PLANS).map(plan => `
@@ -2639,8 +2704,7 @@ function renderPremiumPage() {
     grid.dataset.selected = c.dataset.plan;
     renderPremiumPage();
   });
-    const btn = $('#upgradeNowBtn');
-  if (btn) btn.onclick = () => {
+  if (upgradeBtn) upgradeBtn.onclick = () => {
     const selectedPlan = grid.dataset.selected || 'monthly';
     if (selectedPlan === 'yearly') {
       openYearlyCouponModal();
