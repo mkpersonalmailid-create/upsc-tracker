@@ -1,0 +1,11 @@
+# robots.txt for UPSC Study Tracker
+
+User-agent: *
+Allow: /
+
+# Block admin & sensitive areas
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://upscstudytracker.co.in/sitemap.xml
