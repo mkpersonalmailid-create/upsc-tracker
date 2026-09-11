@@ -24,6 +24,9 @@ a{color:var(--purple);text-decoration:none}
 .hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-.03em;margin-bottom:16px;background:linear-gradient(135deg,#fff,#C4B5FD);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero p{color:var(--text-2);font-size:1.05rem;max-width:600px;margin:0 auto}
 .posts{max-width:1100px;margin:0 auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;position:relative;z-index:1}
+.empty-state{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--text-3)}
+.empty-state .em{font-size:3rem;margin-bottom:16px}
+.empty-state h3{color:var(--text);font-weight:800;font-size:1.2rem;margin-bottom:8px}
 footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--text-3);font-size:.85rem;margin-top:60px;background:var(--bg-2);position:relative;z-index:1}
 footer a{color:var(--text-2);margin:0 8px}
 </style>
@@ -45,31 +48,12 @@ footer a{color:var(--text-2);margin:0 8px}
   <p>Free study strategies, book recommendations, and time management tips for serious aspirants.</p>
 </section>
 
-<section class="posts">
-  
-    <article style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;">
-      <div style="font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">📖 UPSC</div>
-      <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:10px;color:var(--text);line-height:1.35">
-        <a href="/blog/upsc-optional-subject-selection-guide-20260911.html" style="color:var(--text);text-decoration:none">UPSC Optional Subject Selection Guide – Your Complete Roadmap</a>
-      </h2>
-      <p style="font-size:.88rem;color:var(--text-2);line-height:1.6;margin-bottom:16px">A detailed UPSC Optional Subject Selection Guide covering factors, strategies, and tips to help aspirants choose the right optional for maximum score.</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--text-3)">
-        <span>📅 2026-09-11</span>
-        <a href="/blog/upsc-optional-subject-selection-guide-20260911.html" style="color:var(--purple);font-weight:700;text-decoration:none">Read →</a>
-      </div>
-    </article>
-
-    <article style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;">
-      <div style="font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">📖 UPSC</div>
-      <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:10px;color:var(--text);line-height:1.35">
-        <a href="/blog/how-to-start-upsc.html" style="color:var(--text);text-decoration:none">How to Start UPSC Preparation in 2026: Complete Beginner's Guide | UPSC Study Tracker</a>
-      </h2>
-      <p style="font-size:.88rem;color:var(--text-2);line-height:1.6;margin-bottom:16px">A complete step-by-step guide for beginners on how to start UPSC preparation in 2026 — syllabus, books, study plan, and daily routine.</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--text-3)">
-        <span>📅 2026-01-01</span>
-        <a href="/blog/how-to-start-upsc.html" style="color:var(--purple);font-weight:700;text-decoration:none">Read →</a>
-      </div>
-    </article>
+<section class="posts" id="postsContainer">
+  <div class="empty-state">
+    <div class="em">📝</div>
+    <h3>No posts yet</h3>
+    <p>Naya post daily 11:30 AM IST pe automatically publish hoga.</p>
+  </div>
 </section>
 
 <footer>
