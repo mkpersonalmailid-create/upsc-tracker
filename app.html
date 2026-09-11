@@ -2309,7 +2309,7 @@ const PLANS = {
   monthly_auto: { 
     id:'monthly_auto', 
     name:'Monthly Auto', 
-    price:50, 
+    price:99, 
     currency:'INR', 
     period:'1 month', 
     type:'subscription',
@@ -2320,7 +2320,7 @@ const PLANS = {
   monthly_once: { 
     id:'monthly_once', 
     name:'Monthly', 
-    price:50, 
+    price:99, 
     currency:'INR', 
     period:'30 days', 
     type:'one_time',
@@ -2330,7 +2330,7 @@ const PLANS = {
   yearly: { 
     id:'yearly', 
     name:'Yearly', 
-    price:500, 
+    price:799, 
     currency:'INR', 
     period:'12 months', 
     type:'one_time',
@@ -2893,7 +2893,7 @@ function renderPremiumBanner() {
   } else {
     el.innerHTML = `<div style="flex:1;min-width:200px;position:relative">
       <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">💎 Unlock Premium</h4>
-      <p style="font-size:.85rem;color:var(--text-2)">Advanced analytics, unlimited exports, priority support. From <strong>₹50/month</strong>.</p>
+      <p style="font-size:.85rem;color:var(--text-2)">Advanced analytics, unlimited exports, priority support. From <strong>₹99/month</strong>.</p>
     </div>`;
   }
 }
@@ -3728,13 +3728,8 @@ async function logout() {
   if (state.pip.floating) state.pip.floating.remove();
   state.pip = { active: false, window: null, floating: null };
   try { await supa.auth.signOut(); } catch(e) {}
-  // ⬇️ Poori local storage clean
-  try { localStorage.clear(); } catch(e) {}
   state.user = null; state.session = null; state.isPremium = false;
-  $('#app').classList.add('hidden');
-  $('#fab').classList.add('hidden');
-  $('#authScreen').classList.remove('hidden');
-  setAuthMode('signin');
+  window.location.href = '/auth.html';
 }
 
 /* ═══════════════ VIEWS ═══════════════ */
@@ -6623,21 +6618,28 @@ async function boot() {
 
   // Check session
   try {
-    const { data: { session } } = await supa.auth.getSession();
-    if (session) await bootAfterLogin(session);
-  } catch(e) { console.warn('session check', e); }
+  const { data: { session } } = await supa.auth.getSession();
+  if (session) {
+    await bootAfterLogin(session);
+  } else {
+    window.location.href = '/auth.html';
+    return;
+  }
+} catch(e) {
+  console.warn('session check', e);
+  window.location.href = '/auth.html';
+  return;
+}
 
   // Auth state change
   supa.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session && !state.user) await bootAfterLogin(session);
-    else if (event === 'SIGNED_OUT') {
-      state.user = null;
-      $('#app').classList.add('hidden');
-      $('#fab').classList.add('hidden');
-      $('#authScreen').classList.remove('hidden');
-      setAuthMode('signin');
-    }
-  });
+  if (event === 'SIGNED_IN' && session && !state.user) {
+    await bootAfterLogin(session);
+  } else if (event === 'SIGNED_OUT') {
+    state.user = null;
+    window.location.href = '/auth.html';
+  }
+});
 
   // Restore timer
   if (state.timer) {
