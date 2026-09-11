@@ -1283,7 +1283,44 @@ button.fab.hidden,
 </style>
 </head>
 <body>
-
+<!-- YEARLY COUPON MODAL -->
+<div class="modal-overlay" id="yearlyCouponModal">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-head">
+      <div>
+        <h3>🎟️ Apply Coupon</h3>
+        <div class="sub">Yearly plan me discount paayein</div>
+      </div>
+      <button class="modal-close" onclick="closeYearlyCouponModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="padding:14px;background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(244,114,182,.08));border:1px solid rgba(251,191,36,.35);border-radius:12px;text-align:center">
+        <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Original Price</div>
+        <div style="font-size:2rem;font-weight:900;letter-spacing:-.03em;line-height:1">₹500</div>
+        <div style="font-size:.72rem;color:var(--text-3);margin-top:4px">for 12 months</div>
+      </div>
+      
+      <div class="field" style="margin-top:14px">
+        <label>Coupon Code</label>
+        <input type="text" id="yearlyCouponInput" placeholder="e.g. TEST1" 
+          maxlength="20" style="text-transform:uppercase;letter-spacing:.12em;font-weight:800;font-size:.95rem;text-align:center"
+          autocomplete="off">
+      </div>
+      
+      <div id="yearlyCouponMsg" style="font-size:.82rem;padding:10px 14px;border-radius:10px;display:none"></div>
+      
+      <div style="padding:12px 14px;background:var(--card-2);border-radius:10px;font-size:.78rem;color:var(--text-2);line-height:1.6">
+        💡 <strong style="color:var(--text)">Available codes:</strong>
+        <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:var(--mono);color:var(--accent);margin-left:6px">TEST1</code>
+        <span style="color:var(--text-3);margin-left:4px">→ pay only ₹1</span>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-secondary" id="skipYearlyCouponBtn">Skip — Pay ₹500</button>
+      <button class="btn btn-primary" id="applyYearlyCouponBtn">Apply Coupon</button>
+    </div>
+  </div>
+</div>
 
 <!-- PAYMENT OVERLAY -->
 <div class="pay-overlay" id="payOverlay">
@@ -2607,8 +2644,15 @@ function renderPremiumPage() {
     grid.dataset.selected = c.dataset.plan;
     renderPremiumPage();
   });
-  const btn = $('#upgradeNowBtn');
-  if (btn) btn.onclick = () => startUpgrade(grid.dataset.selected || 'monthly');
+    const btn = $('#upgradeNowBtn');
+  if (btn) btn.onclick = () => {
+    const selectedPlan = grid.dataset.selected || 'monthly';
+    if (selectedPlan === 'yearly') {
+      openYearlyCouponModal();
+    } else {
+      startUpgrade(selectedPlan);
+    }
+  };
   renderPaymentHistoryInto('#paymentHistory');
 }
 function openUpgradeModal(reason) {
@@ -2645,7 +2689,15 @@ function openUpgradeModal(reason) {
         });
       };
       renderPlans();
-      $('#modalUpgradeBtn').onclick = () => { closeModal(); startUpgrade(grid.dataset.selected || 'monthly'); };
+      $('#modalUpgradeBtn').onclick = () => {
+  const selectedPlan = grid.dataset.selected || 'monthly';
+  closeModal();
+  if (selectedPlan === 'yearly') {
+    openYearlyCouponModal();   // ← Coupon step pehle
+  } else {
+    startUpgrade(selectedPlan); // ← Monthly seedha
+  }
+};
     }
   });
 }
@@ -2694,9 +2746,71 @@ function hidePayOverlay(success, msg) {
     ov.classList.remove('active');
   }
 }
+/* ═══════════════ YEARLY COUPON MODAL ═══════════════ */
+const YEARLY_COUPONS = {
+  'TEST1': { price: 1, label: 'Test — ₹1', discount: 100 }
+};
+
+function openYearlyCouponModal() {
+  document.getElementById('yearlyCouponInput').value = '';
+  const msg = document.getElementById('yearlyCouponMsg');
+  msg.style.display = 'none';
+  document.getElementById('yearlyCouponModal').classList.add('active');
+  setTimeout(() => document.getElementById('yearlyCouponInput').focus(), 100);
+}
+
+function closeYearlyCouponModal() {
+  document.getElementById('yearlyCouponModal').classList.remove('active');
+}
+
+function showYearlyCouponMsg(text, type = 'ok') {
+  const el = document.getElementById('yearlyCouponMsg');
+  el.style.display = 'block';
+  if (type === 'ok') {
+    el.style.background = 'rgba(16,185,129,.12)';
+    el.style.color = '#6EE7B7';
+    el.style.border = '1px solid rgba(16,185,129,.3)';
+  } else {
+    el.style.background = 'rgba(239,68,68,.12)';
+    el.style.color = '#FCA5A5';
+    el.style.border = '1px solid rgba(239,68,68,.3)';
+  }
+  el.textContent = text;
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'applyYearlyCouponBtn') {
+    const code = (document.getElementById('yearlyCouponInput').value || '').trim().toUpperCase();
+    const coupon = YEARLY_COUPONS[code];
+    if (!coupon) {
+      showYearlyCouponMsg('❌ Invalid coupon code', 'err');
+      return;
+    }
+    showYearlyCouponMsg(`✅ Coupon applied! You pay only ₹${coupon.price}`, 'ok');
+    setTimeout(() => {
+      closeYearlyCouponModal();
+      startUpgrade('yearly', { coupon: { code, ...coupon } });
+    }, 900);
+  }
+    if (e.target && e.target.id === 'skipYearlyCouponBtn') {
+    closeYearlyCouponModal();
+    startUpgrade('yearly', { coupon: null });
+  }
+  if (e.target && e.target.id === 'yearlyCouponModal') {
+    closeYearlyCouponModal();
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.getElementById('yearlyCouponModal').classList.contains('active')) {
+    const btn = document.getElementById('applyYearlyCouponBtn');
+    if (btn) btn.click();
+  }
+});
 
 /* ═══════════════ PAYMENT FLOW ═══════════════ */
-async function startUpgrade(planId) {
+async function startUpgrade(planId, opts = {}) {
+  const coupon = opts.coupon || null;
   if (!supa || !state.user) { toast('Sign in first.', 'err'); return; }
   const plan = PLANS[planId];
   if (isPremiumUser()) { toast('Already Premium.', 'ok'); return; }
@@ -2716,10 +2830,12 @@ async function startUpgrade(planId) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + session.access_token
       },
-      body: JSON.stringify({
+            body: JSON.stringify({
         plan_id: planId,
         type: plan.type,
-        razorpay_plan_id: planId === 'monthly' ? RAZORPAY_PLAN_ID_MONTHLY : null
+        razorpay_plan_id: planId === 'monthly' ? RAZORPAY_PLAN_ID_MONTHLY : null,
+        coupon_code: coupon?.code || null,
+        coupon_price: coupon?.price || null
       })
     });
     const json = await res.json();
