@@ -215,10 +215,16 @@ a{color:var(--pink);text-decoration:none}
   user-select:none;
   pointer-events:none;
   white-space:nowrap;
-  transition:color .25s;
+  transition:all .25s cubic-bezier(0.32,0.72,0,1);
+  opacity:1;
+  max-width:200px;
 }
-.email-input-wrap input:not(:placeholder-shown) ~ .email-suffix{
-  color:var(--text-2);
+.email-input-wrap.hide-suffix .email-suffix{
+  opacity:0;
+  max-width:0;
+  padding-left:0;
+  padding-right:0;
+  margin-left:-4px;
 }
 
 .input-wrap{position:relative}
