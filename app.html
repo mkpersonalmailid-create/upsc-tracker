@@ -2626,61 +2626,107 @@ function renderPremiumPage() {
   const planHeading = document.querySelector('#view-premium h3');
   const planSub = planHeading ? planHeading.nextElementSibling : null;
   
-  // ═══ PREMIUM USER — hide plans, show subscription details ═══
+  // ═══ PREMIUM USER ═══
   if (isPremiumUser()) {
+    const sub = state.subscription;
+    const isYearly = !isAdminUser() && sub?.plan === 'yearly';
+    
     if (planHeading) planHeading.textContent = isAdminUser() ? '👑 Admin Access' : '💎 Your Premium Plan';
     if (planSub) planSub.textContent = isAdminUser() 
       ? 'Full lifetime access as site administrator.' 
       : 'Aap already premium ho — advanced features sab unlocked hain.';
     
-    // Replace plan cards with subscription summary
-    if (grid) {
-      const sub = state.subscription;
-      grid.innerHTML = `
-        <div style="grid-column:1/-1;padding:22px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.35);border-radius:16px">
-          <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
-            <div style="width:52px;height:52px;border-radius:14px;background:var(--grad-2);display:flex;align-items:center;justify-content:center;font-size:1.6rem">
-              ${isAdminUser() ? '👑' : '💎'}
-            </div>
-            <div style="flex:1;min-width:200px">
-              <div style="font-size:1.1rem;font-weight:900;letter-spacing:-.02em">
-                ${isAdminUser() ? 'Administrator Access' : `${(sub?.plan || 'yearly').charAt(0).toUpperCase() + (sub?.plan || 'yearly').slice(1)} Plan`}
-              </div>
-              <div style="font-size:.85rem;color:var(--text-2);margin-top:3px">
-                ${isAdminUser() ? 'Lifetime access · All features' : `Active since ${sub?.start_date ? fmtDate(sub.start_date.slice(0,10)) : '—'}`}
-              </div>
-            </div>
-            <span class="pill s-completed" style="font-size:.72rem;padding:5px 14px">
-              ${isAdminUser() ? 'LIFETIME' : 'ACTIVE'}
-            </span>
-          </div>
-          
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
-            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
-              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Valid Till</div>
-              <div style="font-weight:800;font-size:.95rem">${sub?.expiry_date ? fmtDate(sub.expiry_date.slice(0,10)) : (isAdminUser() ? 'Never expires' : '—')}</div>
-            </div>
-            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
-              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Amount Paid</div>
-              <div style="font-weight:800;font-size:.95rem">${sub?.amount ? '₹' + (sub.amount / 100).toFixed(0) : '—'}</div>
-            </div>
-            <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
-              <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Payment ID</div>
-              <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;word-break:break-all">${esc(sub?.razorpay_payment_id || '—')}</div>
-            </div>
-          </div>
-        </div>
-      `;
+    // Days left
+    let daysLeft = null;
+    let expiringSoon = false;
+    if (sub?.expiry_date && !isAdminUser()) {
+      daysLeft = Math.ceil((new Date(sub.expiry_date) - new Date()) / 86400000);
+      expiringSoon = daysLeft > 0 && daysLeft <= 30;
     }
     
-    // Hide upgrade button
-    if (upgradeBtn) upgradeBtn.style.display = 'none';
+    if (grid) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1">
+          <div style="padding:22px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.35);border-radius:16px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px">
+              <div style="width:52px;height:52px;border-radius:14px;background:var(--grad-2);display:flex;align-items:center;justify-content:center;font-size:1.6rem">
+                ${isAdminUser() ? '👑' : '💎'}
+              </div>
+              <div style="flex:1;min-width:200px">
+                <div style="font-size:1.1rem;font-weight:900;letter-spacing:-.02em">
+                  ${isAdminUser() ? 'Administrator Access' : `${(sub?.plan || 'yearly').charAt(0).toUpperCase() + (sub?.plan || 'yearly').slice(1)} Plan`}
+                </div>
+                <div style="font-size:.85rem;color:var(--text-2);margin-top:3px">
+                  ${isAdminUser() ? 'Lifetime access · All features' : `Active since ${sub?.start_date ? fmtDate(sub.start_date.slice(0,10)) : '—'}`}
+                </div>
+              </div>
+              <span class="pill s-completed" style="font-size:.72rem;padding:5px 14px">
+                ${isAdminUser() ? 'LIFETIME' : 'ACTIVE'}
+              </span>
+            </div>
+            
+            ${expiringSoon ? `
+              <div style="padding:10px 14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:10px;margin-bottom:16px;font-size:.82rem;color:#FBBF24;font-weight:600">
+                ⚠️ Aapka plan sirf <strong>${daysLeft} din</strong> me expire hoga — renew karlo!
+              </div>
+            ` : ''}
+            
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px">
+              <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+                <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Valid Till</div>
+                <div style="font-weight:800;font-size:.95rem">${sub?.expiry_date ? fmtDate(sub.expiry_date.slice(0,10)) : (isAdminUser() ? 'Never expires' : '—')}</div>
+                ${daysLeft !== null && daysLeft > 0 ? `<div style="font-size:.7rem;color:var(--text-3);margin-top:2px">${daysLeft} days left</div>` : ''}
+              </div>
+              <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+                <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Amount Paid</div>
+                <div style="font-weight:800;font-size:.95rem">${sub?.amount ? '₹' + (sub.amount / 100).toFixed(0) : '—'}</div>
+              </div>
+              <div style="padding:12px;background:var(--card);border-radius:10px;border:1px solid var(--border)">
+                <div style="font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:6px">Payment ID</div>
+                <div style="font-family:var(--mono);font-size:.72rem;font-weight:700;word-break:break-all">${esc(sub?.razorpay_payment_id || '—')}</div>
+              </div>
+            </div>
+          </div>
+          
+          ${isYearly ? `
+            <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">🔄 Renew Plan</div>
+                <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +365 days add karo. Coupon bhi apply kar sakte ho.</div>
+              </div>
+              <button class="btn btn-premium" id="renewPlanBtn" style="padding:12px 24px">
+                🔄 Renew for ₹500
+              </button>
+            </div>
+          ` : ''}
+          
+          ${!isAdminUser() && sub?.plan === 'monthly' ? `
+            <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">🔄 Auto-Renewal Active</div>
+                <div style="font-size:.8rem;color:var(--text-2)">Aapka monthly plan UPI Autopay se automatically renew hota hai. Cancel karne ke liye Razorpay app ya support se contact karo.</div>
+              </div>
+              <span class="pill s-completed" style="padding:6px 14px">✓ Auto-Renew ON</span>
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      // Wire renew button
+      const renewBtn = document.getElementById('renewPlanBtn');
+      if (renewBtn) {
+        renewBtn.onclick = () => {
+          openYearlyCouponModal({ isRenewal: true });
+        };
+      }
+    }
     
+    if (upgradeBtn) upgradeBtn.style.display = 'none';
     renderPaymentHistoryInto('#paymentHistory');
     return;
   }
   
-  // ═══ FREE USER — show plans normally ═══
+  // ═══ FREE USER ═══
   if (planHeading) planHeading.textContent = 'Choose Your Plan';
   if (planSub) planSub.textContent = 'Unlock advanced analytics, unlimited exports and priority support.';
   if (upgradeBtn) upgradeBtn.style.display = '';
@@ -2810,11 +2856,22 @@ const YEARLY_COUPONS = {
   'MUKUNDFOUNDER': { price: 1, label: 'Test — ₹1', discount: 100 }
 };
 
-function openYearlyCouponModal() {
+function openYearlyCouponModal(opts = {}) {
+  _couponCtx = { isRenewal: !!opts.isRenewal };
   document.getElementById('yearlyCouponInput').value = '';
   const msg = document.getElementById('yearlyCouponMsg');
   msg.style.display = 'none';
-  document.getElementById('yearlyCouponModal').classList.add('active');
+  
+  // Update modal text if renewal
+  const modal = document.getElementById('yearlyCouponModal');
+  const subtitle = modal.querySelector('.modal-head .sub');
+  if (subtitle) {
+    subtitle.textContent = _couponCtx.isRenewal
+      ? 'Apne plan me +365 days add karo — coupon bhi laga sakte ho'
+      : 'Yearly plan me discount paayein';
+  }
+  
+  modal.classList.add('active');
   setTimeout(() => document.getElementById('yearlyCouponInput').focus(), 100);
 }
 
@@ -2848,12 +2905,12 @@ document.addEventListener('click', (e) => {
     showYearlyCouponMsg(`✅ Coupon applied! You pay only ₹${coupon.price}`, 'ok');
     setTimeout(() => {
       closeYearlyCouponModal();
-      startUpgrade('yearly', { coupon: { code, ...coupon } });
+      startUpgrade('yearly', { coupon: { code, ...coupon }, isRenewal: _couponCtx.isRenewal });
     }, 900);
   }
-    if (e.target && e.target.id === 'skipYearlyCouponBtn') {
+  if (e.target && e.target.id === 'skipYearlyCouponBtn') {
     closeYearlyCouponModal();
-    startUpgrade('yearly', { coupon: null });
+    startUpgrade('yearly', { coupon: null, isRenewal: _couponCtx.isRenewal });
   }
   if (e.target && e.target.id === 'yearlyCouponModal') {
     closeYearlyCouponModal();
@@ -2870,10 +2927,13 @@ document.addEventListener('keydown', (e) => {
 /* ═══════════════ PAYMENT FLOW ═══════════════ */
 async function startUpgrade(planId, opts = {}) {
   const coupon = opts.coupon || null;
+  const isRenewal = !!(opts && opts.isRenewal);
+
   if (!supa || !state.user) { toast('Sign in first.', 'err'); return; }
-  const plan = PLANS[planId];
-  if (isPremiumUser()) { toast('Already Premium.', 'ok'); return; }
   if (!PLANS[planId]) { toast('Invalid plan.', 'err'); return; }
+  if (isPremiumUser() && !isRenewal) { toast('Already Premium.', 'ok'); return; }
+
+  const plan = PLANS[planId];
 
   const { data: { session } } = await supa.auth.getSession();
   if (!session?.access_token) { toast('Session expired.', 'err'); return; }
@@ -2889,14 +2949,16 @@ async function startUpgrade(planId, opts = {}) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + session.access_token
       },
-            body: JSON.stringify({
+      body: JSON.stringify({
         plan_id: planId,
         type: plan.type,
         razorpay_plan_id: planId === 'monthly' ? RAZORPAY_PLAN_ID_MONTHLY : null,
         coupon_code: coupon?.code || null,
-        coupon_price: coupon?.price || null
+        coupon_price: coupon?.price || null,
+        is_renewal: isRenewal
       })
     });
+
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Payment creation failed');
     if (typeof Razorpay === 'undefined') {
@@ -2983,14 +3045,11 @@ async function verifyPayment(response, planId) {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Verification failed');
 
-    // Refresh subscription state
     await loadSubscription();
     updatePremiumUI();
 
-    // Success overlay with confetti
     hidePayOverlay(true, 'Welcome to Premium 🎉');
 
-    // Show success modal after overlay closes
     setTimeout(() => {
       openModal(modalShell({
         title: '🎉 Welcome to Premium!',
@@ -3039,7 +3098,6 @@ async function verifyPayment(response, planId) {
       });
     }, 2400);
 
-    // Auto-refresh data
     setTimeout(() => {
       renderAll();
       updateSidebarUser();
@@ -5087,22 +5145,107 @@ async function refreshAdmin() {
   } catch(e) {}
 
   // Active users
-  try {
-    const { data } = await supa.from('profiles').select('*').gte('last_seen', new Date(Date.now() - 10*60*1000).toISOString()).order('last_seen', { ascending: false });
-    $('#activeCount').textContent = (data || []).length;
-    if (!data || !data.length) { $('#activeUsersList').innerHTML = '<div class="empty"><p>No active users in last 10 min.</p></div>'; }
-    else {
-      $('#activeUsersList').innerHTML = data.map(u => `
-        <div class="row-item">
-          <div style="width:38px;height:38px;border-radius:50%;background:var(--grad-4);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">${(u.name||'U')[0].toUpperCase()}</div>
-          <div class="row-info">
-            <div class="row-title">${esc(u.name||'—')}</div>
-            <div class="row-meta">${u.membership||'free'} · Last seen ${fmtRelDate(u.last_seen?.slice(0,10))}</div>
-          </div>
-          <span class="pill s-completed">Online</span>
-        </div>`).join('');
+  // All users with payment info
+try {
+  const { data: profiles, count } = await supa.from('profiles').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100);
+  $('#userCount').textContent = count || 0;
+  
+  // Fetch all subscriptions + payments in one go
+  const { data: subs } = await supa.from('subscriptions').select('*');
+  const { data: pays } = await supa.from('payments').select('*');
+  
+  // Build maps
+  const subMap = {};
+  (subs || []).forEach(s => { subMap[s.user_id] = s; });
+  
+  const payMap = {};
+  (pays || []).forEach(p => {
+    if (!payMap[p.user_id]) payMap[p.user_id] = [];
+    payMap[p.user_id].push(p);
+  });
+  
+  const renderUsers = (filter='') => {
+    const f = filter.toLowerCase();
+    const filtered = (profiles || []).filter(u => 
+      !f || (u.name||'').toLowerCase().includes(f) || (u.email||'').toLowerCase().includes(f)
+    );
+    
+    if (!filtered.length) {
+      $('#adminUsersList').innerHTML = '<div class="empty"><p>No users found</p></div>';
+      return;
     }
-  } catch(e) {}
+    
+    $('#adminUsersList').innerHTML = filtered.map(u => {
+      const sub = subMap[u.id];
+      const userPays = payMap[u.id] || [];
+      const totalPaid = userPays.reduce((a,p) => a + (p.amount || 0), 0);
+      const lastPayment = userPays.sort((a,b) => new Date(b.created_at) - new Date(a.created_at))[0];
+      
+      // Status badge
+      let statusBadge = '<span class="pill" style="background:var(--card-2);color:var(--text-3)">FREE</span>';
+      let planLabel = 'Never paid';
+      let expiryLabel = '—';
+      
+      if (u.is_admin) {
+        statusBadge = '<span class="pill s-premium" style="font-size:.6rem">👑 ADMIN</span>';
+        planLabel = 'Admin (lifetime)';
+      } else if (sub && sub.status === 'active') {
+        const isExpired = sub.expiry_date && new Date(sub.expiry_date) < new Date();
+        if (isExpired) {
+          statusBadge = '<span class="pill" style="background:rgba(239,68,68,.15);color:#F87171">EXPIRED</span>';
+          planLabel = sub.plan + ' (expired)';
+        } else {
+          statusBadge = '<span class="pill s-completed">PREMIUM</span>';
+          planLabel = sub.plan === 'yearly' ? '💎 Yearly' : '💎 Monthly';
+        }
+        expiryLabel = sub.expiry_date ? fmtDate(sub.expiry_date.slice(0,10)) : '—';
+      }
+      
+      const payAmount = totalPaid > 0 ? '₹' + (totalPaid/100).toFixed(0) : '—';
+      
+      return `
+        <div class="row-item" style="flex-wrap:wrap">
+          <div style="width:38px;height:38px;border-radius:50%;background:${u.is_admin ? 'var(--grad-2)' : 'var(--grad-1)'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">
+            ${(u.name||'U')[0].toUpperCase()}
+          </div>
+          <div class="row-info" style="min-width:180px">
+            <div class="row-title">
+              ${esc(u.name||'—')} ${statusBadge}
+            </div>
+            <div class="row-meta" style="margin-top:4px">
+              <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.72rem">
+                <span>📧 ${esc(u.email || '—')}</span>
+                <span>📅 Joined ${u.created_at?.slice(0,10)||'—'}</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:.75rem;align-items:center">
+            <div style="text-align:right">
+              <div style="font-size:.6rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em">Plan</div>
+              <div style="font-weight:700">${planLabel}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:.6rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em">Total Paid</div>
+              <div style="font-weight:700;color:${totalPaid > 0 ? 'var(--emerald)' : 'var(--text-3)'}">${payAmount}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:.6rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em">Expires</div>
+              <div style="font-weight:700">${expiryLabel}</div>
+            </div>
+            ${lastPayment ? `
+              <div style="text-align:right;min-width:80px">
+                <div style="font-size:.6rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em">Last Pay ID</div>
+                <div style="font-family:var(--mono);font-size:.65rem;word-break:break-all;max-width:100px">${esc(lastPayment.razorpay_payment_id || '—')}</div>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }).join('');
+  };
+  renderUsers();
+  $('#adminUserSearch').oninput = e => renderUsers(e.target.value);
+} catch(e) { console.error('Admin users render:', e); }
 
   // Announcement
   try {
