@@ -8,6 +8,7 @@
 <meta name="color-scheme" content="dark light">
 <meta name="theme-color" content="#0A0612">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="/css/custom-modal.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -6297,7 +6298,17 @@ function wireEvents() {
     }
     renderAll(); toast('Settings saved!', 'ok');
   };
-  $('#signOutBtn').onclick = () => { if (confirm('Sign out?')) logout(); };
+  $('#signOutBtn').onclick = async () => {
+  const ok = await customConfirm({
+    title: 'Sign out?',
+    message: 'Aap apne account se logout ho jayenge. Aapka data safe rahega.',
+    confirmText: 'Sign Out',
+    cancelText: 'Stay',
+    icon: '👋',
+    type: 'danger'
+  });
+  if (ok) logout();
+};
 
   // History filters
   ['#histSearch','#histFrom','#histTo','#histSort'].forEach(s => {
@@ -6569,5 +6580,6 @@ async function boot() {
 
 boot();
 </script>
+<script src="/js/custom-modal.js"></script>  <!-- ✅ YE NAYA -->
 </body>
 </html>
