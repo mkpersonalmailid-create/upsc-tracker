@@ -5279,6 +5279,9 @@ function applyTheme(theme) {
 async function boot() {
   loadLocal();
     updateGreeting();                    // ← YEH ADD KARO
+      // ═══ Hide FAB on login page ═══
+  const fabEl = document.getElementById('fab');
+  if (fabEl) fabEl.classList.add('hidden');
   loadTimerLocal();
   applyTheme(state.settings.theme || 'dark');
   if (!initSupabase()) { console.error('Supabase failed to load'); return; }
