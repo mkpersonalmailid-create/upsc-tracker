@@ -1095,6 +1095,31 @@ button#fab {
     transform: translateX(-50%) scale(1.08) rotate(90deg) !important;
   }
 }
+/* ═══ Hero Greeting — Center + Bigger ═══ */
+.hero .greeting {
+  text-align: center !important;
+  margin-bottom: 26px !important;
+}
+.hero .greeting-hi {
+  font-size: 1rem !important;
+  letter-spacing: .16em !important;
+  margin-bottom: 6px !important;
+}
+.hero .greeting-name {
+  font-size: clamp(2rem, 4.5vw, 2.8rem) !important;
+  line-height: 1.15 !important;
+}
+.hero .greeting-sub {
+  font-size: 1rem !important;
+  margin-top: 8px !important;
+}
+
+/* Mobile — thoda balanced */
+@media (max-width: 700px) {
+  .hero .greeting-hi { font-size: .85rem !important; }
+  .hero .greeting-name { font-size: clamp(1.7rem, 8vw, 2.2rem) !important; }
+  .hero .greeting-sub { font-size: .88rem !important; }
+}
 </style>
 </head>
 <body>
