@@ -1,0 +1,57 @@
+name: 📝 Generate Daily Blog Post
+
+on:
+  schedule:
+    # Roz 6:00 UTC = 11:30 AM IST
+    - cron: '0 6 * * *'
+  workflow_dispatch:  # Manual run button bhi milega
+
+jobs:
+  generate-blog:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write   # Repo me push karne ki permission
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 🤖 Generate blog post using AI
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: node scripts/generate-blog.js
+
+      - name: 📝 Update sitemap.xml
+        run: |
+          # Latest blog post ka URL nikal
+          LATEST=$(ls -t blog/*.html | head -1 | sed 's|^|https://upscstudytracker.co.in/|')
+          echo "Latest post: $LATEST"
+          
+          # Sitemap me entry add karo agar nahi hai
+          if ! grep -q "$LATEST" sitemap.xml; then
+            # </urlset> tag se pehle insert karo
+            sed -i "s|</urlset>|  <url>\n    <loc>$LATEST</loc>\n    <lastmod>$(date +%Y-%m-%d)</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n</urlset>|" sitemap.xml
+          fi
+
+      - name: 🚀 Commit and push
+        run: |
+          git config user.name "UPSC Tracker Bot"
+          git config user.email "bot@upscstudytracker.co.in"
+          git add blog/ sitemap.xml
+          
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🤖 Auto-publish: Daily blog post $(date +%Y-%m-%d)"
+            git push
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
