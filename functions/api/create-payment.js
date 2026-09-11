@@ -3,11 +3,11 @@
 
 const ONE_TIME_PLANS = {
   yearly: {
-    amount: 79900, // ₹500
+    amount: 79900, // ₹799
     description: 'UPSC Tracker Premium — Yearly'
   },
   monthly_once: {
-    amount: 5000, // ₹50
+    amount: 9900, // ₹99
     description: 'UPSC Tracker Premium — Monthly'
   }
 };
