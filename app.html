@@ -4017,7 +4017,17 @@ function updateTimerUI() {
       <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP'}</button>${extra}`;
     $('#pauseBtn').onclick = pauseResumeTimer;
     $('#stopSaveBtn').onclick = () => stopTimer(true);
-    $('#stopDiscardBtn').onclick = () => { if (confirm('Discard?')) stopTimer(false); };
+    $('#stopDiscardBtn').onclick = async () => {
+  const ok = await customConfirm({
+    title: 'Discard Session?',
+    message: 'Your current timer will be stopped and this session will not be saved.',
+    confirmText: 'Discard',
+    cancelText: 'Keep Studying',
+    icon: '⚠️',
+    type: 'warning'
+  });
+  if (ok) stopTimer(false);
+};
     const pipBtn = $('#pipBtn'); if (pipBtn) pipBtn.onclick = togglePiP;
     if (pipBtn) pipBtn.className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
   } else {
@@ -4995,7 +5005,15 @@ function renderHistory() {
       <button class="btn btn-ghost btn-sm" data-del="${s.id}" style="color:var(--red)">✕</button>
     </div>`).join('');
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.sessions = state.sessions.filter(s => s.id !== b.dataset.del);
     saveLocal();
     if (supa && state.user) { try { await supa.from('study_sessions').delete().eq('id', b.dataset.del); } catch(e) {} }
@@ -5070,7 +5088,15 @@ function renderRevisions() {
   }).join('');
   el.querySelectorAll('[data-rev-done]').forEach(b => b.onclick = () => completeRevision(b.dataset.revDone));
   el.querySelectorAll('[data-rev-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.revisions = state.revisions.filter(x => x.id !== b.dataset.revDel);
     saveLocal();
     if (supa && state.user) { try { await supa.from('revisions').delete().eq('id', b.dataset.revDel); } catch(e) {} }
@@ -5114,7 +5140,15 @@ function renderGoals() {
     renderGoals();
   });
   el.querySelectorAll('[data-goal-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.goals = state.goals.filter(x => x.id !== b.dataset.goalDel);
     saveLocal();
     if (supa && state.user) { try { await supa.from('goals').delete().eq('id', b.dataset.goalDel); } catch(e) {} }
@@ -5187,7 +5221,15 @@ function renderTasks() {
     renderTasks(); updateBadges();
   });
   el.querySelectorAll('[data-task-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.tasks = state.tasks.filter(x => x.id !== b.dataset.taskDel);
     saveLocal();
     if (supa && state.user) { try { await supa.from('tasks').delete().eq('id', b.dataset.taskDel); } catch(e) {} }
@@ -5319,7 +5361,15 @@ function openNoteModal(n) {
         closeModal(); renderNotes(); toast('Saved!', 'ok');
       };
       if (existing) $('#nDel').onclick = async () => {
-        if (!confirm('Delete?')) return;
+        const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
         state.notes = state.notes.filter(x => x.id !== n.id);
         saveLocal();
         if (supa && state.user) { try { await supa.from('notes').delete().eq('id', n.id); } catch(e) {} }
@@ -5353,7 +5403,15 @@ function renderPyqs() {
       <button class="btn btn-ghost btn-sm" data-del="${p.id}" style="color:var(--red)">✕</button>
     </div>`).join('');
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.pyqs = state.pyqs.filter(x => x.id !== b.dataset.del);
     saveLocal();
     if (supa && state.user) { try { await supa.from('pyqs').delete().eq('id', b.dataset.del); } catch(e) {} }
@@ -5413,7 +5471,15 @@ function renderMocks() {
     </div>`;
   }).join('');
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.mocks = state.mocks.filter(x => x.id !== b.dataset.del);
     saveLocal();
     if (supa && state.user) { try { await supa.from('mock_tests').delete().eq('id', b.dataset.del); } catch(e) {} }
@@ -5469,7 +5535,15 @@ function renderCurrentAffairs() {
     if (c) { c.read = !c.read; saveLocal(); renderCurrentAffairs(); }
   });
   el.querySelectorAll('[data-del]').forEach(b => b.onclick = async () => {
-    if (!confirm('Delete?')) return;
+    const ok = await customConfirm({
+  title: 'Delete?',
+  message: 'This action cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.currentAffairs = state.currentAffairs.filter(x => x.id !== b.dataset.del);
     saveLocal();
     if (supa && state.user) { try { await supa.from('current_affairs').delete().eq('id', b.dataset.del); } catch(e) {} }
