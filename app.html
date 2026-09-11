@@ -2894,7 +2894,7 @@ function hidePayOverlay(success, msg) {
 const YEARLY_COUPONS = {
   'MUKUNDFOUNDER': { price: 1, label: 'Test — ₹1', discount: 100 }
 };
-
+let _couponCtx = { isRenewal: false };
 function openYearlyCouponModal(opts = {}) {
   _couponCtx = { isRenewal: !!opts.isRenewal };
   document.getElementById('yearlyCouponInput').value = '';
@@ -5296,25 +5296,6 @@ try {
   loadAdminTickets();
   loadAdminFeedback();
 
-  // All users
-  try {
-    const { data, count } = await supa.from('profiles').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(100);
-    $('#userCount').textContent = count || 0;
-    const renderUsers = (filter='') => {
-      const f = filter.toLowerCase();
-      const filtered = (data || []).filter(u => !f || (u.name||'').toLowerCase().includes(f));
-      $('#adminUsersList').innerHTML = filtered.map(u => `
-        <div class="row-item">
-          <div style="width:38px;height:38px;border-radius:50%;background:var(--grad-1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">${(u.name||'U')[0].toUpperCase()}</div>
-          <div class="row-info">
-            <div class="row-title">${esc(u.name||'—')} ${u.is_admin?'<span class="pill s-premium" style="font-size:.6rem">ADMIN</span>':''}</div>
-            <div class="row-meta">${u.membership||'free'} · Joined ${u.created_at?.slice(0,10)||''}</div>
-          </div>
-        </div>`).join('') || '<div class="empty"><p>No users</p></div>';
-    };
-    renderUsers();
-    $('#adminUserSearch').oninput = e => renderUsers(e.target.value);
-  } catch(e) {}
     await loadRevenueData();
 }
 async function loadAdminTickets() {
