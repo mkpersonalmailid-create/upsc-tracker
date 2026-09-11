@@ -51,7 +51,7 @@ export async function onRequestPost({ request, env }) {
       return json({ error: 'Invalid JSON' }, 400);
     }
 
-    const { plan_id, type } = body;
+        const { plan_id, type, coupon_code, coupon_price } = body;
     if (!plan_id || !type) return json({ error: 'Missing plan_id or type' }, 400);
 
     const auth64 = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
@@ -136,11 +136,15 @@ export async function onRequestPost({ request, env }) {
       const plan = ONE_TIME_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid plan' }, 400);
 
-      const orderRes = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST',
-        headers: headers,
+            // Coupon price override
+      const TEST_PRICES = { 'TEST1': 100 }; // ₹1 in paise
+      const useCouponPrice = coupon_code && TEST_PRICES[coupon_code] && coupon_price === TEST_PRICES[coupon_code] / 100;
+      const finalAmount = useCouponPrice ? TEST_PRICES[coupon_code] : plan.amount;
+      
+      const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST', headers,
         body: JSON.stringify({
-          amount: plan.amount,
+          amount: finalAmount,
           currency: 'INR',
           receipt: `u_${user.id.slice(0, 8)}_${Date.now()}`,
           notes: {
@@ -166,12 +170,12 @@ export async function onRequestPost({ request, env }) {
       const order = await orderRes.json();
       console.log('Order created:', order.id, 'for user:', user.id);
 
-      return json({
+            return json({
         order_id: order.id,
         amount: order.amount,
         currency: order.currency,
         key_id: env.RAZORPAY_KEY_ID,
-        description: plan.description,
+        description: useCouponPrice ? `UPSC Tracker — Test (₹${finalAmount/100})` : plan.description,
         type: 'one_time'
       });
     }
