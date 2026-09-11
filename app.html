@@ -3968,22 +3968,31 @@ function updateTimerUI() {
   const el = $('#timerDisplay'); if (!el) return;
   const { active, seconds, timer } = timerState();
   
-  if (!active) {
+    if (!active) {
     el.classList.remove('active','running');
     el.textContent = '00:00:00';
     $('#timerSub').textContent = state.draft.subject ? `Ready: ${state.draft.subject}${state.draft.topic ? ' · ' + state.draft.topic.slice(0,60) + (state.draft.topic.length > 60 ? '…' : '') : ''}` : 'Select what you\'re studying to begin';
     
-    // Only rebuild if not already showing start buttons
+    // Only rebuild if buttons don't exist
     if (!$('#startBtn')) {
       $('#timerActions').innerHTML = `
         <button class="btn btn-primary btn-lg" id="startBtn">▶ Start Session</button>
         <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP Mode'}</button>
         <button class="btn btn-secondary btn-lg" id="manualLogBtn">＋ Log Manually</button>`;
-      $('#startBtn').onclick = startTimer;
-      $('#pipBtn').onclick = togglePiP;
-      $('#pipBtn').className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
-      $('#manualLogBtn').onclick = openManualLogModal;
     }
+    
+    // ═══ ALWAYS attach handlers (whether buttons existed or were just rebuilt) ═══
+    const sb = $('#startBtn');
+    const pb = $('#pipBtn');
+    const mb = $('#manualLogBtn');
+    if (sb) sb.onclick = startTimer;
+    if (pb) {
+      pb.onclick = togglePiP;
+      pb.className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
+      pb.textContent = state.pip.active ? '📌 PiP ON' : '📌 PiP Mode';
+    }
+    if (mb) mb.onclick = openManualLogModal;
+    
     return;
   }
   
