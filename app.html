@@ -2488,8 +2488,8 @@ function hidePayOverlay(success, msg) {
   }
 }
 
-/* ═══════════════ PAYMENT FLOW (same backend as before) ═══════════════ */
-async function startUpgrade(planId, force = false) {
+/* ═══════════════ PAYMENT FLOW ═══════════════ */
+async function startUpgrade(planId) {
   if (!supa || !state.user) { toast('Sign in first.', 'err'); return; }
   const plan = PLANS[planId];
   if (isPremiumUser()) { toast('Already Premium.', 'ok'); return; }
@@ -2499,12 +2499,16 @@ async function startUpgrade(planId, force = false) {
   if (!session?.access_token) { toast('Session expired.', 'err'); return; }
 
   showPayOverlay('Creating Payment…', 'Connecting to Razorpay…');
-  const btn = $('#upgradeNowBtn'); if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing…'; }
+  const btn = $('#upgradeNowBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Processing…'; }
 
   try {
     const res = await fetch('/api/create-payment', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+      },
       body: JSON.stringify({
         plan_id: planId,
         type: plan.type,
@@ -2513,7 +2517,11 @@ async function startUpgrade(planId, force = false) {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Payment creation failed');
-    if (typeof Razorpay === 'undefined') { hidePayOverlay(false); toast('Razorpay SDK missing.', 'err'); return; }
+    if (typeof Razorpay === 'undefined') {
+      hidePayOverlay(false);
+      toast('Razorpay SDK missing.', 'err');
+      return;
+    }
 
     hidePayOverlay(false);
 
@@ -2522,34 +2530,65 @@ async function startUpgrade(planId, force = false) {
       currency: json.currency || 'INR',
       name: 'UPSC Tracker',
       description: json.description,
-      prefill: { email: state.user.email || '', name: state.profile.name || '' },
+      prefill: {
+        email: state.user.email || '',
+        name: state.profile.name || ''
+      },
       theme: { color: '#A855F7' },
       handler: async (response) => { await verifyPayment(response, planId); },
-      modal: { ondismiss: () => { toast('Payment cancelled.', 'info'); restoreUpgradeBtn(); } }
+      modal: {
+        ondismiss: () => {
+          toast('Payment cancelled.', 'info');
+          restoreUpgradeBtn();
+        }
+      }
     };
-    if (plan.type === 'subscription') options.subscription_id = json.subscription_id;
-    else { options.order_id = json.order_id; options.amount = json.amount; }
+
+    if (plan.type === 'subscription') {
+      options.subscription_id = json.subscription_id;
+    } else {
+      options.order_id = json.order_id;
+      options.amount = json.amount;
+    }
 
     const rzp = new Razorpay(options);
-    rzp.on('payment.failed', (resp) => { toast('Payment failed: ' + (resp.error?.description || 'Unknown'), 'err'); restoreUpgradeBtn(); });
+    rzp.on('payment.failed', (resp) => {
+      toast('Payment failed: ' + (resp.error?.description || 'Unknown'), 'err');
+      restoreUpgradeBtn();
+    });
     rzp.open();
-  } catch(e) {
+
+  } catch (e) {
     hidePayOverlay(false);
     toast(e.message, 'err');
     restoreUpgradeBtn();
   }
 }
+
 function restoreUpgradeBtn() {
-  const btn = $('#upgradeNowBtn'); if (btn) { btn.disabled = false; btn.innerHTML = '💎 Upgrade Now'; }
+  const btn = $('#upgradeNowBtn');
+  if (btn) {
+    btn.disabled = false;
+    btn.innerHTML = '💎 Upgrade Now';
+  }
 }
+
 async function verifyPayment(response, planId) {
   const { data: { session } } = await supa.auth.getSession();
-  if (!session?.access_token) { toast('Session expired.', 'err'); return; }
+  if (!session?.access_token) {
+    toast('Session expired.', 'err');
+    return;
+  }
+
   showPayOverlay('Verifying Payment…', 'Almost there!');
+
   try {
     const res = await fetch('/api/verify-payment', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+      },
       body: JSON.stringify({
         razorpay_order_id: response.razorpay_order_id || null,
         razorpay_payment_id: response.razorpay_payment_id,
@@ -2558,19 +2597,106 @@ async function verifyPayment(response, planId) {
         plan_id: planId
       })
     });
+
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Verification failed');
+
+    // Refresh subscription state
     await loadSubscription();
+    updatePremiumUI();
+
+    // Success overlay with confetti
     hidePayOverlay(true, 'Welcome to Premium 🎉');
-    renderAll();
-    setTimeout(() => switchView('premium'), 2500);
-  } catch(e) {
+
+    // Show success modal after overlay closes
+    setTimeout(() => {
+      openModal(modalShell({
+        title: '🎉 Welcome to Premium!',
+        subtitle: 'Your account has been upgraded',
+        body: `
+          <div style="text-align:center;padding:20px 0">
+            <div style="font-size:3.5rem;margin-bottom:12px;animation:bounceIn .6s">💎</div>
+            <div style="font-size:1.3rem;font-weight:900;margin-bottom:8px;
+                 background:var(--grad-1);-webkit-background-clip:text;
+                 -webkit-text-fill-color:transparent;background-clip:text">
+              Payment Successful!
+            </div>
+            <div style="font-size:.9rem;color:var(--text-2);margin-bottom:20px;line-height:1.8">
+              Plan: <strong style="color:var(--text)">${esc(json.plan || planId)}</strong><br>
+              Amount: <strong style="color:var(--text)">₹${((json.amount || 0) / 100).toFixed(0)}</strong><br>
+              Valid until: <strong style="color:var(--text)">${json.expiry ? fmtDate(json.expiry.slice(0, 10)) : '30 days'}</strong>
+            </div>
+            <div style="padding:14px;background:var(--card-2);border-radius:12px;text-align:left;margin-bottom:16px">
+              <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;
+                   letter-spacing:.08em;color:var(--text-3);margin-bottom:8px">
+                What's unlocked:
+              </div>
+              <ul style="font-size:.85rem;color:var(--text-2);line-height:1.9;padding-left:20px;margin:0">
+                <li>📊 Advanced Analytics with Insights</li>
+                <li>🗓 Calendar & History tracking</li>
+                <li>⬇️ Unlimited exports (JSON & CSV)</li>
+                <li>🎯 Goals, Tasks & Planner</li>
+                <li>🏆 Achievements & Weekly Review</li>
+              </ul>
+            </div>
+            <div style="font-size:.72rem;color:var(--text-3);word-break:break-all">
+              Payment ID: <span style="font-family:var(--mono)">${esc(response.razorpay_payment_id || '')}</span>
+            </div>
+          </div>`,
+        actions: `<button class="btn btn-primary" id="goToAnalyticsBtn" 
+          style="width:100%;padding:14px;font-size:.95rem">
+          ✨ Explore Premium Features
+        </button>`
+      }), {
+        onMount() {
+          document.getElementById('goToAnalyticsBtn').onclick = () => {
+            closeModal();
+            switchView('analytics');
+          };
+        }
+      });
+    }, 2400);
+
+    // Auto-refresh data
+    setTimeout(() => {
+      renderAll();
+      updateSidebarUser();
+    }, 500);
+
+  } catch (e) {
     hidePayOverlay(false);
-    toast('Verification failed: ' + e.message, 'err', 6000);
+    openModal(modalShell({
+      title: '❌ Payment Issue',
+      subtitle: 'Something went wrong',
+      body: `
+        <div style="padding:16px;background:rgba(239,68,68,.1);
+             border:1px solid rgba(239,68,68,.3);border-radius:12px;
+             color:#FCA5A5;font-size:.85rem;line-height:1.6">
+          <strong>Error:</strong> ${esc(e.message)}
+        </div>
+        <p style="font-size:.82rem;color:var(--text-2);margin-top:14px;line-height:1.6">
+          Agar aapka paisa cut ho gaya hai toh humein is Payment ID ke saath contact karo:
+        </p>
+        <div style="padding:12px;background:var(--card-2);border-radius:10px;
+             font-family:var(--mono);font-size:.75rem;word-break:break-all;margin-top:8px">
+          ${esc(response.razorpay_payment_id || 'N/A')}
+        </div>`,
+      actions: `
+        <button class="btn btn-secondary" data-close>Close</button>
+        <button class="btn btn-primary" id="contactSupportBtn">💬 Contact Support</button>`
+    }), {
+      onMount() {
+        document.getElementById('contactSupportBtn').onclick = () => {
+          closeModal();
+          switchView('support');
+        };
+      }
+    });
   } finally {
     restoreUpgradeBtn();
   }
 }
+
 
 /* ═══════════════ AUTH ═══════════════ */
 let authMode = 'signin';
