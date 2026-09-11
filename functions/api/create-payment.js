@@ -1,18 +1,22 @@
 // POST /api/create-payment
-// Handles both one-time orders (yearly) and recurring subscriptions (monthly)
+// Handles one-time orders (yearly, monthly_once) + recurring subscription (monthly_auto)
 
 const ONE_TIME_PLANS = {
   yearly: {
-    amount: 50000, // ₹500 in paise
+    amount: 50000, // ₹500
     description: 'UPSC Tracker Premium — Yearly'
+  },
+  monthly_once: {
+    amount: 5000, // ₹50
+    description: 'UPSC Tracker Premium — Monthly'
   }
 };
 
 const SUBSCRIPTION_PLANS = {
-  monthly: {
+  monthly_auto: {
     plan_id_env: 'RAZORPAY_PLAN_ID_MONTHLY',
-    description: 'UPSC Tracker Premium — Monthly',
-    total_count: 60 // 60 months = 5 years (was 120 = 10 years)
+    description: 'UPSC Tracker Premium — Monthly Auto',
+    total_count: 60 // 60 months = 5 years
   }
 };
 
@@ -68,7 +72,7 @@ export async function onRequestPost({ request, env }) {
       || '';
 
     // ═══════════════════════════════════════════════
-    //  SUBSCRIPTION (monthly) — UPI Autopay
+    //  SUBSCRIPTION (monthly_auto) — UPI Autopay
     // ═══════════════════════════════════════════════
     if (type === 'subscription') {
       const plan = SUBSCRIPTION_PLANS[plan_id];
@@ -80,8 +84,6 @@ export async function onRequestPost({ request, env }) {
         return json({ error: 'Server plan not configured' }, 500);
       }
 
-      // ─── Direct subscription creation (no customer API needed) ───
-      // Razorpay auto-creates customer from notes
       const subPayload = {
         plan_id: razorpayPlanId,
         total_count: plan.total_count,
@@ -95,7 +97,6 @@ export async function onRequestPost({ request, env }) {
         }
       };
 
-      // Add phone if available
       if (customerPhone) {
         subPayload.notes.phone = customerPhone;
       }
@@ -130,16 +131,19 @@ export async function onRequestPost({ request, env }) {
     }
 
     // ═══════════════════════════════════════════════
-    //  ONE-TIME ORDER (yearly) — Card / UPI / Netbanking
+    //  ONE-TIME ORDER (yearly / monthly_once)
     // ═══════════════════════════════════════════════
     if (type === 'one_time') {
       const plan = ONE_TIME_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid plan' }, 400);
 
-      // Coupon price override
+      // ─── Coupon price override (yearly only) ───
       const TEST_PRICES = { 'MUKUNDFOUNDER': 100 }; // ₹1 in paise
-      const useCouponPrice = coupon_code && TEST_PRICES[coupon_code] && coupon_price === TEST_PRICES[coupon_code] / 100;
-      const finalAmount = useCouponPrice ? TEST_PRICES[coupon_code] : plan.amount;
+      const couponValid = plan_id === 'yearly'
+        && coupon_code
+        && TEST_PRICES[coupon_code]
+        && coupon_price === TEST_PRICES[coupon_code] / 100;
+      const finalAmount = couponValid ? TEST_PRICES[coupon_code] : plan.amount;
 
       const orderRes = await fetch('https://api.razorpay.com/v1/orders', {
         method: 'POST',
@@ -169,14 +173,14 @@ export async function onRequestPost({ request, env }) {
       }
 
       const order = await orderRes.json();
-      console.log('Order created:', order.id, 'for user:', user.id);
+      console.log('Order created:', order.id, 'for user:', user.id, 'plan:', plan_id);
 
       return json({
         order_id: order.id,
         amount: order.amount,
         currency: order.currency,
         key_id: env.RAZORPAY_KEY_ID,
-        description: useCouponPrice ? `UPSC Tracker — Test (₹${finalAmount/100})` : plan.description,
+        description: couponValid ? `UPSC Tracker — Test (₹${finalAmount/100})` : plan.description,
         type: 'one_time'
       });
     }
