@@ -1153,6 +1153,133 @@ button.fab.hidden,
   opacity: 0 !important;
   pointer-events: none !important;
 }
+/* ═══════════════════════════════════════════════
+   PREMIUM NAV ITEMS — Visual Distinction
+   ═══════════════════════════════════════════════ */
+
+/* Locked (Free user) state */
+.nav-item.premium-locked {
+  opacity: 0.55;
+  position: relative;
+  transition: all .25s ease;
+}
+.nav-item.premium-locked:hover {
+  opacity: 0.9;
+  background: linear-gradient(90deg, rgba(251,191,36,.08), rgba(236,72,153,.05));
+}
+
+/* PRO Badge — top-right corner of nav item */
+.nav-item.premium-locked::after {
+  content: 'PRO';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.5rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #FBBF24, #F472B6);
+  color: #1a1a1a;
+  box-shadow: 0 3px 10px rgba(251,191,36,.4),
+              inset 0 1px 0 rgba(255,255,255,.3);
+  animation: pulse-dot 2.2s ease-in-out infinite;
+  z-index: 1;
+}
+
+/* Icon color — gold when locked */
+.nav-item.premium-locked .nav-icon {
+  color: var(--amber);
+  filter: drop-shadow(0 0 4px rgba(251,191,36,.5));
+}
+
+/* Label — slight gradient text */
+.nav-item.premium-locked .nav-label {
+  background: linear-gradient(135deg, var(--text-2), var(--amber));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: 700;
+}
+
+/* Premium user state — remove all premium styling */
+.nav-item.premium-unlocked {
+  opacity: 1;
+}
+.nav-item.premium-unlocked .nav-icon {
+  color: inherit;
+  filter: none;
+}
+.nav-item.premium-unlocked .nav-label {
+  background: none;
+  -webkit-text-fill-color: inherit;
+  color: inherit;
+}
+
+/* Mobile — smaller badge */
+@media (max-width: 900px) {
+  .nav-item.premium-locked::after {
+    font-size: 0.45rem;
+    padding: 2px 6px;
+    right: 8px;
+  }
+}
+
+/* Collapsed sidebar — badge hidden, only icon shown */
+.sidebar.collapsed .nav-item.premium-locked::after {
+  display: none;
+}
+.sidebar.collapsed .nav-item.premium-locked .nav-icon {
+  color: var(--amber);
+}
+
+/* Free plan indicator card at top of sidebar */
+.sidebar-plan-indicator {
+  padding: 10px 12px;
+  margin: 0 0 12px 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(168,85,247,.12), rgba(236,72,153,.06));
+  border: 1px solid rgba(168,85,247,.25);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.sidebar-plan-indicator.pro {
+  background: linear-gradient(135deg, rgba(251,191,36,.15), rgba(244,114,182,.08));
+  border-color: rgba(251,191,36,.4);
+}
+.sidebar-plan-indicator .plan-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.sidebar-plan-indicator .plan-info {
+  flex: 1;
+  min-width: 0;
+}
+.sidebar-plan-indicator .plan-name {
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--amber), var(--pink));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.sidebar-plan-indicator .plan-desc {
+  font-size: .68rem;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+.sidebar.collapsed .sidebar-plan-indicator {
+  padding: 8px;
+  justify-content: center;
+}
+.sidebar.collapsed .sidebar-plan-indicator .plan-info {
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -2310,6 +2437,86 @@ function updatePremiumUI() {
   updateAdminVisibility();
   renderPremiumBanner();
   renderSubscriptionInfo();
+  updatePremiumNavItems();
+}
+/* ═══════════════ PREMIUM NAV VISUAL ═══════════════ */
+const PREMIUM_VIEWS_LIST = ['calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'insights'];
+const PREMIUM_ORIGINAL_ICONS = {
+  calendar: '🗓',
+  analytics: '📊',
+  history: '📜',
+  goals: '🎯',
+  tasks: '✓',
+  planner: '📅',
+  insights: '✨'
+};
+
+function updatePremiumNavItems() {
+  const isPremium = isPremiumUser();
+  
+  PREMIUM_VIEWS_LIST.forEach(view => {
+    const el = document.querySelector(`.nav-item[data-view="${view}"]`);
+    if (!el) return;
+    
+    const icon = el.querySelector('.nav-icon');
+    
+    if (isPremium) {
+      // Premium user — remove locked state, show real icon
+      el.classList.remove('premium-locked');
+      el.classList.add('premium-unlocked');
+      if (icon) icon.textContent = PREMIUM_ORIGINAL_ICONS[view] || '●';
+    } else {
+      // Free user — show locked state, show lock icon
+      el.classList.add('premium-locked');
+      el.classList.remove('premium-unlocked');
+      if (icon) icon.textContent = '🔒';
+    }
+  });
+  
+  // Sidebar plan indicator at top
+  updateSidebarPlanIndicator(isPremium);
+}
+
+function updateSidebarPlanIndicator(isPremium) {
+  let indicator = document.getElementById('sidebarPlanIndicator');
+  const logoEl = document.querySelector('.sidebar .logo');
+  if (!logoEl) return;
+  
+  // Create if not exists
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'sidebarPlanIndicator';
+    indicator.className = 'sidebar-plan-indicator';
+    indicator.innerHTML = `
+      <div class="plan-icon">💎</div>
+      <div class="plan-info">
+        <div class="plan-name">Premium</div>
+        <div class="plan-desc">Unlock all features</div>
+      </div>
+    `;
+    // Insert after logo
+    logoEl.insertAdjacentElement('afterend', indicator);
+    
+    // Click to open premium page
+    indicator.style.cursor = 'pointer';
+    indicator.addEventListener('click', () => switchView('premium'));
+  }
+  
+  const icon = indicator.querySelector('.plan-icon');
+  const name = indicator.querySelector('.plan-name');
+  const desc = indicator.querySelector('.plan-desc');
+  
+  if (isPremium) {
+    indicator.classList.add('pro');
+    if (icon) icon.textContent = isAdminUser() ? '👑' : '💎';
+    if (name) name.textContent = isAdminUser() ? 'Admin Access' : 'Premium';
+    if (desc) desc.textContent = isAdminUser() ? 'Full access' : 'All features active';
+  } else {
+    indicator.classList.remove('pro');
+    if (icon) icon.textContent = '⚡';
+    if (name) name.textContent = 'Free Plan';
+    if (desc) desc.textContent = 'Tap to upgrade';
+  }
 }
 function updateAdminVisibility() {
   const wrap = $('#adminNavWrap');
@@ -5426,6 +5633,9 @@ async function boot() {
     // ═══ Load announcement banner ═══
   setTimeout(() => loadAnnouncement(), 800);
   setInterval(() => loadAnnouncement(), 120000);  // Refresh every 2 min
+
+   // ═══ Update premium nav items ═══
+  updatePremiumNavItems();
 }
 
 boot();
