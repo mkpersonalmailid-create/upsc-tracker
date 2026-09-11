@@ -3894,43 +3894,75 @@ function stopTicker() { if (tickHandle) { clearInterval(tickHandle); tickHandle 
 function updateTimerUI() {
   const el = $('#timerDisplay'); if (!el) return;
   const { active, seconds, timer } = timerState();
+  
   if (!active) {
     el.classList.remove('active','running');
     el.textContent = '00:00:00';
     $('#timerSub').textContent = state.draft.subject ? `Ready: ${state.draft.subject}${state.draft.topic ? ' · ' + state.draft.topic.slice(0,60) + (state.draft.topic.length > 60 ? '…' : '') : ''}` : 'Select what you\'re studying to begin';
-    $('#timerActions').innerHTML = `
-      <button class="btn btn-primary btn-lg" id="startBtn">▶ Start Session</button>
-      <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP Mode'}</button>
-      <button class="btn btn-secondary btn-lg" id="manualLogBtn">＋ Log Manually</button>`;
-    $('#startBtn').onclick = startTimer;
-    $('#pipBtn').onclick = togglePiP;
-    $('#pipBtn').className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
-    $('#manualLogBtn').onclick = openManualLogModal;
+    
+    // Only rebuild if not already showing start buttons
+    if (!$('#startBtn')) {
+      $('#timerActions').innerHTML = `
+        <button class="btn btn-primary btn-lg" id="startBtn">▶ Start Session</button>
+        <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP Mode'}</button>
+        <button class="btn btn-secondary btn-lg" id="manualLogBtn">＋ Log Manually</button>`;
+      $('#startBtn').onclick = startTimer;
+      $('#pipBtn').onclick = togglePiP;
+      $('#pipBtn').className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
+      $('#manualLogBtn').onclick = openManualLogModal;
+    }
     return;
   }
+  
+  // Active state — only update display, NOT buttons
   el.classList.add('active','running');
   el.textContent = fmtDuration(seconds, 'clock');
   const topicLabel = timer.topic ? ' · ' + timer.topic.slice(0,50) + (timer.topic.length > 50 ? '…' : '') : '';
   $('#timerSub').textContent = `${timer.subject}${topicLabel}${timer.paused ? ' · PAUSED' : ''}`;
-  const pauseLabel = timer.paused ? '▶ Resume' : '⏸ Pause';
-  let extra = '';
+  
+  // ═══ KEY FIX: Only rebuild buttons if they don't exist yet ═══
+  if (!$('#stopSaveBtn')) {
+    const pauseLabel = timer.paused ? '▶ Resume' : '⏸ Pause';
+    let extra = '';
+    if (timer.mode === 'countdown' && timer.countdownSeconds) {
+      const rem = Math.max(0, timer.countdownSeconds - seconds);
+      extra = `<span style="margin-left:8px;color:var(--amber)">⏳ ${fmtDuration(rem,'clock')} left</span>`;
+    }
+    $('#timerActions').innerHTML = `
+      <button class="btn btn-primary btn-lg" id="pauseBtn">${pauseLabel}</button>
+      <button class="btn btn-success btn-lg" id="stopSaveBtn">✓ Finish & Save</button>
+      <button class="btn btn-danger btn-lg" id="stopDiscardBtn">Discard</button>
+      <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP'}</button>${extra}`;
+    $('#pauseBtn').onclick = pauseResumeTimer;
+    $('#stopSaveBtn').onclick = () => stopTimer(true);
+    $('#stopDiscardBtn').onclick = () => { if (confirm('Discard?')) stopTimer(false); };
+    const pipBtn = $('#pipBtn'); if (pipBtn) pipBtn.onclick = togglePiP;
+    if (pipBtn) pipBtn.className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
+  } else {
+    // Buttons exist — only update pause label if needed
+    const pauseBtn = $('#pauseBtn');
+    if (pauseBtn) {
+      const pauseLabel = timer.paused ? '▶ Resume' : '⏸ Pause';
+      if (pauseBtn.textContent.trim() !== pauseLabel) pauseBtn.textContent = pauseLabel;
+    }
+    // Update countdown "left" text if countdown mode
+    if (timer.mode === 'countdown' && timer.countdownSeconds) {
+      const rem = Math.max(0, timer.countdownSeconds - seconds);
+      const extraEl = $('#timerActions').querySelector('span[style*="color"]');
+      if (extraEl) extraEl.textContent = `⏳ ${fmtDuration(rem,'clock')} left`;
+    }
+  }
+  
+  // Countdown completion check
   if (timer.mode === 'countdown' && timer.countdownSeconds) {
     const rem = Math.max(0, timer.countdownSeconds - seconds);
-    extra = `<span style="margin-left:8px;color:var(--amber)">⏳ ${fmtDuration(rem,'clock')} left</span>`;
-    if (rem === 0) { toast('Countdown complete!', 'ok'); stopTimer(true); return; }
+    if (rem === 0 && !timer.countdownNotified) {
+      timer.countdownNotified = true;
+      toast('Countdown complete!', 'ok');
+      stopTimer(true);
+    }
   }
-  $('#timerActions').innerHTML = `
-    <button class="btn btn-primary btn-lg" id="pauseBtn">${pauseLabel}</button>
-    <button class="btn btn-success btn-lg" id="stopSaveBtn">✓ Finish & Save</button>
-    <button class="btn btn-danger btn-lg" id="stopDiscardBtn">Discard</button>
-    <button class="btn btn-secondary btn-lg" id="pipBtn">${state.pip.active ? '📌 PiP ON' : '📌 PiP'}</button>${extra}`;
-  $('#pauseBtn').onclick = pauseResumeTimer;
-  $('#stopSaveBtn').onclick = () => stopTimer(true);
-  $('#stopDiscardBtn').onclick = () => { if (confirm('Discard?')) stopTimer(false); };
-  const pipBtn = $('#pipBtn'); if (pipBtn) pipBtn.onclick = togglePiP;
-  if (pipBtn) pipBtn.className = state.pip.active ? 'btn btn-success btn-lg' : 'btn btn-secondary btn-lg';
 }
-
 /* ═══════════════ PICTURE-IN-PICTURE ═══════════════ */
 async function togglePiP() {
   if (state.pip.active) { closePiP(); return; }
