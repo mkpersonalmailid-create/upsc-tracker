@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Sign In · UPSC Tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+<meta name="theme-color" content="#0A0612">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --bg:#0A0612;
+  --bg-2:#120A1E;
+  --card:#171026;
+  --card-2:#1F1633;
+  --border:#2A1E42;
+  --border-2:#3D2C5E;
+  --text:#FFFFFF;
+  --text-2:#B8A8D9;
+  --text-3:#6E5F8C;
+  --pink:#EC4899;
+  --purple:#A855F7;
+  --violet:#8B5CF6;
+  --orange:#F97316;
+  --amber:#FBBF24;
+  --teal:#14B8A6;
+  --emerald:#34D399;
+  --red:#EF4444;
+  --grad-1:linear-gradient(135deg,#8B5CF6,#EC4899);
+  --shadow-lg:0 24px 64px rgba(0,0,0,.55);
+  --r-xl:32px;
+  --t:.25s cubic-bezier(.2,0,0,1);
+}
+html,body{height:100%}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  line-height:1.5;font-size:15px;-webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),
+    radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%),
+    radial-gradient(circle at 50% 50%,rgba(249,115,22,.05),transparent 60%);
+}
+button,input,select,textarea{font-family:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--pink);text-decoration:none}
+.hidden{display:none!important}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--pink));border-radius:10px;border:2px solid var(--bg)}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 24px rgba(168,85,247,.4)}50%{box-shadow:0 0 56px rgba(236,72,153,.6)}}
+
+/* ═══════════ AUTH SCREEN ═══════════ */
+.auth-screen{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:20px;z-index:500;overflow-y:auto;background:var(--bg);
+}
+.auth-screen::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 20% 30%,rgba(168,85,247,.4),transparent 45%),
+    radial-gradient(circle at 80% 70%,rgba(236,72,153,.35),transparent 45%),
+    radial-gradient(circle at 50% 90%,rgba(249,115,22,.25),transparent 50%);
+  pointer-events:none;
+}
+.auth-card{
+  width:100%;max-width:960px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  box-shadow:var(--shadow-lg),0 0 80px rgba(168,85,247,.25);
+  overflow:hidden;position:relative;z-index:1;display:grid;
+  grid-template-columns:1fr 1fr;animation:cardIn .6s;
+}
+@media(max-width:768px){
+  .auth-card{grid-template-columns:1fr;max-width:440px}
+}
+
+.auth-visual{
+  padding:44px 36px;
+  background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(236,72,153,.12),rgba(249,115,22,.08));
+  border-right:1px solid var(--border);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.auth-visual::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(circle at 30% 30%,rgba(168,85,247,.25),transparent 60%);
+  pointer-events:none;
+}
+@media(max-width:768px){.auth-visual{display:none}}
+.auth-brand{display:flex;align-items:center;gap:12px;margin-bottom:32px;position:relative}
+.auth-brand-mark{
+  width:52px;height:52px;border-radius:14px;
+  background:var(--grad-1);display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:900;color:#fff;
+  box-shadow:0 10px 32px rgba(168,85,247,.45);
+  animation:glow 3s ease-in-out infinite;
+}
+.auth-brand-title{
+  font-size:1.5rem;font-weight:900;letter-spacing:-.03em;
+  background:linear-gradient(135deg,#fff,#C4B5FD);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.auth-brand-sub{
+  font-size:.72rem;color:var(--text-2);font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;margin-top:2px;
+}
+.auth-headline{
+  font-size:1.7rem;font-weight:800;line-height:1.2;
+  letter-spacing:-.02em;margin-bottom:14px;position:relative;
+  background:linear-gradient(135deg,var(--text),var(--text-2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.auth-desc{
+  font-size:.9rem;color:var(--text-2);line-height:1.6;
+  margin-bottom:24px;position:relative;max-width:340px;
+}
+.auth-features{display:flex;flex-direction:column;gap:12px;position:relative;flex:1}
+.auth-feature{display:flex;align-items:center;gap:12px;font-size:.86rem;color:var(--text-2)}
+.auth-feature-ico{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.05rem;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.3);
+}
+.auth-feature-ico.c1{background:linear-gradient(135deg,rgba(168,85,247,.25),rgba(139,92,246,.15));color:var(--purple)}
+.auth-feature-ico.c2{background:linear-gradient(135deg,rgba(236,72,153,.25),rgba(244,63,94,.15));color:var(--pink)}
+.auth-feature-ico.c3{background:linear-gradient(135deg,rgba(249,115,22,.25),rgba(251,191,36,.15));color:var(--orange)}
+.auth-feature-ico.c4{background:linear-gradient(135deg,rgba(20,184,166,.25),rgba(6,182,212,.15));color:var(--teal)}
+
+.auth-form-side{
+  padding:44px 40px;display:flex;flex-direction:column;justify-content:center;
+}
+@media(max-width:600px){.auth-form-side{padding:32px 24px}}
+.auth-form-side h2{font-size:1.4rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.auth-form-side .sub{font-size:.85rem;color:var(--text-2);margin-bottom:24px}
+
+.auth-tabs{
+  display:flex;background:var(--bg-2);border-radius:12px;
+  padding:4px;gap:4px;margin-bottom:20px;
+}
+.auth-tab{
+  flex:1;padding:10px;border-radius:9px;font-weight:700;
+  font-size:.85rem;color:var(--text-3);transition:var(--t);
+}
+.auth-tab.active{background:var(--grad-1);color:#fff;box-shadow:0 6px 18px rgba(168,85,247,.4)}
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.field{display:flex;flex-direction:column;gap:6px;position:relative}
+.field label{
+  font-size:.7rem;font-weight:800;letter-spacing:.06em;
+  color:var(--text-2);text-transform:uppercase;
+}
+.field input,.field select,.field textarea{
+  background:var(--bg-2);border:1.5px solid var(--border);
+  border-radius:11px;padding:12px 14px;font-size:.9rem;
+  width:100%;transition:var(--t);color:var(--text);
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  outline:none;border-color:var(--purple);
+  box-shadow:0 0 0 4px rgba(168,85,247,.15);
+  background:var(--card);
+}
+
+/* ═══ Email with @gmail.com suffix ═══ */
+.email-input-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+  background:var(--bg-2);
+  border:1.5px solid var(--border);
+  border-radius:11px;
+  transition:var(--t);
+  overflow:hidden;
+}
+.email-input-wrap:focus-within{
+  border-color:var(--purple);
+  box-shadow:0 0 0 4px rgba(168,85,247,.15);
+  background:var(--card);
+}
+.email-input-wrap input{
+  flex:1;
+  background:transparent !important;
+  border:none !important;
+  outline:none !important;
+  box-shadow:none !important;
+  padding:12px 4px 12px 14px;
+  font-size:.9rem;
+  color:var(--text);
+  min-width:0;
+}
+.email-input-wrap input:focus{
+  background:transparent !important;
+  box-shadow:none !important;
+}
+.email-input-wrap input::placeholder{
+  color:var(--text-3);
+}
+.email-suffix{
+  padding:12px 14px 12px 4px;
+  color:var(--text-3);
+  font-size:.9rem;
+  font-weight:600;
+  user-select:none;
+  pointer-events:none;
+  white-space:nowrap;
+  transition:color .25s;
+}
+.email-input-wrap input:not(:placeholder-shown) ~ .email-suffix{
+  color:var(--text-2);
+}
+
+.input-wrap{position:relative}
+button.toggle-pw{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  color:var(--text-3);padding:6px 8px;border-radius:6px;
+  font-size:.9rem;background:transparent;border:none;cursor:pointer;z-index:2;
+}
+.toggle-pw:hover{color:var(--text);background:var(--card-2)}
+
+.auth-btn{
+  padding:14px;border-radius:12px;font-weight:800;font-size:.95rem;
+  background:var(--grad-1);color:#fff;transition:var(--t);
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(168,85,247,.4);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+}
+.auth-btn:hover:not(:disabled){
+  transform:translateY(-2px);
+  box-shadow:0 14px 32px rgba(236,72,153,.5);
+  filter:brightness(1.1);
+}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed}
+
+.auth-link{background:none;color:var(--pink);font-weight:700;font-size:.82rem;padding:4px 6px}
+.auth-link:hover{text-decoration:underline}
+.auth-msg{
+  padding:12px 14px;border-radius:11px;font-size:.83rem;
+  margin-bottom:12px;display:none;animation:fadeIn .3s;
+}
+.auth-msg.show{display:block}
+.auth-msg.err{background:rgba(239,68,68,.12);color:#FCA5A5;border:1px solid rgba(239,68,68,.3)}
+.auth-msg.ok{background:rgba(16,185,129,.12);color:#6EE7B7;border:1px solid rgba(16,185,129,.3)}
+.auth-msg.info{background:rgba(168,85,247,.12);color:#C4B5FD;border:1px solid rgba(168,85,247,.3)}
+.auth-foot{text-align:center;margin-top:20px;font-size:.72rem;color:var(--text-3);line-height:1.6}
+.forgot-row{display:flex;justify-content:flex-end;margin-top:-4px}
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .8s linear infinite;display:inline-block;
+}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.82);
+  backdrop-filter:blur(10px);display:none;
+  align-items:center;justify-content:center;z-index:900;padding:20px;overflow-y:auto;
+}
+.modal-overlay.active{display:flex;animation:fadeIn .2s}
+.modal{
+  background:var(--bg-2);border:1px solid var(--border-2);
+  border-radius:24px;max-width:540px;width:100%;max-height:92vh;
+  overflow-y:auto;padding:28px;box-shadow:var(--shadow-lg);
+}
+.modal-head{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:10px;margin-bottom:20px;
+}
+.modal-head h3{
+  font-size:1.2rem;font-weight:800;letter-spacing:-.02em;
+  background:var(--grad-1);-webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;background-clip:text;
+}
+.modal-head .sub{font-size:.82rem;color:var(--text-2);margin-top:3px}
+.modal-close{
+  width:34px;height:34px;border-radius:50%;color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;transition:var(--t);flex-shrink:0;
+}
+.modal-close:hover{background:var(--card);color:var(--text);transform:rotate(90deg)}
+.modal-body{display:flex;flex-direction:column;gap:14px}
+.modal-foot{
+  display:flex;gap:10px;justify-content:flex-end;
+  margin-top:22px;flex-wrap:wrap;
+}
+.modal-foot .btn{min-width:110px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px 18px;border-radius:11px;font-weight:700;font-size:.86rem;
+  transition:var(--t);white-space:nowrap;
+}
+.btn-primary{background:var(--grad-1);color:#fff;box-shadow:0 6px 18px rgba(168,85,247,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(236,72,153,.45)}
+.btn-ghost{color:var(--text-2);padding:8px 14px}
+.btn-ghost:hover{background:var(--card-2);color:var(--text)}
+
+.toasts{
+  position:fixed;bottom:24px;right:24px;display:flex;
+  flex-direction:column;gap:10px;z-index:1100;pointer-events:none;
+}
+.toast{
+  background:var(--card);border:1px solid var(--border-2);
+  border-radius:12px;padding:13px 18px;font-size:.85rem;font-weight:600;
+  box-shadow:0 12px 32px rgba(0,0,0,.4);display:flex;align-items:center;
+  gap:12px;pointer-events:auto;max-width:360px;animation:fadeIn .35s;
+}
+.toast.ok{border-left:4px solid #10B981}
+.toast.err{border-left:4px solid #EF4444}
+.toast.info{border-left:4px solid var(--purple)}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen" class="auth-screen">
+  <div class="auth-card">
+    <!-- LEFT VISUAL -->
+    <div class="auth-visual">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">U</div>
+        <div>
+          <div class="auth-brand-title">UPSC Tracker</div>
+          <div class="auth-brand-sub">Study Smarter</div>
+        </div>
+      </div>
+      <h1 class="auth-headline">Your complete UPSC prep workspace.</h1>
+      <p class="auth-desc">Track sessions, master syllabus, analyse progress — all in one colorful, distraction-free app.</p>
+      <div class="auth-features">
+        <div class="auth-feature"><div class="auth-feature-ico c1">⏱</div><div>Big interactive timer with Picture-in-Picture</div></div>
+        <div class="auth-feature"><div class="auth-feature-ico c2">📖</div><div>Exact UPSC syllabus integrated</div></div>
+        <div class="auth-feature"><div class="auth-feature-ico c3">📊</div><div>Deep analytics with smart insights</div></div>
+        <div class="auth-feature"><div class="auth-feature-ico c4">🎯</div><div>Goals, revisions, mocks, PYQs tracked</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT FORM -->
+    <div class="auth-form-side">
+      <h2 id="authHeading">Welcome back</h2>
+      <p class="sub" id="authSubheading">Sign in to continue your journey</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-auth-mode="signin">Sign In</button>
+        <button class="auth-tab" data-auth-mode="signup">Create Account</button>
+      </div>
+
+      <div id="authMsg" class="auth-msg"></div>
+
+      <form id="authForm" class="auth-form" autocomplete="on">
+        <div class="field" id="nameField" style="display:none">
+          <label for="authName">Your Name</label>
+          <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name">
+        </div>
+
+        <div class="field">
+          <label for="authEmail">Email</label>
+          <div class="email-input-wrap">
+            <input type="email" id="authEmail" name="email" placeholder="yourname" required autocomplete="email">
+            <span class="email-suffix">@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="authPassword">Password</label>
+          <div class="input-wrap">
+            <input type="password" id="authPassword" placeholder="At least 6 characters" required minlength="6" autocomplete="current-password" name="password">
+            <button type="button" class="toggle-pw" id="togglePw">👁</button>
+          </div>
+        </div>
+
+        <div class="forgot-row">
+          <button type="button" class="auth-link" id="forgotPwBtn">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="auth-btn" id="authSubmit">
+          <span id="authSubmitText">Sign In</span>
+        </button>
+      </form>
+
+      <p class="auth-foot">Your data is private and securely synced.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Root -->
+<div class="modal-overlay" id="modalRoot"><div class="modal" id="modalBox"></div></div>
+
+<!-- Toasts -->
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+
+/* ═══════════════ CONFIG ═══════════════ */
+const SUPABASE_URL = 'https://zkmsgheoanyjvjfklqtg.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_nTr7Fmk_6G2u5F3dxjgxww_-dpQx5xN';
+const DEFAULT_EMAIL_DOMAIN = '@gmail.com';
+const APP_URL = '/app.html';
+
+let supa = null;
+let authMode = 'signin';
+
+/* ═══════════════ UTILS ═══════════════ */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function toast(msg, type='info', ms=3200) {
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span style="font-size:1.1rem">${type==='ok'?'✅':type==='err'?'⚠️':'ℹ️'}</span><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+function authMsg(text, type='info') {
+  const el = $('#authMsg');
+  if (!text) { el.classList.remove('show'); return; }
+  el.className = 'auth-msg show ' + type;
+  el.textContent = text;
+}
+
+/* ═══════════════ SUPABASE ═══════════════ */
+function initSupabase() {
+  if (!window.supabase) return false;
+  try {
+    supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+    return true;
+  } catch(e) { console.error('Supabase init failed', e); return false; }
+}
+
+/* ═══════════════ AUTH MODE ═══════════════ */
+function setAuthMode(mode) {
+  authMode = mode;
+  $$('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.authMode === mode));
+  $('#nameField').style.display = mode === 'signup' ? 'flex' : 'none';
+  $('#authSubmitText').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
+  $('#authHeading').textContent = mode === 'signup' ? 'Create your account' : 'Welcome back';
+  $('#authSubheading').textContent = mode === 'signup' ? 'Start your UPSC journey today' : 'Sign in to continue your journey';
+  authMsg('');
+}
+
+/* ═══════════════ EMAIL HELPER ═══════════════ */
+function normalizeEmail(raw) {
+  const val = (raw || '').trim();
+  if (!val) return '';
+  if (val.includes('@')) return val;
+  return val + DEFAULT_EMAIL_DOMAIN;
+}
+
+/* ═══════════════ SUBMIT HANDLER ═══════════════ */
+async function handleAuthSubmit(e) {
+  e.preventDefault();
+  if (!supa) { authMsg('Supabase not ready.', 'err'); return; }
+
+  const email = normalizeEmail($('#authEmail').value);
+  const password = $('#authPassword').value;
+  const name = $('#authName').value.trim();
+
+  if (!email || !password) { authMsg('Enter email and password.', 'err'); return; }
+  if (password.length < 6) { authMsg('Password must be 6+ characters.', 'err'); return; }
+
+  const btn = $('#authSubmit');
+  btn.disabled = true;
+  const orig = $('#authSubmitText').textContent;
+  $('#authSubmitText').innerHTML = '<span class="spinner"></span>' + (authMode === 'signin' ? ' Signing in…' : ' Creating…');
+  authMsg('');
+
+  try {
+    if (authMode === 'signin') {
+      const { error } = await supa.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast('Signed in! Redirecting…', 'ok', 1500);
+      setTimeout(() => window.location.href = APP_URL, 1000);
+    } else {
+      const { data, error } = await supa.auth.signUp({
+        email, password,
+        options: { data: { full_name: name || email.split('@')[0] } }
+      });
+      if (error) throw error;
+      if (data.user && !data.session) {
+        authMsg('Account created. Please confirm your email to sign in.', 'ok');
+        setAuthMode('signin');
+      } else {
+        toast('Account created! 🎉', 'ok', 1500);
+        setTimeout(() => window.location.href = APP_URL, 1500);
+      }
+    }
+  } catch(err) {
+    authMsg(err.message || 'Authentication failed.', 'err');
+  } finally {
+    btn.disabled = false;
+    $('#authSubmitText').textContent = orig;
+  }
+}
+
+/* ═══════════════ MODAL HELPERS ═══════════════ */
+function openModal(html, opts = {}) {
+  const box = $('#modalBox');
+  box.innerHTML = html;
+  $('#modalRoot').classList.add('active');
+  if (opts.onMount) opts.onMount(box);
+}
+function closeModal() { $('#modalRoot').classList.remove('active'); }
+
+function modalShell({ title, subtitle='', body, actions }) {
+  return `
+    <div class="modal-head">
+      <div>
+        <h3>${esc(title)}</h3>
+        ${subtitle ? `<div class="sub">${esc(subtitle)}</div>` : ''}
+      </div>
+      <button class="modal-close" data-close>✕</button>
+    </div>
+    <div class="modal-body">${body}</div>
+    ${actions ? `<div class="modal-foot">${actions}</div>` : ''}
+  `;
+}
+
+/* ═══════════════ FORGOT PASSWORD ═══════════════ */
+async function handleForgotPassword() {
+  const body = `
+    <div class="field">
+      <label>Email address</label>
+      <div class="email-input-wrap">
+        <input type="email" id="resetEmailInput" placeholder="yourname" autocomplete="email">
+        <span class="email-suffix">@gmail.com</span>
+      </div>
+    </div>
+    <p style="font-size:.82rem;color:var(--text-3)">We'll send a password reset link to your email.</p>
+  `;
+
+  openModal(modalShell({
+    title: 'Reset Password',
+    subtitle: 'Enter your registered email',
+    body,
+    actions: `
+      <button class="btn btn-ghost" data-close>Cancel</button>
+      <button class="btn btn-primary" id="resetSendBtn">Send Reset Link</button>
+    `
+  }), {
+    onMount() {
+      setTimeout(() => $('#resetEmailInput').focus(), 100);
+
+      const doSend = async () => {
+        const inputEmail = normalizeEmail($('#resetEmailInput').value);
+
+        if (!inputEmail || !inputEmail.includes('@')) {
+          toast('Enter a valid email.', 'err');
+          return;
+        }
+
+        const btn = $('#resetSendBtn');
+        btn.disabled = true;
+        btn.textContent = '⏳ Sending…';
+
+        try {
+          const { error } = await supa.auth.resetPasswordForEmail(inputEmail, {
+            redirectTo: window.location.origin + APP_URL
+          });
+          if (error) throw error;
+          closeModal();
+          toast('Reset link sent! Check your email.', 'ok', 4000);
+        } catch(e) {
+          toast(e.message, 'err');
+          btn.disabled = false;
+          btn.textContent = 'Send Reset Link';
+        }
+      };
+
+      $('#resetSendBtn').onclick = doSend;
+      $('#resetEmailInput').onkeydown = e => { if (e.key === 'Enter') doSend(); };
+    }
+  });
+}
+
+/* ═══════════════ WIRE EVENTS ═══════════════ */
+function wireEvents() {
+  $$('.auth-tab').forEach(t => t.onclick = () => setAuthMode(t.dataset.authMode));
+  $('#authForm').onsubmit = handleAuthSubmit;
+  $('#forgotPwBtn').onclick = handleForgotPassword;
+
+  $('#togglePw').onclick = () => {
+    const p = $('#authPassword');
+    p.type = p.type === 'password' ? 'text' : 'password';
+    $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
+  };
+
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) closeModal();
+    if (e.target.id === 'modalRoot') closeModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+}
+
+/* ═══════════════ BOOT ═══════════════ */
+async function boot() {
+  if (!initSupabase()) {
+    console.error('Supabase failed to load');
+    return;
+  }
+
+  wireEvents();
+  setAuthMode('signin');
+
+  // Check existing session — already logged in? → redirect to app
+  try {
+    const { data: { session } } = await supa.auth.getSession();
+    if (session) {
+      window.location.href = APP_URL;
+      return;
+    }
+  } catch(e) {
+    console.warn('Session check failed:', e);
+  }
+
+  // Auth state change — if signin happens anywhere
+  supa.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      setTimeout(() => window.location.href = APP_URL, 800);
+    }
+  });
+}
+
+boot();
+</script>
+
+</body>
+</html>
