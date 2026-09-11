@@ -2258,6 +2258,35 @@ async function handleForgotPassword() {
     }
   });
 }
+async function loadAnnouncement() {
+  if (!supa) return;
+  try {
+    const { data, error } = await supa
+      .from('site_announcements')
+      .select('*')
+      .eq('active', true)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    const banner = document.getElementById('announcementBanner');
+    if (!banner) { console.warn('Banner element missing!'); return; }
+    
+    if (error || !data) { 
+      banner.classList.add('hidden'); 
+      return; 
+    }
+    
+    const iconMap = { info: '📢', success: '✅', warning: '⚠️', danger: '🚨' };
+    banner.className = 'announcement-banner ' + (data.type || 'info');
+    banner.querySelector('.ann-icon').textContent = iconMap[data.type] || '📢';
+    document.getElementById('announcementText').textContent = data.message;
+    banner.classList.remove('hidden');
+  } catch (e) {
+    console.warn('Announcement load error:', e);
+  }
+}
+
 async function bootAfterLogin(session) {
   state.user = session.user; state.session = session;
   $('#authScreen').classList.add('hidden');
@@ -4482,6 +4511,8 @@ function wireEvents() {
   $('#adminTicketFilter').onchange = loadAdminTickets;
   $('#adminFbFilter').onchange = loadAdminFeedback;
   $('#manageAnnBtn').onclick = openAnnouncementEditor;
+  // Auto-refresh banner when admin publishes
+   window.refreshBanner = loadAnnouncement;
 
   // FAB
   $('#fab').onclick = () => $('#fabMenu').classList.toggle('active');
@@ -4800,6 +4831,10 @@ async function boot() {
 
   // Periodic badge update
   setInterval(updateBadges, 60000);
+
+    // ═══ Load announcement banner ═══
+  setTimeout(() => loadAnnouncement(), 800);
+  setInterval(() => loadAnnouncement(), 120000);  // Refresh every 2 min
 }
 
 boot();
