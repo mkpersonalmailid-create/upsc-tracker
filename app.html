@@ -1487,6 +1487,46 @@ button.fab.hidden,
   }
 }
 }
+/* ═══ APP LOADER ═══ */
+#appLoader{
+  position:fixed;inset:0;background:var(--bg);
+  display:none;align-items:center;justify-content:center;
+  z-index:9998;opacity:0;
+  transition:opacity .4s cubic-bezier(0.32,0.72,0,1);
+  pointer-events:none;
+}
+#appLoader.active{display:flex;opacity:1;pointer-events:auto}
+#appLoader.fade-out{opacity:0}
+.app-loader-inner{text-align:center;animation:fadeIn .5s cubic-bezier(0.32,0.72,0,1)}
+.app-loader-logo{
+  width:90px;height:90px;margin:0 auto 24px;border-radius:22px;
+  background:var(--grad-1);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 14px 44px rgba(168,85,247,.5);
+  animation:glow 2s ease-in-out infinite;overflow:hidden;
+  font-size:2rem;font-weight:900;color:#fff;
+}
+.app-loader-logo img{width:100%;height:100%;object-fit:cover}
+.app-loader-text{
+  font-size:1rem;font-weight:800;color:var(--text);
+  letter-spacing:-.01em;margin-bottom:6px;
+}
+.app-loader-sub{
+  font-size:.82rem;color:var(--text-3);
+  margin-bottom:22px;min-height:18px;
+}
+.app-loader-bar{
+  width:220px;height:4px;background:var(--card-2);
+  border-radius:20px;overflow:hidden;margin:0 auto;
+}
+.app-loader-bar-fill{
+  height:100%;width:40%;background:var(--grad-1);
+  border-radius:20px;
+  animation:loaderSlide 1.4s cubic-bezier(0.32,0.72,0,1) infinite;
+}
+@keyframes loaderSlide{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(350%)}
+}
 </style>
 </head>
 <body>
@@ -3607,35 +3647,71 @@ async function bootAfterLogin(session) {
   state.user = session.user; state.session = session;
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
-  $('#fab').classList.remove('hidden');
-   clearLegacyUserCache();
-  // ⬇️ YE ADD KARO — sidebar pe loading state
-  const sidebar = $('#sidebar');
-  if (sidebar) {
-    sidebar.style.opacity = '0.5';
-    sidebar.style.pointerEvents = 'none';
-  }
-  
-  await loadCloudData();       // ⬅️ Pehle data load karo
-  
-  // ⬇️ Data load hone ke baad opacity wapas
-  if (sidebar) {
-    sidebar.style.opacity = '1';
-    sidebar.style.pointerEvents = '';
-  }
-  updateSidebarUser();
-  await loadCloudData();
-  updateSidebarUser();
-  updatePremiumUI();
-  updateAdminVisibility();
-  renderAll();
-  updateGreeting();  
+  $('#fab').classList.add('hidden');
+
+  // ═══ FULL-SCREEN LOADER SHOW ═══
+  showAppLoader('Loading your workspace…');
+
+  try {
+    clearLegacyUserCache();
+
+    // ⬇️ loadCloudData() SIRF EK BAAR — duplicate call hata di
+    await loadCloudData();
+
+    // Ab UI update karo (state.isPremium already set hai)
+    updateSidebarUser();
+    updatePremiumUI();
+    updateAdminVisibility();
+    updatePremiumNavItems();
+    renderAll();
+    updateGreeting();
     updateLastSeen();
-  setInterval(updateLastSeen, 60000);
-  
-  // Load announcement banner after login
-  setTimeout(() => loadAnnouncement(), 800);
-  setInterval(() => loadAnnouncement(), 120000);
+    setInterval(updateLastSeen, 60000);
+
+    // Announcement
+    setTimeout(() => loadAnnouncement(), 500);
+    setInterval(() => loadAnnouncement(), 120000);
+
+    // FAB wapas dikhao
+    $('#fab').classList.remove('hidden');
+  } catch (e) {
+    console.error('bootAfterLogin failed:', e);
+  } finally {
+    hideAppLoader();
+  }
+}
+
+/* ═══ APP LOADER HELPERS ═══ */
+function showAppLoader(msg) {
+  let loader = document.getElementById('appLoader');
+  if (!loader) {
+    loader = document.createElement('div');
+    loader.id = 'appLoader';
+    loader.innerHTML = `
+      <div class="app-loader-inner">
+        <div class="app-loader-logo">
+          <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo"
+            onerror="this.style.display='none';this.parentElement.textContent='U'">
+        </div>
+        <div class="app-loader-text">UPSC Tracker</div>
+        <div class="app-loader-sub" id="appLoaderSub">${msg || 'Loading…'}</div>
+        <div class="app-loader-bar"><div class="app-loader-bar-fill"></div></div>
+      </div>`;
+    document.body.appendChild(loader);
+  } else {
+    const sub = document.getElementById('appLoaderSub');
+    if (sub) sub.textContent = msg || 'Loading…';
+  }
+  requestAnimationFrame(() => loader.classList.add('active'));
+}
+
+function hideAppLoader() {
+  const loader = document.getElementById('appLoader');
+  if (!loader) return;
+  loader.classList.add('fade-out');
+  setTimeout(() => {
+    loader.classList.remove('active', 'fade-out');
+  }, 450);
 }
 
 function updateSidebarUser() {
@@ -6576,12 +6652,10 @@ async function boot() {
   setInterval(() => loadAnnouncement(), 120000);  // Refresh every 2 min
 
    // ═══ Update premium nav items ═══
-  updatePremiumNavItems();
+  // updatePremiumNavItems();  // ← Hata diya — login ke baad hi chale}
 }
-
 boot();
 </script>
 
 </body>
 </html>
-
