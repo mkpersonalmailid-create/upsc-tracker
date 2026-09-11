@@ -179,6 +179,7 @@ export async function onRequestPost({ request, env }) {
         },
         body: JSON.stringify({ 
           membership: planName, 
+          email: user.email,
           updated_at: new Date().toISOString() 
         })
       });
