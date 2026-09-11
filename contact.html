@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Contact — UPSC Study Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#08090D !important;color:#F5F7FB !important}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+line-height:1.7;-webkit-font-smoothing:antialiased;min-height:100vh}
+a{color:#5E9EFF;text-decoration:none}
+a:hover{text-decoration:underline}
+img{max-width:100%;display:block}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 24px;
+background:rgba(8,9,13,.95);backdrop-filter:blur(20px);border-bottom:1px solid #232838;
+display:flex;justify-content:space-between;align-items:center}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;
+color:#F5F7FB !important;font-size:.95rem}
+.nav-logo img{width:32px;height:32px;border-radius:8px}
+.nav-cta{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
+padding:8px 16px;border-radius:8px;font-weight:800;font-size:.82rem;
+text-decoration:none !important}
+main{max-width:760px;margin:0 auto;padding:120px 24px 60px}
+h1{font-size:clamp(2rem,4vw,2.8rem);font-weight:900;letter-spacing:-.03em;
+line-height:1.15;margin-bottom:16px;color:#F5F7FB !important}
+.sub{color:#98A2B8 !important;font-size:1.05rem;margin-bottom:40px}
+.back{display:inline-flex;align-items:center;gap:8px;color:#5F6A82 !important;
+margin-bottom:24px;font-size:.85rem;font-weight:600;text-decoration:none}
+.back:hover{color:#5E9EFF !important;text-decoration:none}
+/* HERO ADMIN CARD */
+.admin-card{background:linear-gradient(135deg,rgba(94,158,255,.12),rgba(167,139,250,.08));
+border:1px solid rgba(94,158,255,.3);border-radius:20px;padding:32px;
+margin-bottom:24px;text-align:center;position:relative;overflow:hidden}
+.admin-card::before{content:'';position:absolute;top:-50%;left:-10%;width:200px;height:200px;
+background:radial-gradient(circle,rgba(94,158,255,.25),transparent 70%);pointer-events:none}
+.admin-icon{width:64px;height:64px;border-radius:50%;margin:0 auto 16px;
+background:linear-gradient(135deg,#5E9EFF,#A78BFA);display:flex;align-items:center;
+justify-content:center;font-size:1.8rem;box-shadow:0 10px 30px rgba(94,158,255,.5);
+position:relative}
+.admin-card h2{font-size:1.3rem;font-weight:800;color:#F5F7FB !important;
+margin-bottom:8px;position:relative}
+.admin-card p{color:#98A2B8 !important;font-size:.92rem;margin-bottom:20px;position:relative}
+.admin-email{display:inline-flex;align-items:center;gap:10px;
+background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
+padding:14px 28px;border-radius:12px;font-weight:800;font-size:.95rem;
+text-decoration:none !important;box-shadow:0 8px 24px rgba(94,158,255,.5);
+transition:.25s;position:relative;word-break:break-all}
+.admin-email:hover{transform:translateY(-3px);
+box-shadow:0 14px 36px rgba(94,158,255,.65);text-decoration:none !important}
+/* CARD GRID */
+.card{background:#141824;border:1px solid #232838;border-radius:16px;
+padding:26px;margin-bottom:16px;border-left:3px solid #5E9EFF;transition:.25s}
+.card:hover{border-color:#3A4560;transform:translateX(3px);
+box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.card-icon{width:44px;height:44px;border-radius:12px;
+background:rgba(94,158,255,.15);border:1px solid rgba(94,158,255,.3);
+display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px}
+.card h3{font-size:1.1rem;font-weight:800;margin-bottom:8px;
+color:#F5F7FB !important}
+.card p{color:#98A2B8 !important;font-size:.92rem;margin-bottom:16px;line-height:1.65}
+.card-btn{display:inline-flex;align-items:center;gap:8px;
+background:rgba(94,158,255,.12);color:#5E9EFF !important;
+padding:10px 20px;border-radius:10px;font-weight:800;font-size:.85rem;
+border:1px solid rgba(94,158,255,.3);transition:.25s;text-decoration:none}
+.card-btn:hover{background:rgba(94,158,255,.2);border-color:#5E9EFF;
+text-decoration:none !important;transform:translateY(-1px)}
+/* FOOTER */
+footer{background:#0F1118;border-top:1px solid #232838;padding:40px 24px;
+text-align:center;color:#5F6A82 !important;font-size:.82rem;margin-top:60px}
+footer a{color:#5E9EFF !important}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="/" class="nav-logo">
+    <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
+    <span>UPSC Study Tracker</span>
+  </a>
+  <a href="/app.html" class="nav-cta">Start Free →</a>
+</div>
+
+<main>
+  <a href="/" class="back">← Back to Home</a>
+
+  <h1>Contact Us</h1>
+  <p class="sub">Questions, bugs, feature ideas, or just want to chat? We'd love to hear from you.</p>
+
+  <!-- MAIN ADMIN CONTACT CARD -->
+  <div class="admin-card">
+    <div class="admin-icon">📧</div>
+    <h2>Write to Admin</h2>
+    <p>Direct line to the founder. Response within 24-48 hours.</p>
+    <a href="mailto:mkpersonalmailid@gmail.com" class="admin-email">
+      ✉️ mkpersonalmailid@gmail.com
+    </a>
+  </div>
+
+  <!-- OTHER CONTACT OPTIONS -->
+  <div class="card">
+    <div class="card-icon">💬</div>
+    <h3>In-App Feedback</h3>
+    <p>Fastest way to reach us. Login to the app and use the Feedback section — we reply back.</p>
+    <a href="/app.html" class="card-btn">Open App → Feedback</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">🐛</div>
+    <h3>Report a Bug</h3>
+    <p>Something not working? Include screenshots and steps to reproduce so we can fix it faster.</p>
+    <a href="mailto:mkpersonalmailid@gmail.com?subject=Bug Report" class="card-btn">Report Bug</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">💡</div>
+    <h3>Feature Request</h3>
+    <p>Have an idea that would make the app better for aspirants? Tell us — we build based on user feedback.</p>
+    <a href="mailto:mkpersonalmailid@gmail.com?subject=Feature Request" class="card-btn">Suggest Feature</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">💎</div>
+    <h3>Billing & Payments</h3>
+    <p>For payment issues, refund requests, or subscription problems. Include your payment ID from Razorpay.</p>
+    <a href="mailto:mkpersonalmailid@gmail.com?subject=Billing" class="card-btn">Contact Billing</a>
+  </div>
+
+  <div class="card">
+    <div class="card-icon">🤝</div>
+    <h3>Partnerships & Press</h3>
+    <p>Media inquiries, collaborations, or business partnerships. Reach out directly to admin.</p>
+    <a href="mailto:mkpersonalmailid@gmail.com?subject=Partnership" class="card-btn">Get in Touch</a>
+  </div>
+</main>
+
+<footer>
+  © 2026 UPSC Study Tracker · <a href="/">Home</a> · <a href="/app.html">App</a> · <a href="/about.html">About</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>
+</footer>
+
+</body>
+</html>
