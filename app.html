@@ -4700,7 +4700,15 @@ function renderSyllabus() {
     switchView('study');
   });
   tree.querySelectorAll('[data-syl-del]').forEach(el => el.onclick = async () => {
-    if (!confirm('Delete this topic?')) return;
+    const ok = await customConfirm({
+  title: 'Delete Topic?',
+  message: 'This topic will be removed from your syllabus tracker. This cannot be undone.',
+  confirmText: 'Delete',
+  cancelText: 'Cancel',
+  icon: '🗑️',
+  type: 'danger'
+});
+if (!ok) return;
     state.syllabus = state.syllabus.filter(x => x.id !== el.dataset.sylDel);
     saveLocal();
     if (supa && state.user) { try { await supa.from('syllabus_topics').delete().eq('id', el.dataset.sylDel); } catch(e) {} }
