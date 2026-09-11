@@ -3018,7 +3018,7 @@ async function startUpgrade(planId, opts = {}) {
         name: state.profile.name || ''
       },
       theme: { color: '#A855F7' },
-      handler: async (response) => { await verifyPayment(response, planId); },
+      handler: async (response) => { await verifyPayment(response, planId, isRenewal); },
       modal: {
         ondismiss: () => {
           toast('Payment cancelled.', 'info');
@@ -3291,6 +3291,20 @@ async function bootAfterLogin(session) {
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
   $('#fab').classList.remove('hidden');
+  // ⬇️ YE ADD KARO — sidebar pe loading state
+  const sidebar = $('#sidebar');
+  if (sidebar) {
+    sidebar.style.opacity = '0.5';
+    sidebar.style.pointerEvents = 'none';
+  }
+  
+  await loadCloudData();       // ⬅️ Pehle data load karo
+  
+  // ⬇️ Data load hone ke baad opacity wapas
+  if (sidebar) {
+    sidebar.style.opacity = '1';
+    sidebar.style.pointerEvents = '';
+  }
   updateSidebarUser();
   await loadCloudData();
   updateSidebarUser();
