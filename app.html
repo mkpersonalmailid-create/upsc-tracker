@@ -1120,6 +1120,30 @@ button#fab {
   .hero .greeting-name { font-size: clamp(1.7rem, 8vw, 2.2rem) !important; }
   .hero .greeting-sub { font-size: .88rem !important; }
 }
+/* ═══ Greeting — Center + Bold ═══ */
+.hero .greeting {
+  text-align: center !important;
+  margin-bottom: 24px !important;
+}
+.hero .greeting-name {
+  font-size: clamp(1.7rem, 3.8vw, 2.4rem) !important;
+  font-weight: 900 !important;
+  letter-spacing: -.02em !important;
+  line-height: 1.15 !important;
+  background: linear-gradient(135deg, #fff 0%, #C4B5FD 60%, #F9A8D4 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+.hero .greeting-sub {
+  font-size: .95rem !important;
+  color: var(--text-2) !important;
+  margin-top: 8px !important;
+}
+@media (max-width: 700px) {
+  .hero .greeting-name { font-size: clamp(1.5rem, 7vw, 2rem) !important; }
+  .hero .greeting-sub { font-size: .86rem !important; }
+}
 </style>
 </head>
 <body>
@@ -1279,8 +1303,7 @@ button#fab {
       <section class="view active" id="view-study">
         <div class="hero">
           <div class="greeting">
-            <div class="greeting-hi" id="greetTime">GOOD MORNING</div>
-            <div class="greeting-name" id="greetName">Welcome</div>
+            <div class="greeting-name" id="greetName">Welcome 👋</div>
             <div class="greeting-sub" id="greetSub">Ready to make today count?</div>
           </div>
           <div class="clock-wrap">
@@ -2688,6 +2711,7 @@ async function bootAfterLogin(session) {
   updatePremiumUI();
   updateAdminVisibility();
   renderAll();
+  updateGreeting();  
     updateLastSeen();
   setInterval(updateLastSeen, 60000);
   
@@ -2768,10 +2792,17 @@ function updateBadges() {
 }
 
 /* ═══════════════ STUDY VIEW ═══════════════ */
+function updateGreeting() {
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  const name = state.profile.name ? state.profile.name.split(' ')[0] : (state.user?.email?.split('@')[0] || 'there');
+  const greetEl = document.getElementById('greetName');
+  const subEl = document.getElementById('greetSub');
+  if (greetEl) greetEl.textContent = `${greet}, ${name} 👋`;
+  if (subEl) subEl.textContent = state.sessions.length ? "Let's make today count." : "Welcome. Start your first session.";
+}
 function renderStudy() {
-  $('#greetTime').textContent = getGreetingLabel();
-  $('#greetName').textContent = (state.profile.name ? state.profile.name.split(' ')[0] : 'there') + ' 👋';
-  $('#greetSub').textContent = state.sessions.length ? "Let's make today count." : "Welcome. Start your first session.";
+  updateGreeting();
   const todaySec = secondsOn(todayKey());
   const target = (state.settings.daily_target || 8) * 3600;
   $('#todayStudy').textContent = fmtDuration(todaySec);
@@ -5247,6 +5278,7 @@ function applyTheme(theme) {
 /* ═══════════════ BOOT ═══════════════ */
 async function boot() {
   loadLocal();
+    updateGreeting();                    // ← YEH ADD KARO
   loadTimerLocal();
   applyTheme(state.settings.theme || 'dark');
   if (!initSupabase()) { console.error('Supabase failed to load'); return; }
