@@ -63,7 +63,6 @@ a{color:var(--pink);text-decoration:none}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 @keyframes glow{0%,100%{box-shadow:0 0 24px rgba(168,85,247,.4)}50%{box-shadow:0 0 56px rgba(236,72,153,.6)}}
 
-/* ═══════════ AUTH SCREEN ═══════════ */
 .auth-screen{
   position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
   padding:20px;z-index:500;overflow-y:auto;background:var(--bg);
@@ -173,7 +172,9 @@ a{color:var(--pink);text-decoration:none}
   background:var(--card);
 }
 
-/* ═══ Email with @gmail.com suffix ═══ */
+/* ═══════════════════════════════════════════════
+   EMAIL INPUT WITH @gmail.com SUFFIX
+   ═══════════════════════════════════════════════ */
 .email-input-wrap{
   position:relative;
   display:flex;
@@ -181,7 +182,7 @@ a{color:var(--pink);text-decoration:none}
   background:var(--bg-2);
   border:1.5px solid var(--border);
   border-radius:11px;
-  transition:var(--t);
+  transition:border-color .25s, box-shadow .25s, background .25s;
   overflow:hidden;
 }
 .email-input-wrap:focus-within{
@@ -215,16 +216,20 @@ a{color:var(--pink);text-decoration:none}
   user-select:none;
   pointer-events:none;
   white-space:nowrap;
-  transition:all .25s cubic-bezier(0.32,0.72,0,1);
-  opacity:1;
-  max-width:200px;
+  transition:opacity .2s cubic-bezier(0.32,0.72,0,1);
 }
-.email-input-wrap.hide-suffix .email-suffix{
-  opacity:0;
-  max-width:0;
-  padding-left:0;
-  padding-right:0;
-  margin-left:-4px;
+
+/* ═══ TRIPLE-LAYER HIDE (CSS + class + inline style) ═══ */
+.email-input-wrap.hide-suffix .email-suffix,
+.email-suffix[style*="display: none"],
+.email-suffix.hidden-suffix{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  width:0 !important;
+  padding:0 !important;
+  margin:0 !important;
+  overflow:hidden !important;
 }
 
 .input-wrap{position:relative}
@@ -370,7 +375,7 @@ button.toggle-pw{
         <div class="field">
           <label for="authEmail">Email</label>
           <div class="email-input-wrap">
-            <input type="email" id="authEmail" name="email" placeholder="yourname" required autocomplete="email">
+            <input type="text" id="authEmail" name="email" placeholder="yourname" required autocomplete="email" inputmode="email">
             <span class="email-suffix">@gmail.com</span>
           </div>
         </div>
@@ -457,13 +462,40 @@ function setAuthMode(mode) {
   authMsg('');
 }
 
-/* ═══════════════ EMAIL HELPER ═══════════════ */
+/* ═══════════════ EMAIL HELPERS ═══════════════ */
 function normalizeEmail(raw) {
   const val = (raw || '').trim();
   if (!val) return '';
   if (val.includes('@')) return val;
   return val + DEFAULT_EMAIL_DOMAIN;
 }
+
+/* ═══════════════ SUFFIX AUTO-HIDE (TRIPLE LAYER) ═══════════════ */
+function toggleEmailSuffix(input) {
+  if (!input) return;
+  const wrap = input.closest('.email-input-wrap');
+  if (!wrap) return;
+  const suffix = wrap.querySelector('.email-suffix');
+  if (!suffix) return;
+
+  const hasAt = (input.value || '').includes('@');
+
+  if (hasAt) {
+    // Layer 1: CSS class
+    wrap.classList.add('hide-suffix');
+    // Layer 2: Inline style
+    suffix.style.display = 'none';
+    // Layer 3: Another class (fallback)
+    suffix.classList.add('hidden-suffix');
+  } else {
+    wrap.classList.remove('hide-suffix');
+    suffix.style.display = '';
+    suffix.classList.remove('hidden-suffix');
+  }
+}
+
+// Expose globally for oninput attribute
+window.toggleEmailSuffix = toggleEmailSuffix;
 
 /* ═══════════════ SUBMIT HANDLER ═══════════════ */
 async function handleAuthSubmit(e) {
@@ -540,8 +572,7 @@ async function handleForgotPassword() {
     <div class="field">
       <label>Email address</label>
       <div class="email-input-wrap">
-        <input type="email" id="resetEmailInput" placeholder="yourname" autocomplete="email">
-        <span class="email-suffix">@gmail.com</span>
+       <input type="text" id="resetEmailInput" placeholder="yourname" autocomplete="email" inputmode="email">        <span class="email-suffix">@gmail.com</span>
       </div>
     </div>
     <p style="font-size:.82rem;color:var(--text-3)">We'll send a password reset link to your email.</p>
@@ -557,7 +588,13 @@ async function handleForgotPassword() {
     `
   }), {
     onMount() {
-      setTimeout(() => $('#resetEmailInput').focus(), 100);
+      setTimeout(() => {
+        const inp = $('#resetEmailInput');
+        if (inp) {
+          inp.focus();
+          inp.addEventListener('input', function() { toggleEmailSuffix(this); });
+        }
+      }, 100);
 
       const doSend = async () => {
         const inputEmail = normalizeEmail($('#resetEmailInput').value);
@@ -603,6 +640,16 @@ function wireEvents() {
     $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
   };
 
+  // ⬇️ ATTACH INPUT LISTENER PROPERLY (instead of inline oninput)
+  const emailInput = $('#authEmail');
+  if (emailInput) {
+    emailInput.addEventListener('input', function() {
+      toggleEmailSuffix(this);
+    });
+    // Initial state
+    toggleEmailSuffix(emailInput);
+  }
+
   document.addEventListener('click', e => {
     if (e.target.closest('[data-close]')) closeModal();
     if (e.target.id === 'modalRoot') closeModal();
@@ -622,6 +669,12 @@ async function boot() {
 
   wireEvents();
   setAuthMode('signin');
+
+  // Initial check — if browser autofilled email with @, hide suffix
+  setTimeout(() => {
+    const authEmailInput = document.getElementById('authEmail');
+    if (authEmailInput && authEmailInput.value) toggleEmailSuffix(authEmailInput);
+  }, 150);
 
   // Check existing session — already logged in? → redirect to app
   try {
