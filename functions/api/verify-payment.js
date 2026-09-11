@@ -1,7 +1,7 @@
 // POST /api/verify-payment
 // Handles both one-time orders and subscriptions
 
-const ONE_TIME_PLANS = { yearly: { amount: 50000, days: 365, plan: 'yearly' } };
+const ONE_TIME_PLANS = { yearly: { days: 365, plan: 'yearly' } };
 
 function json(o, s = 200) {
   return new Response(JSON.stringify(o), { status: s,
@@ -46,7 +46,6 @@ export async function onRequestPost({ request, env }) {
       const expected = hex(sigBuf);
       if (!timingSafeEqual(expected, razorpay_signature)) return json({ error: 'Invalid signature' }, 400);
 
-      // Fetch subscription from Razorpay to confirm
       const sRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${razorpay_subscription_id}`,
         { headers: { 'Authorization': 'Basic ' + auth64 } });
       if (!sRes.ok) return json({ error: 'Subscription not found' }, 400);
@@ -61,17 +60,18 @@ export async function onRequestPost({ request, env }) {
       currency = sub.plan?.item?.currency || 'INR';
       planName = 'monthly';
       subscriptionId = razorpay_subscription_id;
-      // expiry = current_end (unix seconds) → 30 days from now
       const currentEnd = sub.current_end ? sub.current_end * 1000 : Date.now() + 30 * 86400000;
       expiryDays = Math.max(1, Math.round((currentEnd - Date.now()) / 86400000));
     }
     // ============ ONE-TIME ORDER VERIFY ============
     else if (razorpay_order_id) {
+      // Signature check
       const sigBuf = await crypto.subtle.sign('HMAC', key,
         enc.encode(`${razorpay_order_id}|${razorpay_payment_id}`));
       const expected = hex(sigBuf);
       if (!timingSafeEqual(expected, razorpay_signature)) return json({ error: 'Invalid signature' }, 400);
 
+      // Fetch payment from Razorpay
       const pRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
         { headers: { 'Authorization': 'Basic ' + auth64 } });
       if (!pRes.ok) return json({ error: 'Payment not found' }, 400);
@@ -79,12 +79,25 @@ export async function onRequestPost({ request, env }) {
       if (payment.order_id !== razorpay_order_id) return json({ error: 'Order mismatch' }, 400);
       if (!['captured', 'authorized'].includes(payment.status)) return json({ error: 'Not captured' }, 400);
 
+      // ─── Fetch ORDER from Razorpay to get ACTUAL amount (coupon-aware) ───
+      const oRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`,
+        { headers: { 'Authorization': 'Basic ' + auth64 } });
+      if (!oRes.ok) return json({ error: 'Order not found' }, 400);
+      const order = await oRes.json();
+
+      // Paid amount MUST equal the order amount (whatever it is — ₹1 or ₹500)
+      if (payment.amount !== order.amount) {
+        return json({ error: 'Amount mismatch' }, 400);
+      }
+
       const plan = ONE_TIME_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid plan' }, 400);
-      if (payment.amount !== plan.amount) return json({ error: 'Amount mismatch' }, 400);
       if (payment.notes?.user_id && payment.notes.user_id !== user.id) return json({ error: 'User mismatch' }, 403);
 
-      amount = payment.amount; currency = payment.currency; planName = plan.plan; expiryDays = plan.days;
+      amount = payment.amount;
+      currency = payment.currency;
+      planName = plan.plan;
+      expiryDays = plan.days;
     } else {
       return json({ error: 'Missing order or subscription id' }, 400);
     }
@@ -133,9 +146,9 @@ export async function onRequestPost({ request, env }) {
         amount, currency, status: 'captured', plan: planName })
     });
 
-    return json({ success: true, plan: planName, expiry: expiryISO });
+    return json({ success: true, plan: planName, expiry: expiryISO, amount });
   } catch (e) {
     console.error('verify-payment error:', e);
-    return json({ error: 'Server error' }, 500);
+    return json({ error: 'Server error', message: e.message }, 500);
   }
 }
