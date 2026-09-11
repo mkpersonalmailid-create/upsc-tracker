@@ -1279,6 +1279,212 @@ button.fab.hidden,
 }
 .sidebar.collapsed .sidebar-plan-indicator .plan-info {
   display: none;
+  /* ═══════════ iOS-STYLE SMOOTH ANIMATIONS ═══════════ */
+
+/* iOS spring easing — used by Apple for smooth transitions */
+:root {
+  --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ios-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ios-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Sidebar smooth slide ─── */
+.sidebar {
+  transition: 
+    width 0.4s var(--ios-ease),
+    transform 0.4s var(--ios-ease),
+    box-shadow 0.3s ease;
+}
+
+/* Mobile: sidebar slides in with iOS feel */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.42s var(--ios-ease);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+}
+
+/* ─── Nav items staggered entrance ─── */
+.nav {
+  animation: navFadeIn 0.5s var(--ios-ease);
+}
+
+@keyframes navFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.nav-item {
+  animation: navItemSlide 0.5s var(--ios-ease) backwards;
+  transition: 
+    background 0.28s var(--ios-smooth),
+    color 0.2s ease,
+    transform 0.28s var(--ios-spring),
+    box-shadow 0.3s ease;
+}
+
+/* Stagger delay — har item thoda late aata hai (iOS style) */
+.nav-item:nth-child(1) { animation-delay: 0.02s; }
+.nav-item:nth-child(2) { animation-delay: 0.05s; }
+.nav-item:nth-child(3) { animation-delay: 0.08s; }
+.nav-item:nth-child(4) { animation-delay: 0.11s; }
+.nav-item:nth-child(5) { animation-delay: 0.14s; }
+.nav-item:nth-child(6) { animation-delay: 0.17s; }
+.nav-item:nth-child(7) { animation-delay: 0.20s; }
+.nav-item:nth-child(8) { animation-delay: 0.23s; }
+.nav-item:nth-child(9) { animation-delay: 0.26s; }
+.nav-item:nth-child(10) { animation-delay: 0.29s; }
+.nav-item:nth-child(n+11) { animation-delay: 0.32s; }
+
+@keyframes navItemSlide {
+  0% {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateX(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Hover — subtle lift with spring feel */
+.nav-item:hover {
+  transform: translateX(4px) scale(1.01);
+  transition: transform 0.25s var(--ios-spring);
+}
+
+/* Active item — soft pulse */
+.nav-item.active {
+  animation: navActiveSoft 0.5s var(--ios-ease);
+}
+
+@keyframes navActiveSoft {
+  0% {
+    transform: scale(0.97);
+    box-shadow: inset 0 0 0 1px rgba(168,85,247,0);
+  }
+  50% {
+    transform: scale(1.01);
+    box-shadow: inset 0 0 0 1px rgba(168,85,247,0.4);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: inset 0 0 0 1px rgba(168,85,247,0.3);
+  }
+}
+
+/* ─── Nav icons pop-in ─── */
+.nav-icon {
+  transition: transform 0.3s var(--ios-spring), color 0.2s ease;
+}
+.nav-item:hover .nav-icon {
+  transform: scale(1.15);
+}
+.nav-item.active .nav-icon {
+  transform: scale(1.05);
+}
+
+/* ─── Nav badges smooth pop ─── */
+.nav-badge {
+  transition: transform 0.3s var(--ios-spring), opacity 0.2s ease;
+}
+.nav-badge:not(.hidden) {
+  animation: badgePop 0.4s var(--ios-spring);
+}
+@keyframes badgePop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ─── Sidebar plan indicator smooth ─── */
+.sidebar-plan-indicator {
+  animation: planSlideIn 0.5s var(--ios-ease) 0.1s backwards;
+}
+@keyframes planSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── Logo entrance ─── */
+.logo {
+  animation: logoIn 0.5s var(--ios-ease);
+}
+@keyframes logoIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Topbar icons smooth hover (iOS-style) ─── */
+.top-icon-btn, .collapse-btn, .avatar-btn {
+  transition: 
+    background 0.28s var(--ios-smooth),
+    color 0.2s ease,
+    transform 0.3s var(--ios-spring),
+    box-shadow 0.3s ease,
+    border-color 0.2s ease;
+}
+.top-icon-btn:hover, .collapse-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+}
+.top-icon-btn:active, .collapse-btn:active, .avatar-btn:active {
+  transform: scale(0.94);
+  transition: transform 0.1s ease;
+}
+
+/* ─── Mobile tap ripple feel (iOS-like) ─── */
+@media (hover: none) {
+  .nav-item:active,
+  .top-icon-btn:active,
+  .collapse-btn:active {
+    transform: scale(0.96);
+    transition: transform 0.12s ease;
+  }
+}
+
+/* ─── Smooth content fade ─── */
+.view.active {
+  animation: viewFadeIn 0.4s var(--ios-ease);
+}
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Reduce motion — accessibility ─── */
+@media (prefers-reduced-motion: reduce) {
+  .nav-item, .nav, .view.active, .logo, .sidebar-plan-indicator {
+    animation: none !important;
+  }
+  .nav-item, .sidebar, .top-icon-btn {
+    transition: none !important;
+  }
+}
 }
 </style>
 </head>
