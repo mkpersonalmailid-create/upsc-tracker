@@ -2264,12 +2264,38 @@ const UI_KEY = 'upsc_tracker_v5_ui';
 const RAZORPAY_PLAN_ID_MONTHLY = 'plan_TaOc0r72B2FnsZ';
 
 const PLANS = {
-  monthly: { id:'monthly', name:'Monthly', price:50, currency:'INR', period:'1 month', type:'subscription',
+  monthly_auto: { 
+    id:'monthly_auto', 
+    name:'Monthly Auto', 
+    price:50, 
+    currency:'INR', 
+    period:'1 month', 
+    type:'subscription',
+    description:'UPSC Tracker Premium — Monthly Auto',
+    disabled: true,                     // ⬅️ Disabled — showing "Inactive"
+    features:['All core features','Advanced analytics','Unlimited exports','Auto-renews via UPI']
+  },
+  monthly_once: { 
+    id:'monthly_once', 
+    name:'Monthly', 
+    price:50, 
+    currency:'INR', 
+    period:'30 days', 
+    type:'one_time',
     description:'UPSC Tracker Premium — Monthly',
-    features:['All core features','Advanced analytics','Unlimited exports','Priority support'] },
-  yearly: { id:'yearly', name:'Yearly', price:500, currency:'INR', period:'12 months', type:'one_time',
-    description:'UPSC Tracker Premium — Yearly', badge:'BEST VALUE',
-    features:['All core features','Advanced analytics','Unlimited exports','Priority support','Save ₹100'] }
+    features:['All core features','Advanced analytics','Unlimited exports','Manual renewal','Pay each month']
+  },
+  yearly: { 
+    id:'yearly', 
+    name:'Yearly', 
+    price:500, 
+    currency:'INR', 
+    period:'12 months', 
+    type:'one_time',
+    description:'UPSC Tracker Premium — Yearly', 
+    badge:'BEST VALUE',
+    features:['All core features','Advanced analytics','Unlimited exports','Save ₹100','Priority support']
+  }
 };
 
 /* ═══════════════ OPTIONAL SUBJECTS (full list from UPSC) ═══════════════ */
@@ -2882,7 +2908,9 @@ function renderPremiumPage() {
   // ═══ PREMIUM USER ═══
   if (isPremiumUser()) {
     const sub = state.subscription;
-    const isYearly = !isAdminUser() && sub?.plan === 'yearly';
+const isYearly = !isAdminUser() && sub?.plan === 'yearly';
+const isMonthlyOnce = !isAdminUser() && (sub?.plan === 'monthly_once');
+const isMonthlyAuto = !isAdminUser() && sub?.plan === 'monthly';
     
     if (planHeading) planHeading.textContent = isAdminUser() ? '👑 Admin Access' : '💎 Your Premium Plan';
     if (planSub) planSub.textContent = isAdminUser() 
@@ -2942,16 +2970,40 @@ function renderPremiumPage() {
           </div>
           
           ${isYearly ? `
-            <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-              <div style="flex:1;min-width:200px">
-                <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">🔄 Renew Plan</div>
-                <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +365 days add karo. Coupon bhi apply kar sakte ho.</div>
-              </div>
-              <button class="btn btn-premium" id="renewPlanBtn" style="padding:12px 24px">
-                🔄 Renew for ₹500
-              </button>
-            </div>
-          ` : ''}
+  <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">🔄 Renew Yearly Plan</div>
+      <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +365 days add karo. Coupon bhi apply kar sakte ho.</div>
+    </div>
+    <button class="btn btn-premium" id="renewPlanBtn" data-plan="yearly" style="padding:12px 24px">
+      🔄 Renew for ₹500
+    </button>
+  </div>
+` : ''}
+
+${isMonthlyOnce ? `
+  <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">🔄 Renew Monthly Plan</div>
+      <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +30 days add karo (no autopay).</div>
+    </div>
+    <button class="btn btn-premium" id="renewPlanBtn" data-plan="monthly_once" style="padding:12px 24px">
+      🔄 Renew for ₹50
+    </button>
+  </div>
+` : ''}
+
+${isMonthlyAuto ? `
+  <div style="padding:18px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">⚠️ Auto-Renewal Inactive</div>
+      <div style="font-size:.8rem;color:var(--text-2)">Auto-renewal currently inactive due to technical reasons. Aap Monthly ya Yearly plan choose kar sakte ho.</div>
+    </div>
+    <button class="btn btn-premium" id="switchToManualBtn" style="padding:12px 24px">
+      Switch to Manual
+    </button>
+  </div>
+` : ''}
           
           ${!isAdminUser() && sub?.plan === 'monthly' ? `
             <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -2966,12 +3018,25 @@ function renderPremiumPage() {
       `;
       
       // Wire renew button
-      const renewBtn = document.getElementById('renewPlanBtn');
-      if (renewBtn) {
-        renewBtn.onclick = () => {
-          openYearlyCouponModal({ isRenewal: true });
-        };
-      }
+      // Wire renew button
+const renewBtn = document.getElementById('renewPlanBtn');
+if (renewBtn) {
+  renewBtn.onclick = () => {
+    const planId = renewBtn.dataset.plan || 'yearly';
+    if (planId === 'yearly') {
+      openYearlyCouponModal({ isRenewal: true });
+    } else {
+      startUpgrade(planId, { isRenewal: true });
+    }
+  };
+}
+
+const switchBtn = document.getElementById('switchToManualBtn');
+if (switchBtn) {
+  switchBtn.onclick = () => {
+    startUpgrade('monthly_once', { isRenewal: false });
+  };
+}
     }
     
     if (upgradeBtn) upgradeBtn.style.display = 'none';
@@ -2980,37 +3045,61 @@ function renderPremiumPage() {
   }
   
   // ═══ FREE USER ═══
-  if (planHeading) planHeading.textContent = 'Choose Your Plan';
-  if (planSub) planSub.textContent = 'Unlock advanced analytics, unlimited exports and priority support.';
-  if (upgradeBtn) upgradeBtn.style.display = '';
+  // ═══ FREE USER ═══
+if (planHeading) planHeading.textContent = 'Choose Your Plan';
+if (planSub) planSub.textContent = 'Unlock advanced analytics, unlimited exports and priority support.';
+if (upgradeBtn) upgradeBtn.style.display = '';
+
+if (!grid) return;
+let selected = grid.dataset.selected || 'monthly_once';
+grid.dataset.selected = selected;
+// 3-column grid
+grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
+
+grid.innerHTML = Object.values(PLANS).map(plan => {
+  const isDisabled = plan.disabled === true;
+  const isSelected = plan.id === selected;
   
-  if (!grid) return;
-  let selected = grid.dataset.selected || 'monthly';
-  grid.dataset.selected = selected;
-  grid.innerHTML = Object.values(PLANS).map(plan => `
-    <div class="plan-card ${plan.id===selected?'selected':''}" data-plan="${plan.id}"
-      style="background:${plan.id===selected?'linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06))':'var(--card)'};
-             border:1.5px solid ${plan.id===selected?'#FBBF24':'var(--border)'};border-radius:16px;padding:22px;
-             position:relative;cursor:pointer;transition:all .25s">
+  return `
+    <div class="plan-card ${isSelected?'selected':''} ${isDisabled?'disabled':''}" 
+      data-plan="${plan.id}" 
+      data-disabled="${isDisabled}"
+      style="background:${isSelected?'linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06))':'var(--card)'};
+             border:1.5px solid ${isSelected?'#FBBF24':'var(--border)'};border-radius:16px;padding:22px;
+             position:relative;cursor:${isDisabled?'not-allowed':'pointer'};transition:all .25s;
+             opacity:${isDisabled ? 0.55 : 1}">
       ${plan.badge?`<div style="position:absolute;top:-10px;right:14px;background:var(--grad-2);color:#1a1a1a;font-size:.65rem;font-weight:900;padding:3px 12px;border-radius:20px">${plan.badge}</div>`:''}
+      ${isDisabled?`<div style="position:absolute;top:-10px;left:14px;background:linear-gradient(135deg,#EF4444,#F43F5E);color:#fff;font-size:.6rem;font-weight:900;padding:3px 12px;border-radius:20px">INACTIVE</div>`:''}
       <div style="font-size:.82rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);margin-bottom:8px">${plan.name}</div>
       <div style="font-size:2.2rem;font-weight:900;letter-spacing:-.03em;line-height:1">₹${plan.price}<span style="font-size:.85rem;color:var(--text-3);font-weight:600">/ ${plan.period}</span></div>
       <ul style="list-style:none;margin-top:16px;display:flex;flex-direction:column;gap:8px">
         ${plan.features.map(f=>`<li style="font-size:.82rem;color:var(--text-2);display:flex;align-items:center;gap:8px"><span style="color:var(--emerald);font-weight:900">✓</span>${esc(f)}</li>`).join('')}
       </ul>
-    </div>`).join('');
-  grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
-    grid.dataset.selected = c.dataset.plan;
-    renderPremiumPage();
-  });
+      ${isDisabled?`
+        <div style="margin-top:14px;padding:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:8px;font-size:.72rem;color:#FCA5A5;line-height:1.5">
+          ⚠️ <strong>Currently inactive</strong> due to technical reasons. Please choose another plan.
+        </div>
+      `:''}
+    </div>
+  `;
+}).join('');
+
+grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
+  if (c.dataset.disabled === 'true') {
+    toast('Auto-renewal plan currently inactive. Please choose Monthly or Yearly.', 'warn', 4000);
+    return;
+  }
+  grid.dataset.selected = c.dataset.plan;
+  renderPremiumPage();
+});
   if (upgradeBtn) upgradeBtn.onclick = () => {
-    const selectedPlan = grid.dataset.selected || 'monthly';
-    if (selectedPlan === 'yearly') {
-      openYearlyCouponModal();
-    } else {
-      startUpgrade(selectedPlan);
-    }
-  };
+  const selectedPlan = grid.dataset.selected || 'monthly_once';
+  if (selectedPlan === 'yearly') {
+    openYearlyCouponModal();
+  } else {
+    startUpgrade(selectedPlan);
+  }
+};
   renderPaymentHistoryInto('#paymentHistory');
 }
 function openUpgradeModal(reason) {
@@ -3020,7 +3109,7 @@ function openUpgradeModal(reason) {
         ${reason?`"<strong>${esc(reason)}</strong>" is a Premium feature.`:'Unlock the full experience.'}
       </div>
     </div>
-    <div id="modalPlansGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px"></div>
+    <div id="modalPlansGrid" style="display:grid;grid-template-columns:1fr;gap:10px"></div>
     <p style="text-align:center;font-size:.72rem;color:var(--text-3);margin-top:8px">Secure payment via Razorpay</p>`;
   openModal(modalShell({
     title: '💎 Upgrade to Premium',
@@ -3031,29 +3120,40 @@ function openUpgradeModal(reason) {
   }), {
     onMount() {
       const grid = $('#modalPlansGrid');
-      grid.dataset.selected = 'monthly';
-      const renderPlans = () => {
-        grid.innerHTML = Object.values(PLANS).map(plan => `
-          <div class="plan-card ${plan.id===grid.dataset.selected?'selected':''}" data-plan="${plan.id}"
-            style="background:${plan.id===grid.dataset.selected?'linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06))':'var(--card-2)'};
-                   border:1.5px solid ${plan.id===grid.dataset.selected?'#FBBF24':'var(--border)'};border-radius:14px;padding:16px;position:relative;cursor:pointer">
-            ${plan.badge?`<div style="position:absolute;top:-8px;right:10px;background:var(--grad-2);color:#1a1a1a;font-size:.6rem;font-weight:900;padding:2px 10px;border-radius:20px">${plan.badge}</div>`:''}
-            <div style="font-size:.75rem;font-weight:800;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">${plan.name}</div>
-            <div style="font-size:1.6rem;font-weight:900">₹${plan.price}<span style="font-size:.75rem;color:var(--text-3)">/${plan.period}</span></div>
-          </div>`).join('');
-        grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
-          grid.dataset.selected = c.dataset.plan;
-          renderPlans();
-        });
-      };
+      grid.dataset.selected = 'monthly_once';
+const renderPlans = () => {
+  grid.innerHTML = Object.values(PLANS).map(plan => {
+    const isDisabled = plan.disabled === true;
+    const isSelected = plan.id === grid.dataset.selected;
+    return `
+      <div class="plan-card ${isSelected?'selected':''}" data-plan="${plan.id}" data-disabled="${isDisabled}"
+        style="background:${isSelected?'linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06))':'var(--card-2)'};
+               border:1.5px solid ${isSelected?'#FBBF24':'var(--border)'};border-radius:14px;padding:16px;position:relative;
+               cursor:${isDisabled?'not-allowed':'pointer'};opacity:${isDisabled ? 0.5 : 1}">
+        ${plan.badge?`<div style="position:absolute;top:-8px;right:10px;background:var(--grad-2);color:#1a1a1a;font-size:.6rem;font-weight:900;padding:2px 10px;border-radius:20px">${plan.badge}</div>`:''}
+        ${isDisabled?`<div style="position:absolute;top:-8px;left:10px;background:linear-gradient(135deg,#EF4444,#F43F5E);color:#fff;font-size:.55rem;font-weight:900;padding:2px 10px;border-radius:20px">INACTIVE</div>`:''}
+        <div style="font-size:.75rem;font-weight:800;text-transform:uppercase;color:var(--text-3);margin-bottom:6px">${plan.name}</div>
+        <div style="font-size:1.6rem;font-weight:900">₹${plan.price}<span style="font-size:.75rem;color:var(--text-3)">/${plan.period}</span></div>
+      </div>
+    `;
+  }).join('');
+  grid.querySelectorAll('[data-plan]').forEach(c => c.onclick = () => {
+    if (c.dataset.disabled === 'true') {
+      toast('Auto-renewal plan currently inactive.', 'warn');
+      return;
+    }
+    grid.dataset.selected = c.dataset.plan;
+    renderPlans();
+  });
+};
       renderPlans();
       $('#modalUpgradeBtn').onclick = () => {
-  const selectedPlan = grid.dataset.selected || 'monthly';
+  const selectedPlan = grid.dataset.selected || 'monthly_once';
   closeModal();
   if (selectedPlan === 'yearly') {
-    openYearlyCouponModal();   // ← Coupon step pehle
+    openYearlyCouponModal();
   } else {
-    startUpgrade(selectedPlan); // ← Monthly seedha
+    startUpgrade(selectedPlan);
   }
 };
     }
@@ -3205,7 +3305,7 @@ async function startUpgrade(planId, opts = {}) {
       body: JSON.stringify({
         plan_id: planId,
         type: plan.type,
-        razorpay_plan_id: planId === 'monthly' ? RAZORPAY_PLAN_ID_MONTHLY : null,
+        razorpay_plan_id: planId === 'monthly_auto' ? RAZORPAY_PLAN_ID_MONTHLY : null,
         coupon_code: coupon?.code || null,
         coupon_price: coupon?.price || null,
         is_renewal: isRenewal
@@ -3270,7 +3370,7 @@ function restoreUpgradeBtn() {
   }
 }
 
-async function verifyPayment(response, planId) {
+async function verifyPayment(response, planId, isRenewal = false) {
   const { data: { session } } = await supa.auth.getSession();
   if (!session?.access_token) {
     toast('Session expired.', 'err');
@@ -3287,12 +3387,13 @@ async function verifyPayment(response, planId) {
         'Authorization': 'Bearer ' + session.access_token
       },
       body: JSON.stringify({
-        razorpay_order_id: response.razorpay_order_id || null,
-        razorpay_payment_id: response.razorpay_payment_id,
-        razorpay_signature: response.razorpay_signature,
-        razorpay_subscription_id: response.razorpay_subscription_id || null,
-        plan_id: planId
-      })
+  razorpay_order_id: response.razorpay_order_id || null,
+  razorpay_payment_id: response.razorpay_payment_id,
+  razorpay_signature: response.razorpay_signature,
+  razorpay_subscription_id: response.razorpay_subscription_id || null,
+  plan_id: planId,
+  is_renewal: isRenewal
+})
     });
 
     const json = await res.json();
