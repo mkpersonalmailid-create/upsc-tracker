@@ -1,7 +1,10 @@
 // POST /api/verify-payment
 // Handles one-time orders, subscriptions, and renewals
 
-const ONE_TIME_PLANS = { yearly: { days: 365, plan: 'yearly' } };
+const ONE_TIME_PLANS = { 
+  yearly: { days: 365, plan: 'yearly' },
+  monthly_once: { days: 30, plan: 'monthly_once' }
+};
 
 function json(o, s = 200) {
   return new Response(JSON.stringify(o), { status: s,
@@ -58,12 +61,12 @@ export async function onRequestPost({ request, env }) {
 
       amount = sub.quantity * (sub.plan?.item?.amount || 0);
       currency = sub.plan?.item?.currency || 'INR';
-      planName = 'monthly';
+      planName = 'monthly_auto';   // ⬅️ changed from 'monthly'
       subscriptionId = razorpay_subscription_id;
       const currentEnd = sub.current_end ? sub.current_end * 1000 : Date.now() + 30 * 86400000;
       expiryDays = Math.max(1, Math.round((currentEnd - Date.now()) / 86400000));
     }
-    // ============ ONE-TIME ORDER VERIFY (yearly) ============
+    // ============ ONE-TIME ORDER VERIFY (yearly / monthly_once) ============
     else if (razorpay_order_id) {
       const sigBuf = await crypto.subtle.sign('HMAC', key,
         enc.encode(`${razorpay_order_id}|${razorpay_payment_id}`));
@@ -112,13 +115,15 @@ export async function onRequestPost({ request, env }) {
     const now = new Date();
 
     // ═══════════════ EXPIRY CALCULATION ═══════════════
-    // RULE: Yearly purchase → if user already has active yearly sub, EXTEND from existing expiry
-    //       Otherwise (first purchase / expired / different plan) → fresh 365 days from now
+    // RULE: For yearly and monthly_once — if user has active same plan, EXTEND from existing expiry
+    //       Otherwise (fresh purchase / expired / different plan) → start from now
     let expiryISO;
     let renewalExtended = false;
 
-    if (planName === 'yearly') {
-      // Always check existing subscription for yearly purchases
+    const isOneTimePlan = (planName === 'yearly' || planName === 'monthly_once');
+
+    if (isOneTimePlan) {
+      // Check existing subscription
       const existingRes = await fetch(
         `${env.SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=expiry_date,status,plan`,
         { headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY } }
@@ -128,28 +133,28 @@ export async function onRequestPost({ request, env }) {
         const existing = await existingRes.json();
         const current = Array.isArray(existing) ? existing[0] : null;
         
-        const isActiveYearly = current
-          && current.plan === 'yearly'
+        const isActiveSamePlan = current
+          && current.plan === planName
           && current.status === 'active'
           && current.expiry_date
           && new Date(current.expiry_date) > now;
         
-        if (isActiveYearly) {
-          // ✅ EXTEND: Add 365 days to existing future expiry
+        if (isActiveSamePlan) {
+          // ✅ EXTEND: Add expiryDays to existing future expiry
           const baseDate = new Date(current.expiry_date);
           expiryISO = new Date(baseDate.getTime() + expiryDays * 86400000).toISOString();
           renewalExtended = true;
-          console.log(`✅ Renewal: extended ${current.expiry_date} → ${expiryISO} (+${expiryDays}d)`);
+          console.log(`✅ ${planName} renewal: extended ${current.expiry_date} → ${expiryISO} (+${expiryDays}d)`);
         } else {
-          // 🔄 FRESH: No active yearly, start from now
+          // 🔄 FRESH: No active same plan, start from now
           expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
-          console.log(`🆕 Fresh yearly purchase: expires ${expiryISO}`);
+          console.log(`🆕 Fresh ${planName} purchase: expires ${expiryISO}`);
         }
       } else {
         expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
       }
     } else {
-      // Monthly subscription or other — always fresh
+      // Subscription (monthly_auto) or other — always fresh
       expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
     }
 
