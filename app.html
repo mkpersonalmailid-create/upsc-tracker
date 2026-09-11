@@ -712,9 +712,31 @@ a{color:var(--pink);text-decoration:none}
 @media(max-width:600px){.form-grid,.form-grid-3{grid-template-columns:1fr}}
 .skel{background:linear-gradient(90deg,var(--card-2) 25%,var(--card) 50%,var(--card-2) 75%);
   background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:10px}
+  /* ═══ Announcement Banner ═══ */
+.announcement-banner{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  font-size:.85rem;font-weight:600;border-bottom:1px solid var(--border);
+  position:relative;z-index:50;overflow:hidden;
+  animation:fadeIn .4s}
+.announcement-banner.hidden{display:none!important}
+.announcement-banner.info{
+  background:linear-gradient(90deg,rgba(168,85,247,.18),rgba(139,92,246,.08),rgba(168,85,247,.18));
+  border-bottom-color:rgba(168,85,247,.3);color:#E9D5FF}
+.announcement-banner.success{
+  background:linear-gradient(90deg,rgba(16,185,129,.18),rgba(52,211,153,.08),rgba(16,185,129,.18));
+  border-bottom-color:rgba(16,185,129,.3);color:#6EE7B7}
+.announcement-banner.warning{
+  background:linear-gradient(90deg,rgba(251,191,36,.2),rgba(251,191,36,.08),rgba(251,191,36,.2));
+  border-bottom-color:rgba(251,191,36,.35);color:#FBBF24}
+.announcement-banner.danger{
+  background:linear-gradient(90deg,rgba(239,68,68,.2),rgba(239,68,68,.08),rgba(239,68,68,.2));
+  border-bottom-color:rgba(239,68,68,.35);color:#FCA5A5}
+.announcement-banner .ann-icon{font-size:1.15rem;flex-shrink:0}
+.announcement-banner .ann-text{flex:1;line-height:1.5}
 </style>
 </head>
 <body>
+
 
 <!-- PAYMENT OVERLAY -->
 <div class="pay-overlay" id="payOverlay">
@@ -839,6 +861,10 @@ a{color:var(--pink);text-decoration:none}
   </aside>
 
   <main class="main">
+    <div id="announcementBanner" class="announcement-banner hidden">
+  <span class="ann-icon">📢</span>
+  <span class="ann-text" id="announcementText"></span>
+</div>
     <header class="topbar">
       <div class="topbar-left">
         <button class="collapse-btn" id="collapseBtn">☰</button>
@@ -2889,13 +2915,19 @@ function renderRecentSessions() {
 
 /* ═══════════════ CHART PRIMITIVES ═══════════════ */
 function setupCanvas(canvas) {
+  if (!canvas || !canvas.parentElement) {
+    return { ctx: null, w: 0, h: 0 };
+  }
   const wrap = canvas.parentElement;
-  const w = wrap.clientWidth, h = wrap.clientHeight;
+  const w = wrap.clientWidth || 320;
+  const h = wrap.clientHeight || 200;
   const dpr = window.devicePixelRatio || 1;
-  canvas.width = w*dpr; canvas.height = h*dpr;
-  canvas.style.width = w+'px'; canvas.style.height = h+'px';
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  canvas.style.width = w + 'px'; canvas.style.height = h + 'px';
   const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,w,h);
+  if (!ctx) return { ctx: null, w: 0, h: 0 };
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
   return { ctx, w, h };
 }
 function themeColors() {
@@ -2909,7 +2941,9 @@ function themeColors() {
   };
 }
 function drawBarChart(canvas, labels, values, opts={}) {
-  const { ctx, w, h } = setupCanvas(canvas); const c = themeColors();
+  const { ctx, w, h } = setupCanvas(canvas);
+  if (!ctx) return;
+  const c = themeColors();
   const p = { t:18, r:16, b:32, l:48 };
   const cw = w-p.l-p.r, ch = h-p.t-p.b;
   const max = Math.max(...values, opts.minMax||4); const unit = opts.unit||'h';
@@ -2946,8 +2980,10 @@ function drawBarChart(canvas, labels, values, opts={}) {
     ctx.fillText(lab, p.l + i*(barW+gap) + gap/2 + barW/2, h-10);
   });
 }
-function drawLineChart(canvas, labels, values, opts={}) {
-  const { ctx, w, h } = setupCanvas(canvas); const c = themeColors();
+function drawLineChart(canvas, labels, values, opts = {}) {
+  const { ctx, w, h } = setupCanvas(canvas);
+  if (!ctx) return;
+  const c = themeColors();
   const p = { t:18, r:16, b:32, l:48 };
   const cw = w-p.l-p.r, ch = h-p.t-p.b;
   const max = Math.max(...values, opts.minMax||4);
@@ -2980,7 +3016,9 @@ function drawLineChart(canvas, labels, values, opts={}) {
   labels.forEach((lab,i) => { if (i % step !== 0 && i !== n-1) return; ctx.fillText(lab, xFor(i), h-10); });
 }
 function drawDonut(canvas, entries) {
-  const { ctx, w, h } = setupCanvas(canvas); const c = themeColors();
+  const { ctx, w, h } = setupCanvas(canvas);
+  if (!ctx) return;
+  const c = themeColors();
   const total = entries.reduce((a,x) => a+x.value, 0);
   if (!total) { ctx.fillStyle = c.text3; ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'center'; ctx.fillText('No data', w/2, h/2); return; }
   const cx = w/2, cy = h/2, R = Math.min(w,h)*0.42, r = R*0.6;
