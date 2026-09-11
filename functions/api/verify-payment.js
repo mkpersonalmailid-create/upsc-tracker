@@ -167,6 +167,26 @@ export async function onRequestPost({ request, env }) {
     });
     if (!subRes.ok) { console.error(await subRes.text()); return json({ error: 'Failed to save subscription' }, 500); }
 
+    // ============ Sync profiles.membership ============
+    try {
+      const profileSync = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+        method: 'PATCH',
+        headers: { 
+          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify({ 
+          membership: planName, 
+          updated_at: new Date().toISOString() 
+        })
+      });
+      if (!profileSync.ok) {
+        console.warn('profile membership sync failed:', await profileSync.text());
+      }
+    } catch(e) { console.warn('profile membership sync error:', e.message); }
+
     // ============ Log payment ============
     await fetch(`${env.SUPABASE_URL}/rest/v1/payments`, {
       method: 'POST',
