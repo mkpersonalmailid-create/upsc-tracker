@@ -2,9 +2,10 @@ name: 🤖 AI Outreach — Reddit Monitor + Backlink Discovery
 
 on:
   schedule:
+    # Roz 2 baar: 5:30 UTC (11 AM IST) aur 14:30 UTC (8 PM IST)
     - cron: '30 5 * * *'
     - cron: '30 14 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # Manual button bhi
 
 jobs:
   ai-outreach:
