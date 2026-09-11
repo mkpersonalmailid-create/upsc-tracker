@@ -1,5 +1,5 @@
 // POST /api/verify-payment
-// Handles both one-time orders and subscriptions
+// Handles one-time orders, subscriptions, and renewals
 
 const ONE_TIME_PLANS = { yearly: { days: 365, plan: 'yearly' } };
 
@@ -28,7 +28,7 @@ export async function onRequestPost({ request, env }) {
     // 2. Body
     let body; try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature,
-            razorpay_subscription_id, plan_id } = body;
+            razorpay_subscription_id, plan_id, is_renewal } = body;
 
     if (!razorpay_payment_id || !razorpay_signature) return json({ error: 'Missing payment fields' }, 400);
 
@@ -79,13 +79,13 @@ export async function onRequestPost({ request, env }) {
       if (payment.order_id !== razorpay_order_id) return json({ error: 'Order mismatch' }, 400);
       if (!['captured', 'authorized'].includes(payment.status)) return json({ error: 'Not captured' }, 400);
 
-      // ─── Fetch ORDER from Razorpay to get ACTUAL amount (coupon-aware) ───
+      // Fetch ORDER to get ACTUAL amount (coupon-aware — works for ₹1 or ₹500)
       const oRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`,
         { headers: { 'Authorization': 'Basic ' + auth64 } });
       if (!oRes.ok) return json({ error: 'Order not found' }, 400);
       const order = await oRes.json();
 
-      // Paid amount MUST equal the order amount (whatever it is — ₹1 or ₹500)
+      // Paid amount MUST equal order amount
       if (payment.amount !== order.amount) {
         return json({ error: 'Amount mismatch' }, 400);
       }
@@ -114,7 +114,38 @@ export async function onRequestPost({ request, env }) {
     }
 
     const now = new Date();
-    const expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
+
+    // ═══════════════ EXPIRY CALCULATION (RENEWAL-AWARE) ═══════════════
+    let expiryISO;
+    let renewalExtended = false;
+
+    if (is_renewal === true && planName === 'yearly') {
+      // Check existing subscription
+      const existingRes = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=expiry_date,status`,
+        { headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY } }
+      );
+      if (existingRes.ok) {
+        const existing = await existingRes.json();
+        const current = Array.isArray(existing) ? existing[0] : null;
+        if (current?.expiry_date && new Date(current.expiry_date) > now) {
+          // Extend from existing future expiry
+          const baseDate = new Date(current.expiry_date);
+          expiryISO = new Date(baseDate.getTime() + expiryDays * 86400000).toISOString();
+          renewalExtended = true;
+          console.log(`Renewal: extended from ${current.expiry_date} to ${expiryISO}`);
+        } else {
+          // Already expired — start fresh
+          expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
+          console.log('Renewal: previous expired, starting fresh');
+        }
+      } else {
+        expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
+      }
+    } else {
+      // New purchase (one-time or subscription)
+      expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
+    }
 
     // ============ Save subscription ============
     const subPayload = {
@@ -146,7 +177,13 @@ export async function onRequestPost({ request, env }) {
         amount, currency, status: 'captured', plan: planName })
     });
 
-    return json({ success: true, plan: planName, expiry: expiryISO, amount });
+    return json({
+      success: true,
+      plan: planName,
+      expiry: expiryISO,
+      amount,
+      renewal_extended: renewalExtended
+    });
   } catch (e) {
     console.error('verify-payment error:', e);
     return json({ error: 'Server error', message: e.message }, 500);
