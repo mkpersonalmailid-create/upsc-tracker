@@ -1,79 +1,124 @@
 // POST /api/create-payment
-// Handles both one-time orders and recurring subscriptions
+// Handles both one-time orders (yearly) and recurring subscriptions (monthly)
 
 const ONE_TIME_PLANS = {
-  yearly: { amount: 50000, description: 'UPSC Tracker Premium — Yearly' } // ₹500 in paise
+  yearly: {
+    amount: 50000, // ₹500 in paise
+    description: 'UPSC Tracker Premium — Yearly'
+  }
 };
+
 const SUBSCRIPTION_PLANS = {
-  monthly: { plan_id_env: 'RAZORPAY_PLAN_ID_MONTHLY', description: 'UPSC Tracker Premium — Monthly', total_count: 120 }
+  monthly: {
+    plan_id_env: 'RAZORPAY_PLAN_ID_MONTHLY',
+    description: 'UPSC Tracker Premium — Monthly',
+    total_count: 60 // 60 months = 5 years (was 120 = 10 years)
+  }
 };
 
 function json(o, s = 200) {
-  return new Response(JSON.stringify(o), { status: s,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  return new Response(JSON.stringify(o), {
+    status: s,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store'
+    }
+  });
 }
 
 export async function onRequestPost({ request, env }) {
   try {
-    // 1. Verify Supabase session
+    // ═══ 1. Verify Supabase session ═══
     const auth = request.headers.get('Authorization') || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!token) return json({ error: 'Unauthenticated' }, 401);
 
     const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
-      headers: { 'apikey': env.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token }
+      headers: {
+        'apikey': env.SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ' + token
+      }
     });
     if (!userRes.ok) return json({ error: 'Invalid session' }, 401);
     const user = await userRes.json();
     if (!user?.id) return json({ error: 'Invalid user' }, 401);
 
-    // 2. Parse body
-    let body; try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
+    // ═══ 2. Parse body ═══
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: 'Invalid JSON' }, 400);
+    }
+
     const { plan_id, type } = body;
     if (!plan_id || !type) return json({ error: 'Missing plan_id or type' }, 400);
 
     const auth64 = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
-    const headers = { 'Authorization': 'Basic ' + auth64, 'Content-Type': 'application/json' };
+    const headers = {
+      'Authorization': 'Basic ' + auth64,
+      'Content-Type': 'application/json'
+    };
 
-    // ============ SUBSCRIPTION (monthly) ============
+    const customerName = user.user_metadata?.full_name
+      || user.email?.split('@')[0]
+      || 'Student';
+    const customerPhone = user.user_metadata?.phone
+      || user.phone
+      || '';
+
+    // ═══════════════════════════════════════════════
+    //  SUBSCRIPTION (monthly) — UPI Autopay
+    // ═══════════════════════════════════════════════
     if (type === 'subscription') {
       const plan = SUBSCRIPTION_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid subscription plan' }, 400);
 
       const razorpayPlanId = env[plan.plan_id_env];
-      if (!razorpayPlanId) return json({ error: 'Server plan not configured' }, 500);
-
-      // Create or fetch customer
-      const custRes = await fetch('https://api.razorpay.com/v1/customers', {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Student',
-          email: user.email,
-          notes: { user_id: user.id },
-          fail_existing: '0'
-        })
-      });
-      const customer = await custRes.json();
-      if (!customer.id) return json({ error: 'Failed to create Razorpay customer' }, 502);
-
-      // Create subscription
-      const subRes = await fetch('https://api.razorpay.com/v1/subscriptions', {
-        method: 'POST', headers,
-        body: JSON.stringify({
-          plan_id: razorpayPlanId,
-          customer_id: customer.id,
-          total_count: plan.total_count,   // 120 months = 10 years
-          quantity: 1,
-          customer_notify: 1,
-          notes: { user_id: user.id, plan_id }
-        })
-      });
-      if (!subRes.ok) {
-        const t = await subRes.text();
-        console.error('Subscription creation failed:', t);
-        return json({ error: 'Failed to create subscription' }, 502);
+      if (!razorpayPlanId) {
+        console.error('Missing env var:', plan.plan_id_env);
+        return json({ error: 'Server plan not configured' }, 500);
       }
+
+      // ─── Direct subscription creation (no customer API needed) ───
+      // Razorpay auto-creates customer from notes
+      const subPayload = {
+        plan_id: razorpayPlanId,
+        total_count: plan.total_count,
+        quantity: 1,
+        customer_notify: 1,
+        notes: {
+          user_id: user.id,
+          plan_id: plan_id,
+          email: user.email,
+          name: customerName
+        }
+      };
+
+      // Add phone if available
+      if (customerPhone) {
+        subPayload.notes.phone = customerPhone;
+      }
+
+      const subRes = await fetch('https://api.razorpay.com/v1/subscriptions', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(subPayload)
+      });
+
+      if (!subRes.ok) {
+        const errText = await subRes.text();
+        console.error('Subscription creation failed:', subRes.status, errText);
+        let errMsg = 'Failed to create subscription';
+        try {
+          const errJson = JSON.parse(errText);
+          errMsg = errJson?.error?.description || errMsg;
+        } catch {}
+        return json({ error: errMsg }, 502);
+      }
+
       const sub = await subRes.json();
+      console.log('Subscription created:', sub.id, 'for user:', user.id);
 
       return json({
         subscription_id: sub.id,
@@ -84,26 +129,42 @@ export async function onRequestPost({ request, env }) {
       });
     }
 
-    // ============ ONE-TIME ORDER (yearly) ============
+    // ═══════════════════════════════════════════════
+    //  ONE-TIME ORDER (yearly) — Card / UPI / Netbanking
+    // ═══════════════════════════════════════════════
     if (type === 'one_time') {
       const plan = ONE_TIME_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid plan' }, 400);
 
-      const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
-        method: 'POST', headers,
+      const orderRes = await fetch('https://api.razorpay.com/v1/orders', {
+        method: 'POST',
+        headers: headers,
         body: JSON.stringify({
           amount: plan.amount,
           currency: 'INR',
           receipt: `u_${user.id.slice(0, 8)}_${Date.now()}`,
-          notes: { user_id: user.id, plan_id }
+          notes: {
+            user_id: user.id,
+            plan_id: plan_id,
+            email: user.email,
+            name: customerName
+          }
         })
       });
-      if (!rzpRes.ok) {
-        const t = await rzpRes.text();
-        console.error('Order failed:', t);
-        return json({ error: 'Failed to create order' }, 502);
+
+      if (!orderRes.ok) {
+        const errText = await orderRes.text();
+        console.error('Order failed:', orderRes.status, errText);
+        let errMsg = 'Failed to create order';
+        try {
+          const errJson = JSON.parse(errText);
+          errMsg = errJson?.error?.description || errMsg;
+        } catch {}
+        return json({ error: errMsg }, 502);
       }
-      const order = await rzpRes.json();
+
+      const order = await orderRes.json();
+      console.log('Order created:', order.id, 'for user:', user.id);
 
       return json({
         order_id: order.id,
@@ -116,8 +177,9 @@ export async function onRequestPost({ request, env }) {
     }
 
     return json({ error: 'Invalid payment type' }, 400);
+
   } catch (e) {
     console.error('create-payment error:', e);
-    return json({ error: 'Server error' }, 500);
+    return json({ error: 'Server error', message: e.message }, 500);
   }
 }
