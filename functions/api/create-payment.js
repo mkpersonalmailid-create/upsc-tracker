@@ -137,7 +137,7 @@ export async function onRequestPost({ request, env }) {
       if (!plan) return json({ error: 'Invalid plan' }, 400);
 
       // Coupon price override
-      const TEST_PRICES = { 'TEST1': 100 }; // ₹1 in paise
+      const TEST_PRICES = { 'MUKUNDFOUNDER': 100 }; // ₹1 in paise
       const useCouponPrice = coupon_code && TEST_PRICES[coupon_code] && coupon_price === TEST_PRICES[coupon_code] / 100;
       const finalAmount = useCouponPrice ? TEST_PRICES[coupon_code] : plan.amount;
 
