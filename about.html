@@ -4,100 +4,337 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>About — UPSC Study Tracker</title>
+<link rel="icon" href="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-background:#08090D !important;color:#F5F7FB !important;line-height:1.7;
--webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
-a{color:#5E9EFF;text-decoration:none}
-a:hover{text-decoration:underline}
-img{max-width:100%;display:block}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0A0612;--bg-2:#120A1E;--card:#171026;--card-2:#1F1633;
+  --border:#2A1E42;--border-2:#3D2C5E;
+  --text:#FFFFFF;--text-2:#B8A8D9;--text-3:#6E5F8C;
+  --purple:#A855F7;--pink:#EC4899;--violet:#8B5CF6;
+  --amber:#FBBF24;--emerald:#34D399;--teal:#14B8A6;
+  --grad-1:linear-gradient(135deg,#8B5CF6,#EC4899);
+  --grad-2:linear-gradient(135deg,#F97316,#FBBF24);
+  --grad-3:linear-gradient(135deg,#14B8A6,#06B6D4);
+  --grad-4:linear-gradient(135deg,#10B981,#34D399);
+  --grad-hero:linear-gradient(135deg,#8B5CF6 0%,#EC4899 50%,#F97316 100%);
+  --shadow-lg:0 24px 64px rgba(0,0,0,.55);
+  --ios-ease:cubic-bezier(0.32,0.72,0,1);
+  --ios-spring:cubic-bezier(0.34,1.56,0.64,1);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),
+             radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%),
+             radial-gradient(circle at 50% 50%,rgba(249,115,22,.05),transparent 60%)}
+a{color:var(--purple);text-decoration:none;transition:.25s}
+a:hover{color:var(--pink)}
+::selection{background:rgba(168,85,247,.4);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--pink));border-radius:10px;border:2px solid var(--bg)}
+
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 24px;
-background:rgba(8,9,13,.9);backdrop-filter:blur(20px);border-bottom:1px solid #232838;
-display:flex;justify-content:space-between;align-items:center}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#F5F7FB;font-size:.95rem}
-.nav-logo img{width:32px;height:32px;border-radius:8px}
-.nav-cta{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
-padding:8px 16px;border-radius:8px;font-weight:800;font-size:.82rem}
-main{max-width:760px;margin:0 auto;padding:120px 24px 60px}
-h1{font-size:clamp(2rem,4vw,2.8rem);font-weight:900;letter-spacing:-.03em;
-line-height:1.15;margin-bottom:16px;color:#F5F7FB}
-.sub{color:#98A2B8;font-size:1.05rem;margin-bottom:40px}
-h2{font-size:1.4rem;font-weight:800;margin-top:40px;margin-bottom:14px;color:#F5F7FB;letter-spacing:-.02em}
-h3{font-size:1.05rem;font-weight:800;margin-top:24px;margin-bottom:10px;color:#F5F7FB}
-p{color:#98A2B8;margin-bottom:16px}
-ul{color:#98A2B8;padding-left:22px;margin-bottom:16px}
-li{margin-bottom:8px}
-strong{color:#F5F7FB}
-.card{background:#141824;border:1px solid #232838;border-radius:16px;
-padding:28px;margin:24px 0;border-left:3px solid #5E9EFF}
-.back{display:inline-flex;align-items:center;gap:8px;color:#5F6A82;
-margin-bottom:24px;font-size:.85rem;font-weight:600}
-footer{background:#0F1118;border-top:1px solid #232838;padding:40px 24px;
-text-align:center;color:#5F6A82;font-size:.82rem;margin-top:60px}
-footer a{color:#5E9EFF}
+  background:rgba(10,6,18,.75);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid transparent;transition:all .4s var(--ios-ease);
+  display:flex;justify-content:space-between;align-items:center}
+.nav.scrolled{background:rgba(10,6,18,.95);border-bottom-color:var(--border);
+  padding:10px 24px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#fff;font-size:.95rem}
+.nav-logo img{width:32px;height:32px;border-radius:8px;box-shadow:0 4px 12px rgba(168,85,247,.3)}
+.nav-cta{background:var(--grad-1);color:#fff!important;padding:9px 18px;border-radius:11px;
+  font-weight:800;font-size:.83rem;box-shadow:0 6px 18px rgba(168,85,247,.35);
+  transition:all .3s var(--ios-ease)}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(236,72,153,.5);color:#fff!important}
+
+.hero{padding:140px 24px 40px;text-align:center;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(251,191,36,.15),rgba(236,72,153,.1));
+  border:1px solid rgba(251,191,36,.3);color:#FBBF24;
+  padding:7px 16px;border-radius:50px;font-size:.75rem;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:20px;
+  backdrop-filter:blur(10px)}
+.hero h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:900;letter-spacing:-.035em;
+  line-height:1.1;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 0%,#C4B5FD 60%,#F9A8D4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{color:var(--text-2);font-size:1.05rem;max-width:600px;margin:0 auto}
+
+main{max-width:760px;margin:0 auto;padding:30px 24px 80px;position:relative;z-index:1}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--text-3);
+  margin-bottom:24px;font-size:.85rem;font-weight:600;transition:.25s}
+.back:hover{color:var(--purple);transform:translateX(-3px)}
+
+/* Section reveal */
+.section{opacity:0;transform:translateY(30px);
+  transition:opacity .8s var(--ios-ease),transform .8s var(--ios-ease)}
+.section.visible{opacity:1;transform:translateY(0)}
+
+h2{font-size:1.5rem;font-weight:900;margin-top:44px;margin-bottom:16px;
+  color:#fff;letter-spacing:-.025em}
+h2 .grad{background:var(--grad-hero);background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:gradientShift 4s ease infinite}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+h3{font-size:1.05rem;font-weight:800;margin-top:22px;margin-bottom:10px;color:#fff}
+p{color:var(--text-2);margin-bottom:16px;font-size:.95rem}
+strong{color:#fff;font-weight:700}
+
+/* Story Card */
+.story-card{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:28px;margin:24px 0;position:relative;overflow:hidden;
+  border-left:3px solid var(--purple)}
+.story-card::before{content:'';position:absolute;top:-40%;right:-10%;width:240px;height:240px;
+  background:radial-gradient(circle,rgba(168,85,247,.12),transparent 70%);pointer-events:none}
+.story-card p:last-child{margin-bottom:0}
+
+/* Mission card */
+.mission{background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(236,72,153,.08),rgba(249,115,22,.05));
+  border:1px solid rgba(168,85,247,.3);border-radius:24px;padding:36px 32px;
+  margin:32px 0;text-align:center;position:relative;overflow:hidden;
+  box-shadow:0 24px 60px rgba(168,85,247,.15)}
+.mission::before{content:'';position:absolute;top:-50%;left:-20%;width:100%;height:200%;
+  background:radial-gradient(circle,rgba(168,85,247,.2),transparent 60%);
+  animation:float 12s ease-in-out infinite;pointer-events:none}
+@keyframes float{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-30px)}}
+.mission-icon{font-size:2.4rem;margin-bottom:14px;position:relative;
+  display:inline-block;animation:heartBeat 2.5s ease-in-out infinite}
+@keyframes heartBeat{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.mission h3{font-size:1.25rem;font-weight:900;color:#fff;margin-bottom:12px;
+  position:relative;letter-spacing:-.02em}
+.mission p{color:var(--text-2);font-size:1rem;line-height:1.7;position:relative;
+  max-width:520px;margin:0 auto}
+
+/* Feature list */
+.features-list{list-style:none;padding:0;margin:20px 0}
+.features-list li{padding:14px 16px;background:var(--card);border:1px solid var(--border);
+  border-radius:12px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;
+  transition:all .3s var(--ios-ease);position:relative}
+.features-list li:hover{border-color:var(--border-2);transform:translateX(4px);
+  box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.features-list .fi{width:40px;height:40px;border-radius:11px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+  background:linear-gradient(135deg,rgba(168,85,247,.2),rgba(236,72,153,.1));
+  border:1px solid rgba(168,85,247,.2)}
+.features-list .ft{flex:1}
+.features-list .ft strong{display:block;color:#fff;font-weight:800;
+  font-size:.95rem;margin-bottom:2px}
+.features-list .ft span{color:var(--text-2);font-size:.85rem;line-height:1.5}
+
+/* Principles grid */
+.principles{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:24px 0}
+@media(max-width:600px){.principles{grid-template-columns:1fr}}
+.principle{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:22px;transition:all .35s var(--ios-ease);position:relative;overflow:hidden}
+.principle::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:var(--grad-1);opacity:0;transition:opacity .3s}
+.principle:hover{border-color:var(--border-2);transform:translateY(-4px);
+  box-shadow:0 20px 40px rgba(0,0,0,.4)}
+.principle:hover::before{opacity:1}
+.principle-icon{font-size:1.5rem;margin-bottom:10px}
+.principle h4{font-size:.98rem;font-weight:800;color:#fff;margin-bottom:6px}
+.principle p{color:var(--text-2);font-size:.85rem;margin:0;line-height:1.6}
+
+/* Contact CTA */
+.contact-cta{background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1));
+  border:1px solid rgba(168,85,247,.3);border-radius:20px;
+  padding:32px;text-align:center;margin:32px 0}
+.contact-cta h3{font-size:1.15rem;color:#fff;margin-bottom:8px;font-weight:900}
+.contact-cta p{color:var(--text-2);margin-bottom:18px;font-size:.9rem}
+.contact-btn{display:inline-flex;align-items:center;gap:8px;
+  background:var(--grad-1);color:#fff!important;padding:14px 28px;border-radius:12px;
+  font-weight:800;font-size:.92rem;box-shadow:0 10px 28px rgba(168,85,247,.45);
+  transition:all .35s var(--ios-spring);word-break:break-all}
+.contact-btn:hover{transform:translateY(-3px);
+  box-shadow:0 16px 40px rgba(236,72,153,.55);color:#fff!important}
+
+/* Disclaimer */
+.disclaimer{background:var(--card);border:1px solid var(--border);
+  border-left:3px solid var(--amber);border-radius:14px;
+  padding:20px;margin:32px 0}
+.disclaimer h4{font-size:.88rem;font-weight:900;color:var(--amber);
+  margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.disclaimer p{margin:0;font-size:.88rem;line-height:1.7}
+
+footer{background:var(--bg-2);border-top:1px solid var(--border);
+  padding:48px 24px 32px;text-align:center;color:var(--text-3);font-size:.83rem;
+  position:relative;z-index:1;margin-top:60px}
+.footer-links{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;
+  margin-bottom:20px;font-weight:600}
+.footer-links a{color:var(--text-2);font-size:.83rem}
+.footer-links a:hover{color:var(--purple)}
+.footer-copy{opacity:.7;font-size:.78rem}
 </style>
 </head>
 <body>
 
-<div class="nav">
+<nav class="nav" id="nav">
   <a href="/" class="nav-logo">
     <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
     <span>UPSC Study Tracker</span>
   </a>
-  <a href="/app.html" class="nav-cta">Start Free →</a>
-</div>
+  <a href="/auth.html" class="nav-cta">Start Free →</a>
+</nav>
+
+<header class="hero">
+  <div class="hero-badge">📖 Our Story</div>
+  <h1>Built for Aspirants.<br>By an Aspirant.</h1>
+  <p class="sub">A study tracker designed around how UPSC preparation actually works — not how productivity gurus think it should.</p>
+</header>
 
 <main>
   <a href="/" class="back">← Back to Home</a>
 
-  <h1>About UPSC Study Tracker</h1>
-  <p class="sub">A study tracking platform built for serious UPSC aspirants — by someone who's been through the grind.</p>
+  <section class="section">
+    <h2>The <span class="grad">Backstory</span></h2>
+    <div class="story-card">
+      <p>UPSC preparation is brutal. Not because the syllabus is hard — but because staying consistent, tracking progress, and managing revisions across 2–3 years of prep is nearly impossible without a system.</p>
+      <p>I tried Notion. It took 3 days to set up and 3 weeks to abandon. I tried paid UPSC apps. ₹500–1000/month for features I didn't need. I tried Excel sheets. Forgotten in a week.</p>
+      <p>So I built what I actually wanted — a <strong>simple, focused, UPSC-specific study tracker</strong>. No bloat, no distraction. Just: pick subject → hit timer → track progress.</p>
+    </div>
+  </section>
 
-  <h2>Our Story</h2>
-  <p>UPSC preparation is brutal. Not because the syllabus is hard — but because staying consistent, tracking progress, and managing revisions across 2-3 years of preparation is nearly impossible without a system.</p>
-  <p>I tried Notion. It took 3 days to setup and 3 weeks to abandon. I tried paid UPSC apps. ₹500-1000/month for features I didn't need. I tried Excel sheets. Forgotten in a week.</p>
-  <p>So I built what I actually wanted — a <strong>simple, focused, UPSC-specific study tracker</strong>. No bloat, no distraction. Just: pick subject, hit timer, track progress.</p>
+  <section class="section">
+    <div class="mission">
+      <div class="mission-icon">🎯</div>
+      <h3>Our Mission</h3>
+      <p>Give every UPSC aspirant — regardless of city, coaching, or budget — the same tools that serious toppers use. Data-driven preparation shouldn't be a luxury.</p>
+    </div>
+  </section>
 
-  <div class="card">
-    <h3>💡 Our Mission</h3>
-    <p>Give every UPSC aspirant — regardless of city, coaching, or budget — the tools that serious toppers use. Data-driven preparation shouldn't be a luxury.</p>
-  </div>
+  <section class="section">
+    <h2>What You <span class="grad">Get</span></h2>
+    <ul class="features-list">
+      <li>
+        <div class="fi">⏱</div>
+        <div class="ft">
+          <strong>Study Timer</strong>
+          <span>Stopwatch, countdown, and Pomodoro — with UPSC subjects pre-loaded</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">📖</div>
+        <div class="ft">
+          <strong>Complete Syllabus Tracker</strong>
+          <span>GS Papers I–IV, Essay, CSAT, Optional — exact UPSC syllabus integrated</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">🔁</div>
+        <div class="ft">
+          <strong>Spaced Repetition Revisions</strong>
+          <span>Auto-schedules 1/3/7/14/30/60 day cycles based on what you study</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">📝</div>
+        <div class="ft">
+          <strong>PYQ Analytics</strong>
+          <span>Year-wise, subject-wise tracking with auto-calculated accuracy percentages</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">📊</div>
+        <div class="ft">
+          <strong>Productivity Insights</strong>
+          <span>Best study hours, neglected subjects, consistency trends — from real data</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">📋</div>
+        <div class="ft">
+          <strong>Mock Test Analytics</strong>
+          <span>Score progression over time, weak area identification</span>
+        </div>
+      </li>
+      <li>
+        <div class="fi">📚</div>
+        <div class="ft">
+          <strong>Goals, Tasks, Notes, Current Affairs</strong>
+          <span>Everything you need for prep — all in one place</span>
+        </div>
+      </li>
+    </ul>
+  </section>
 
-  <h2>What We Offer</h2>
-  <ul>
-    <li><strong>Study Timer</strong> — Stopwatch, countdown, and Pomodoro with UPSC subjects pre-loaded</li>
-    <li><strong>Complete Syllabus Tracker</strong> — GS Papers I-IV, Essay, CSAT, Optional</li>
-    <li><strong>Spaced Repetition Revision</strong> — Auto-schedules 1/3/7/14/30/60 day cycles</li>
-    <li><strong>PYQ Analytics</strong> — Year-wise, subject-wise tracking with accuracy %</li>
-    <li><strong>Productivity Insights</strong> — Best study hours, neglected subjects, consistency</li>
-    <li><strong>Mock Test Analytics</strong> — Score progression, weak areas</li>
-    <li><strong>Goals, Tasks, Notes, Current Affairs</strong> — All in one place</li>
-  </ul>
+  <section class="section">
+    <h2>Our <span class="grad">Principles</span></h2>
+    <div class="principles">
+      <div class="principle">
+        <div class="principle-icon">🎯</div>
+        <h4>UPSC-First</h4>
+        <p>Not a generic productivity app. Every feature is designed around how UPSC aspirants actually study.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">⚡</div>
+        <h4>Zero Setup</h4>
+        <p>Login and start. No templates, no configuration. Your first session can begin in 60 seconds.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🔒</div>
+        <h4>Privacy Focused</h4>
+        <p>Your data belongs to you. Export anytime. Delete anytime. No ads, no selling data.</p>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">💎</div>
+        <h4>Free Core, Honest Premium</h4>
+        <p>All essential features free forever. Premium exists for advanced analytics — priced fairly, cancel anytime.</p>
+      </div>
+    </div>
+  </section>
 
-  <h2>Our Principles</h2>
-  <h3>🎯 UPSC-First</h3>
-  <p>Not a generic productivity app. Every feature is designed around how UPSC aspirants actually study.</p>
+  <section class="section">
+    <div class="contact-cta">
+      <h3>Say Hi 👋</h3>
+      <p>Questions, feedback, or a feature idea? Reach out anytime.</p>
+      <a href="mailto:mkpersonalmailid@gmail.com" class="contact-btn">
+        ✉️ mkpersonalmailid@gmail.com
+      </a>
+    </div>
+  </section>
 
-  <h3>⚡ Zero Setup</h3>
-  <p>Login and start. No templates, no configuration. Your first session can start in 60 seconds.</p>
-
-  <h3>🔒 Privacy Focused</h3>
-  <p>Your data belongs to you. Export anytime. Delete anytime. No ads, no selling data.</p>
-
-  <h3>💎 Free Core, Honest Premium</h3>
-  <p>All essential features free forever. Premium exists for advanced analytics — priced fairly, cancel anytime.</p>
-
-  <h2>Contact</h2>
-  <p>📧 <a href="mailto:mkpersonalmailid@gmail.com">support@upscstudytracker.co.in</a></p>
-
-  <h2>Disclaimer</h2>
-  <p>UPSC Study Tracker is an independent productivity tool. We are not affiliated with UPSC, Government of India, or any coaching institute.</p>
+  <section class="section">
+    <div class="disclaimer">
+      <h4>⚖️ Disclaimer</h4>
+      <p>UPSC Study Tracker is an independent productivity tool. We are not affiliated with UPSC, Government of India, or any coaching institute.</p>
+    </div>
+  </section>
 </main>
 
 <footer>
-  © 2026 UPSC Study Tracker · <a href="/">Home</a> · <a href="/app.html">App</a> · <a href="/contact.html">Contact</a> · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/auth.html">App</a>
+    <a href="/contact.html">Contact</a>
+    <a href="/privacy.html">Privacy</a>
+    <a href="/terms.html">Terms</a>
+  </div>
+  <div class="footer-copy">© 2026 UPSC Study Tracker · Made in India 🇮🇳</div>
 </footer>
 
+<script>
+const nav = document.getElementById('nav');
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      nav.classList.toggle('scrolled', window.scrollY > 40);
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, { passive: true });
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.section').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>

@@ -4,131 +4,326 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Terms & Conditions — UPSC Study Tracker</title>
+<link rel="icon" href="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,sans-serif;background:#08090D !important;
-color:#F5F7FB !important;line-height:1.75;-webkit-font-smoothing:antialiased;min-height:100vh}
-a{color:#5E9EFF;text-decoration:none}
-a:hover{text-decoration:underline}
-img{max-width:100%;display:block}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0A0612;--bg-2:#120A1E;--card:#171026;--card-2:#1F1633;
+  --border:#2A1E42;--border-2:#3D2C5E;
+  --text:#FFFFFF;--text-2:#B8A8D9;--text-3:#6E5F8C;
+  --purple:#A855F7;--pink:#EC4899;--violet:#8B5CF6;
+  --amber:#FBBF24;--emerald:#34D399;--red:#EF4444;
+  --grad-1:linear-gradient(135deg,#8B5CF6,#EC4899);
+  --grad-hero:linear-gradient(135deg,#8B5CF6 0%,#EC4899 50%,#F97316 100%);
+  --shadow-lg:0 24px 64px rgba(0,0,0,.55);
+  --ios-ease:cubic-bezier(0.32,0.72,0,1);
+}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+  line-height:1.75;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),
+             radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%),
+             radial-gradient(circle at 50% 50%,rgba(249,115,22,.05),transparent 60%)}
+a{color:var(--purple);text-decoration:none;transition:.25s}
+a:hover{color:var(--pink)}
+::selection{background:rgba(168,85,247,.4);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--purple),var(--pink));border-radius:10px;border:2px solid var(--bg)}
+
+/* Progress bar */
+.read-progress{position:fixed;top:0;left:0;height:3px;width:0%;z-index:9999;
+  background:var(--grad-hero);background-size:200% 100%;
+  animation:gradientShift 3s ease infinite;transition:width .1s}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+
+/* Nav */
 .nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 24px;
-background:rgba(8,9,13,.9);backdrop-filter:blur(20px);border-bottom:1px solid #232838;
-display:flex;justify-content:space-between;align-items:center}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#F5F7FB;font-size:.95rem}
-.nav-logo img{width:32px;height:32px;border-radius:8px}
-.nav-cta{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
-padding:8px 16px;border-radius:8px;font-weight:800;font-size:.82rem}
-main{max-width:760px;margin:0 auto;padding:120px 24px 60px}
-h1{font-size:clamp(2rem,4vw,2.6rem);font-weight:900;letter-spacing:-.03em;
-line-height:1.15;margin-bottom:12px;color:#F5F7FB}
-.updated{color:#5F6A82;font-size:.85rem;margin-bottom:40px;
-padding-bottom:24px;border-bottom:1px solid #232838}
-h2{font-size:1.3rem;font-weight:800;margin-top:40px;margin-bottom:14px;color:#F5F7FB}
-p{color:#98A2B8;margin-bottom:14px}
-ul{color:#98A2B8;padding-left:22px;margin-bottom:14px}
-li{margin-bottom:8px}
-strong{color:#F5F7FB}
-.callout{background:#141824;border:1px solid #232838;border-left:3px solid #5E9EFF;
-border-radius:12px;padding:20px;margin:20px 0;font-size:.92rem}
-.callout strong{display:block;margin-bottom:6px;color:#F5F7FB}
-.callout p{margin:0;color:#98A2B8}
-.back{display:inline-flex;align-items:center;gap:8px;color:#5F6A82;
-margin-bottom:24px;font-size:.85rem;font-weight:600}
-footer{background:#0F1118;border-top:1px solid #232838;padding:40px 24px;
-text-align:center;color:#5F6A82;font-size:.82rem;margin-top:60px}
-footer a{color:#5E9EFF}
+  background:rgba(10,6,18,.75);backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  border-bottom:1px solid transparent;transition:all .4s var(--ios-ease);
+  display:flex;justify-content:space-between;align-items:center}
+.nav.scrolled{background:rgba(10,6,18,.95);border-bottom-color:var(--border);
+  padding:10px 24px;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#fff;font-size:.95rem}
+.nav-logo img{width:32px;height:32px;border-radius:8px;box-shadow:0 4px 12px rgba(168,85,247,.3)}
+.nav-cta{background:var(--grad-1);color:#fff!important;padding:9px 18px;border-radius:11px;
+  font-weight:800;font-size:.83rem;box-shadow:0 6px 18px rgba(168,85,247,.35);
+  transition:all .3s var(--ios-ease)}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(236,72,153,.5);color:#fff!important}
+
+/* Hero */
+.hero{padding:140px 24px 40px;text-align:center;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(168,85,247,.15),rgba(236,72,153,.1));
+  border:1px solid rgba(168,85,247,.3);color:#C4B5FD;
+  padding:7px 16px;border-radius:50px;font-size:.75rem;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;margin-bottom:20px;
+  backdrop-filter:blur(10px)}
+.hero h1{font-size:clamp(2.2rem,5vw,3.4rem);font-weight:900;letter-spacing:-.035em;
+  line-height:1.1;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 0%,#C4B5FD 60%,#F9A8D4 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .sub{color:var(--text-2);font-size:1.05rem;max-width:520px;margin:0 auto}
+.hero-meta{display:flex;justify-content:center;gap:24px;margin-top:22px;flex-wrap:wrap;
+  font-size:.82rem;color:var(--text-3)}
+.hero-meta span{display:inline-flex;align-items:center;gap:6px}
+
+/* Main */
+main{max-width:760px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:1}
+.back{display:inline-flex;align-items:center;gap:8px;color:var(--text-3);
+  margin-bottom:24px;font-size:.85rem;font-weight:600;transition:.25s}
+.back:hover{color:var(--purple);transform:translateX(-3px)}
+
+/* TL;DR Callout */
+.callout{background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(236,72,153,.05));
+  border:1px solid rgba(168,85,247,.3);border-radius:18px;padding:22px 24px;
+  margin:0 0 40px;position:relative;overflow:hidden}
+.callout::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--grad-1)}
+.callout-badge{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;
+  font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--purple);
+  margin-bottom:10px}
+.callout p{margin:0;color:var(--text-2);font-size:.92rem;line-height:1.7}
+.callout strong{color:#fff}
+
+/* TOC */
+.toc{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px 22px;margin-bottom:40px}
+.toc-title{font-size:.72rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-3);margin-bottom:12px}
+.toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px}
+@media(max-width:600px){.toc-grid{grid-template-columns:1fr}}
+.toc a{font-size:.86rem;color:var(--text-2);font-weight:600;padding:6px 0;
+  display:flex;align-items:center;gap:8px;transition:.2s}
+.toc a::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--purple);
+  opacity:.4;transition:.2s}
+.toc a:hover{color:var(--purple)}
+.toc a:hover::before{opacity:1;width:12px;border-radius:2px}
+
+/* Sections */
+.section{opacity:0;transform:translateY(30px);
+  transition:opacity .8s var(--ios-ease),transform .8s var(--ios-ease)}
+.section.visible{opacity:1;transform:translateY(0)}
+h2{font-size:1.35rem;font-weight:800;margin-top:44px;margin-bottom:14px;
+  color:#fff;letter-spacing:-.02em;display:flex;align-items:center;gap:12px}
+h2 .num{display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;
+  background:var(--grad-1);border-radius:10px;font-size:.82rem;color:#fff;
+  box-shadow:0 4px 14px rgba(168,85,247,.35);flex-shrink:0}
+p{color:var(--text-2);margin-bottom:14px;font-size:.94rem}
+ul{color:var(--text-2);padding-left:0;margin-bottom:16px;list-style:none}
+li{margin-bottom:10px;font-size:.93rem;padding-left:26px;position:relative}
+li::before{content:'';position:absolute;left:0;top:10px;width:8px;height:8px;
+  background:var(--grad-1);border-radius:50%}
+strong{color:#fff;font-weight:700}
+.card-inline{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px 20px;margin:16px 0;border-left:3px solid var(--purple)}
+.card-inline p{margin:0;font-size:.9rem}
+
+/* Footer */
+footer{background:var(--bg-2);border-top:1px solid var(--border);
+  padding:48px 24px 32px;text-align:center;color:var(--text-3);font-size:.83rem;
+  position:relative;z-index:1;margin-top:60px}
+.footer-links{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;
+  margin-bottom:20px;font-weight:600}
+.footer-links a{color:var(--text-2);font-size:.83rem}
+.footer-links a:hover{color:var(--purple)}
+.footer-copy{opacity:.7;font-size:.78rem}
+
+/* Back to top */
+.top-btn{position:fixed;bottom:24px;right:24px;width:48px;height:48px;border-radius:50%;
+  background:var(--grad-1);color:#fff;font-size:1.2rem;cursor:pointer;border:none;
+  box-shadow:0 10px 32px rgba(168,85,247,.5);z-index:200;
+  opacity:0;pointer-events:none;transition:all .35s var(--ios-ease);
+  display:flex;align-items:center;justify-content:center}
+.top-btn.show{opacity:1;pointer-events:auto}
+.top-btn:hover{transform:translateY(-3px) scale(1.05);
+  box-shadow:0 14px 40px rgba(236,72,153,.6)}
 </style>
 </head>
 <body>
 
-<div class="nav">
+<div class="read-progress" id="readProgress"></div>
+
+<nav class="nav" id="nav">
   <a href="/" class="nav-logo">
     <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
     <span>UPSC Study Tracker</span>
   </a>
-  <a href="/app.html" class="nav-cta">Start Free →</a>
-</div>
+  <a href="/auth.html" class="nav-cta">Start Free →</a>
+</nav>
+
+<header class="hero">
+  <div class="hero-badge">📜 Legal Document</div>
+  <h1>Terms & Conditions</h1>
+  <p class="sub">The rules of the road. Simple, honest, and written in plain English.</p>
+  <div class="hero-meta">
+    <span>📅 Last updated: 12 September 2026</span>
+    <span>⏱ 5 min read</span>
+  </div>
+</header>
 
 <main>
   <a href="/" class="back">← Back to Home</a>
 
-  <h1>Terms & Conditions</h1>
-  <div class="updated">Last updated: 11 September 2026</div>
-
   <div class="callout">
-    <strong>Plain English Summary</strong>
-    <p>Use the app fairly. Don't abuse it. We provide the service "as is" — no guarantees about results. Premium plans can be cancelled anytime.</p>
+    <div class="callout-badge">⚡ TL;DR Summary</div>
+    <p>Use the app fairly. Don't abuse it. We provide the service <strong>"as is"</strong> — no guarantees about results. <strong>Premium plans can be cancelled anytime.</strong> Your data belongs to you.</p>
   </div>
 
-  <h2>1. Acceptance of Terms</h2>
-  <p>By using UPSC Study Tracker, you agree to these Terms. If you do not agree, please do not use the Service.</p>
+  <div class="toc">
+    <div class="toc-title">Jump to Section</div>
+    <div class="toc-grid">
+      <a href="#s1">1. Acceptance</a>
+      <a href="#s2">2. Service Description</a>
+      <a href="#s3">3. User Accounts</a>
+      <a href="#s4">4. Responsibilities</a>
+      <a href="#s5">5. Premium Plans</a>
+      <a href="#s6">6. Refunds</a>
+      <a href="#s7">7. Intellectual Property</a>
+      <a href="#s8">8. Liability</a>
+      <a href="#s9">9. Termination</a>
+      <a href="#s10">10. Changes</a>
+      <a href="#s11">11. Governing Law</a>
+      <a href="#s12">12. Contact</a>
+    </div>
+  </div>
 
-  <h2>2. Description of Service</h2>
-  <p>UPSC Study Tracker is a study tracking platform for UPSC aspirants. We provide study timer, syllabus tracking, revision scheduling, and analytics tools.</p>
-  <p>The Service is provided "as is" without warranties. We do not guarantee any particular outcome.</p>
+  <section class="section" id="s1">
+    <h2><span class="num">1</span> Acceptance of Terms</h2>
+    <p>By using UPSC Study Tracker, you agree to these Terms. If you do not agree with any part, please discontinue using the Service.</p>
+  </section>
 
-  <h2>3. User Accounts</h2>
-  <ul>
-    <li>You must provide a valid email address</li>
-    <li>You are responsible for maintaining your password's confidentiality</li>
-    <li>One account per person unless otherwise permitted</li>
-    <li>You must be 16 years or older</li>
-  </ul>
+  <section class="section" id="s2">
+    <h2><span class="num">2</span> Description of Service</h2>
+    <p>UPSC Study Tracker is a study tracking platform built for UPSC aspirants. We provide a study timer, syllabus tracking, spaced-repetition revisions, and analytics tools.</p>
+    <div class="card-inline">
+      <p>📌 The Service is provided <strong>"as is"</strong> without warranties of any kind. We do not guarantee any specific outcome from using the app.</p>
+    </div>
+  </section>
 
-  <h2>4. User Responsibilities</h2>
-  <p>You agree not to:</p>
-  <ul>
-    <li>Use the Service for any unlawful purpose</li>
-    <li>Attempt to gain unauthorized access to other users' data</li>
-    <li>Interfere with or disrupt the Service's infrastructure</li>
-    <li>Reverse engineer, scrape, or abuse the API</li>
-    <li>Use the Service to send spam</li>
-  </ul>
+  <section class="section" id="s3">
+    <h2><span class="num">3</span> User Accounts</h2>
+    <ul>
+      <li>You must provide a valid email address at signup</li>
+      <li>You are responsible for keeping your password secure</li>
+      <li>One account per person unless otherwise permitted</li>
+      <li>You must be <strong>16 years or older</strong> to use the Service</li>
+    </ul>
+  </section>
 
-  <h2>5. Premium Subscription</h2>
-  <ul>
-    <li><strong>Free Tier:</strong> Core features at no cost, forever</li>
-    <li><strong>Monthly Plan:</strong> ₹50/month, auto-renewing via UPI Autopay</li>
-    <li><strong>Yearly Plan:</strong> ₹500/year, one-time payment</li>
-  </ul>
-  <p>By subscribing, you agree that:</p>
-  <ul>
-    <li>Monthly plans auto-renew unless cancelled before next billing date</li>
-    <li>Yearly plans do not auto-renew</li>
-    <li>Pricing may change with 30 days advance notice</li>
-  </ul>
+  <section class="section" id="s4">
+    <h2><span class="num">4</span> User Responsibilities</h2>
+    <p>By using the Service, you agree <strong>not</strong> to:</p>
+    <ul>
+      <li>Use the Service for any unlawful purpose</li>
+      <li>Attempt to gain unauthorized access to other users' data</li>
+      <li>Interfere with or disrupt the Service's infrastructure</li>
+      <li>Reverse engineer, scrape, or abuse the API</li>
+      <li>Use the Service to distribute spam or malware</li>
+    </ul>
+  </section>
 
-  <h2>6. Refund Policy</h2>
-  <p><strong>Monthly:</strong> Non-refundable once billing cycle begins. Cancel anytime.</p>
-  <p><strong>Yearly:</strong> Refund within 7 days if premium features were not extensively used. Email support@upscstudytracker.co.in. Processing takes 5-7 business days.</p>
+  <section class="section" id="s5">
+    <h2><span class="num">5</span> Premium Subscription</h2>
+    <ul>
+      <li><strong>Free Tier:</strong> Core features at no cost, forever</li>
+      <li><strong>Monthly Plan:</strong> ₹99/month — manual renewal</li>
+      <li><strong>Yearly Plan:</strong> ₹799/year — one-time payment</li>
+    </ul>
+    <p>By subscribing, you acknowledge:</p>
+    <ul>
+      <li>Monthly plans do not auto-renew unless you choose to renew</li>
+      <li>Yearly plans are one-time payments</li>
+      <li>Pricing may change with 30 days advance notice</li>
+    </ul>
+  </section>
 
-  <h2>7. Intellectual Property</h2>
-  <p>All content, design, and code are owned by us. Your data belongs to you — full ownership retained.</p>
+  <section class="section" id="s6">
+    <h2><span class="num">6</span> Refund Policy</h2>
+    <p><strong>Monthly:</strong> Non-refundable once the billing cycle begins. You can cancel anytime to prevent future charges.</p>
+    <p><strong>Yearly:</strong> Full refund within 7 days if premium features were not extensively used. Email us at <a href="mailto:mkpersonalmailid@gmail.com">mkpersonalmailid@gmail.com</a>. Processing takes 5–7 business days.</p>
+  </section>
 
-  <h2>8. Limitation of Liability</h2>
-  <ul>
-    <li>Service provided "as is" without warranties</li>
-    <li>We are not responsible for decisions based on app data</li>
-    <li>Our total liability is limited to amount paid in past 12 months</li>
-  </ul>
-  <p><strong>Important:</strong> We are a productivity tool, not an education provider. UPSC selection depends on your effort and many factors outside our control.</p>
+  <section class="section" id="s7">
+    <h2><span class="num">7</span> Intellectual Property</h2>
+    <p>All content, design, and code of UPSC Study Tracker belong to us. However — <strong>your study data belongs entirely to you.</strong> You retain full ownership of everything you enter into the app.</p>
+  </section>
 
-  <h2>9. Termination</h2>
-  <p>We may suspend or terminate your account for violation of these Terms, fraudulent behavior, or legal requirements. You may delete your account anytime from Settings.</p>
+  <section class="section" id="s8">
+    <h2><span class="num">8</span> Limitation of Liability</h2>
+    <ul>
+      <li>Service is provided "as is" without warranties</li>
+      <li>We are not responsible for decisions made based on app data</li>
+      <li>Our total liability is limited to the amount you paid in the past 12 months</li>
+    </ul>
+    <div class="card-inline">
+      <p>🎯 <strong>Important:</strong> We are a productivity tool, not an education provider. Your UPSC selection depends entirely on your own effort and factors outside our control.</p>
+    </div>
+  </section>
 
-  <h2>10. Changes to Terms</h2>
-  <p>We may update these Terms. Continued use implies acceptance. If you disagree, please stop using the Service.</p>
+  <section class="section" id="s9">
+    <h2><span class="num">9</span> Termination</h2>
+    <p>We may suspend or terminate your account for violating these Terms, fraudulent behavior, or legal requirements. You can delete your account anytime from Settings — no questions asked.</p>
+  </section>
 
-  <h2>11. Governing Law</h2>
-  <p>These Terms are governed by Indian law. Disputes subject to exclusive jurisdiction of courts in India.</p>
+  <section class="section" id="s10">
+    <h2><span class="num">10</span> Changes to Terms</h2>
+    <p>We may update these Terms occasionally. Continued use of the Service implies acceptance of the updated Terms. If you disagree, please stop using the Service.</p>
+  </section>
 
-  <h2>12. Contact</h2>
-  <p>📧 <a href="mailto:support@upscstudytracker.co.in">support@upscstudytracker.co.in</a></p>
+  <section class="section" id="s11">
+    <h2><span class="num">11</span> Governing Law</h2>
+    <p>These Terms are governed by Indian law. Any disputes shall be subject to the exclusive jurisdiction of courts in India.</p>
+  </section>
+
+  <section class="section" id="s12">
+    <h2><span class="num">12</span> Contact</h2>
+    <p>Questions about these Terms? Reach out to us at <a href="mailto:mkpersonalmailid@gmail.com">mkpersonalmailid@gmail.com</a></p>
+  </section>
 </main>
 
 <footer>
-  © 2026 UPSC Study Tracker · <a href="/">Home</a> · <a href="/app.html">App</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a> · <a href="/privacy.html">Privacy</a>
+  <div class="footer-links">
+    <a href="/">Home</a>
+    <a href="/auth.html">App</a>
+    <a href="/about.html">About</a>
+    <a href="/contact.html">Contact</a>
+    <a href="/privacy.html">Privacy</a>
+  </div>
+  <div class="footer-copy">© 2026 UPSC Study Tracker · Made in India 🇮🇳</div>
 </footer>
 
+<button class="top-btn" id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<script>
+const nav = document.getElementById('nav');
+const progress = document.getElementById('readProgress');
+const topBtn = document.getElementById('topBtn');
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => {
+      const scrolled = window.scrollY;
+      nav.classList.toggle('scrolled', scrolled > 40);
+      const h = document.documentElement;
+      const pct = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      progress.style.width = pct + '%';
+      topBtn.classList.toggle('show', scrolled > 400);
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, { passive: true });
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }});
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.section').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
