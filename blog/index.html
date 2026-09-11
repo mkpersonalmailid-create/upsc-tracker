@@ -1,153 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Blog — UPSC Study Tracker</title>
-<meta name="description" content="Free UPSC preparation guides, study strategies, book recommendations, and time management tips for serious aspirants.">
-<meta name="keywords" content="upsc blog, upsc preparation, ias study tips, upsc strategy">
+<title>UPSC Preparation Blog — Study Strategies & Tips | UPSC Tracker</title>
+<meta name="description" content="Free UPSC study strategies, book recommendations, time management tips, and prep guides. Updated daily for serious aspirants.">
 <link rel="icon" href="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-html,body{background:#08090D !important;color:#F5F7FB !important}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;overflow-x:hidden}
-a{color:#5E9EFF;text-decoration:none}
-a:hover{text-decoration:underline}
-img{max-width:100%;display:block}
-
-/* NAVBAR */
-.nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:14px 24px;
-background:rgba(8,9,13,.95);backdrop-filter:blur(20px);border-bottom:1px solid #232838;
-display:flex;justify-content:space-between;align-items:center}
-.nav-logo{display:flex;align-items:center;gap:10px;font-weight:800;
-color:#F5F7FB !important;font-size:.95rem;text-decoration:none}
-.nav-logo img{width:32px;height:32px;border-radius:8px}
-.nav-cta{background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
-padding:8px 16px;border-radius:8px;font-weight:800;font-size:.82rem;
-text-decoration:none !important;transition:.25s}
-.nav-cta:hover{transform:translateY(-1px);text-decoration:none !important;
-box-shadow:0 6px 20px rgba(94,158,255,.5)}
-
-/* HERO */
-main{padding:120px 0 60px}
-.container{max-width:1100px;margin:0 auto;padding:0 24px}
-.hero{text-align:center;max-width:720px;margin:0 auto 60px}
-.hero .tag{font-size:.72rem;font-weight:800;letter-spacing:.14em;
-text-transform:uppercase;color:#5E9EFF;margin-bottom:14px}
-.hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-.03em;
-line-height:1.15;margin-bottom:16px;
-background:linear-gradient(135deg,#fff,#A78BFA);
--webkit-background-clip:text;-webkit-text-fill-color:transparent;
-background-clip:text}
-.hero p{color:#98A2B8 !important;font-size:1.05rem}
-
-/* BLOG GRID */
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px}
-.card{background:#141824;border:1px solid #232838;border-radius:18px;padding:28px;
-display:flex;flex-direction:column;transition:.25s;position:relative;
-overflow:hidden;text-decoration:none;color:inherit}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-background:linear-gradient(90deg,transparent,#5E9EFF,transparent);
-opacity:0;transition:.3s}
-.card:hover{border-color:#3A4560;transform:translateY(-4px);
-box-shadow:0 20px 40px rgba(0,0,0,.4);text-decoration:none}
-.card:hover::before{opacity:1}
-.card .cat{font-size:.7rem;font-weight:800;text-transform:uppercase;
-letter-spacing:.08em;color:#5E9EFF;margin-bottom:12px}
-.card h2{font-size:1.15rem;font-weight:800;line-height:1.4;margin-bottom:12px;
-color:#F5F7FB;letter-spacing:-.01em}
-.card p{color:#98A2B8;font-size:.88rem;line-height:1.6;flex:1;margin-bottom:16px}
-.card .meta{font-size:.75rem;color:#5F6A82;display:flex;
-justify-content:space-between;align-items:center;padding-top:16px;
-border-top:1px solid #232838}
-.card .read-more{color:#5E9EFF;font-weight:700}
-
-/* EMPTY STATE */
-.empty{text-align:center;padding:80px 24px}
-.empty .icon{font-size:4rem;opacity:.3;margin-bottom:20px}
-.empty h3{color:#F5F7FB;font-size:1.2rem;margin-bottom:8px;font-weight:800}
-.empty p{color:#98A2B8;font-size:.9rem;max-width:400px;margin:0 auto 24px}
-.empty .btn{display:inline-flex;align-items:center;gap:8px;
-background:linear-gradient(135deg,#5E9EFF,#7C6AFF);color:#fff !important;
-padding:12px 24px;border-radius:10px;font-weight:800;font-size:.88rem;
-box-shadow:0 6px 20px rgba(94,158,255,.4);text-decoration:none !important}
-.empty .btn:hover{transform:translateY(-2px);text-decoration:none !important;
-box-shadow:0 10px 28px rgba(94,158,255,.55)}
-
-/* FOOTER */
-footer{background:#0F1118;border-top:1px solid #232838;padding:40px 24px;
-text-align:center;color:#5F6A82 !important;font-size:.82rem;margin-top:80px}
-footer a{color:#5E9EFF !important}
+:root{--bg:#0A0612;--card:#171026;--border:#2A1E42;--text:#FFF;--text-2:#B8A8D9;--text-3:#6E5F8C;--purple:#A855F7;--grad-1:linear-gradient(135deg,#8B5CF6,#EC4899)}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%)}
+a{color:var(--purple);text-decoration:none}
+.navbar{padding:16px 0;border-bottom:1px solid var(--border);background:rgba(10,6,18,.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text)}
+.logo img{width:36px;height:36px;border-radius:9px}
+.nav-cta{background:var(--grad-1);color:#fff!important;padding:10px 20px;border-radius:10px;font-weight:800;font-size:.85rem}
+.hero{text-align:center;padding:60px 20px 40px;position:relative;z-index:1}
+.hero .tag{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:14px}
+.hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-.03em;margin-bottom:16px;background:linear-gradient(135deg,#fff,#C4B5FD);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{color:var(--text-2);font-size:1.05rem;max-width:600px;margin:0 auto}
+.posts{max-width:1100px;margin:0 auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;position:relative;z-index:1}
+footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--text-3);font-size:.85rem;margin-top:60px;background:var(--bg-2);position:relative;z-index:1}
+footer a{color:var(--text-2);margin:0 8px}
 </style>
 </head>
 <body>
-
-<!-- NAVBAR -->
-<div class="nav">
-  <a href="/" class="nav-logo">
-    <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
-    <span>UPSC Study Tracker</span>
-  </a>
-  <a href="/app.html" class="nav-cta">Start Free →</a>
-</div>
-
-<!-- MAIN CONTENT -->
-<main>
-  <div class="container">
-    <div class="hero">
-      <div class="tag">Blog</div>
-      <h1>UPSC Preparation Blog</h1>
-      <p>Free study strategies, book recommendations, and time management tips for serious aspirants.</p>
-    </div>
-
-    <div class="grid">
-
-      <!-- ══════════════════════════════════════════════
-           ARTICLE CARD 1
-           Har naye article ke liye ye block copy karein
-           aur details badal dein
-      ══════════════════════════════════════════════════ -->
-
-      <a href="/blog/how-to-start-upsc.html" class="card">
-        <div class="cat">Strategy</div>
-        <h2>How to Start UPSC Preparation in 2026: Complete Beginner's Guide</h2>
-        <p>A step-by-step roadmap for UPSC beginners — from understanding the syllabus to building a daily routine that actually works.</p>
-        <div class="meta">
-          <span>📅 Sep 11, 2026</span>
-          <span class="read-more">Read →</span>
-        </div>
-      </a>
-
-      <!-- ══════════════════════════════════════════════
-           ARTICLE CARD 2 (Example - jab article ready ho
-           to comment hatakar ye block use karein)
-      ══════════════════════════════════════════════════
-
-      <a href="/blog/best-books-upsc.html" class="card">
-        <div class="cat">Resources</div>
-        <h2>Best Books for UPSC Prelims & Mains (2026 Updated)</h2>
-        <p>Complete list of must-read books for GS Paper I, II, III, IV, Essay, and CSAT.</p>
-        <div class="meta">
-          <span>📅 Coming Soon</span>
-          <span class="read-more">Read →</span>
-        </div>
-      </a>
-
-      -->
-
-    </div>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/" class="logo">
+      <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Tracker">
+      <span>UPSC Study Tracker</span>
+    </a>
+    <a href="/app.html" class="nav-cta">Start Free →</a>
   </div>
-</main>
+</nav>
 
-<!-- FOOTER -->
+<section class="hero">
+  <div class="tag">Blog</div>
+  <h1>UPSC Preparation Blog</h1>
+  <p>Free study strategies, book recommendations, and time management tips for serious aspirants.</p>
+</section>
+
+<section class="posts">
+  
+    <article style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;">
+      <div style="font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">📖 UPSC</div>
+      <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:10px;color:var(--text);line-height:1.35">
+        <a href="/blog/upsc-optional-subject-selection-guide-20260911.html" style="color:var(--text);text-decoration:none">UPSC Optional Subject Selection Guide – Your Complete Roadmap</a>
+      </h2>
+      <p style="font-size:.88rem;color:var(--text-2);line-height:1.6;margin-bottom:16px">A detailed UPSC Optional Subject Selection Guide covering factors, strategies, and tips to help aspirants choose the right optional for maximum score.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--text-3)">
+        <span>📅 2026-09-11</span>
+        <a href="/blog/upsc-optional-subject-selection-guide-20260911.html" style="color:var(--purple);font-weight:700;text-decoration:none">Read →</a>
+      </div>
+    </article>
+
+    <article style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;">
+      <div style="font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">📖 UPSC</div>
+      <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:10px;color:var(--text);line-height:1.35">
+        <a href="/blog/how-to-start-upsc.html" style="color:var(--text);text-decoration:none">How to Start UPSC Preparation in 2026: Complete Beginner's Guide | UPSC Study Tracker</a>
+      </h2>
+      <p style="font-size:.88rem;color:var(--text-2);line-height:1.6;margin-bottom:16px">A complete step-by-step guide for beginners on how to start UPSC preparation in 2026 — syllabus, books, study plan, and daily routine.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--text-3)">
+        <span>📅 2026-01-01</span>
+        <a href="/blog/how-to-start-upsc.html" style="color:var(--purple);font-weight:700;text-decoration:none">Read →</a>
+      </div>
+    </article>
+</section>
+
 <footer>
-  © 2026 UPSC Study Tracker ·
-  <a href="/">Home</a> ·
-  <a href="/app.html">App</a> ·
-  <a href="/about.html">About</a> ·
-  <a href="/contact.html">Contact</a>
+  <div>© 2026 UPSC Study Tracker</div>
+  <div style="margin-top:10px">
+    <a href="/">Home</a> · <a href="/app.html">App</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a>
+  </div>
 </footer>
-
 </body>
 </html>
