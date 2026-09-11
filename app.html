@@ -1144,6 +1144,15 @@ button#fab {
   .hero .greeting-name { font-size: clamp(1.5rem, 7vw, 2rem) !important; }
   .hero .greeting-sub { font-size: .86rem !important; }
 }
+/* ═══ FAB HIDDEN STATE — Force hide (override #fab display:flex) ═══ */
+button#fab.hidden,
+button.fab.hidden,
+.fab.hidden {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 </style>
 </head>
 <body>
