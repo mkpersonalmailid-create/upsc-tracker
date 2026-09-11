@@ -998,36 +998,39 @@ a{color:var(--pink);text-decoration:none}
     visibility: visible;
   }
 
-  /* ═══ Close button inside sidebar ═══ */
-  .sidebar-close-mobile {
-    display: flex;
-    position: absolute;
-    top: 14px;
-    right: 12px;
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
-    background: var(--card-2);
-    border: 1px solid var(--border);
-    color: var(--text-2);
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    cursor: pointer;
-    z-index: 310;
-    transition: all .2s;
-    padding: 0;
-  }
-  .sidebar-close-mobile:hover,
-  .sidebar-close-mobile:active {
-    background: var(--card);
-    color: var(--text);
-    border-color: var(--border-2);
-    transform: rotate(90deg);
-  }
+  /* ═══ Mobile Sidebar Close Button ═══ */
+.sidebar-close-mobile {
+  display: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all .2s;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.sidebar-close-mobile:hover,
+.sidebar-close-mobile:active {
+  background: var(--card);
+  color: var(--text);
+  border-color: var(--border-2);
+  transform: rotate(90deg);
+}
+@media (max-width: 900px) {
+  .sidebar-close-mobile { display: flex; }
+}
+@media (min-width: 901px) {
+  .sidebar-close-mobile { display: none !important; }
+}
 
-  /* Sidebar padding so close button doesn't overlap logo */
-  .sidebar { padding-top: 56px; }
+
 }
 
 /* Hide overlay + close on desktop */
@@ -1108,7 +1111,7 @@ a{color:var(--pink);text-decoration:none}
 <div id="app" class="app hidden">
 
   <aside class="sidebar" id="sidebar">
-          <button class="sidebar-close-mobile" id="sidebarClose" title="Close">✕</button>
+
     <div class="logo">
       <div class="logo-mark" id="logoMark">
         <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo" onerror="this.style.display='none';this.parentElement.textContent='U';this.parentElement.style.color='#fff';this.parentElement.style.fontWeight='900';this.parentElement.style.fontSize='1.3rem'">
@@ -1117,6 +1120,7 @@ a{color:var(--pink);text-decoration:none}
         <div class="logo-text">UPSC TRACKER</div>
         <div class="logo-tagline">Track · Analyze · Crack</div>
       </div>
+       <button class="sidebar-close-mobile" id="sidebarClose" title="Close">✕</button>
     </div>
     <nav class="nav">
       <div class="sb-section-title">Study</div>
@@ -2602,9 +2606,14 @@ async function bootAfterLogin(session) {
   updatePremiumUI();
   updateAdminVisibility();
   renderAll();
-  updateLastSeen();
+    updateLastSeen();
   setInterval(updateLastSeen, 60000);
+  
+  // Load announcement banner after login
+  setTimeout(() => loadAnnouncement(), 800);
+  setInterval(() => loadAnnouncement(), 120000);
 }
+
 function updateSidebarUser() {
   const name = state.profile.name || state.user?.email?.split('@')[0] || 'Student';
   $('#sbUserName').textContent = name;
@@ -4768,11 +4777,65 @@ function wireEvents() {
   // Nav
   $$('.nav-item').forEach(n => n.onclick = () => switchView(n.dataset.view));
   $$('.bnav-item').forEach(n => n.onclick = () => switchView(n.dataset.view));
+   // ═══ Sidebar Toggle + Mobile Close ═══
   $('#collapseBtn').onclick = () => {
     const sb = $('#sidebar');
-    if (window.innerWidth <= 900) sb.classList.toggle('open');
-    else sb.classList.toggle('collapsed');
+    if (window.innerWidth <= 900) {
+      sb.classList.toggle('open');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
+      document.querySelectorAll('.fab, .fab-menu').forEach(el => {
+        el.style.display = sb.classList.contains('open') ? 'none' : '';
+      });
+    } else {
+      sb.classList.toggle('collapsed');
+    }
   };
+
+  const sbCloseBtn = document.getElementById('sidebarClose');
+  if (sbCloseBtn) {
+    sbCloseBtn.addEventListener('click', () => {
+      const sb = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sb) sb.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+      document.querySelectorAll('.fab, .fab-menu').forEach(el => el.style.display = '');
+    });
+  }
+
+  const sbOverlay = document.getElementById('sidebarOverlay');
+  if (sbOverlay) {
+    sbOverlay.addEventListener('click', () => {
+      const sb = document.getElementById('sidebar');
+      if (sb) sb.classList.remove('open');
+      sbOverlay.classList.remove('active');
+      document.querySelectorAll('.fab, .fab-menu').forEach(el => el.style.display = '');
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const sb = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sb && sb.classList.contains('open')) {
+        sb.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+        document.querySelectorAll('.fab, .fab-menu').forEach(el => el.style.display = '');
+      }
+    }
+  });
+
+  document.addEventListener('click', e => {
+    if (window.innerWidth <= 900 && e.target.closest('.nav-item')) {
+      setTimeout(() => {
+        const sb = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (sb) sb.classList.remove('open');
+        if (overlay) overlay.classList.remove('active');
+        document.querySelectorAll('.fab, .fab-menu').forEach(el => el.style.display = '');
+      }, 100);
+    }
+  });
   $('#sbUser').onclick = () => switchView('settings');
   $('#topAvatar').onclick = () => switchView('settings');
   $('#settingsBtn').onclick = () => switchView('settings');
