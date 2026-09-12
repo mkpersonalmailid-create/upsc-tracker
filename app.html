@@ -4212,6 +4212,114 @@
         flex-shrink: 0;
         animation: heartBeat 1s ease-in-out infinite;
       }
+      /* ═══════════════════════════════════════════════
+         LIGHT THEME OVERRIDES — Hero + Timer Fix
+         ═══════════════════════════════════════════════ */
+      [data-theme='light'] .hero {
+        background: linear-gradient(
+          135deg,
+          rgba(139, 92, 246, 0.06),
+          rgba(236, 72, 153, 0.04),
+          rgba(249, 115, 22, 0.03)
+        );
+        border-color: rgba(168, 85, 247, 0.18);
+      }
+
+      /* Softer, less intrusive glow blobs */
+      [data-theme='light'] .hero::before {
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.14), transparent 60%);
+      }
+      [data-theme='light'] .hero::after {
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.1), transparent 60%);
+      }
+
+      /* Greeting — darker gradient text for light bg */
+      [data-theme='light'] .hero .greeting-name {
+        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 50%, #be185d 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        text-shadow: none !important;
+      }
+
+      [data-theme='light'] .hero .greeting-sub {
+        color: var(--text-2) !important;
+      }
+
+      /* Timer — dark gradient text in light theme */
+      [data-theme='light'] .clock-display {
+        background: linear-gradient(135deg, #6d28d9, #db2777, #ea580c, #6d28d9) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        filter: drop-shadow(0 4px 16px rgba(168, 85, 247, 0.25)) !important;
+      }
+
+      [data-theme='light'] .clock-display.running {
+        filter: drop-shadow(0 8px 24px rgba(236, 72, 153, 0.35)) !important;
+      }
+
+      /* Inactive timer — clearly visible grey-purple */
+      [data-theme='light'] .clock-display:not(.active) {
+        background: none !important;
+        -webkit-text-fill-color: #b8a8d9 !important;
+        color: #b8a8d9 !important;
+        filter: none !important;
+      }
+
+      /* Clock status — readable */
+      [data-theme='light'] .clock-status {
+        color: var(--text-2) !important;
+      }
+
+      /* Timer mode chips — better contrast in light */
+      [data-theme='light'] .timer-modes {
+        background: rgba(139, 92, 246, 0.08);
+        border-color: rgba(168, 85, 247, 0.15);
+        backdrop-filter: blur(6px);
+      }
+
+      [data-theme='light'] .mode-chip {
+        color: var(--text-2);
+      }
+
+      [data-theme='light'] .mode-chip:hover {
+        background: rgba(139, 92, 246, 0.12);
+        color: var(--text);
+      }
+
+      [data-theme='light'] .mode-chip.active {
+        background: var(--grad-1);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+      }
+
+      /* "What are you studying?" card — softer in light */
+      [data-theme='light'] .what-studying {
+        background: #ffffff;
+        border-color: rgba(168, 85, 247, 0.15);
+      }
+
+      [data-theme='light'] .step-label {
+        border-bottom-color: rgba(168, 85, 247, 0.15);
+      }
+
+      [data-theme='light'] .step-title {
+        color: #4c1d95;
+      }
+
+      [data-theme='light'] .step-sub {
+        color: var(--text-3);
+      }
+
+      /* KPI cards — subtle shadow, clean border */
+      [data-theme='light'] .kpi {
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.06);
+      }
+
+      [data-theme='light'] .kpi:hover {
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.15);
+      }
     </style>
   </head>
   <body>
