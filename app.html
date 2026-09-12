@@ -8253,7 +8253,8 @@ ${
         <option value="optional">Optional</option><option value="essay">Essay</option><option value="csat">CSAT</option>
       </select></div>
     <div class="field"><label>Subject</label><select id="mlSubject"></select></div>
-    <div class="field"><label>Topic (optional)</label><input type="text" id="mlTopic" placeholder="Topic"></div>
+        <div class="field"><label>Topic</label>
+      <select id="mlTopic"><option value="">— Select category & subject first —</option></select></div>
         <div class="field"><label>Study Type</label>
       <select id="mlType">${STUDY_TYPES.map((t) => `<option>${t}</option>`).join('')}</select></div>
     <div class="field"><label>Update Topic Status (optional)</label>
@@ -8275,14 +8276,33 @@ ${
       <button class="btn btn-primary" id="mlSave">Save</button>`,
           }),
           {
-            onMount() {
+            oonMount() {
+              // ⬇️⬇️⬇️ NAYA CODE — Topic dropdown ⬇️⬇️⬇️
+              const refreshTopics = () => {
+                const cat = $('#mlCategory').value;
+                const subject = $('#mlSubject').value;
+                const topics = getTopicsForCategorySubject(cat, subject);
+                const sel = $('#mlTopic');
+                if (!topics || !topics.length) {
+                  sel.innerHTML = '<option value="">— No topics found —</option>';
+                  return;
+                }
+                sel.innerHTML =
+                  '<option value="">— Select a topic —</option>' +
+                  topics.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+              };
+
               const refresh = () => {
                 const cat = $('#mlCategory').value;
                 const subs = getSubjectsForCategory(cat);
                 $('#mlSubject').innerHTML = subs.map((s) => `<option>${esc(s)}</option>`).join('');
+                refreshTopics();
               };
+
               $('#mlCategory').onchange = refresh;
+              $('#mlSubject').onchange = refreshTopics;
               refresh();
+              // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
               const recalc = () => {
                 const sv = $('#mlStart').value,
                   ev = $('#mlEnd').value;
