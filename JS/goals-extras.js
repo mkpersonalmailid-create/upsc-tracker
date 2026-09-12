@@ -1,9 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v4 (FINAL)
+   UPSC TRACKER — Goals Extras v5 (FINAL)
    ─────────────────────────────────────────────────────────────
-   ✅ NEW: "Is this part of a goal?" dropdown in session modals
-   ✅ NEW: Auto-fill subject/topic from linked goal
-   ✅ NEW: Session → Goal auto-increment (smart matching)
+   ✅ Goal Study Mode — pick goal, then start timer
+   ✅ "Is this part of a goal?" dropdown in session modals
+   ✅ Auto-fill subject/topic from linked goal
+   ✅ Session → Goal auto-increment (smart matching)
    ✅ Units: Hours (study time) | Topics (tracked only)
    ✅ Category/Subject/Topic cascade in goal modal (collapsible)
    ✅ Analytics strip at top of Goals page
@@ -15,7 +16,7 @@
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v4 loaded');
+  console.log('[goals-extras] v5 loaded');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -677,7 +678,6 @@
         }
         setTimeout(() => {
           if (subjSel && goal.subject) {
-            // Ensure subject exists in dropdown
             const hasOpt = Array.from(subjSel.options).some((o) => o.value === goal.subject);
             if (hasOpt) subjSel.value = goal.subject;
           }
@@ -817,6 +817,276 @@
     } catch (e) {}
   }
 
+  /* ═══════════════ 13. GOAL STUDY MODE ═══════════════ */
+  function injectGoalStudyMode() {
+    const modesEl = document.getElementById('timerModes');
+    if (!modesEl) return;
+    if (modesEl.querySelector('[data-mode="goal"]')) return;
+
+    /* Add new mode chip */
+    const chip = document.createElement('button');
+    chip.className = 'mode-chip';
+    chip.dataset.mode = 'goal';
+    chip.textContent = '🎯 Goal Study';
+    modesEl.appendChild(chip);
+
+    /* Create goal selector panel */
+    const whatStudying = document.querySelector('.what-studying');
+    if (!whatStudying) return;
+
+    const oldPanel = document.getElementById('goalStudyPanel');
+    if (oldPanel) oldPanel.remove();
+
+    const activeGoals = (state.goals || []).filter((g) => g.status !== 'completed' && g.current < g.target);
+
+    const panel = document.createElement('div');
+    panel.id = 'goalStudyPanel';
+    panel.style.cssText =
+      'display:none;padding:18px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;margin-bottom:18px';
+    panel.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:1.4rem">🎯</span>
+        <div style="flex:1">
+          <div style="font-weight:800;font-size:1rem;color:#FBBF24">Goal Study Mode</div>
+          <div style="font-size:.76rem;color:var(--text-3);margin-top:2px">Select a goal — timer will auto-link to it</div>
+        </div>
+      </div>
+      ${
+        activeGoals.length === 0
+          ? `
+        <div style="padding:16px;background:rgba(0,0,0,.2);border-radius:10px;text-align:center;font-size:.85rem;color:var(--text-2)">
+          <div style="font-size:1.5rem;margin-bottom:6px">📭</div>
+          No active goals yet.<br>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="switchView('goals');setTimeout(()=>document.getElementById('addGoalBtn').click(),200)">+ Create Goal</button>
+        </div>
+      `
+          : `
+        <div class="field">
+          <label style="color:#FBBF24">Select Goal</label>
+          <select id="goalStudySelect" style="width:100%;background:var(--bg-2);border:1.5px solid rgba(251,191,36,.4);border-radius:11px;padding:12px 14px;font-size:.88rem;color:var(--text)">
+            <option value="">— Choose a goal —</option>
+            ${activeGoals
+              .map((g) => {
+                const remaining = Math.max(0, (g.target || 0) - (g.current || 0));
+                return `<option value="${g.id}">🎯 ${escHtml(g.title)} (${remaining.toFixed(1)} ${escHtml(g.unit || 'h')} left)</option>`;
+              })
+              .join('')}
+          </select>
+        </div>
+        <div id="goalStudyInfo" style="display:none;padding:12px 14px;background:rgba(0,0,0,.22);border-radius:10px;font-size:.82rem;color:#C4B5FD;line-height:1.65;margin-top:10px"></div>
+      `
+      }
+    `;
+
+    const catChips = document.getElementById('categoryChips');
+    if (catChips && catChips.parentElement) {
+      catChips.parentElement.insertBefore(panel, catChips);
+    } else {
+      whatStudying.insertBefore(panel, whatStudying.firstChild);
+    }
+
+    /* Wire goal dropdown */
+    const sel = document.getElementById('goalStudySelect');
+    if (sel) {
+      sel.onchange = () => {
+        const gid = sel.value;
+        const info = document.getElementById('goalStudyInfo');
+
+        if (!gid) {
+          info.style.display = 'none';
+          return;
+        }
+
+        const goal = state.goals.find((g) => g.id === gid);
+        if (!goal) return;
+
+        const unit = (goal.unit || '').toLowerCase();
+        const remaining = Math.max(0, goal.target - goal.current);
+
+        info.style.display = 'block';
+        info.innerHTML = `
+          <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong><br>
+          ${
+            unit.includes('hour') || unit.includes('hr')
+              ? `⏱ ${remaining.toFixed(1)} ${escHtml(goal.unit || 'hours')} remaining — timer hours will auto-add to this goal.`
+              : `📖 Goal will be tracked.`
+          }
+          ${goal.subject ? `<br>📚 Subject: <strong style="color:#E9D5FF">${escHtml(goal.subject)}</strong>` : ''}
+          ${goal.topic ? `<br>📖 Topic: <strong style="color:#E9D5FF">${escHtml(goal.topic)}</strong>` : ''}
+        `;
+
+        /* Set draft so timer carries goal's subject/topic */
+        if (goal.subject) {
+          state.draft.category = goal.category || findCategoryForSubject(goal.subject) || 'prelims';
+          state.draft.subject = goal.subject;
+          state.draft.topic = goal.topic || null;
+          if (typeof renderCategoryChips === 'function') renderCategoryChips();
+          if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
+          if (typeof renderTopicSelect === 'function') renderTopicSelect();
+        } else {
+          state.draft.category = state.draft.category || 'prelims';
+          state.draft.subject = goal.title;
+          state.draft.topic = goal.topic || null;
+        }
+      };
+    }
+
+    /* Listen for mode chip changes */
+    modesEl.addEventListener('click', (e) => {
+      const chip = e.target.closest('.mode-chip');
+      if (!chip) return;
+      const mode = chip.dataset.mode;
+
+      const panelEl = document.getElementById('goalStudyPanel');
+      const catChipsEl = document.getElementById('categoryChips');
+      const subjSelector = document.getElementById('subjectSelector');
+      const topicPicker = document.querySelector('.topic-picker');
+
+      if (mode === 'goal') {
+        state._goalStudyMode = true;
+        if (panelEl) panelEl.style.display = 'block';
+        if (catChipsEl) catChipsEl.style.display = 'none';
+        if (subjSelector) subjSelector.style.display = 'none';
+        if (topicPicker) topicPicker.style.display = 'none';
+        document.querySelectorAll('.step-label').forEach((el) => (el.style.display = 'none'));
+      } else {
+        state._goalStudyMode = false;
+        if (panelEl) panelEl.style.display = 'none';
+        if (catChipsEl) catChipsEl.style.display = '';
+        if (subjSelector) subjSelector.style.display = '';
+        if (topicPicker) topicPicker.style.display = '';
+        document.querySelectorAll('.step-label').forEach((el) => (el.style.display = ''));
+      }
+    });
+  }
+
+  function patchRenderStudyForGoalMode() {
+    const _orig = window.renderStudy;
+    if (typeof _orig !== 'function') return;
+    window.renderStudy = function () {
+      _orig.call(this);
+      setTimeout(injectGoalStudyMode, 30);
+    };
+    try {
+      renderStudy = window.renderStudy;
+    } catch (e) {}
+  }
+
+  function patchStartTimerForGoalMode() {
+    const _orig = window.startTimer;
+    if (typeof _orig !== 'function') return;
+
+    window.startTimer = function () {
+      if (state._goalStudyMode) {
+        const sel = document.getElementById('goalStudySelect');
+        const gid = sel ? sel.value : '';
+        if (!gid) {
+          if (typeof toast === 'function') toast('Please select a goal first', 'err', 3000);
+          const panel = document.getElementById('goalStudyPanel');
+          if (panel) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            panel.style.boxShadow = '0 0 0 3px rgba(239,68,68,.4)';
+            setTimeout(() => {
+              panel.style.boxShadow = '';
+            }, 1500);
+          }
+          return;
+        }
+
+        const goal = state.goals.find((g) => g.id === gid);
+        if (!goal) {
+          if (typeof toast === 'function') toast('Goal not found', 'err');
+          return;
+        }
+
+        if (!state.draft.subject) {
+          state.draft.subject = goal.subject || goal.title;
+          state.draft.category = goal.category || 'prelims';
+        }
+
+        _orig.call(this);
+
+        if (state.timer) {
+          state.timer.goalId = gid;
+          state.timer.goalTitle = goal.title;
+          try {
+            localStorage.setItem('upsc_tracker_v5_state.timer', JSON.stringify(state.timer));
+          } catch (e) {}
+          if (typeof toast === 'function') {
+            toast(`🎯 Timer started · linked to "${goal.title}"`, 'ok', 2500);
+          }
+        }
+      } else {
+        _orig.call(this);
+      }
+    };
+
+    try {
+      startTimer = window.startTimer;
+    } catch (e) {}
+  }
+
+  function patchSaveSessionModalForGoal() {
+    const _orig = window.openSaveSessionModal;
+    if (typeof _orig !== 'function') return;
+
+    window.openSaveSessionModal = function (snap) {
+      _orig.call(this, snap);
+
+      if (snap && snap.goalId) {
+        setTimeout(() => {
+          const notesEl = document.getElementById('sessNotes');
+          if (notesEl) {
+            const tag = `[GOAL:${snap.goalId}]`;
+            if (!notesEl.value.includes(tag)) {
+              notesEl.value = (notesEl.value ? notesEl.value.trim() + '\n' : '') + tag;
+            }
+          }
+          const modal = document.querySelector('#modalBox .modal-body');
+          if (modal && !modal.querySelector('.goal-timer-chip')) {
+            const chip = document.createElement('div');
+            chip.className = 'goal-timer-chip';
+            chip.style.cssText =
+              'padding:10px 14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.4);border-radius:10px;font-size:.82rem;color:#FBBF24;margin-bottom:12px;display:flex;align-items:center;gap:8px';
+            chip.innerHTML = `<span>🎯</span><div>Linked to goal: <strong>${escHtml(snap.goalTitle || 'Goal')}</strong></div>`;
+            modal.insertBefore(chip, modal.firstChild);
+          }
+        }, 50);
+      }
+    };
+
+    try {
+      openSaveSessionModal = window.openSaveSessionModal;
+    } catch (e) {}
+  }
+
+  function patchManualLogForGoal() {
+    const _orig = window.openManualLogModal;
+    if (typeof _orig !== 'function') return;
+
+    window.openManualLogModal = function () {
+      _orig.call(this);
+
+      if (state._goalStudyMode) {
+        const sel = document.getElementById('goalStudySelect');
+        const gid = sel ? sel.value : '';
+        if (gid) {
+          setTimeout(() => {
+            const modalSel = document.getElementById('sessionGoalSelect');
+            if (modalSel) {
+              modalSel.value = gid;
+              modalSel.dispatchEvent(new Event('change'));
+            }
+          }, 80);
+        }
+      }
+    };
+
+    try {
+      openManualLogModal = window.openManualLogModal;
+    } catch (e) {}
+  }
+
   /* ═══════════════ INIT ═══════════════ */
   let attempts = 0;
   function waitThenStart() {
@@ -832,10 +1102,15 @@
       patchOpenGoalModal();
       patchOpenModal();
       startSessionWatcher();
+      patchRenderStudyForGoalMode();
+      patchStartTimerForGoalMode();
+      patchSaveSessionModalForGoal();
+      patchManualLogForGoal();
 
       setTimeout(() => {
         patchCalendarMarkers();
         patchOpenDayDetail();
+        injectGoalStudyMode();
         if (typeof renderCalendar === 'function') renderCalendar();
       }, 500);
 
