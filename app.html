@@ -8860,6 +8860,41 @@ ${
               (s) => s.status === 'completed' || (s.status || '').startsWith('rev'),
             ).length;
 
+            // ⬇️⬇️⬇️ NAYA CODE — Paper level filter check ⬇️⬇️⬇️
+            if (syllabusFilter) {
+              let paperHasMatch = false;
+
+              // SYLLABUS topics check karo
+              for (const sub of paper.subjects) {
+                for (const t of sub.topics) {
+                  const existing = state.syllabus.find(
+                    (x) => x.paper === pid && x.subject === sub.name && x.topic === t,
+                  );
+                  const st = existing?.status || 'not_started';
+                  if (st === syllabusFilter) {
+                    paperHasMatch = true;
+                    break;
+                  }
+                }
+                if (paperHasMatch) break;
+              }
+
+              // Custom topics check karo
+              if (!paperHasMatch) {
+                paperHasMatch = paperSyl.some((s) => {
+                  let isCustom = true;
+                  const subj = paper.subjects.find((x) => x.name === s.subject);
+                  if (subj && subj.topics.includes(s.topic)) isCustom = false;
+                  return isCustom && (s.status || 'not_started') === syllabusFilter;
+                });
+              }
+
+              // Agar koi match nahi mila → paper hide karo
+              if (!paperHasMatch) {
+                return '';
+              }
+            }
+            // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
             return `
       <div class="syl-cat-head" data-cat="${pid}">
   <span class="syl-arrow">▶</span>
@@ -8872,6 +8907,36 @@ ${
           ${paper.subjects
             .map((sub) => {
               const subSyl = paperSyl.filter((s) => s.subject === sub.name);
+
+              // ⬇️⬇️⬇️ NAYA CODE — Filter check ⬇️⬇️⬇️
+              let hasMatchingTopic = false;
+              if (!syllabusFilter) {
+                hasMatchingTopic = true;
+              } else {
+                // SYLLABUS topics check
+                for (const t of sub.topics) {
+                  const existing = state.syllabus.find(
+                    (x) => x.paper === pid && x.subject === sub.name && x.topic === t,
+                  );
+                  const st = existing?.status || 'not_started';
+                  if (st === syllabusFilter) {
+                    hasMatchingTopic = true;
+                    break;
+                  }
+                }
+                // Custom topics check
+                if (!hasMatchingTopic) {
+                  const custom = subSyl.filter((s) => !sub.topics.includes(s.topic));
+                  hasMatchingTopic = custom.some((s) => (s.status || 'not_started') === syllabusFilter);
+                }
+              }
+
+              // Agar filter active hai aur koi matching topic nahi → subject hide karo
+              if (syllabusFilter && !hasMatchingTopic) {
+                return '';
+              }
+              // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
+
               return `
               <div class="syl-subj">
                 <div class="syl-subj-head">
