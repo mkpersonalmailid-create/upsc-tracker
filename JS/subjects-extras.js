@@ -1,16 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Subjects Extras v7 (FINAL)
+   UPSC TRACKER — Subjects Extras v8 (FINAL)
    - Phase 1: Custom subjects category selector me dikhana
    - Phase 2: Edit, Delete (custom), Hide (default), Restore
    - Phase 3: Syllabus me custom subjects section + topics add
    - Phase 4: Syllabus section collapsible + direct delete button
    - Phase 5: Study page numbered step labels
+   - Phase 6: GS Mains split into Paper I/II/III/IV
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[subjects-extras] v7 loaded (FINAL)');
+  console.log('[subjects-extras] v8 loaded (FINAL — GS Mains split)');
 
   const CAT_MAP = {};
 
@@ -281,7 +282,6 @@
           .join('');
       }
 
-      // Wire Edit buttons
       grid.querySelectorAll('[data-subj-edit]').forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -295,7 +295,6 @@
         };
       });
 
-      // Wire Delete/Hide buttons
       grid.querySelectorAll('[data-subj-del]').forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -315,7 +314,7 @@
     console.log('[subjects-extras] patched: renderSubjects');
   }
 
-  /* ═══════════ PATCH 4: renderSyllabus (Collapsible Custom Section) ═══════════ */
+  /* ═══════════ PATCH 4: renderSyllabus ═══════════ */
   function patchRenderSyllabus() {
     const _orig = renderSyllabus;
     window.renderSyllabus = function () {
@@ -324,20 +323,21 @@
       const tree = document.getElementById('syllabusTree');
       if (!tree) return;
 
-      // Remove old custom section
       const old = document.getElementById('customSubjSylSection');
       if (old) old.remove();
 
-      // Get custom subjects
       const customSubjects = state.subjects.filter((s) => !isDefaultSubject(s.name) && !s.archived);
       if (!customSubjects.length) return;
 
-      // Collapse state from localStorage
       const isCollapsed = localStorage.getItem('customSylCollapsed') !== '0';
 
       const CAT_LABEL = {
         prelims: '🎯 GS Prelims',
         mains: '📚 GS Mains',
+        'mains-gs1': '📘 GS Mains · Paper I',
+        'mains-gs2': '📗 GS Mains · Paper II',
+        'mains-gs3': '📙 GS Mains · Paper III',
+        'mains-gs4': '📕 GS Mains · Paper IV',
         optional: '⭐ Optional',
         essay: '✍️ Essay',
         csat: '🧮 CSAT',
@@ -412,7 +412,6 @@
 
       tree.appendChild(section);
 
-      // ═══ Collapse toggle ═══
       section.querySelector('#customSylHeader').onclick = () => {
         const body = document.getElementById('customSylBody');
         const arrow = document.getElementById('customSylArrow');
@@ -424,7 +423,6 @@
         localStorage.setItem('customSylCollapsed', nowCollapsed ? '0' : '1');
       };
 
-      // ═══ Add Topic buttons ═══
       section.querySelectorAll('[data-add-custom-topic]').forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -432,7 +430,6 @@
         };
       });
 
-      // ═══ Delete Subject buttons ═══
       section.querySelectorAll('[data-del-custom-subj]').forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
@@ -440,7 +437,6 @@
         };
       });
 
-      // ═══ Status toggle ═══
       section.querySelectorAll('[data-cust-syl-toggle]').forEach((el) => {
         el.onclick = (e) => {
           e.stopPropagation();
@@ -455,7 +451,6 @@
         };
       });
 
-      // ═══ Delete topic ═══
       section.querySelectorAll('[data-cust-syl-del]').forEach((el) => {
         el.onclick = async (e) => {
           e.stopPropagation();
@@ -505,7 +500,6 @@
     const section = document.querySelector('.what-studying');
     if (!section) return;
 
-    // Remove old labels
     section.querySelectorAll('.step-label').forEach((el) => el.remove());
 
     const catChips = document.getElementById('categoryChips');
@@ -527,6 +521,131 @@
     });
 
     if (typeof attachRipples === 'function') attachRipples();
+  }
+
+  /* ═══════════ PATCH 6: GS Mains Split into Paper I/II/III/IV ═══════════ */
+
+  // ═══ Category chips — split GS Mains ═══
+  function patchRenderCategoryChips() {
+    window.renderCategoryChips = function () {
+      const container = document.getElementById('categoryChips');
+      if (!container) return;
+      const optional = state.profile.optional_subject || 'Optional';
+      const cats = [
+        { id: 'prelims', label: '🎯 GS Prelims', cls: 'c-prelims' },
+        { id: 'mains-gs1', label: '📘 GS Mains · Paper I', cls: 'c-mains' },
+        { id: 'mains-gs2', label: '📗 GS Mains · Paper II', cls: 'c-mains' },
+        { id: 'mains-gs3', label: '📙 GS Mains · Paper III', cls: 'c-mains' },
+        { id: 'mains-gs4', label: '📕 GS Mains · Paper IV', cls: 'c-mains' },
+        {
+          id: 'optional',
+          label: `⭐ Optional: ${optional.length > 20 ? optional.slice(0, 20) + '…' : optional}`,
+          cls: 'c-optional',
+        },
+        { id: 'essay', label: '✍️ Essay', cls: 'c-essay' },
+        { id: 'csat', label: '🧮 CSAT', cls: 'c-csat' },
+      ];
+      container.innerHTML = cats
+        .map(
+          (c) =>
+            `<button class="cat-chip ${c.cls} ${state.draft.category === c.id ? 'selected' : ''}" data-cat="${c.id}">${esc(c.label)}</button>`,
+        )
+        .join('');
+      container.querySelectorAll('[data-cat]').forEach(
+        (b) =>
+          (b.onclick = () => {
+            state.draft.category = b.dataset.cat;
+            state.draft.subject = null;
+            state.draft.topic = null;
+            if (typeof clearSelectionWarning === 'function') clearSelectionWarning();
+            window.renderCategoryChips();
+            if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
+            if (typeof renderTopicSelect === 'function') renderTopicSelect();
+          }),
+      );
+    };
+    try {
+      renderCategoryChips = window.renderCategoryChips;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: renderCategoryChips (GS split)');
+  }
+
+  // ═══ getSubjectsForCategory — handle new categories ═══
+  function patchGetSubjectsForMainsSplit() {
+    const _orig = window.getSubjectsForCategory;
+
+    window.getSubjectsForCategory = function (cat) {
+      if (!cat) return [];
+
+      // New GS Mains papers
+      if (cat === 'mains-gs1') return SYLLABUS['mains-gs1'].subjects.map((s) => s.name);
+      if (cat === 'mains-gs2') return SYLLABUS['mains-gs2'].subjects.map((s) => s.name);
+      if (cat === 'mains-gs3') return SYLLABUS['mains-gs3'].subjects.map((s) => s.name);
+      if (cat === 'mains-gs4') return SYLLABUS['mains-gs4'].subjects.map((s) => s.name);
+
+      // For legacy 'mains' and other cats — use original wrapper
+      const base = _orig.call(this, cat) || [];
+
+      const custom = Object.entries(CAT_MAP)
+        .filter(([_, c]) => c === cat)
+        .map(([n]) => n);
+
+      // Also: legacy 'mains' custom subjects appear in all 4 GS papers
+      const legacyMains = cat.startsWith('mains-gs')
+        ? Object.entries(CAT_MAP)
+            .filter(([_, c]) => c === 'mains')
+            .map(([n]) => n)
+        : [];
+
+      return [...new Set([...base, ...custom, ...legacyMains])];
+    };
+    try {
+      getSubjectsForCategory = window.getSubjectsForCategory;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: getSubjectsForCategory (mains split)');
+  }
+
+  // ═══ getTopicsForCategorySubject — handle new categories ═══
+  function patchGetTopicsForMainsSplit() {
+    window.getTopicsForCategorySubject = function (cat, subj) {
+      if (!cat || !subj) return [];
+
+      if (cat === 'optional') {
+        return [`${subj} — Paper I Topics`, `${subj} — Paper II Topics`, 'Custom topic (add in syllabus)'];
+      }
+      if (cat === 'essay') {
+        return SYLLABUS['mains-essay'].subjects.find((s) => s.name === subj)?.topics || [];
+      }
+
+      let papers = [];
+      if (cat === 'prelims') papers = ['prelims-gs1', 'prelims-csat'];
+      else if (cat === 'mains') papers = ['mains-gs1', 'mains-gs2', 'mains-gs3', 'mains-gs4'];
+      else if (cat === 'mains-gs1') papers = ['mains-gs1'];
+      else if (cat === 'mains-gs2') papers = ['mains-gs2'];
+      else if (cat === 'mains-gs3') papers = ['mains-gs3'];
+      else if (cat === 'mains-gs4') papers = ['mains-gs4'];
+      else if (cat === 'csat') papers = ['prelims-csat'];
+
+      const topics = [];
+      papers.forEach((p) => {
+        const s = SYLLABUS[p]?.subjects.find((x) => x.name === subj);
+        if (s) topics.push(...s.topics);
+      });
+      return topics;
+    };
+    try {
+      getTopicsForCategorySubject = window.getTopicsForCategorySubject;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: getTopicsForCategorySubject (mains split)');
+  }
+
+  // ═══ Migrate legacy draft.category='mains' to 'mains-gs1' ═══
+  function migrateLegacyMains() {
+    if (state.draft && state.draft.category === 'mains') {
+      state.draft.category = 'mains-gs1';
+      state.draft.subject = null;
+      state.draft.topic = null;
+    }
   }
 
   /* ═══════════ ADD TOPIC TO CUSTOM SUBJECT ═══════════ */
@@ -661,18 +780,23 @@
     section.querySelector('#restoreAllSubsBtn').onclick = restoreAllSubjects;
   }
 
+  /* ═══════════ SHARED CATS ARRAY (for modals) ═══════════ */
+  const SUBJECT_CATS = [
+    { id: 'prelims', label: '🎯 GS Prelims' },
+    { id: 'mains-gs1', label: '📘 GS Mains · Paper I' },
+    { id: 'mains-gs2', label: '📗 GS Mains · Paper II' },
+    { id: 'mains-gs3', label: '📙 GS Mains · Paper III' },
+    { id: 'mains-gs4', label: '📕 GS Mains · Paper IV' },
+    { id: 'optional', label: '⭐ Optional' },
+    { id: 'essay', label: '✍️ Essay' },
+    { id: 'csat', label: '🧮 CSAT' },
+  ];
+
   /* ═══════════ NEW SUBJECT MODAL ═══════════ */
   function openNewSubjectModal() {
     if (document.querySelector('#modalRoot.active')) return;
 
     const COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#10B981', '#6366F1', '#EF4444'];
-    const CATS = [
-      { id: 'prelims', label: '🎯 GS Prelims' },
-      { id: 'mains', label: '📚 GS Mains' },
-      { id: 'optional', label: '⭐ Optional' },
-      { id: 'essay', label: '✍️ Essay' },
-      { id: 'csat', label: '🧮 CSAT' },
-    ];
 
     const body = `
       <div class="field">
@@ -682,7 +806,7 @@
       <div class="field">
         <label>Category</label>
         <select id="newSubjCategory">
-          ${CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
+          ${SUBJECT_CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
         </select>
         <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
           Ye subject is category ke selector me dikhega (Study / Manual Log / Pomodoro / Syllabus).
@@ -778,13 +902,6 @@
     }
 
     const COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#10B981', '#6366F1', '#EF4444'];
-    const CATS = [
-      { id: 'prelims', label: '🎯 GS Prelims' },
-      { id: 'mains', label: '📚 GS Mains' },
-      { id: 'optional', label: '⭐ Optional' },
-      { id: 'essay', label: '✍️ Essay' },
-      { id: 'csat', label: '🧮 CSAT' },
-    ];
 
     const currentColor = subj.color || getSubjectColor(oldName);
     const currentCat = subj.category || CAT_MAP[oldName] || 'prelims';
@@ -797,7 +914,7 @@
       <div class="field">
         <label>Category</label>
         <select id="editSubjCategory">
-          ${CATS.map((c) => `<option value="${c.id}" ${c.id === currentCat ? 'selected' : ''}>${c.label}</option>`).join('')}
+          ${SUBJECT_CATS.map((c) => `<option value="${c.id}" ${c.id === currentCat ? 'selected' : ''}>${c.label}</option>`).join('')}
         </select>
       </div>
       <div class="field">
@@ -1051,6 +1168,10 @@
       patchRenderSubjects();
       patchRenderSyllabus();
       patchStudyView();
+      patchRenderCategoryChips();
+      patchGetSubjectsForMainsSplit();
+      patchGetTopicsForMainsSplit();
+      migrateLegacyMains();
       pollForUser();
       if (supa && supa.auth && supa.auth.onAuthStateChange) {
         supa.auth.onAuthStateChange((event, session) => {
