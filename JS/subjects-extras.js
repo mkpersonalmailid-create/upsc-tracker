@@ -1,15 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Subjects Extras (Phase 1 + 2)
+   UPSC TRACKER — Subjects Extras (Phase 1 + 2) — v5 FIXED
    Phase 1: Custom subjects category selector me dikhana
    Phase 2: Edit, Delete (custom), Hide (default), Restore
+   Fix v5: Default subjects ko "Hide" treat karo (delete nahi)
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[subjects-extras] v4 loaded (Phase 1 + 2)');
+  console.log('[subjects-extras] v5 loaded (fixed default-subject handling)');
 
   const CAT_MAP = {};
+
+  /* ═══════════ HELPER: Check if subject is from SYLLABUS (default) ═══════════ */
+  function isDefaultSubject(name) {
+    return Object.values(SYLLABUS).some((p) => p.subjects.some((sub) => sub.name === name));
+  }
 
   /* ═══════════ CSS INJECTION ═══════════ */
   function injectCSS() {
@@ -185,7 +191,9 @@
             if (c.rev2 > 0) badges.push(`<span class="pill ts-rev2" title="${c.rev2} topics">🔵 Rev 2</span>`);
             if (c.rev3 > 0) badges.push(`<span class="pill ts-rev3" title="${c.rev3} topics">🔵 Rev 3</span>`);
 
-            const isCustom = state.subjects.some((s) => s.name === name);
+            // ✅ FIX: subject is "custom" only if it's in state.subjects AND NOT in SYLLABUS
+            const isDefault = isDefaultSubject(name);
+            const isCustom = state.subjects.some((s) => s.name === name) && !isDefault;
 
             return `<div class="card subject-card" style="border-left:4px solid ${getSubjectColor(name)}">
               <div class="subject-card-actions">
@@ -352,6 +360,11 @@
               toast('Subject already exists', 'err');
               return;
             }
+            // Block creating subject with same name as default
+            if (isDefaultSubject(name)) {
+              toast('This name is already a default subject. Choose another.', 'err', 4000);
+              return;
+            }
 
             const subj = { id: uuid(), name, color: selectedColor, category, archived: false };
             state.subjects.push(subj);
@@ -460,7 +473,6 @@
             }
 
             const nameChanged = newName !== oldName;
-            const catChanged = newCat !== currentCat;
 
             // Update local subject
             subj.name = newName;
@@ -539,7 +551,11 @@
 
   /* ═══════════ DELETE (custom) / HIDE (default) ═══════════ */
   async function confirmDeleteOrHide(name, isCustom) {
-    if (isCustom) {
+    // ✅ Extra safety: force isCustom=false if subject is in SYLLABUS
+    const actuallyCustom = isCustom && !isDefaultSubject(name);
+
+    if (actuallyCustom) {
+      // ═══ CUSTOM SUBJECT → HARD DELETE ═══
       const ok = await customConfirm({
         title: 'Delete Subject?',
         message: `"${name}" will be permanently deleted. Sessions and syllabus entries will remain in your history but the subject name will become orphaned.`,
@@ -566,6 +582,7 @@
       if (state.view === 'subjects') window.renderSubjects();
       if (typeof renderAll === 'function') renderAll();
     } else {
+      // ═══ DEFAULT SUBJECT → SOFT HIDE ═══
       const ok = await customConfirm({
         title: 'Hide Subject?',
         message: `"${name}" will be hidden from your Subjects page. You can restore it anytime from the "Hidden Subjects" section below.`,
@@ -603,7 +620,7 @@
     if (state.view === 'subjects') window.renderSubjects();
   }
 
-  /* ═══════════ LOAD CATEGORIES FROM DB ═══════════ */
+  /* ═══════════ LOAD CATEGORIES FROM DB + DUPLICATE CLEANUP ═══════════ */
   function pollForUser() {
     if (state.user) {
       loadCustomCategories();
@@ -615,17 +632,27 @@
   async function loadCustomCategories() {
     if (!supa || !state.user) return;
     try {
-      const { data, error } = await supa.from('subjects').select('name, category').eq('user_id', state.user.id);
+      const { data, error } = await supa.from('subjects').select('id, name, category').eq('user_id', state.user.id);
       if (error) {
         console.warn('[subjects-extras] DB error:', error.message);
         return;
       }
       if (data?.length) {
-        data.forEach((s) => {
+        for (const s of data) {
+          // ✅ Cleanup: if it's a default subject name, remove from DB + state.subjects
+          if (isDefaultSubject(s.name)) {
+            console.warn('[subjects-extras] removing duplicate of default subject:', s.name);
+            try {
+              await supa.from('subjects').delete().eq('id', s.id);
+            } catch (e) {}
+            // Remove from local state
+            state.subjects = state.subjects.filter((x) => x.name !== s.name);
+            continue;
+          }
           if (s.category) CAT_MAP[s.name] = s.category;
-        });
+        }
       }
-      console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'subjects');
+      console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'custom subjects');
     } catch (e) {
       console.warn('[subjects-extras] load error:', e);
     }
