@@ -299,30 +299,37 @@
     const accClass = acc >= 0.7 ? 'good' : acc >= 0.5 ? 'mid' : 'bad';
     const typeObj = TEST_TYPES.find((x) => x.id === t.test_type) || TEST_TYPES[1];
     const catLabel = CAT_OPTIONS.find((c) => c.id === t.category)?.label || '';
+    const totalMarks = t.total_marks || 0;
+    const score = t.score || 0;
 
     const row = document.createElement('div');
     row.className = 'tt-record';
     row.style.setProperty('--tc', typeObj.color);
 
     row.innerHTML = `
-      <div class="tt-record-body">
-        <div class="tt-record-title">${escHtml(t.name || 'Untitled Test')}</div>
-        <div class="tt-record-meta">
-          <span class="tt-chip" style="background:${typeObj.color}22;color:${typeObj.color}">${typeObj.label}</span>
-          ${catLabel ? `<span class="tt-chip">${escHtml(catLabel)}</span>` : ''}
-          ${t.subject ? `<span class="tt-chip">📚 ${escHtml(t.subject)}</span>` : ''}
-          ${t.topic ? `<span class="tt-chip">📖 ${escHtml(t.topic)}</span>` : ''}
-          <span class="tt-chip">📅 ${fmtDate(t.date)}</span>
-          ${t.time_taken ? `<span class="tt-chip">⏱ ${t.time_taken}m</span>` : ''}
-        </div>
+    <div class="tt-record-body">
+      <div class="tt-record-title">${escHtml(t.name || 'Untitled Test')}</div>
+      <div class="tt-record-meta">
+        <span class="tt-chip" style="background:${typeObj.color}22;color:${typeObj.color}">${typeObj.label}</span>
+        ${catLabel ? `<span class="tt-chip">${escHtml(catLabel)}</span>` : ''}
+        ${t.subject ? `<span class="tt-chip">📚 ${escHtml(t.subject)}</span>` : ''}
+        ${t.topic ? `<span class="tt-chip">📖 ${escHtml(t.topic)}</span>` : ''}
+        <span class="tt-chip">📅 ${fmtDate(t.date)}</span>
+        ${t.time_taken ? `<span class="tt-chip">⏱ ${t.time_taken}m</span>` : ''}
       </div>
-      <div class="tt-record-stats">
-        <div class="tt-accuracy ${accClass}">${t.attempted ? pct(acc) : '—'}</div>
-        <div class="tt-score-sub">${t.correct || 0}/${t.attempted || 0} correct</div>
-        ${t.total_marks ? `<div class="tt-score-sub">Score: ${t.score || 0}/${t.total_marks}</div>` : ''}
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:.72rem">
+        <span style="color:var(--emerald);font-weight:800">✓ ${t.correct || 0}</span>
+        <span style="color:var(--red);font-weight:800">✗ ${t.incorrect || 0}</span>
+        <span style="color:var(--text-3);font-weight:700">○ ${t.unattempted || 0}</span>
       </div>
-      <button class="tt-del" data-tt-del="${t.id}" title="Delete">✕</button>
-    `;
+    </div>
+    <div class="tt-record-stats">
+      <div class="tt-accuracy ${accClass}">${t.attempted ? pct(acc) : '—'}</div>
+      <div class="tt-score-sub">${t.correct || 0}/${t.attempted || 0} correct</div>
+      ${totalMarks ? `<div class="tt-score-sub" style="font-weight:800;color:${score >= totalMarks * 0.5 ? 'var(--emerald)' : score >= 0 ? 'var(--amber)' : 'var(--red)'}">${score.toFixed(1)} / ${totalMarks}</div>` : ''}
+    </div>
+    <button class="tt-del" data-tt-del="${t.id}" title="Delete">✕</button>
+  `;
 
     setTimeout(() => {
       row.querySelector('[data-tt-del]').onclick = () => deleteTestRecord(t.id);
@@ -330,7 +337,6 @@
 
     return row;
   }
-
   /* ═══════════════ SUBJECT ACCURACY ═══════════════ */
   function buildSubjectAccuracy(records) {
     const bySubj = {};
@@ -595,68 +601,98 @@
   }
 
   /* ═══════════════ OPEN ADD/EDIT MODAL ═══════════════ */
+  /* ═══════════════ OPEN ADD/EDIT MODAL ═══════════════ */
   function openTestModal() {
-    const body = `
-      <div class="field">
-        <label>Test Name</label>
-        <input type="text" id="ttName" placeholder="e.g. Vision Prelims Mock 1 / UPSC 2023 GS Paper I" maxlength="150">
-      </div>
+    const NEGATIVE_PRESETS = [
+      { id: 'upsc', label: '🎯 UPSC Prelims (1/3)', value: 0.66 },
+      { id: 'half', label: '½ Half mark', value: 1 },
+      { id: 'full', label: '1 Full mark', value: 2 },
+      { id: 'none', label: '❌ No negative', value: 0 },
+      { id: 'custom', label: '⚙️ Custom', value: -1 },
+    ];
 
+    const body = `
+    <div class="field">
+      <label>Test Name</label>
+      <input type="text" id="ttName" placeholder="e.g. Vision Prelims Mock 1 / UPSC 2023 GS Paper I" maxlength="150">
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label>Type</label>
+        <select id="ttTestType">
+          ${TEST_TYPES.map((t) => `<option value="${t.id}">${t.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="ttDate" value="${todayKey()}">
+      </div>
+    </div>
+
+    <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:4px">
+      <div style="font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px">🎯 Link to Category / Subject</div>
       <div class="form-grid">
         <div class="field">
-          <label>Type</label>
-          <select id="ttTestType">
-            ${TEST_TYPES.map((t) => `<option value="${t.id}">${t.label}</option>`).join('')}
+          <label>Category</label>
+          <select id="ttCat">
+            ${CAT_OPTIONS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
           </select>
         </div>
         <div class="field">
-          <label>Date</label>
-          <input type="date" id="ttDate" value="${todayKey()}">
+          <label>Subject</label>
+          <select id="ttSubj" disabled><option value="">— Select category first —</option></select>
         </div>
       </div>
+      <div class="field">
+        <label>Topic (optional)</label>
+        <select id="ttTopic" disabled><option value="">— Select subject first —</option></select>
+      </div>
+    </div>
 
-      <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-top:4px">
-        <div style="font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px">🎯 Link to Category / Subject</div>
-        <div class="form-grid">
-          <div class="field">
-            <label>Category</label>
-            <select id="ttCat">
-              ${CAT_OPTIONS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
-            </select>
-          </div>
-          <div class="field">
-            <label>Subject</label>
-            <select id="ttSubj" disabled><option value="">— Select category first —</option></select>
-          </div>
+    <!-- ═══ Marks Setup ═══ -->
+    <div style="background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.28);border-radius:12px;padding:14px;margin-top:4px">
+      <div style="font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#C4B5FD;margin-bottom:10px">📊 Marks Setup</div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Marks per Question</label>
+          <input type="number" id="ttMarksPerQ" min="0.5" step="0.5" value="2">
         </div>
         <div class="field">
-          <label>Topic (optional)</label>
-          <select id="ttTopic" disabled><option value="">— Select subject first —</option></select>
+          <label>Negative Marking</label>
+          <select id="ttNegative">
+            ${NEGATIVE_PRESETS.map((p) => `<option value="${p.id}" data-val="${p.value}">${p.label}</option>`).join('')}
+          </select>
         </div>
       </div>
-
-      <div class="form-grid form-grid-3" style="margin-top:6px">
-        <div class="field"><label>Total Qs</label><input type="number" id="ttTotal" min="0" value="100"></div>
-        <div class="field"><label>Attempted</label><input type="number" id="ttAttempted" min="0" value="0"></div>
-        <div class="field"><label>Correct</label><input type="number" id="ttCorrect" min="0" value="0"></div>
+      <div class="field" id="ttCustomNegWrap" style="display:none">
+        <label>Custom Negative Value (per wrong)</label>
+        <input type="number" id="ttCustomNeg" min="0" step="0.01" value="0.66">
       </div>
+    </div>
 
-      <div class="form-grid form-grid-3">
-        <div class="field"><label>Total Marks</label><input type="number" id="ttTotalMarks" min="0" value="0"></div>
-        <div class="field"><label>Score</label><input type="number" id="ttScore" min="0" value="0"></div>
-        <div class="field"><label>Time (min)</label><input type="number" id="ttTime" min="0" value="120"></div>
-      </div>
+    <!-- ═══ Question Counts ═══ -->
+    <div class="form-grid form-grid-3" style="margin-top:6px">
+      <div class="field"><label>Total Qs</label><input type="number" id="ttTotal" min="0" value="100"></div>
+      <div class="field"><label>✓ Correct</label><input type="number" id="ttCorrect" min="0" value="0" style="border-color:rgba(16,185,129,.5)"></div>
+      <div class="field"><label>✗ Wrong</label><input type="number" id="ttWrong" min="0" value="0" style="border-color:rgba(239,68,68,.5)"></div>
+    </div>
 
-      <div style="padding:10px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.28);border-radius:10px;font-size:.78rem;color:#C4B5FD;line-height:1.6;margin-top:6px">
-        <strong style="color:#E9D5FF">💡 Live calc:</strong> Incorrect = Attempted − Correct · Accuracy = Correct / Attempted
-        <div id="ttLiveCalc" style="margin-top:6px;font-family:var(--mono);font-size:.72rem;color:#E9D5FF">—</div>
-      </div>
+    <div class="form-grid">
+      <div class="field"><label>Time (min)</label><input type="number" id="ttTime" min="0" value="120"></div>
+      <div class="field"><label>Score (auto)</label><input type="number" id="ttScore" step="0.01" readonly style="opacity:.75;font-weight:800"></div>
+    </div>
 
-      <div class="field">
-        <label>Notes (optional)</label>
-        <textarea id="ttNotes" rows="3" placeholder="Mistakes, learnings, weak areas…"></textarea>
-      </div>
-    `;
+    <!-- ═══ Live Calc Box ═══ -->
+    <div id="ttLiveCalc" style="padding:14px;background:rgba(0,0,0,.28);border:1px solid rgba(168,85,247,.25);border-radius:12px;font-size:.82rem;line-height:1.7;font-family:var(--mono)">
+      Loading…
+    </div>
+
+    <div class="field">
+      <label>Notes (optional)</label>
+      <textarea id="ttNotes" rows="3" placeholder="Mistakes, learnings, weak areas…"></textarea>
+    </div>
+  `;
 
     openModal(
       modalShell({
@@ -664,14 +700,18 @@
         subtitle: 'PYQ / Mock / Sectional / Full',
         body,
         actions: `<button class="btn btn-secondary" data-close>Cancel</button>
-          <button class="btn btn-primary" id="ttSaveBtn">Save Record</button>`,
+        <button class="btn btn-primary" id="ttSaveBtn">Save Record</button>`,
       }),
       {
         onMount() {
           const catSel = document.getElementById('ttCat');
           const subjSel = document.getElementById('ttSubj');
           const topicSel = document.getElementById('ttTopic');
+          const negSel = document.getElementById('ttNegative');
+          const customWrap = document.getElementById('ttCustomNegWrap');
+          const customInput = document.getElementById('ttCustomNeg');
 
+          /* ═══ Category → Subject → Topic cascade ═══ */
           function populateSubjects(cat, preserveSubj) {
             if (!cat) {
               subjSel.innerHTML = '<option value="">— Select category first —</option>';
@@ -712,29 +752,98 @@
           };
           subjSel.onchange = () => populateTopics(catSel.value, subjSel.value, '');
 
-          // Live calc
-          function updateCalc() {
-            const att = parseInt(document.getElementById('ttAttempted').value, 10) || 0;
-            const cor = parseInt(document.getElementById('ttCorrect').value, 10) || 0;
-            const inc = Math.max(0, att - cor);
-            const acc = att ? ((cor / att) * 100).toFixed(1) : '0.0';
-            document.getElementById('ttLiveCalc').textContent = `Incorrect: ${inc} · Accuracy: ${acc}%`;
+          /* ═══ Negative marking toggle ═══ */
+          negSel.onchange = () => {
+            const isCustom = negSel.value === 'custom';
+            customWrap.style.display = isCustom ? 'flex' : 'none';
+            updateCalc();
+          };
+
+          /* ═══ Live calculation ═══ */
+          function getNegativeValue() {
+            const opt = negSel.options[negSel.selectedIndex];
+            const presetVal = parseFloat(opt.dataset.val);
+            if (presetVal >= 0) return presetVal;
+            return parseFloat(customInput.value) || 0;
           }
-          ['ttAttempted', 'ttCorrect'].forEach((id) => {
-            document.getElementById(id).oninput = updateCalc;
+
+          function updateCalc() {
+            const total = parseInt(document.getElementById('ttTotal').value, 10) || 0;
+            const correct = parseInt(document.getElementById('ttCorrect').value, 10) || 0;
+            const wrong = parseInt(document.getElementById('ttWrong').value, 10) || 0;
+            const marksPerQ = parseFloat(document.getElementById('ttMarksPerQ').value) || 2;
+            const negVal = getNegativeValue();
+
+            const attempted = correct + wrong;
+            const unattempted = Math.max(0, total - attempted);
+            const accuracy = attempted ? (correct / attempted) * 100 : 0;
+            const totalMarks = total * marksPerQ;
+            const rawScore = correct * marksPerQ;
+            const penalty = wrong * negVal;
+            const finalScore = Math.round((rawScore - penalty) * 100) / 100;
+
+            // Clamp
+            const cCorrect = Math.min(correct, total);
+            const cWrong = Math.min(wrong, total - cCorrect);
+
+            // Auto-fill score field
+            document.getElementById('ttScore').value = finalScore.toFixed(2);
+
+            // Color for accuracy
+            const accColor = accuracy >= 70 ? 'var(--emerald)' : accuracy >= 50 ? 'var(--amber)' : 'var(--red)';
+            const scoreColor =
+              finalScore >= totalMarks * 0.5 ? 'var(--emerald)' : finalScore >= 0 ? 'var(--amber)' : 'var(--red)';
+
+            const calcEl = document.getElementById('ttLiveCalc');
+            calcEl.innerHTML = `
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px 16px">
+              <div>Attempted: <strong style="color:#C4B5FD">${attempted}</strong></div>
+              <div>Unattempted: <strong style="color:var(--text-3)">${unattempted}</strong></div>
+              <div>Accuracy: <strong style="color:${accColor}">${accuracy.toFixed(1)}%</strong></div>
+              <div>Total Marks: <strong style="color:var(--text-2)">${totalMarks}</strong></div>
+              <div style="color:var(--emerald)">+ ${rawScore.toFixed(2)} (correct)</div>
+              <div style="color:var(--red)">− ${penalty.toFixed(2)} (negative)</div>
+            </div>
+            <div style="margin-top:8px;padding-top:8px;border-top:1px dashed rgba(168,85,247,.3);font-size:1rem">
+              🎯 Final Score: <strong style="color:${scoreColor};font-size:1.1rem">${finalScore.toFixed(2)}</strong>
+              <span style="font-size:.75rem;color:var(--text-3)"> / ${totalMarks}</span>
+            </div>
+          `;
+
+            return {
+              total,
+              correct: cCorrect,
+              wrong: cWrong,
+              unattempted,
+              attempted,
+              accuracy,
+              totalMarks,
+              finalScore,
+              marksPerQ,
+              negVal,
+            };
+          }
+
+          /* ═══ Wire all input events ═══ */
+          ['ttTotal', 'ttCorrect', 'ttWrong', 'ttMarksPerQ', 'ttCustomNeg'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.oninput = updateCalc;
           });
           updateCalc();
 
+          /* ═══ Save Handler ═══ */
           document.getElementById('ttSaveBtn').onclick = async () => {
             const name = document.getElementById('ttName').value.trim();
             if (!name) {
               toast('Please enter a test name', 'err');
               return;
             }
-            const attempted = parseInt(document.getElementById('ttAttempted').value, 10) || 0;
-            const correct = parseInt(document.getElementById('ttCorrect').value, 10) || 0;
-            if (correct > attempted) {
-              toast('Correct cannot exceed Attempted', 'err');
+
+            const calc = updateCalc();
+            const { total, correct, wrong, unattempted, attempted, totalMarks, finalScore, marksPerQ, negVal } = calc;
+
+            if (attempted > total) {
+              toast('Attempted cannot exceed Total', 'err');
               return;
             }
 
@@ -746,12 +855,15 @@
               category: catSel.value || null,
               subject: subjSel.value || null,
               topic: topicSel.value || null,
-              total_questions: parseInt(document.getElementById('ttTotal').value, 10) || 0,
+              total_questions: total,
               attempted,
               correct,
-              incorrect: Math.max(0, attempted - correct),
-              total_marks: parseFloat(document.getElementById('ttTotalMarks').value) || 0,
-              score: parseFloat(document.getElementById('ttScore').value) || 0,
+              incorrect: wrong,
+              unattempted,
+              marks_per_question: marksPerQ,
+              negative_marking: negVal,
+              total_marks: totalMarks,
+              score: finalScore,
               time_taken: parseInt(document.getElementById('ttTime').value, 10) || 0,
               notes: document.getElementById('ttNotes').value.trim(),
               created_at: new Date().toISOString(),
@@ -785,7 +897,6 @@
       },
     );
   }
-
   /* ═══════════════ DELETE ═══════════════ */
   async function deleteTestRecord(id) {
     const rec = (state.testRecords || []).find((x) => x.id === id);
@@ -837,6 +948,8 @@
         attempted: x.attempted || 0,
         correct: x.correct || 0,
         incorrect: x.incorrect || 0,
+        marks_per_question: x.marks_per_question || 2, // ← NAYA
+        negative_marking: x.negative_marking || 0.66,
         total_marks: x.total_marks || 0,
         score: x.score || 0,
         time_taken: x.time_taken || 0,
