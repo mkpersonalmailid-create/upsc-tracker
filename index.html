@@ -56,9 +56,7 @@
       rel="stylesheet"
     />
     <style>
-      /* ═══════════════════════════════════════════════
-   ROOT
-   ═══════════════════════════════════════════════ */
+      /* ═══════════ RESET ═══════════ */
       * {
         margin: 0;
         padding: 0;
@@ -66,19 +64,18 @@
         -webkit-tap-highlight-color: transparent;
       }
       :root {
-        --bg: #0a0612;
-        --bg-2: #120a1e;
-        --card: #171026;
-        --card-2: #1f1633;
-        --border: #2a1e42;
-        --border-2: #3d2c5e;
+        --bg: #08040f;
+        --bg-2: #0f0818;
+        --card: #141024;
+        --card-2: #1c1630;
+        --border: rgba(255, 255, 255, 0.06);
+        --border-2: rgba(255, 255, 255, 0.12);
         --text: #ffffff;
-        --text-2: #b8a8d9;
-        --text-3: #6e5f8c;
-        --pink: #ec4899;
+        --text-2: #a99bc7;
+        --text-3: #645682;
         --purple: #a855f7;
+        --pink: #ec4899;
         --violet: #8b5cf6;
-        --indigo: #6366f1;
         --orange: #f97316;
         --amber: #fbbf24;
         --teal: #14b8a6;
@@ -88,15 +85,15 @@
         --red: #ef4444;
         --grad-1: linear-gradient(135deg, #8b5cf6, #ec4899);
         --grad-2: linear-gradient(135deg, #f97316, #fbbf24);
-        --grad-3: linear-gradient(135deg, #14b8a6, #06b6d4);
         --grad-hero: linear-gradient(135deg, #8b5cf6 0%, #ec4899 50%, #f97316 100%);
-        --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.55);
+        --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
         --ios-ease: cubic-bezier(0.32, 0.72, 0, 1);
         --ios-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --max: 1400px;
       }
       html {
         scroll-behavior: smooth;
-        scroll-padding-top: 80px;
+        scroll-padding-top: 90px;
       }
       body {
         font-family:
@@ -106,11 +103,11 @@
           sans-serif;
         background: var(--bg);
         color: var(--text);
-        line-height: 1.6;
+        line-height: 1.55;
         -webkit-font-smoothing: antialiased;
         overflow-x: hidden;
         position: relative;
-        font-feature-settings: 'cv11', 'ss01';
+        font-feature-settings: 'cv11', 'ss01', 'ss03';
       }
       body::before {
         content: '';
@@ -119,8 +116,8 @@
         pointer-events: none;
         z-index: 0;
         background:
-          radial-gradient(circle at 15% 20%, rgba(168, 85, 247, 0.12), transparent 45%),
-          radial-gradient(circle at 85% 80%, rgba(236, 72, 153, 0.1), transparent 45%),
+          radial-gradient(circle at 10% 15%, rgba(168, 85, 247, 0.15), transparent 40%),
+          radial-gradient(circle at 90% 85%, rgba(236, 72, 153, 0.12), transparent 40%),
           radial-gradient(circle at 50% 50%, rgba(249, 115, 22, 0.05), transparent 60%);
       }
       a {
@@ -138,15 +135,19 @@
         background: none;
         color: inherit;
       }
-      .container {
-        max-width: 1240px;
+      .wrap {
+        max-width: var(--max);
         margin: 0 auto;
-        padding: 0 24px;
+        padding: 0 32px;
         position: relative;
         z-index: 1;
       }
-      .hidden {
-        display: none !important;
+      .wrap-narrow {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 32px;
+        position: relative;
+        z-index: 1;
       }
       ::selection {
         background: rgba(168, 85, 247, 0.4);
@@ -169,14 +170,12 @@
       @keyframes fadeIn {
         from {
           opacity: 0;
-          transform: translateY(8px);
         }
         to {
           opacity: 1;
-          transform: none;
         }
       }
-      @keyframes fadeInUp {
+      @keyframes fadeUp {
         from {
           opacity: 0;
           transform: translateY(40px);
@@ -186,20 +185,20 @@
           transform: translateY(0);
         }
       }
-      @keyframes fadeInDown {
+      @keyframes fadeDown {
         from {
           opacity: 0;
-          transform: translateY(-24px);
+          transform: translateY(-20px);
         }
         to {
           opacity: 1;
           transform: translateY(0);
         }
       }
-      @keyframes fadeInScale {
+      @keyframes scaleIn {
         from {
           opacity: 0;
-          transform: scale(0.94);
+          transform: scale(0.96);
         }
         to {
           opacity: 1;
@@ -214,16 +213,7 @@
         }
         50% {
           opacity: 0.55;
-          transform: scale(1.2);
-        }
-      }
-      @keyframes float {
-        0%,
-        100% {
-          transform: translateY(0);
-        }
-        50% {
-          transform: translateY(-12px);
+          transform: scale(1.15);
         }
       }
       @keyframes floatSlow {
@@ -232,7 +222,7 @@
           transform: translate(0, 0) rotate(0);
         }
         50% {
-          transform: translate(40px, -30px) rotate(3deg);
+          transform: translate(50px, -40px) rotate(4deg);
         }
       }
       @keyframes gradientShift {
@@ -247,10 +237,10 @@
       @keyframes dotPulse {
         0%,
         100% {
-          box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+          box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.6);
         }
         50% {
-          box-shadow: 0 0 0 8px rgba(251, 191, 36, 0);
+          box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
         }
       }
       @keyframes barGrow {
@@ -282,14 +272,12 @@
           opacity: 1;
         }
       }
-      @keyframes countUp {
+      @keyframes marquee {
         from {
-          opacity: 0;
-          transform: translateY(6px);
+          transform: translateX(0);
         }
         to {
-          opacity: 1;
-          transform: none;
+          transform: translateX(-50%);
         }
       }
 
@@ -298,7 +286,7 @@
         position: fixed;
         top: 0;
         left: 0;
-        height: 3px;
+        height: 2px;
         z-index: 9999;
         background: var(--grad-hero);
         background-size: 200% 100%;
@@ -318,32 +306,32 @@
       .bg-orbs .orb {
         position: absolute;
         border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.5;
+        filter: blur(100px);
+        opacity: 0.4;
       }
       .bg-orbs .orb-1 {
-        top: -10%;
-        left: -10%;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 70%);
-        animation: floatSlow 20s ease-in-out infinite;
-      }
-      .bg-orbs .orb-2 {
-        top: 30%;
-        right: -15%;
+        top: -15%;
+        left: -15%;
         width: 700px;
         height: 700px;
-        background: radial-gradient(circle, rgba(236, 72, 153, 0.3), transparent 70%);
-        animation: floatSlow 25s ease-in-out infinite reverse;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.4), transparent 70%);
+        animation: floatSlow 25s ease-in-out infinite;
+      }
+      .bg-orbs .orb-2 {
+        top: 40%;
+        right: -20%;
+        width: 800px;
+        height: 800px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.35), transparent 70%);
+        animation: floatSlow 30s ease-in-out infinite reverse;
       }
       .bg-orbs .orb-3 {
-        bottom: -10%;
-        left: 20%;
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, rgba(249, 115, 22, 0.25), transparent 70%);
-        animation: floatSlow 22s ease-in-out infinite;
+        bottom: -15%;
+        left: 30%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(249, 115, 22, 0.3), transparent 70%);
+        animation: floatSlow 28s ease-in-out infinite;
       }
 
       /* ═══ NAVBAR ═══ */
@@ -353,17 +341,17 @@
         left: 0;
         right: 0;
         z-index: 100;
-        padding: 16px 0;
-        background: rgba(10, 6, 18, 0.6);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        padding: 18px 0;
+        background: rgba(8, 4, 15, 0.5);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
         border-bottom: 1px solid transparent;
         transition: all 0.4s var(--ios-ease);
       }
       .navbar.scrolled {
-        background: rgba(10, 6, 18, 0.92);
+        background: rgba(8, 4, 15, 0.88);
         border-bottom-color: var(--border);
-        padding: 10px 0;
+        padding: 12px 0;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
       }
       .nav-inner {
@@ -374,9 +362,9 @@
       .nav-logo {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         font-weight: 800;
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         letter-spacing: -0.02em;
         transition: transform 0.3s var(--ios-spring);
       }
@@ -384,57 +372,44 @@
         transform: scale(1.02);
       }
       .nav-logo img {
-        width: 36px;
-        height: 36px;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
       }
       .nav-links {
         display: flex;
         align-items: center;
-        gap: 28px;
+        gap: 36px;
       }
       .nav-links a {
-        font-size: 0.88rem;
+        font-size: 0.9rem;
         color: var(--text-2);
         font-weight: 600;
-        transition: color 0.25s var(--ios-smooth);
+        transition: color 0.25s var(--ios-ease);
         position: relative;
       }
       .nav-links a:not(.nav-cta):hover {
         color: var(--text);
       }
-      .nav-links a:not(.nav-cta)::after {
-        content: '';
-        position: absolute;
-        bottom: -4px;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background: var(--grad-1);
-        transition: width 0.35s var(--ios-ease);
-      }
-      .nav-links a:not(.nav-cta):hover::after {
-        width: 100%;
-      }
       .nav-cta {
         background: var(--grad-1);
         color: #fff !important;
-        padding: 10px 20px;
-        border-radius: 11px;
+        padding: 11px 22px;
+        border-radius: 12px;
         font-weight: 800;
-        font-size: 0.85rem;
-        box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
+        font-size: 0.86rem;
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
         transition: all 0.3s var(--ios-spring);
         position: relative;
         overflow: hidden;
       }
       .nav-cta:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 26px rgba(236, 72, 153, 0.5);
+        box-shadow: 0 10px 30px rgba(236, 72, 153, 0.55);
         filter: brightness(1.08);
       }
-      @media (max-width: 900px) {
+      @media (max-width: 960px) {
         .nav-links a:not(.nav-cta) {
           display: none;
         }
@@ -442,45 +417,44 @@
 
       /* ═══ HERO ═══ */
       .hero {
-        padding: 170px 0 80px;
+        padding: 190px 0 100px;
         position: relative;
         z-index: 1;
-      }
-      .hero-inner {
         text-align: center;
-        max-width: 960px;
-        margin: 0 auto;
       }
-      .hero-badge {
+      .hero-eyebrow {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(236, 72, 153, 0.1));
-        border: 1px solid rgba(251, 191, 36, 0.35);
+        gap: 10px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(236, 72, 153, 0.08));
+        border: 1px solid rgba(251, 191, 36, 0.3);
         color: var(--amber);
-        padding: 8px 18px;
+        padding: 9px 20px;
         border-radius: 50px;
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         font-weight: 800;
         letter-spacing: 0.03em;
-        margin-bottom: 28px;
-        animation: fadeInDown 0.8s var(--ios-ease) both;
+        margin-bottom: 32px;
+        animation: fadeDown 0.8s var(--ios-ease) both;
         backdrop-filter: blur(10px);
       }
-      .hero-badge .pulse-dot {
-        width: 6px;
-        height: 6px;
+      .hero-eyebrow .dot {
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
         background: var(--amber);
         animation: dotPulse 1.8s ease-in-out infinite;
       }
       .hero h1 {
-        font-size: clamp(2.4rem, 6vw, 4.5rem);
+        font-size: clamp(3rem, 8vw, 6.5rem);
         font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 1.05;
-        margin-bottom: 24px;
-        animation: fadeInUp 0.9s var(--ios-ease) 0.1s both;
+        letter-spacing: -0.045em;
+        line-height: 0.98;
+        margin-bottom: 32px;
+        animation: fadeUp 1s var(--ios-ease) 0.1s both;
+      }
+      .hero h1 .line {
+        display: block;
       }
       .hero h1 .grad {
         background: var(--grad-hero);
@@ -490,30 +464,35 @@
         background-clip: text;
         animation: gradientShift 4s ease infinite;
       }
-      .hero p.sub {
-        font-size: clamp(1rem, 2vw, 1.15rem);
+      .hero-sub {
+        font-size: clamp(1.05rem, 1.8vw, 1.3rem);
         color: var(--text-2);
-        max-width: 680px;
-        margin: 0 auto 40px;
-        line-height: 1.7;
-        animation: fadeInUp 0.9s var(--ios-ease) 0.2s both;
+        max-width: 780px;
+        margin: 0 auto 48px;
+        line-height: 1.65;
+        font-weight: 400;
+        animation: fadeUp 1s var(--ios-ease) 0.2s both;
+      }
+      .hero-sub strong {
+        color: var(--text);
+        font-weight: 600;
       }
       .hero-ctas {
         display: flex;
-        gap: 14px;
+        gap: 16px;
         justify-content: center;
         flex-wrap: wrap;
-        animation: fadeInUp 0.9s var(--ios-ease) 0.3s both;
+        animation: fadeUp 1s var(--ios-ease) 0.3s both;
       }
       .btn-hero {
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        padding: 16px 34px;
-        border-radius: 13px;
-        font-size: 1rem;
+        padding: 18px 38px;
+        border-radius: 14px;
+        font-size: 1.02rem;
         font-weight: 800;
-        transition: all 0.35s var(--ios-spring);
+        transition: all 0.4s var(--ios-spring);
         cursor: pointer;
         position: relative;
         overflow: hidden;
@@ -521,87 +500,88 @@
       .btn-hero.primary {
         background: var(--grad-1);
         color: #fff;
-        box-shadow: 0 10px 32px rgba(168, 85, 247, 0.4);
+        box-shadow: 0 12px 36px rgba(168, 85, 247, 0.45);
       }
       .btn-hero.primary::before {
         content: '';
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
         transform: translateX(-100%);
-        transition: transform 0.8s var(--ios-ease);
+        transition: transform 0.9s var(--ios-ease);
       }
       .btn-hero.primary:hover::before {
         transform: translateX(100%);
       }
       .btn-hero.primary:hover {
         transform: translateY(-3px);
-        box-shadow: 0 16px 44px rgba(236, 72, 153, 0.6);
-        filter: brightness(1.06);
+        box-shadow: 0 18px 48px rgba(236, 72, 153, 0.65);
+        filter: brightness(1.08);
       }
       .btn-hero.secondary {
-        background: rgba(255, 255, 255, 0.06);
+        background: rgba(255, 255, 255, 0.05);
         color: var(--text);
-        border: 1.5px solid var(--border);
+        border: 1.5px solid var(--border-2);
         backdrop-filter: blur(10px);
       }
       .btn-hero.secondary:hover {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.09);
         border-color: var(--purple);
         transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(168, 85, 247, 0.2);
       }
       .hero-trust {
-        margin-top: 36px;
-        font-size: 0.82rem;
-        color: var(--text-3);
+        margin-top: 44px;
         display: flex;
         justify-content: center;
-        gap: 24px;
+        gap: 32px;
         flex-wrap: wrap;
-        animation: fadeInUp 0.9s var(--ios-ease) 0.4s both;
+        animation: fadeUp 1s var(--ios-ease) 0.4s both;
       }
       .hero-trust span {
         display: inline-flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: var(--text-3);
+        font-weight: 600;
       }
-      .hero-trust strong {
-        color: var(--text-2);
+      .hero-trust svg {
+        width: 16px;
+        height: 16px;
+        color: var(--emerald);
       }
 
       /* ═══ QUOTE CAROUSEL ═══ */
       .quote-section {
-        padding: 40px 0 0;
+        padding: 20px 0 60px;
         text-align: center;
         position: relative;
         z-index: 1;
       }
       .quote-box {
-        max-width: 800px;
+        max-width: 900px;
         margin: 0 auto;
-        padding: 0 24px;
-        min-height: 90px;
-        position: relative;
+        padding: 0 32px;
+        min-height: 100px;
       }
       .quote-text {
-        font-size: clamp(1.1rem, 2.2vw, 1.45rem);
-        font-weight: 600;
+        font-size: clamp(1.15rem, 2vw, 1.5rem);
+        font-weight: 500;
         font-style: italic;
         color: var(--text-2);
-        line-height: 1.6;
+        line-height: 1.55;
         transition: opacity 0.5s var(--ios-ease);
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(196, 181, 253, 0.8));
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(196, 181, 253, 0.8));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
       }
       .quote-author {
         display: block;
-        margin-top: 14px;
-        font-size: 0.82rem;
+        margin-top: 16px;
+        font-size: 0.78rem;
         font-weight: 800;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
         color: var(--amber);
         font-style: normal;
@@ -610,26 +590,30 @@
 
       /* ═══ DEMO SECTION ═══ */
       .demo-section {
-        padding: 80px 0 100px;
+        padding: 80px 0 120px;
         position: relative;
         z-index: 1;
       }
-      .section-tag {
+      .section-label {
         font-size: 0.72rem;
         font-weight: 800;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.16em;
         text-transform: uppercase;
-        color: var(--purple);
-        margin-bottom: 14px;
+        background: var(--grad-1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 16px;
+        display: inline-block;
       }
-      .demo-title {
-        font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      .section-title {
+        font-size: clamp(2rem, 4.5vw, 3.4rem);
         font-weight: 900;
-        letter-spacing: -0.03em;
-        margin-bottom: 12px;
-        line-height: 1.15;
+        letter-spacing: -0.035em;
+        line-height: 1.08;
+        margin-bottom: 20px;
       }
-      .demo-title .grad {
+      .section-title .grad {
         background: var(--grad-hero);
         background-size: 200% auto;
         -webkit-background-clip: text;
@@ -637,31 +621,32 @@
         background-clip: text;
         animation: gradientShift 4s ease infinite;
       }
-      .demo-sub {
+      .section-desc {
         color: var(--text-2);
-        max-width: 600px;
+        font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+        max-width: 680px;
         margin: 0 auto;
-        font-size: 1rem;
+        line-height: 1.6;
       }
       .demo-tabs {
         display: flex;
         justify-content: center;
-        gap: 8px;
-        margin: 32px 0 28px;
+        gap: 10px;
+        margin: 44px 0 36px;
         flex-wrap: wrap;
       }
       .demo-tab {
-        padding: 11px 22px;
-        border-radius: 12px;
+        padding: 13px 26px;
+        border-radius: 14px;
         background: var(--card);
         border: 1.5px solid var(--border);
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         font-weight: 700;
         color: var(--text-2);
         transition: all 0.35s var(--ios-spring);
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 9px;
         position: relative;
         overflow: hidden;
       }
@@ -669,33 +654,33 @@
         border-color: var(--border-2);
         color: var(--text);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
       }
       .demo-tab.active {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.12));
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(236, 72, 153, 0.12));
         border-color: var(--purple);
         color: #fff;
-        box-shadow: 0 6px 24px rgba(168, 85, 247, 0.3);
+        box-shadow: 0 8px 28px rgba(168, 85, 247, 0.35);
       }
       .demo-window {
         background: linear-gradient(180deg, var(--card), var(--card-2));
         border: 1px solid var(--border-2);
-        border-radius: 22px;
-        padding: 14px;
-        max-width: 1000px;
+        border-radius: 26px;
+        padding: 16px;
+        max-width: 1200px;
         margin: 0 auto;
         box-shadow:
-          0 40px 100px rgba(0, 0, 0, 0.6),
-          0 0 80px rgba(168, 85, 247, 0.15);
+          0 60px 140px rgba(0, 0, 0, 0.7),
+          0 0 100px rgba(168, 85, 247, 0.18);
         position: relative;
         overflow: hidden;
         transition: all 0.6s var(--ios-ease);
       }
       .demo-window:hover {
-        transform: translateY(-6px);
+        transform: translateY(-8px);
         box-shadow:
-          0 50px 120px rgba(0, 0, 0, 0.7),
-          0 0 100px rgba(168, 85, 247, 0.25);
+          0 70px 160px rgba(0, 0, 0, 0.8),
+          0 0 120px rgba(168, 85, 247, 0.28);
       }
       .demo-window::before {
         content: '';
@@ -704,16 +689,16 @@
         left: 0;
         right: 0;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.5), transparent);
+        background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.6), transparent);
       }
       .demo-dots {
         display: flex;
-        gap: 6px;
-        padding: 6px 8px 12px;
+        gap: 7px;
+        padding: 6px 10px 14px;
       }
       .demo-dots span {
-        width: 10px;
-        height: 10px;
+        width: 11px;
+        height: 11px;
         border-radius: 50%;
       }
       .demo-dots span:nth-child(1) {
@@ -726,10 +711,10 @@
         background: #27c93f;
       }
       .demo-body {
-        padding: 6px;
+        padding: 8px;
         background: var(--bg);
-        border-radius: 16px;
-        min-height: 560px;
+        border-radius: 18px;
+        min-height: 620px;
         overflow: hidden;
         position: relative;
       }
@@ -744,15 +729,14 @@
       /* ═══ MOCK APP ═══ */
       .mock-app {
         display: grid;
-        grid-template-columns: 210px 1fr;
+        grid-template-columns: 230px 1fr;
         width: 100%;
-        min-height: 540px;
+        min-height: 600px;
         background: var(--bg);
         overflow: hidden;
-        border-radius: 12px;
-        font-family: inherit;
+        border-radius: 14px;
       }
-      @media (max-width: 700px) {
+      @media (max-width: 720px) {
         .mock-app {
           grid-template-columns: 1fr;
         }
@@ -763,77 +747,66 @@
       .mock-sidebar {
         background: var(--bg-2);
         border-right: 1px solid var(--border);
-        padding: 16px 12px;
+        padding: 18px 14px;
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
         overflow: hidden;
         position: relative;
-      }
-      .mock-sidebar::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        width: 1px;
-        background: linear-gradient(180deg, transparent, var(--purple), var(--pink), transparent);
-        opacity: 0.4;
       }
       .mock-logo {
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 6px 8px 14px;
+        gap: 10px;
+        padding: 8px 10px 16px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
       .mock-logo-icon {
-        width: 26px;
-        height: 26px;
-        border-radius: 7px;
+        width: 30px;
+        height: 30px;
+        border-radius: 8px;
         background: var(--grad-1);
         display: flex;
         align-items: center;
         justify-content: center;
         color: #fff;
         font-weight: 900;
-        font-size: 0.72rem;
-        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4);
+        font-size: 0.78rem;
+        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.45);
       }
       .mock-logo-text {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 800;
-        color: var(--text);
       }
       .mock-nav-section {
-        font-size: 0.55rem;
+        font-size: 0.6rem;
         font-weight: 800;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
         color: var(--text-3);
-        padding: 10px 8px 4px;
+        padding: 12px 10px 6px;
         text-transform: uppercase;
       }
       .mock-nav-item {
         display: flex;
         align-items: center;
-        gap: 9px;
-        padding: 7px 9px;
-        border-radius: 8px;
-        font-size: 0.72rem;
+        gap: 10px;
+        padding: 9px 11px;
+        border-radius: 9px;
+        font-size: 0.78rem;
         color: var(--text-3);
         font-weight: 600;
         transition: all 0.3s var(--ios-ease);
       }
       .mock-nav-item.active {
-        background: linear-gradient(90deg, rgba(168, 85, 247, 0.2), rgba(236, 72, 153, 0.08));
+        background: linear-gradient(90deg, rgba(168, 85, 247, 0.22), rgba(236, 72, 153, 0.08));
         color: #fff;
-        box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.3);
+        box-shadow: inset 0 0 0 1px rgba(168, 85, 247, 0.32);
       }
       .mock-nav-icon {
-        width: 14px;
+        width: 16px;
         text-align: center;
-        font-size: 0.78rem;
+        font-size: 0.85rem;
       }
       .mock-main {
         background: var(--bg);
@@ -844,42 +817,42 @@
       .mock-topbar {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
+        gap: 12px;
+        padding: 12px 18px;
         border-bottom: 1px solid var(--border);
         background: var(--bg-2);
         flex-shrink: 0;
       }
       .mock-search {
         flex: 1;
-        padding: 7px 11px;
+        padding: 9px 13px;
         background: var(--bg);
         border: 1px solid var(--border);
-        border-radius: 7px;
-        font-size: 0.68rem;
+        border-radius: 9px;
+        font-size: 0.74rem;
         color: var(--text-3);
-        max-width: 300px;
+        max-width: 340px;
       }
       .mock-topbar-icons {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         margin-left: auto;
         align-items: center;
       }
       .mock-icon-btn {
-        width: 26px;
-        height: 26px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         background: var(--card);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.72rem;
+        font-size: 0.78rem;
       }
       .mock-avatar {
-        width: 26px;
-        height: 26px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
         background: var(--grad-1);
         display: flex;
@@ -887,40 +860,38 @@
         justify-content: center;
         color: #fff;
         font-weight: 800;
-        font-size: 0.66rem;
-        box-shadow: 0 4px 12px rgba(168, 85, 247, 0.35);
+        font-size: 0.72rem;
+        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
       }
       .mock-content {
-        padding: 18px;
+        padding: 24px;
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 14px;
+        gap: 18px;
         flex: 1;
         min-height: 0;
       }
-      .mock-greet {
-        text-align: center;
-        animation: fadeInUp 0.6s var(--ios-ease) both;
-      }
       .mock-greet-text {
-        font-size: 1.05rem;
+        font-size: 1.2rem;
         font-weight: 800;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.02em;
         background: linear-gradient(135deg, #fff 0%, #c4b5fd 60%, #f9a8d4 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        text-align: center;
       }
       .mock-greet-sub {
-        font-size: 0.74rem;
+        font-size: 0.8rem;
         color: var(--text-3);
-        margin-top: 3px;
+        margin-top: 4px;
+        text-align: center;
       }
       .mock-kpis {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 9px;
+        gap: 12px;
       }
       @media (max-width: 600px) {
         .mock-kpis {
@@ -930,11 +901,11 @@
       .mock-kpi {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 11px;
-        padding: 10px 12px;
+        border-radius: 13px;
+        padding: 13px 15px;
         position: relative;
         overflow: hidden;
-        animation: fadeInScale 0.5s var(--ios-ease) both;
+        animation: scaleIn 0.5s var(--ios-ease) both;
       }
       .mock-kpi::before {
         content: '';
@@ -945,42 +916,26 @@
         width: 3px;
         background: var(--kc);
       }
-      .mock-kpi::after {
-        content: '';
-        position: absolute;
-        top: -30%;
-        right: -20%;
-        width: 120px;
-        height: 120px;
-        background: radial-gradient(circle, var(--kc), transparent 70%);
-        opacity: 0.15;
-        pointer-events: none;
-      }
       .mock-kpi-label {
-        font-size: 0.56rem;
+        font-size: 0.6rem;
         color: var(--text-3);
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        letter-spacing: 0.1em;
         font-weight: 800;
-        position: relative;
-        z-index: 1;
+        margin-bottom: 5px;
       }
       .mock-kpi-value {
-        font-size: 1rem;
+        font-size: 1.15rem;
         font-weight: 900;
-        margin: 4px 0 7px;
+        margin-bottom: 9px;
         font-variant-numeric: tabular-nums;
-        letter-spacing: -0.02em;
-        position: relative;
-        z-index: 1;
+        letter-spacing: -0.025em;
       }
       .mock-kpi-bar {
         height: 4px;
         background: var(--card-2);
         border-radius: 10px;
         overflow: hidden;
-        position: relative;
-        z-index: 1;
       }
       .mock-kpi-bar > div {
         height: 100%;
@@ -988,36 +943,28 @@
         transition: width 1.4s var(--ios-ease);
       }
       .mock-timer {
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(236, 72, 153, 0.08));
-        border: 1px solid rgba(168, 85, 247, 0.25);
-        border-radius: 14px;
-        padding: 16px;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.14), rgba(236, 72, 153, 0.08));
+        border: 1px solid rgba(168, 85, 247, 0.28);
+        border-radius: 16px;
+        padding: 20px;
         text-align: center;
         position: relative;
         overflow: hidden;
         flex-shrink: 0;
       }
-      .mock-timer::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at 50% 0%, rgba(168, 85, 247, 0.18), transparent 70%);
-        pointer-events: none;
-      }
       .mock-timer-mode {
         display: inline-flex;
-        gap: 3px;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 3px;
-        border-radius: 20px;
-        font-size: 0.6rem;
-        margin-bottom: 12px;
-        position: relative;
+        gap: 4px;
+        background: rgba(0, 0, 0, 0.35);
+        padding: 4px;
+        border-radius: 22px;
+        font-size: 0.66rem;
+        margin-bottom: 16px;
         backdrop-filter: blur(10px);
       }
       .mock-timer-mode > span {
-        padding: 4px 12px;
-        border-radius: 20px;
+        padding: 5px 14px;
+        border-radius: 22px;
         color: var(--text-3);
         font-weight: 700;
         transition: all 0.3s var(--ios-ease);
@@ -1025,12 +972,12 @@
       .mock-timer-mode > span.active {
         background: var(--grad-1);
         color: #fff;
-        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+        box-shadow: 0 4px 16px rgba(168, 85, 247, 0.45);
       }
       .mock-timer-display {
-        font-size: 2.4rem;
+        font-size: 2.8rem;
         font-weight: 200;
-        letter-spacing: -0.04em;
+        letter-spacing: -0.045em;
         font-variant-numeric: tabular-nums;
         font-family: 'JetBrains Mono', monospace;
         background: var(--grad-hero);
@@ -1039,33 +986,29 @@
         -webkit-text-fill-color: transparent;
         background-clip: text;
         line-height: 1;
-        position: relative;
         animation: gradientShift 4s ease infinite;
       }
       .mock-timer-sub {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         color: var(--text-3);
-        margin: 8px 0 14px;
-        position: relative;
+        margin: 10px 0 16px;
       }
       .mock-timer-btns {
         display: flex;
-        gap: 8px;
+        gap: 10px;
         justify-content: center;
-        position: relative;
       }
       .mock-btn-primary,
       .mock-btn-secondary {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 800;
-        padding: 8px 18px;
-        border-radius: 20px;
-        cursor: default;
+        padding: 9px 20px;
+        border-radius: 22px;
       }
       .mock-btn-primary {
         background: var(--grad-1);
         color: #fff;
-        box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.45);
       }
       .mock-btn-secondary {
         background: var(--card-2);
@@ -1074,32 +1017,32 @@
       }
       .mock-charts {
         display: grid;
-        grid-template-columns: 1.6fr 1fr;
-        gap: 10px;
+        grid-template-columns: 1.7fr 1fr;
+        gap: 12px;
         flex: 1;
         min-height: 0;
       }
       .mock-chart {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px 14px;
+        border-radius: 13px;
+        padding: 14px 16px;
         display: flex;
         flex-direction: column;
         min-height: 0;
       }
       .mock-chart-title {
-        font-size: 0.68rem;
+        font-size: 0.74rem;
         font-weight: 800;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         color: var(--text-2);
       }
       .mock-bars {
         display: flex;
         align-items: flex-end;
-        gap: 5px;
+        gap: 6px;
         flex: 1;
-        padding-top: 6px;
+        padding-top: 8px;
       }
       .mock-bars > div {
         flex: 1;
@@ -1137,9 +1080,9 @@
         position: relative;
       }
       .mock-donut-ring {
-        width: 80%;
+        width: 75%;
         aspect-ratio: 1;
-        max-width: 100px;
+        max-width: 110px;
         border-radius: 50%;
         background: conic-gradient(
           #a855f7 0deg 130deg,
@@ -1150,28 +1093,26 @@
         );
         position: relative;
         animation: donutSpin 1.2s var(--ios-ease) both;
-        box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+        box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
       }
       .mock-donut-ring::after {
         content: '';
         position: absolute;
-        inset: 26%;
+        inset: 28%;
         border-radius: 50%;
         background: var(--card);
       }
       .mock-donut-center {
         position: absolute;
-        font-size: 0.8rem;
+        font-size: 0.88rem;
         font-weight: 900;
-        color: var(--text);
       }
       .mock-subjects {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        overflow: hidden;
+        gap: 12px;
       }
-      @media (max-width: 700px) {
+      @media (max-width: 720px) {
         .mock-subjects {
           grid-template-columns: repeat(2, 1fr);
         }
@@ -1179,15 +1120,15 @@
       .mock-subject {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px;
+        border-radius: 13px;
+        padding: 16px;
         position: relative;
         overflow: hidden;
-        animation: fadeInScale 0.5s var(--ios-ease) both;
+        animation: scaleIn 0.5s var(--ios-ease) both;
         transition: all 0.3s var(--ios-ease);
       }
       .mock-subject:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
         border-color: var(--border-2);
       }
       .mock-subject::before {
@@ -1200,17 +1141,16 @@
         background: var(--sc);
       }
       .mock-subject-name {
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         font-weight: 800;
-        margin-bottom: 10px;
-        color: var(--text);
+        margin-bottom: 12px;
       }
       .mock-subject-stat {
         display: flex;
         justify-content: space-between;
-        font-size: 0.62rem;
+        font-size: 0.68rem;
         color: var(--text-3);
-        margin-bottom: 4px;
+        margin-bottom: 5px;
       }
       .mock-subject-stat strong {
         color: var(--text-2);
@@ -1219,39 +1159,38 @@
       .mock-syl {
         display: flex;
         flex-direction: column;
-        gap: 9px;
-        overflow: hidden;
+        gap: 10px;
       }
       .mock-syl-cat {
         background: var(--card);
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 14px 16px;
+        border-radius: 13px;
+        padding: 16px 18px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 14px;
         transition: all 0.35s var(--ios-ease);
-        animation: fadeInScale 0.5s var(--ios-ease) both;
+        animation: scaleIn 0.5s var(--ios-ease) both;
       }
       .mock-syl-cat:hover {
         border-color: var(--border-2);
-        transform: translateX(4px);
+        transform: translateX(5px);
       }
       .mock-syl-cat-info {
         flex: 1;
       }
       .mock-syl-name {
-        font-size: 0.84rem;
+        font-size: 0.88rem;
         font-weight: 800;
         color: var(--sc);
         margin-bottom: 3px;
       }
       .mock-syl-meta {
-        font-size: 0.66rem;
+        font-size: 0.7rem;
         color: var(--text-3);
       }
       .mock-syl-bar {
-        width: 90px;
+        width: 110px;
         height: 6px;
         background: var(--card-2);
         border-radius: 10px;
@@ -1264,58 +1203,130 @@
         transition: width 1.4s var(--ios-ease);
       }
       .mock-syl-pct {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         font-weight: 800;
         color: var(--text-2);
-        min-width: 36px;
+        min-width: 42px;
         text-align: right;
       }
       .mock-insights {
         display: flex;
         flex-direction: column;
-        gap: 9px;
-        overflow: hidden;
+        gap: 12px;
       }
       .mock-insight {
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(236, 72, 153, 0.04));
-        border: 1px solid rgba(168, 85, 247, 0.2);
-        border-radius: 12px;
-        padding: 12px 16px;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.09), rgba(236, 72, 153, 0.04));
+        border: 1px solid rgba(168, 85, 247, 0.22);
+        border-radius: 13px;
+        padding: 15px 18px;
         display: flex;
-        gap: 12px;
+        gap: 14px;
         align-items: flex-start;
-        animation: fadeInUp 0.5s var(--ios-ease) both;
+        animation: fadeUp 0.5s var(--ios-ease) both;
         transition: all 0.3s var(--ios-ease);
       }
       .mock-insight:hover {
-        transform: translateX(4px);
-        border-color: rgba(168, 85, 247, 0.4);
+        transform: translateX(5px);
+        border-color: rgba(168, 85, 247, 0.45);
       }
       .mock-insight-ico {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         flex-shrink: 0;
         margin-top: 2px;
       }
       .mock-insight-text {
-        font-size: 0.78rem;
+        font-size: 0.84rem;
         color: var(--text-2);
         line-height: 1.55;
       }
       .mock-insight-text strong {
         color: var(--text);
+        font-weight: 700;
+      }
+
+      /* ═══ SHARE BAR ═══ */
+      .share-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 52px auto 0;
+        padding: 16px 24px;
+        flex-wrap: wrap;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        max-width: fit-content;
+      }
+      .share-bar .share-label {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-right: 8px;
+      }
+      .share-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        color: var(--text-2);
+        transition: all 0.3s var(--ios-spring);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+      .share-btn svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+      }
+      .share-btn:hover {
+        transform: translateY(-3px) scale(1.08);
+        color: #fff;
+        border-color: transparent;
+      }
+      .share-btn.wa:hover {
+        background: #25d366;
+        box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
+      }
+      .share-btn.tw:hover {
+        background: #000;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
+      }
+      .share-btn.tg:hover {
+        background: #229ed9;
+        box-shadow: 0 10px 24px rgba(34, 158, 217, 0.45);
+      }
+      .share-btn.li:hover {
+        background: #0a66c2;
+        box-shadow: 0 10px 24px rgba(10, 102, 194, 0.45);
+      }
+      .share-btn.rd:hover {
+        background: #ff4500;
+        box-shadow: 0 10px 24px rgba(255, 69, 0, 0.45);
+      }
+      .share-btn.cp:hover {
+        background: var(--grad-1);
+        box-shadow: 0 10px 24px rgba(168, 85, 247, 0.45);
       }
 
       /* ═══ STATS BAR ═══ */
       .stats-bar {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        padding: 40px;
-        background: var(--card);
+        gap: 24px;
+        padding: 48px 40px;
+        background: linear-gradient(180deg, var(--card), var(--card-2));
         border: 1px solid var(--border);
-        border-radius: 22px;
-        margin: 60px auto 0;
-        max-width: 960px;
+        border-radius: 26px;
+        margin: 80px auto 0;
+        max-width: 1100px;
         position: relative;
         overflow: hidden;
       }
@@ -1331,200 +1342,610 @@
       @media (max-width: 768px) {
         .stats-bar {
           grid-template-columns: repeat(2, 1fr);
-          gap: 28px;
-          padding: 28px;
+          gap: 32px;
+          padding: 36px 24px;
         }
       }
       .stat-item {
         text-align: center;
       }
       .stat-num {
-        font-size: 2.4rem;
+        font-size: clamp(2rem, 4vw, 3rem);
         font-weight: 900;
-        letter-spacing: -0.03em;
+        letter-spacing: -0.04em;
         line-height: 1;
         background: var(--grad-1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         font-variant-numeric: tabular-nums;
-        animation: countUp 0.5s var(--ios-ease) both;
       }
       .stat-label {
-        font-size: 0.72rem;
+        font-size: 0.75rem;
         color: var(--text-3);
         text-transform: uppercase;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
         font-weight: 800;
-        margin-top: 10px;
+        margin-top: 12px;
       }
 
       /* ═══ SECTIONS ═══ */
       .section {
-        padding: 120px 0;
+        padding: 140px 0;
         position: relative;
         z-index: 1;
       }
       .section-head {
         text-align: center;
-        max-width: 760px;
-        margin: 0 auto 70px;
+        max-width: 820px;
+        margin: 0 auto 80px;
       }
-      .section-head h2 {
-        font-size: clamp(1.9rem, 4vw, 3rem);
-        font-weight: 900;
-        letter-spacing: -0.03em;
-        line-height: 1.15;
-        margin-bottom: 18px;
-      }
-      .section-head h2 .grad {
-        background: var(--grad-hero);
-        background-size: 200% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation: gradientShift 4s ease infinite;
-      }
-      .section-head p {
-        color: var(--text-2);
-        font-size: 1.05rem;
+      @media (max-width: 768px) {
+        .section {
+          padding: 90px 0;
+        }
+        .section-head {
+          margin-bottom: 56px;
+        }
       }
 
-      /* ═══ FEATURES ═══ */
-      .features-grid {
+      /* ═══ BENTO FEATURES ═══ */
+      .bento {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(12, 1fr);
         gap: 20px;
       }
-      .feature-card {
+      .bento-item {
         background: linear-gradient(180deg, var(--card), var(--card-2));
         border: 1px solid var(--border);
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 32px;
         transition: all 0.5s var(--ios-ease);
         position: relative;
         overflow: hidden;
+        grid-column: span 4;
       }
-      .feature-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 2px;
-        background: var(--grad-1);
-        opacity: 0;
-        transition: opacity 0.4s var(--ios-ease);
+      .bento-item.large {
+        grid-column: span 6;
+        padding: 40px;
       }
-      .feature-card::after {
+      .bento-item.wide {
+        grid-column: span 8;
+      }
+      .bento-item:hover {
+        border-color: var(--border-2);
+        transform: translateY(-6px);
+        box-shadow:
+          0 24px 60px rgba(0, 0, 0, 0.55),
+          0 0 80px rgba(168, 85, 247, 0.18);
+      }
+      .bento-item::before {
         content: '';
         position: absolute;
         top: -50%;
         right: -50%;
-        width: 220px;
-        height: 220px;
+        width: 300px;
+        height: 300px;
         background: radial-gradient(circle, rgba(168, 85, 247, 0.15), transparent 70%);
         opacity: 0;
         transition: opacity 0.5s var(--ios-ease);
         pointer-events: none;
       }
-      .feature-card:hover {
-        border-color: var(--border-2);
-        transform: translateY(-6px);
-        box-shadow:
-          0 24px 48px rgba(0, 0, 0, 0.5),
-          0 0 60px rgba(168, 85, 247, 0.15);
-      }
-      .feature-card:hover::before,
-      .feature-card:hover::after {
+      .bento-item:hover::before {
         opacity: 1;
       }
-      .feature-icon {
+      .bento-icon {
         width: 56px;
         height: 56px;
         border-radius: 16px;
-        background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.12));
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(236, 72, 153, 0.14));
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
+        font-size: 1.6rem;
         margin-bottom: 22px;
-        border: 1px solid rgba(168, 85, 247, 0.2);
+        border: 1px solid rgba(168, 85, 247, 0.22);
         position: relative;
         z-index: 1;
         transition: transform 0.5s var(--ios-spring);
       }
-      .feature-card:hover .feature-icon {
-        transform: scale(1.1) rotate(-6deg);
+      .bento-item:hover .bento-icon {
+        transform: scale(1.12) rotate(-8deg);
       }
-      .feature-card h3 {
-        font-size: 1.08rem;
+      .bento-item h3 {
+        font-size: 1.15rem;
         font-weight: 800;
         margin-bottom: 10px;
-        letter-spacing: -0.01em;
+        letter-spacing: -0.015em;
         position: relative;
         z-index: 1;
       }
-      .feature-card p {
+      .bento-item p {
         color: var(--text-2);
-        font-size: 0.9rem;
+        font-size: 0.92rem;
         line-height: 1.65;
         position: relative;
         z-index: 1;
       }
-
-      /* ═══ MOTIVATION QUOTE ═══ */
-      .motivation {
-        padding: 80px 0;
-        text-align: center;
+      @media (max-width: 960px) {
+        .bento-item,
+        .bento-item.large,
+        .bento-item.wide {
+          grid-column: span 12;
+        }
       }
-      .motivation-quote {
-        max-width: 800px;
+
+      /* ═══ COMPARE TABLE ═══ */
+      .compare-table {
+        max-width: 1000px;
         margin: 0 auto;
-        padding: 56px 44px;
-        background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(236, 72, 153, 0.05));
-        border: 1px solid rgba(251, 191, 36, 0.2);
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1px solid var(--border);
         border-radius: 26px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+      }
+      .compare-row {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr 1fr 1fr;
+        padding: 22px 32px;
+        border-bottom: 1px solid var(--border);
+        align-items: center;
+        font-size: 0.95rem;
+        transition: background 0.3s var(--ios-ease);
+      }
+      .compare-row:hover:not(.header) {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .compare-row:last-child {
+        border-bottom: none;
+      }
+      .compare-row.header {
+        background: rgba(168, 85, 247, 0.06);
+        font-weight: 800;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-3);
+      }
+      .compare-row.header .col-us {
+        color: var(--purple);
+        font-weight: 900;
+      }
+      .compare-row .col-us {
+        color: var(--text);
+        font-weight: 700;
+      }
+      .compare-row .col-other {
+        color: var(--text-3);
+        font-size: 0.88rem;
+      }
+      .check {
+        color: var(--emerald);
+        font-weight: 900;
+        font-size: 1.15rem;
+      }
+      .cross {
+        color: var(--red);
+        font-weight: 900;
+        font-size: 1.15rem;
+      }
+      .partial {
+        color: var(--amber);
+        font-weight: 900;
+        font-size: 1.15rem;
+      }
+      @media (max-width: 600px) {
+        .compare-row {
+          grid-template-columns: 1.8fr 1fr 1fr 1fr;
+          font-size: 0.78rem;
+          padding: 16px 14px;
+        }
+        .compare-row.header {
+          font-size: 0.64rem;
+        }
+      }
+
+      /* ═══ PRICING (FIXED) ═══ */
+      .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1180px;
+        margin: 0 auto;
+        align-items: stretch;
+      }
+      @media (max-width: 900px) {
+        .pricing-grid {
+          grid-template-columns: 1fr;
+          max-width: 520px;
+          gap: 20px;
+        }
+      }
+      .plan {
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1.5px solid var(--border);
+        border-radius: 26px;
+        padding: 40px 36px;
+        position: relative;
+        transition: all 0.4s var(--ios-ease);
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
+      }
+      .plan:hover {
+        transform: translateY(-6px);
+        border-color: var(--border-2);
+        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+      }
+      .plan.featured {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: linear-gradient(180deg, rgba(251, 191, 36, 0.08), var(--card));
+        box-shadow: 0 0 80px rgba(251, 191, 36, 0.18);
+      }
+      .plan.featured:hover {
+        border-color: var(--amber);
+        box-shadow:
+          0 30px 70px rgba(0, 0, 0, 0.55),
+          0 0 100px rgba(251, 191, 36, 0.3);
+      }
+      .plan-badge {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--grad-2);
+        color: #1a1a1a;
+        font-size: 0.72rem;
+        font-weight: 900;
+        padding: 7px 20px;
+        border-radius: 22px;
+        letter-spacing: 0.08em;
+        box-shadow: 0 8px 24px rgba(251, 191, 36, 0.45);
+        white-space: nowrap;
+      }
+      .plan-name {
+        font-size: 0.82rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-3);
+        margin-bottom: 20px;
+      }
+      .plan-price {
+        display: flex;
+        align-items: baseline;
+        gap: 4px;
+        margin-bottom: 12px;
+      }
+      .plan-price .cur {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: var(--text-2);
+      }
+      .plan-price .num {
+        font-size: 4rem;
+        font-weight: 900;
+        letter-spacing: -0.05em;
+        line-height: 1;
+      }
+      .plan-price .period {
+        font-size: 0.95rem;
+        color: var(--text-3);
+        font-weight: 600;
+        margin-left: 4px;
+      }
+      .plan-desc {
+        color: var(--text-3);
+        font-size: 0.88rem;
+        margin-bottom: 32px;
+        line-height: 1.5;
+        min-height: 42px;
+      }
+      .plan-list {
+        list-style: none;
+        margin-bottom: 36px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        flex: 1;
+      }
+      .plan-list li {
+        font-size: 0.9rem;
+        color: var(--text-2);
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        line-height: 1.5;
+      }
+      .plan-list li svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: var(--emerald);
+      }
+      .plan-btn {
+        width: 100%;
+        padding: 16px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 0.95rem;
+        transition: all 0.35s var(--ios-spring);
+        text-align: center;
+        display: block;
+        position: relative;
+        overflow: hidden;
+        margin-top: auto;
+      }
+      .plan-btn.primary {
+        background: var(--grad-1);
+        color: #fff;
+        box-shadow: 0 8px 26px rgba(168, 85, 247, 0.42);
+      }
+      .plan-btn.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 36px rgba(236, 72, 153, 0.55);
+        filter: brightness(1.08);
+      }
+      .plan-btn.gold {
+        background: var(--grad-2);
+        color: #1a1a1a;
+        box-shadow: 0 8px 26px rgba(251, 191, 36, 0.42);
+      }
+      .plan-btn.gold:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 36px rgba(251, 191, 36, 0.65);
+        filter: brightness(1.05);
+      }
+      .plan-btn.outline {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        border: 1.5px solid var(--border-2);
+      }
+      .plan-btn.outline:hover {
+        border-color: var(--purple);
+        color: var(--purple);
+        background: rgba(168, 85, 247, 0.08);
+        transform: translateY(-2px);
+      }
+
+      /* ═══ FAQ (NEW DESIGN) ═══ */
+      .faq-layout {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 80px;
+        max-width: 1200px;
+        margin: 0 auto;
+        align-items: start;
+      }
+      @media (max-width: 960px) {
+        .faq-layout {
+          grid-template-columns: 1fr;
+          gap: 48px;
+        }
+      }
+      .faq-left {
+        position: sticky;
+        top: 120px;
+      }
+      @media (max-width: 960px) {
+        .faq-left {
+          position: static;
+        }
+      }
+      .faq-illustration {
+        width: 100%;
+        max-width: 420px;
+        aspect-ratio: 1;
+        position: relative;
+        margin-bottom: 32px;
+      }
+      .faq-illustration svg {
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 20px 40px rgba(168, 85, 247, 0.25));
+      }
+      .faq-left h2 {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        line-height: 1.1;
+        margin-bottom: 18px;
+      }
+      .faq-left p {
+        color: var(--text-2);
+        font-size: 1rem;
+        line-height: 1.6;
+        max-width: 380px;
+      }
+      .faq-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .faq-item {
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        overflow: hidden;
+        transition: all 0.4s var(--ios-ease);
+      }
+      .faq-item.open {
+        border-color: rgba(168, 85, 247, 0.45);
+        background: linear-gradient(180deg, rgba(168, 85, 247, 0.06), var(--card));
+        box-shadow: 0 12px 40px rgba(168, 85, 247, 0.18);
+      }
+      .faq-q {
+        padding: 24px 28px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        user-select: none;
+        transition: color 0.3s var(--ios-ease);
+      }
+      .faq-q:hover {
+        color: var(--purple);
+      }
+      .faq-q-icon {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        border-radius: 50%;
+        background: var(--card-2);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.4s var(--ios-spring);
         position: relative;
       }
-      .motivation-quote::before {
+      .faq-q-icon::before,
+      .faq-q-icon::after {
+        content: '';
+        position: absolute;
+        background: var(--text-2);
+        border-radius: 2px;
+        transition: all 0.3s var(--ios-ease);
+      }
+      .faq-q-icon::before {
+        width: 12px;
+        height: 2px;
+      }
+      .faq-q-icon::after {
+        width: 2px;
+        height: 12px;
+      }
+      .faq-item.open .faq-q-icon {
+        background: var(--grad-1);
+        border-color: transparent;
+        transform: rotate(180deg);
+      }
+      .faq-item.open .faq-q-icon::before,
+      .faq-item.open .faq-q-icon::after {
+        background: #fff;
+      }
+      .faq-item.open .faq-q-icon::after {
+        transform: scaleY(0);
+      }
+      .faq-a {
+        padding: 0 28px;
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.5s var(--ios-ease),
+          padding 0.3s var(--ios-ease);
+        color: var(--text-2);
+        font-size: 0.94rem;
+        line-height: 1.75;
+      }
+      .faq-item.open .faq-a {
+        padding: 0 28px 26px;
+        max-height: 500px;
+      }
+
+      /* ═══ TESTIMONIALS ═══ */
+      .testimonials-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      @media (max-width: 900px) {
+        .testimonials-grid {
+          grid-template-columns: 1fr;
+          max-width: 520px;
+        }
+      }
+      .testimonial {
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1px solid var(--border);
+        border-radius: 22px;
+        padding: 36px;
+        transition: all 0.4s var(--ios-ease);
+        position: relative;
+        overflow: hidden;
+      }
+      .testimonial:hover {
+        border-color: var(--border-2);
+        transform: translateY(-5px);
+        box-shadow: 0 24px 56px rgba(0, 0, 0, 0.5);
+      }
+      .testimonial::before {
         content: '"';
         position: absolute;
-        top: -30px;
-        left: 30px;
-        font-size: 8rem;
+        top: 20px;
+        right: 28px;
+        font-size: 5rem;
         line-height: 1;
-        color: rgba(251, 191, 36, 0.2);
+        color: rgba(168, 85, 247, 0.12);
         font-family: Georgia, serif;
+        font-style: normal;
       }
-      .motivation-quote p {
-        font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-        font-weight: 700;
-        line-height: 1.5;
+      .testimonial .stars {
+        color: var(--amber);
+        font-size: 1rem;
+        margin-bottom: 20px;
+        letter-spacing: 3px;
+      }
+      .testimonial p {
+        font-size: 0.95rem;
+        color: var(--text-2);
+        line-height: 1.75;
+        margin-bottom: 28px;
+        font-style: italic;
         position: relative;
         z-index: 1;
-        font-style: italic;
       }
-      .motivation-quote .author {
-        margin-top: 22px;
-        color: var(--amber);
-        font-size: 0.9rem;
+      .testimonial .author {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        position: relative;
+        z-index: 1;
+      }
+      .testimonial .avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--grad-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 900;
+        color: #fff;
+        font-size: 0.95rem;
+        flex-shrink: 0;
+        box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
+      }
+      .testimonial .name {
         font-weight: 800;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
+        font-size: 0.92rem;
+      }
+      .testimonial .role {
+        font-size: 0.78rem;
+        color: var(--text-3);
+        margin-top: 2px;
       }
 
-      /* ═══ HOW GRID ═══ */
+      /* ═══ HOW IT WORKS ═══ */
       .how-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
-        gap: 30px;
+        gap: 40px;
+        max-width: 1100px;
+        margin: 0 auto;
         position: relative;
       }
       @media (max-width: 900px) {
         .how-grid {
           grid-template-columns: 1fr;
-          gap: 44px;
+          gap: 52px;
         }
       }
       .how-step {
@@ -1532,44 +1953,46 @@
         text-align: center;
       }
       .how-num {
-        width: 76px;
-        height: 76px;
+        width: 88px;
+        height: 88px;
         border-radius: 50%;
-        margin: 0 auto 22px;
+        margin: 0 auto 26px;
         background: var(--grad-1);
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.7rem;
+        font-size: 1.9rem;
         font-weight: 900;
-        box-shadow: 0 12px 36px rgba(168, 85, 247, 0.5);
+        box-shadow: 0 16px 44px rgba(168, 85, 247, 0.55);
         position: relative;
         z-index: 2;
         transition: transform 0.5s var(--ios-spring);
       }
       .how-step:hover .how-num {
-        transform: scale(1.1) rotate(6deg);
+        transform: scale(1.12) rotate(8deg);
       }
       .how-step h3 {
-        font-size: 1.18rem;
+        font-size: 1.25rem;
         font-weight: 800;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
+        letter-spacing: -0.02em;
       }
       .how-step p {
         color: var(--text-2);
-        font-size: 0.92rem;
-        max-width: 280px;
+        font-size: 0.95rem;
+        max-width: 320px;
         margin: 0 auto;
+        line-height: 1.6;
       }
       .how-step::before {
         content: '';
         position: absolute;
-        top: 38px;
-        left: calc(50% + 54px);
-        right: calc(-50% + 54px);
+        top: 44px;
+        left: calc(50% + 60px);
+        right: calc(-50% + 60px);
         height: 2px;
-        background: linear-gradient(90deg, rgba(168, 85, 247, 0.5), transparent);
+        background: linear-gradient(90deg, rgba(168, 85, 247, 0.6), transparent);
         z-index: 1;
       }
       .how-step:last-child::before {
@@ -1581,341 +2004,9 @@
         }
       }
 
-      /* ═══ COMPARE TABLE ═══ */
-      .compare-table {
-        max-width: 860px;
-        margin: 0 auto;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 22px;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-      }
-      .compare-row {
-        display: grid;
-        grid-template-columns: 1.4fr 1fr 1fr 1fr;
-        padding: 18px 26px;
-        border-bottom: 1px solid var(--border);
-        align-items: center;
-        font-size: 0.9rem;
-        transition: background 0.3s var(--ios-ease);
-      }
-      .compare-row:hover:not(.header) {
-        background: var(--card-2);
-      }
-      .compare-row:last-child {
-        border-bottom: none;
-      }
-      .compare-row.header {
-        background: var(--card-2);
-        font-weight: 800;
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--text-3);
-      }
-      .compare-row.header .col-us {
-        color: var(--purple);
-      }
-      .compare-row .col-us {
-        color: var(--text);
-        font-weight: 700;
-      }
-      .compare-row .col-other {
-        color: var(--text-3);
-        font-size: 0.85rem;
-      }
-      .check {
-        color: var(--emerald);
-        font-weight: 900;
-        font-size: 1.1rem;
-      }
-      .cross {
-        color: var(--red);
-        font-weight: 900;
-        font-size: 1.1rem;
-      }
-      .partial {
-        color: var(--amber);
-        font-weight: 900;
-        font-size: 1.1rem;
-      }
-      @media (max-width: 600px) {
-        .compare-row {
-          grid-template-columns: 1.6fr 1fr 1fr 1fr;
-          font-size: 0.78rem;
-          padding: 14px 12px;
-        }
-        .compare-row.header {
-          font-size: 0.66rem;
-        }
-      }
-
-      /* ═══ TESTIMONIALS ═══ */
-      .testimonials-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-      }
-      .testimonial {
-        background: linear-gradient(180deg, var(--card), var(--card-2));
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 30px;
-        transition: all 0.4s var(--ios-ease);
-      }
-      .testimonial:hover {
-        border-color: var(--border-2);
-        transform: translateY(-4px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-      }
-      .testimonial .stars {
-        color: var(--amber);
-        font-size: 1rem;
-        margin-bottom: 16px;
-        letter-spacing: 2px;
-      }
-      .testimonial p {
-        font-size: 0.92rem;
-        color: var(--text-2);
-        line-height: 1.75;
-        margin-bottom: 24px;
-        font-style: italic;
-      }
-      .testimonial .author {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-      .testimonial .avatar {
-        width: 46px;
-        height: 46px;
-        border-radius: 50%;
-        background: var(--grad-1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        color: #fff;
-        font-size: 0.9rem;
-        flex-shrink: 0;
-        box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
-      }
-      .testimonial .name {
-        font-weight: 800;
-        font-size: 0.9rem;
-      }
-      .testimonial .role {
-        font-size: 0.75rem;
-        color: var(--text-3);
-      }
-
-      /* ═══ PRICING ═══ */
-      .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 20px;
-        max-width: 980px;
-        margin: 0 auto;
-      }
-      .plan {
-        background: linear-gradient(180deg, var(--card), var(--card-2));
-        border: 1.5px solid var(--border);
-        border-radius: 24px;
-        padding: 36px;
-        position: relative;
-        transition: all 0.4s var(--ios-ease);
-      }
-      .plan:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-      }
-      .plan.featured {
-        border-color: var(--amber);
-        background: linear-gradient(180deg, rgba(251, 191, 36, 0.06), var(--card));
-        box-shadow: 0 0 60px rgba(251, 191, 36, 0.15);
-        transform: scale(1.02);
-      }
-      .plan.featured:hover {
-        transform: scale(1.02) translateY(-4px);
-      }
-      .plan-badge {
-        position: absolute;
-        top: -13px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--grad-2);
-        color: #1a1a1a;
-        font-size: 0.7rem;
-        font-weight: 900;
-        padding: 6px 18px;
-        border-radius: 20px;
-        letter-spacing: 0.06em;
-        box-shadow: 0 6px 18px rgba(251, 191, 36, 0.4);
-      }
-      .plan h3 {
-        font-size: 0.85rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--text-3);
-        margin-bottom: 16px;
-      }
-      .plan .price {
-        font-size: 3.4rem;
-        font-weight: 900;
-        letter-spacing: -0.04em;
-        line-height: 1;
-        margin-bottom: 10px;
-      }
-      .plan .price .cur {
-        font-size: 1.5rem;
-        font-weight: 800;
-        vertical-align: top;
-        color: var(--text-2);
-      }
-      .plan .price .period {
-        font-size: 0.9rem;
-        color: var(--text-3);
-        font-weight: 600;
-      }
-      .plan .desc {
-        color: var(--text-3);
-        font-size: 0.85rem;
-        margin-bottom: 28px;
-      }
-      .plan ul {
-        list-style: none;
-        margin-bottom: 32px;
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-      }
-      .plan li {
-        font-size: 0.88rem;
-        color: var(--text-2);
-        display: flex;
-        gap: 10px;
-        align-items: flex-start;
-        line-height: 1.5;
-      }
-      .plan li::before {
-        content: '✓';
-        color: var(--emerald);
-        font-weight: 900;
-        flex-shrink: 0;
-        font-size: 0.95rem;
-      }
-      .plan .btn-plan {
-        width: 100%;
-        padding: 15px;
-        border-radius: 12px;
-        font-weight: 800;
-        font-size: 0.92rem;
-        transition: all 0.35s var(--ios-spring);
-        text-align: center;
-        display: block;
-        position: relative;
-        overflow: hidden;
-      }
-      .plan .btn-plan.primary {
-        background: var(--grad-1);
-        color: #fff;
-        box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
-      }
-      .plan .btn-plan.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 14px 36px rgba(236, 72, 153, 0.5);
-        filter: brightness(1.08);
-      }
-      .plan .btn-plan.gold {
-        background: var(--grad-2);
-        color: #1a1a1a;
-        box-shadow: 0 8px 24px rgba(251, 191, 36, 0.4);
-      }
-      .plan .btn-plan.gold:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 14px 36px rgba(251, 191, 36, 0.6);
-        filter: brightness(1.05);
-      }
-      .plan .btn-plan.outline {
-        background: transparent;
-        color: var(--text);
-        border: 1.5px solid var(--border-2);
-      }
-      .plan .btn-plan.outline:hover {
-        border-color: var(--purple);
-        color: var(--purple);
-        background: rgba(168, 85, 247, 0.05);
-        transform: translateY(-2px);
-      }
-
-      /* ═══ FAQ ═══ */
-      .faq-list {
-        max-width: 820px;
-        margin: 0 auto;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-      }
-      .faq-item {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        overflow: hidden;
-        transition: all 0.4s var(--ios-ease);
-      }
-      .faq-item.open {
-        border-color: var(--purple);
-        background: linear-gradient(180deg, rgba(168, 85, 247, 0.04), var(--card));
-        box-shadow: 0 8px 32px rgba(168, 85, 247, 0.15);
-      }
-      .faq-q {
-        padding: 24px 28px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        user-select: none;
-        transition: color 0.3s var(--ios-ease);
-      }
-      .faq-q:hover {
-        color: var(--purple);
-      }
-      .faq-q::after {
-        content: '+';
-        font-size: 1.5rem;
-        color: var(--text-3);
-        font-weight: 300;
-        transition: transform 0.4s var(--ios-spring);
-        flex-shrink: 0;
-      }
-      .faq-item.open .faq-q::after {
-        transform: rotate(45deg);
-        color: var(--purple);
-      }
-      .faq-a {
-        padding: 0 28px;
-        max-height: 0;
-        overflow: hidden;
-        transition:
-          max-height 0.5s var(--ios-ease),
-          padding 0.3s var(--ios-ease);
-        color: var(--text-2);
-        font-size: 0.9rem;
-        line-height: 1.75;
-      }
-      .faq-item.open .faq-a {
-        padding: 0 28px 24px;
-        max-height: 500px;
-      }
-
       /* ═══ CTA ═══ */
       .cta-section {
-        padding: 120px 0;
+        padding: 140px 0;
         text-align: center;
         position: relative;
         z-index: 1;
@@ -1923,36 +2014,41 @@
       .cta-box {
         background: linear-gradient(
           135deg,
-          rgba(168, 85, 247, 0.15),
-          rgba(236, 72, 153, 0.1),
+          rgba(168, 85, 247, 0.18),
+          rgba(236, 72, 153, 0.12),
           rgba(249, 115, 22, 0.08)
         );
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        border-radius: 32px;
-        padding: 80px 40px;
-        max-width: 860px;
+        border: 1px solid rgba(168, 85, 247, 0.35);
+        border-radius: 36px;
+        padding: 100px 60px;
+        max-width: 1100px;
         margin: 0 auto;
         position: relative;
         overflow: hidden;
+      }
+      @media (max-width: 768px) {
+        .cta-box {
+          padding: 64px 28px;
+        }
       }
       .cta-box::before {
         content: '';
         position: absolute;
         top: -50%;
         left: -20%;
-        width: 100%;
+        width: 120%;
         height: 200%;
-        background: radial-gradient(circle, rgba(168, 85, 247, 0.25), transparent 60%);
-        animation: floatSlow 15s ease-in-out infinite;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.3), transparent 60%);
+        animation: floatSlow 18s ease-in-out infinite;
         pointer-events: none;
       }
       .cta-box h2 {
-        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        font-size: clamp(2rem, 5vw, 3.5rem);
         font-weight: 900;
-        letter-spacing: -0.03em;
-        margin-bottom: 18px;
+        letter-spacing: -0.04em;
+        margin-bottom: 22px;
         position: relative;
-        line-height: 1.15;
+        line-height: 1.08;
       }
       .cta-box h2 .grad {
         background: var(--grad-hero);
@@ -1964,83 +2060,18 @@
       }
       .cta-box p {
         color: var(--text-2);
-        font-size: 1.1rem;
-        margin-bottom: 40px;
+        font-size: 1.15rem;
+        margin-bottom: 48px;
         position: relative;
-        max-width: 520px;
+        max-width: 600px;
         margin-left: auto;
         margin-right: auto;
-      }
-
-      /* ═══ SHARE BAR ═══ */
-      .share-bar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin: 40px auto 0;
-        padding: 14px 20px;
-        flex-wrap: wrap;
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        max-width: fit-content;
-      }
-      .share-bar .share-label {
-        font-size: 0.75rem;
-        font-weight: 800;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        color: var(--text-3);
-        margin-right: 6px;
-      }
-      .share-btn {
-        width: 38px;
-        height: 38px;
-        border-radius: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--card-2);
-        border: 1px solid var(--border);
-        color: var(--text-2);
-        transition: all 0.3s var(--ios-spring);
-        cursor: pointer;
-        font-size: 1rem;
-      }
-      .share-btn:hover {
-        transform: translateY(-3px) scale(1.08);
-        color: #fff;
-        border-color: transparent;
-      }
-      .share-btn.wa:hover {
-        background: #25d366;
-        box-shadow: 0 8px 20px rgba(37, 211, 102, 0.4);
-      }
-      .share-btn.tw:hover {
-        background: #000;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-      }
-      .share-btn.tg:hover {
-        background: #0088cc;
-        box-shadow: 0 8px 20px rgba(0, 136, 204, 0.4);
-      }
-      .share-btn.li:hover {
-        background: #0a66c2;
-        box-shadow: 0 8px 20px rgba(10, 102, 194, 0.4);
-      }
-      .share-btn.rd:hover {
-        background: #ff4500;
-        box-shadow: 0 8px 20px rgba(255, 69, 0, 0.4);
-      }
-      .share-btn.cp:hover {
-        background: var(--grad-1);
-        box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+        line-height: 1.6;
       }
 
       /* ═══ FOOTER ═══ */
       footer {
-        padding: 80px 0 30px;
+        padding: 100px 0 40px;
         border-top: 1px solid var(--border);
         background: var(--bg-2);
         position: relative;
@@ -2049,28 +2080,28 @@
       .footer-grid {
         display: grid;
         grid-template-columns: 2fr 1fr 1fr 1fr;
-        gap: 44px;
-        margin-bottom: 56px;
+        gap: 60px;
+        margin-bottom: 64px;
       }
       @media (max-width: 768px) {
         .footer-grid {
           grid-template-columns: 1fr 1fr;
-          gap: 36px;
+          gap: 44px;
         }
       }
       .footer-brand img {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        margin-bottom: 16px;
-        box-shadow: 0 6px 18px rgba(168, 85, 247, 0.3);
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        margin-bottom: 20px;
+        box-shadow: 0 6px 22px rgba(168, 85, 247, 0.4);
       }
       .footer-brand p {
         color: var(--text-3);
-        font-size: 0.85rem;
-        max-width: 280px;
+        font-size: 0.9rem;
+        max-width: 320px;
         line-height: 1.7;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
       }
       .footer-social {
         display: flex;
@@ -2078,38 +2109,42 @@
         flex-wrap: wrap;
       }
       .footer-social a {
-        width: 40px;
-        height: 40px;
-        border-radius: 11px;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
         background: var(--card);
         border: 1px solid var(--border);
         display: flex;
         align-items: center;
         justify-content: center;
         color: var(--text-2);
-        font-size: 1.05rem;
         transition: all 0.3s var(--ios-spring);
+      }
+      .footer-social a svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
       }
       .footer-social a:hover {
         background: var(--grad-1);
         color: #fff;
         border-color: transparent;
-        transform: translateY(-3px) scale(1.05);
-        box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+        transform: translateY(-3px) scale(1.06);
+        box-shadow: 0 10px 28px rgba(168, 85, 247, 0.45);
       }
       .footer-col h4 {
-        font-size: 0.78rem;
+        font-size: 0.8rem;
         font-weight: 800;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--text);
-        margin-bottom: 20px;
+        margin-bottom: 22px;
       }
       .footer-col a {
         display: block;
         color: var(--text-3);
-        font-size: 0.85rem;
-        margin-bottom: 12px;
+        font-size: 0.9rem;
+        margin-bottom: 14px;
         transition: all 0.3s var(--ios-ease);
       }
       .footer-col a:hover {
@@ -2117,15 +2152,15 @@
         transform: translateX(4px);
       }
       .footer-bottom {
-        padding-top: 32px;
+        padding-top: 36px;
         border-top: 1px solid var(--border);
         text-align: center;
         color: var(--text-3);
-        font-size: 0.8rem;
+        font-size: 0.85rem;
         display: flex;
         justify-content: space-between;
         flex-wrap: wrap;
-        gap: 12px;
+        gap: 14px;
         align-items: center;
       }
       @media (max-width: 600px) {
@@ -2138,22 +2173,22 @@
       /* ═══ REVEAL ═══ */
       .reveal {
         opacity: 0;
-        transform: translateY(40px);
+        transform: translateY(50px);
         transition:
-          opacity 1s var(--ios-ease),
-          transform 1s var(--ios-ease);
+          opacity 1.1s var(--ios-ease),
+          transform 1.1s var(--ios-ease);
       }
       .reveal.visible {
         opacity: 1;
         transform: translateY(0);
       }
-      .reveal.delay-1 {
+      .reveal.d1 {
         transition-delay: 0.1s;
       }
-      .reveal.delay-2 {
+      .reveal.d2 {
         transition-delay: 0.2s;
       }
-      .reveal.delay-3 {
+      .reveal.d3 {
         transition-delay: 0.3s;
       }
 
@@ -2169,7 +2204,7 @@
       .btn-hero,
       .nav-cta,
       .demo-tab,
-      .plan .btn-plan,
+      .plan-btn,
       .share-btn {
         position: relative;
         overflow: hidden;
@@ -2197,7 +2232,7 @@
 
     <!-- NAVBAR -->
     <nav class="navbar" id="navbar">
-      <div class="container">
+      <div class="wrap">
         <div class="nav-inner">
           <a href="/" class="nav-logo">
             <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Study Tracker" />
@@ -2217,35 +2252,84 @@
 
     <!-- HERO -->
     <section class="hero">
-      <div class="container">
-        <div class="hero-inner">
-          <div class="hero-badge">
-            <span class="pulse-dot"></span>
-            Trusted by 500+ serious UPSC aspirants
-          </div>
-          <h1>Track Every Minute.<br /><span class="grad">Crack UPSC.</span></h1>
-          <p class="sub">
-            India's most complete <strong style="color: var(--text)">free UPSC study tracker</strong>. Timer, syllabus,
-            spaced-repetition revisions, PYQ analytics, and productivity insights — all in one place.
-            <strong style="color: var(--text)">No Notion templates. No setup. Just start.</strong>
-          </p>
-          <div class="hero-ctas">
-            <a href="/auth.html" class="btn-hero primary" data-ripple><span>▶</span> Start Tracking Free</a>
-            <a href="#demo" class="btn-hero secondary" data-ripple>👀 See Live Demo</a>
-          </div>
-          <div class="hero-trust">
-            <span>✅ <strong>Zero setup</strong></span>
-            <span>✅ <strong>No credit card</strong></span>
-            <span>✅ <strong>Works on mobile</strong></span>
-            <span>✅ <strong>Data auto-saves</strong></span>
-          </div>
+      <div class="wrap">
+        <div class="hero-eyebrow">
+          <span class="dot"></span>
+          Trusted by 500+ serious UPSC aspirants
+        </div>
+        <h1>
+          <span class="line">Track Every Minute.</span>
+          <span class="line grad">Crack UPSC.</span>
+        </h1>
+        <p class="hero-sub">
+          India's most complete <strong>free UPSC study tracker</strong>. Timer, syllabus, spaced-repetition revisions,
+          PYQ analytics, and productivity insights — all in one place.
+          <strong>No Notion templates. No setup. Just start.</strong>
+        </p>
+        <div class="hero-ctas">
+          <a href="/auth.html" class="btn-hero primary" data-ripple><span>▶</span> Start Tracking Free</a>
+          <a href="#demo" class="btn-hero secondary" data-ripple>👀 See Live Demo</a>
+        </div>
+        <div class="hero-trust">
+          <span
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Zero setup</span
+          >
+          <span
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            No credit card</span
+          >
+          <span
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Works on mobile</span
+          >
+          <span
+            ><svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Data auto-saves</span
+          >
         </div>
       </div>
     </section>
 
     <!-- QUOTE CAROUSEL -->
     <section class="quote-section">
-      <div class="container">
+      <div class="wrap">
         <div class="quote-box">
           <div class="quote-text" id="quoteText">
             "Success is the sum of small efforts repeated day in and day out."
@@ -2255,13 +2339,13 @@
       </div>
     </section>
 
-    <!-- INTERACTIVE DEMO -->
+    <!-- DEMO -->
     <section class="demo-section" id="demo">
-      <div class="container">
-        <div style="text-align: center; margin-bottom: 36px" class="reveal">
-          <div class="section-tag">Live Preview</div>
-          <h2 class="demo-title">See How The App <span class="grad">Actually Works</span> 👇</h2>
-          <p class="demo-sub">
+      <div class="wrap">
+        <div style="text-align: center; margin-bottom: 16px" class="reveal">
+          <span class="section-label">Live Preview</span>
+          <h2 class="section-title">See How The App <span class="grad">Actually Works</span></h2>
+          <p class="section-desc">
             Click through each tab to explore every screen — exactly as you'll use it inside the app.
           </p>
         </div>
@@ -2276,7 +2360,7 @@
         <div class="demo-window reveal">
           <div class="demo-dots"><span></span><span></span><span></span></div>
           <div class="demo-body">
-            <!-- STUDY PANEL -->
+            <!-- STUDY -->
             <div class="demo-panel active" data-panel="study">
               <div class="mock-app">
                 <div class="mock-sidebar">
@@ -2305,7 +2389,7 @@
                     </div>
                   </div>
                   <div class="mock-content">
-                    <div class="mock-greet">
+                    <div>
                       <div class="mock-greet-text">Good morning, Mukund 👋</div>
                       <div class="mock-greet-sub">Let's make today count.</div>
                     </div>
@@ -2368,7 +2452,7 @@
               </div>
             </div>
 
-            <!-- SUBJECTS PANEL -->
+            <!-- SUBJECTS -->
             <div class="demo-panel" data-panel="subjects">
               <div class="mock-app">
                 <div class="mock-sidebar">
@@ -2394,16 +2478,16 @@
                   </div>
                   <div class="mock-content">
                     <div style="display: flex; justify-content: space-between; align-items: center">
-                      <div style="font-size: 1rem; font-weight: 800">All Subjects</div>
+                      <div style="font-size: 1.05rem; font-weight: 800">All Subjects</div>
                       <div
                         style="
-                          padding: 7px 16px;
-                          border-radius: 20px;
+                          padding: 8px 18px;
+                          border-radius: 22px;
                           background: var(--grad-1);
                           color: #fff;
-                          font-size: 0.7rem;
+                          font-size: 0.75rem;
                           font-weight: 800;
-                          box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
+                          box-shadow: 0 4px 16px rgba(168, 85, 247, 0.42);
                         "
                       >
                         + Custom Subject
@@ -2464,7 +2548,7 @@
               </div>
             </div>
 
-            <!-- SYLLABUS PANEL -->
+            <!-- SYLLABUS -->
             <div class="demo-panel" data-panel="syllabus">
               <div class="mock-app">
                 <div class="mock-sidebar">
@@ -2495,23 +2579,23 @@
                         justify-content: space-between;
                         align-items: center;
                         flex-wrap: wrap;
-                        gap: 8px;
+                        gap: 10px;
                       "
                     >
                       <div>
-                        <div style="font-size: 0.95rem; font-weight: 800">📖 UPSC Syllabus Tracker</div>
-                        <div style="font-size: 0.68rem; color: var(--text-3); margin-top: 3px">
+                        <div style="font-size: 1rem; font-weight: 800">📖 UPSC Syllabus Tracker</div>
+                        <div style="font-size: 0.72rem; color: var(--text-3); margin-top: 4px">
                           Complete UPSC syllabus — GS I-IV, CSAT, Essay, Optional
                         </div>
                       </div>
-                      <div style="display: flex; gap: 6px">
+                      <div style="display: flex; gap: 8px">
                         <div
                           style="
-                            padding: 5px 12px;
-                            border-radius: 8px;
+                            padding: 6px 14px;
+                            border-radius: 9px;
                             background: var(--card);
                             border: 1px solid var(--border);
-                            font-size: 0.64rem;
+                            font-size: 0.7rem;
                             font-weight: 700;
                             color: var(--text-2);
                           "
@@ -2520,13 +2604,13 @@
                         </div>
                         <div
                           style="
-                            padding: 5px 12px;
-                            border-radius: 8px;
+                            padding: 6px 14px;
+                            border-radius: 9px;
                             background: var(--grad-1);
                             color: #fff;
-                            font-size: 0.64rem;
+                            font-size: 0.7rem;
                             font-weight: 700;
-                            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.35);
+                            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
                           "
                         >
                           + Add Topic
@@ -2588,7 +2672,7 @@
               </div>
             </div>
 
-            <!-- INSIGHTS PANEL -->
+            <!-- INSIGHTS -->
             <div class="demo-panel" data-panel="insights">
               <div class="mock-app">
                 <div class="mock-sidebar">
@@ -2612,24 +2696,24 @@
                       <div
                         style="
                           display: inline-block;
-                          padding: 4px 14px;
-                          border-radius: 20px;
+                          padding: 5px 15px;
+                          border-radius: 22px;
                           background: var(--grad-1);
                           color: #fff;
-                          font-size: 0.62rem;
+                          font-size: 0.66rem;
                           font-weight: 900;
-                          letter-spacing: 0.06em;
+                          letter-spacing: 0.08em;
                           text-transform: uppercase;
-                          margin-bottom: 10px;
-                          box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+                          margin-bottom: 12px;
+                          box-shadow: 0 4px 16px rgba(168, 85, 247, 0.4);
                         "
                       >
                         ✨ Powered by your data
                       </div>
-                      <div style="font-size: 1.05rem; font-weight: 900; letter-spacing: -0.01em; margin-bottom: 5px">
+                      <div style="font-size: 1.15rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px">
                         Your Personalized Insights
                       </div>
-                      <div style="font-size: 0.78rem; color: var(--text-2); margin-bottom: 14px">
+                      <div style="font-size: 0.84rem; color: var(--text-2); margin-bottom: 18px">
                         Data-driven suggestions to improve your study patterns.
                       </div>
                     </div>
@@ -2668,50 +2752,87 @@
           </div>
         </div>
 
-        <!-- Share bar -->
+        <!-- Share bar with proper SVG logos -->
         <div class="share-bar reveal">
           <span class="share-label">Share</span>
           <a
             class="share-btn wa"
-            href="https://wa.me/?text=Check%20out%20this%20awesome%20free%20UPSC%20study%20tracker%3A%20https%3A%2F%2Fupscstudytracker.co.in"
+            href="https://wa.me/?text=Check%20out%20this%20free%20UPSC%20study%20tracker%3A%20https%3A%2F%2Fupscstudytracker.co.in"
             target="_blank"
             rel="noopener"
             title="WhatsApp"
-            >📱</a
           >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+              />
+            </svg>
+          </a>
           <a
             class="share-btn tw"
             href="https://twitter.com/intent/tweet?text=Free%20UPSC%20Study%20Tracker%20%E2%80%94%20Timer%2C%20Syllabus%20%26%20Analytics%20%E2%80%94%20perfect%20for%20aspirants%21&url=https%3A%2F%2Fupscstudytracker.co.in"
             target="_blank"
             rel="noopener"
-            title="Twitter/X"
-            >𝕏</a
+            title="X"
           >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+              />
+            </svg>
+          </a>
           <a
             class="share-btn tg"
             href="https://t.me/share/url?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker%20%E2%80%94%20must%20try%21"
             target="_blank"
             rel="noopener"
             title="Telegram"
-            >✈️</a
           >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
+              />
+            </svg>
+          </a>
           <a
             class="share-btn li"
             href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fupscstudytracker.co.in"
             target="_blank"
             rel="noopener"
             title="LinkedIn"
-            >in</a
           >
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+              />
+            </svg>
+          </a>
           <a
             class="share-btn rd"
             href="https://www.reddit.com/submit?url=https%3A%2F%2Fupscstudytracker.co.in&title=Free%20UPSC%20Study%20Tracker"
             target="_blank"
             rel="noopener"
             title="Reddit"
-            >👽</a
           >
-          <button class="share-btn cp" id="copyLinkBtn" title="Copy Link">🔗</button>
+            <svg viewBox="0 0 24 24">
+              <path
+                d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.688-.561-1.249-1.249-1.249zm-5.466 3.321a.32.32 0 0 0-.217.062c-.005.005-.041.037-.041.074 0 .035.031.078.043.091.82.816 2.192 1.066 3.431 1.066 1.24 0 2.61-.25 3.432-1.066.012-.013.043-.056.043-.091 0-.037-.036-.069-.041-.074a.32.32 0 0 0-.217-.062.352.352 0 0 0-.143.036c-.729.329-1.585.487-2.533.487-.947 0-1.803-.158-2.533-.487a.352.352 0 0 0-.143-.036z"
+              />
+            </svg>
+          </a>
+          <button class="share-btn cp" id="copyLinkBtn" title="Copy Link">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+          </button>
         </div>
 
         <!-- Stats bar -->
@@ -2738,43 +2859,43 @@
 
     <!-- PROBLEM -->
     <section class="section" style="background: var(--bg-2)">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">The Problem</div>
-          <h2>99% of Aspirants <span class="grad">Make This Mistake</span></h2>
-          <p>
+          <span class="section-label">The Problem</span>
+          <h2 class="section-title">99% of Aspirants <span class="grad">Make This Mistake</span></h2>
+          <p class="section-desc">
             Six months in, you realize — some topics were skipped, revisions never happened, and you can't even recall
             what you studied.
           </p>
         </div>
-        <div class="features-grid" style="max-width: 1000px; margin: 0 auto">
-          <div class="feature-card reveal">
-            <div class="feature-icon">😰</div>
+        <div class="bento" style="max-width: 1200px; margin: 0 auto">
+          <div class="bento-item reveal">
+            <div class="bento-icon">😰</div>
             <h3>Blind Spots</h3>
             <p>Some topics never get studied because you don't track them. You find out only in the exam.</p>
           </div>
-          <div class="feature-card reveal delay-1">
-            <div class="feature-icon">🔁</div>
+          <div class="bento-item reveal d1">
+            <div class="bento-icon">🔁</div>
             <h3>Revision Gets Forgotten</h3>
             <p>You forget what you studied because you never planned revisions in the first place.</p>
           </div>
-          <div class="feature-card reveal delay-2">
-            <div class="feature-icon">😵</div>
+          <div class="bento-item reveal d2">
+            <div class="bento-icon">😵</div>
             <h3>Over-Studying Favourites</h3>
             <p>Way too much time on favourites, zero on weak areas. The imbalance slowly builds up.</p>
           </div>
-          <div class="feature-card reveal">
-            <div class="feature-icon">📉</div>
+          <div class="bento-item reveal">
+            <div class="bento-icon">📉</div>
             <h3>No Data, No Direction</h3>
             <p>You don't know what's improving or what's getting worse. It's blind flying.</p>
           </div>
-          <div class="feature-card reveal delay-1">
-            <div class="feature-icon">😩</div>
+          <div class="bento-item reveal d1">
+            <div class="bento-icon">😩</div>
             <h3>Too Much Notion Setup</h3>
             <p>Templates, databases, formulas — you quit in 3 days. Too much effort, no payoff.</p>
           </div>
-          <div class="feature-card reveal delay-2">
-            <div class="feature-icon">💸</div>
+          <div class="bento-item reveal d2">
+            <div class="bento-icon">💸</div>
             <h3>Coaching Apps Are Costly</h3>
             <p>₹5000+/month trackers that aren't even relevant. Waste of money and time.</p>
           </div>
@@ -2782,23 +2903,13 @@
       </div>
     </section>
 
-    <!-- MOTIVATION QUOTE -->
-    <section class="motivation">
-      <div class="container">
-        <div class="motivation-quote reveal">
-          <p>"The only way to do great work is to love what you do."</p>
-          <div class="author">— Steve Jobs</div>
-        </div>
-      </div>
-    </section>
-
     <!-- HOW IT WORKS -->
     <section class="section" id="how">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">How It Works</div>
-          <h2>Start in <span class="grad">60 Seconds</span></h2>
-          <p>No complex setup. No Notion templates. Just login and start tracking.</p>
+          <span class="section-label">How It Works</span>
+          <h2 class="section-title">Start in <span class="grad">60 Seconds</span></h2>
+          <p class="section-desc">No complex setup. No Notion templates. Just login and start tracking.</p>
         </div>
         <div class="how-grid">
           <div class="how-step reveal">
@@ -2806,12 +2917,12 @@
             <h3>Sign up free</h3>
             <p>Create your account in 30 seconds. No credit card required. Full access to core features.</p>
           </div>
-          <div class="how-step reveal delay-1">
+          <div class="how-step reveal d1">
             <div class="how-num">2</div>
             <h3>Pick & start</h3>
             <p>Choose a subject from the pre-loaded UPSC syllabus, hit the timer, and start studying.</p>
           </div>
-          <div class="how-step reveal delay-2">
+          <div class="how-step reveal d2">
             <div class="how-num">3</div>
             <h3>See progress grow</h3>
             <p>Streaks, analytics, revision reminders — all automatic. Watch yourself improve daily.</p>
@@ -2820,74 +2931,80 @@
       </div>
     </section>
 
-    <!-- FEATURES -->
+    <!-- FEATURES (BENTO) -->
     <section class="section" id="features" style="background: var(--bg-2)">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">Everything You Need</div>
-          <h2>Everything in <span class="grad">One Place</span></h2>
-          <p>Every feature solves a real problem for aspirants. No fluff, no distraction.</p>
+          <span class="section-label">Everything You Need</span>
+          <h2 class="section-title">Everything in <span class="grad">One Place</span></h2>
+          <p class="section-desc">Every feature solves a real problem for aspirants. No fluff, no distraction.</p>
         </div>
-        <div class="features-grid">
-          <div class="feature-card reveal">
-            <div class="feature-icon">⏱</div>
+        <div class="bento" style="max-width: 1200px; margin: 0 auto">
+          <div class="bento-item large reveal">
+            <div class="bento-icon">⏱</div>
             <h3>Study Timer</h3>
             <p>Stopwatch, countdown, and Pomodoro modes with pre-loaded UPSC subjects. Just pick and start.</p>
           </div>
-          <div class="feature-card reveal delay-1">
-            <div class="feature-icon">📖</div>
-            <h3>Syllabus Tracker</h3>
+          <div class="bento-item large reveal d1">
+            <div class="bento-icon">📖</div>
+            <h3>Complete Syllabus Tracker</h3>
             <p>Complete UPSC syllabus (GS I-IV, Essay, CSAT, Optional) with status per topic — click to update.</p>
           </div>
-          <div class="feature-card reveal delay-2">
-            <div class="feature-icon">🔁</div>
+          <div class="bento-item reveal">
+            <div class="bento-icon">🔁</div>
             <h3>Smart Revision</h3>
-            <p>Spaced repetition with 1/3/7/14/30/60 day intervals. Auto-schedules based on your study.</p>
+            <p>Spaced repetition with 1/3/7/14/30/60 day intervals. Auto-schedules.</p>
           </div>
-          <div class="feature-card reveal delay-3">
-            <div class="feature-icon">📝</div>
+          <div class="bento-item reveal d1">
+            <div class="bento-icon">📝</div>
             <h3>PYQ Tracker</h3>
-            <p>Year-wise, subject-wise PYQs with accuracy percentages auto-calculated.</p>
+            <p>Year-wise, subject-wise PYQs with accuracy auto-calculated.</p>
           </div>
-          <div class="feature-card reveal">
-            <div class="feature-icon">📊</div>
+          <div class="bento-item reveal d2">
+            <div class="bento-icon">📊</div>
             <h3>Analytics Dashboard</h3>
-            <p>Best study hours, neglected subjects, consistency trends — all from real data.</p>
+            <p>Best study hours, neglected subjects, consistency trends.</p>
           </div>
-          <div class="feature-card reveal delay-1">
-            <div class="feature-icon">📋</div>
-            <h3>Mock Test Tracking</h3>
-            <p>Log mock tests, track scores over time, identify weak areas, see improvement.</p>
+          <div class="bento-item wide reveal">
+            <div class="bento-icon">🔥</div>
+            <h3>Streaks & Study Heatmap</h3>
+            <p>
+              Build consistency with day streaks and a GitHub-style 12-month heatmap. Watch your dedication turn into a
+              visual masterpiece.
+            </p>
           </div>
-          <div class="feature-card reveal delay-2">
-            <div class="feature-icon">🎯</div>
+          <div class="bento-item reveal d1">
+            <div class="bento-icon">🎯</div>
             <h3>Goals & Tasks</h3>
-            <p>Daily, weekly, and monthly targets with task management and visual progress.</p>
+            <p>Daily, weekly, and monthly targets with visual progress.</p>
           </div>
-          <div class="feature-card reveal delay-3">
-            <div class="feature-icon">🔥</div>
-            <h3>Streaks & Heatmap</h3>
-            <p>Build consistency with day streaks and a GitHub-style 12-month study heatmap.</p>
+          <div class="bento-item reveal">
+            <div class="bento-icon">📋</div>
+            <h3>Mock Test Tracking</h3>
+            <p>Log mock tests, track scores, identify weak areas.</p>
           </div>
-          <div class="feature-card reveal">
-            <div class="feature-icon">✨</div>
-            <h3>AI-Style Insights</h3>
-            <p>Personalized suggestions to improve your study patterns — based on your actual data.</p>
-          </div>
-          <div class="feature-card reveal delay-1">
-            <div class="feature-icon">📅</div>
+          <div class="bento-item reveal d1">
+            <div class="bento-icon">📅</div>
             <h3>Calendar View</h3>
-            <p>See your study history at a glance. Beautiful heatmap with daily activity levels.</p>
+            <p>Study history with beautiful daily activity heatmap.</p>
           </div>
-          <div class="feature-card reveal delay-2">
-            <div class="feature-icon">📝</div>
+          <div class="bento-item reveal d2">
+            <div class="bento-icon">✨</div>
+            <h3>AI-Style Insights</h3>
+            <p>Personalized suggestions to improve your patterns.</p>
+          </div>
+          <div class="bento-item reveal">
+            <div class="bento-icon">📝</div>
             <h3>Short Notes</h3>
-            <p>Save quick notes with links to Sheets, Keep, Drive, YouTube — all in one place.</p>
+            <p>Save quick notes with links to Sheets, Keep, Drive, YouTube.</p>
           </div>
-          <div class="feature-card reveal delay-3">
-            <div class="feature-icon">🔒</div>
+          <div class="bento-item wide reveal d1">
+            <div class="bento-icon">🔒</div>
             <h3>Private & Secure</h3>
-            <p>Your data is encrypted on Supabase. No one else can access it. Export anytime.</p>
+            <p>
+              Your data is encrypted on Supabase with Row Level Security. Only you can access it. Export anytime as JSON
+              or CSV. No ads, no tracking, no selling your data — ever.
+            </p>
           </div>
         </div>
       </div>
@@ -2895,11 +3012,11 @@
 
     <!-- COMPARISON -->
     <section class="section">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">Why Us</div>
-          <h2>UPSC Tracker <span class="grad">vs Others</span></h2>
-          <p>Notion, spreadsheets, or generic trackers — why are we the best choice?</p>
+          <span class="section-label">Why Us</span>
+          <h2 class="section-title">UPSC Tracker <span class="grad">vs Others</span></h2>
+          <p class="section-desc">Notion, spreadsheets, or generic trackers — why are we the best choice?</p>
         </div>
         <div class="compare-table reveal">
           <div class="compare-row header">
@@ -2962,18 +3079,18 @@
 
     <!-- TESTIMONIALS -->
     <section class="section" style="background: var(--bg-2)">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">Real Users</div>
-          <h2>What <span class="grad">Aspirants Say</span></h2>
-          <p>Hundreds of serious aspirants already tracking their prep daily.</p>
+          <span class="section-label">Real Users</span>
+          <h2 class="section-title">What <span class="grad">Aspirants Say</span></h2>
+          <p class="section-desc">Hundreds of serious aspirants already tracking their prep daily.</p>
         </div>
         <div class="testimonials-grid">
           <div class="testimonial reveal">
             <div class="stars">★★★★★</div>
             <p>
-              "I used to track everything on Notion but quit within 3 days. This app is simple — just pick a subject,
-              start the timer. Now I use it every single day."
+              I used to track everything on Notion but quit within 3 days. This app is simple — just pick a subject,
+              start the timer. Now I use it every single day.
             </p>
             <div class="author">
               <div class="avatar">R</div>
@@ -2983,11 +3100,11 @@
               </div>
             </div>
           </div>
-          <div class="testimonial reveal delay-1">
+          <div class="testimonial reveal d1">
             <div class="stars">★★★★★</div>
             <p>
-              "The revision scheduler is a game changer. I used to forget what to revise. Now it automatically shows up
-              as due."
+              The revision scheduler is a game changer. I used to forget what to revise. Now it automatically shows up
+              as due.
             </p>
             <div class="author">
               <div class="avatar">P</div>
@@ -2997,11 +3114,11 @@
               </div>
             </div>
           </div>
-          <div class="testimonial reveal delay-2">
+          <div class="testimonial reveal d2">
             <div class="stars">★★★★★</div>
             <p>
-              "The best part is the analytics. I discovered I'm most focused in the morning, so I now plan my toughest
-              subjects then."
+              The best part is the analytics. I discovered I'm most focused in the morning, so I now plan my toughest
+              subjects then.
             </p>
             <div class="author">
               <div class="avatar">A</div>
@@ -3015,114 +3132,437 @@
       </div>
     </section>
 
-    <!-- PRICING -->
+    <!-- PRICING (FIXED) -->
     <section class="section" id="pricing">
-      <div class="container">
+      <div class="wrap">
         <div class="section-head reveal">
-          <div class="section-tag">Simple Pricing</div>
-          <h2>Free to Start. <span class="grad">Upgrade When Ready.</span></h2>
-          <p>Basic tracking is free for everyone. Advanced features have an optional premium plan.</p>
+          <span class="section-label">Simple Pricing</span>
+          <h2 class="section-title">Free to Start. <span class="grad">Upgrade When Ready.</span></h2>
+          <p class="section-desc">
+            Basic tracking is free for everyone. Advanced features have an optional premium plan.
+          </p>
         </div>
         <div class="pricing-grid">
           <div class="plan reveal">
-            <h3>Free</h3>
-            <div class="price"><span class="cur">₹</span>0</div>
-            <div class="desc">Perfect for starting out</div>
-            <ul>
-              <li>Study timer (Pomodoro included)</li>
-              <li>Complete syllabus tracker</li>
-              <li>Revision scheduler</li>
-              <li>PYQ tracker</li>
-              <li>Notes & tasks</li>
-              <li>Current affairs</li>
+            <div class="plan-name">Free</div>
+            <div class="plan-price"><span class="cur">₹</span><span class="num">0</span></div>
+            <div class="plan-desc">Perfect for starting out</div>
+            <ul class="plan-list">
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Study timer (Pomodoro included)
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Complete syllabus tracker
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Revision scheduler
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                PYQ tracker
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Notes & tasks
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Current affairs
+              </li>
             </ul>
-            <a href="/auth.html" class="btn-plan outline" data-ripple>Start Free</a>
+            <a href="/auth.html" class="plan-btn outline" data-ripple>Start Free</a>
           </div>
-          <div class="plan featured reveal delay-1">
+          <div class="plan featured reveal d1">
             <div class="plan-badge">BEST VALUE</div>
-            <h3>Premium Yearly</h3>
-            <div class="price"><span class="cur">₹</span>799<span class="period">/year</span></div>
-            <div class="desc">For serious aspirants — just ₹66/month</div>
-            <ul>
-              <li>Everything in Free</li>
-              <li>Advanced analytics dashboard</li>
-              <li>Calendar with study heatmap</li>
-              <li>Goals & planner</li>
-              <li>Achievements system</li>
-              <li>Weekly review reports</li>
-              <li>Unlimited export (JSON, CSV)</li>
-              <li>Priority support</li>
+            <div class="plan-name">Premium Yearly</div>
+            <div class="plan-price">
+              <span class="cur">₹</span><span class="num">799</span><span class="period">/year</span>
+            </div>
+            <div class="plan-desc">For serious aspirants — just ₹66/month</div>
+            <ul class="plan-list">
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Everything in Free
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Advanced analytics dashboard
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Calendar with study heatmap
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Goals & planner
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Achievements system
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Weekly review reports
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Unlimited export (JSON, CSV)
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Priority support
+              </li>
             </ul>
-            <a href="/auth.html" class="btn-plan gold" data-ripple>Upgrade to Premium</a>
+            <a href="/auth.html" class="plan-btn gold" data-ripple>Upgrade to Premium</a>
           </div>
-          <div class="plan reveal delay-2">
-            <h3>Monthly</h3>
-            <div class="price"><span class="cur">₹</span>99<span class="period">/month</span></div>
-            <div class="desc">Try premium features monthly</div>
-            <ul>
-              <li>Everything in Premium</li>
-              <li>Cancel anytime</li>
-              <li>No long-term commitment</li>
-              <li>Same advanced features</li>
+          <div class="plan reveal d2">
+            <div class="plan-name">Monthly</div>
+            <div class="plan-price">
+              <span class="cur">₹</span><span class="num">99</span><span class="period">/month</span>
+            </div>
+            <div class="plan-desc">Try premium features monthly</div>
+            <ul class="plan-list">
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Everything in Premium
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Cancel anytime
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                No long-term commitment
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Same advanced features
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Full premium access
+              </li>
             </ul>
-            <a href="/auth.html" class="btn-plan primary" data-ripple>Choose Monthly</a>
+            <a href="/auth.html" class="plan-btn primary" data-ripple>Choose Monthly</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- FAQ -->
+    <!-- FAQ (NEW DESIGN) -->
     <section class="section" id="faq" style="background: var(--bg-2)">
-      <div class="container">
-        <div class="section-head reveal">
-          <div class="section-tag">Common Questions</div>
-          <h2>Frequently <span class="grad">Asked</span></h2>
-        </div>
-        <div class="faq-list">
-          <div class="faq-item reveal">
-            <div class="faq-q">Is the app really free?</div>
-            <div class="faq-a">
-              Yes. All core features (timer, syllabus, revision, PYQ tracker, notes, current affairs) are free. Advanced
-              analytics and premium features have an optional paid plan.
+      <div class="wrap">
+        <div class="faq-layout">
+          <!-- LEFT: Illustration + Title -->
+          <div class="faq-left reveal">
+            <div class="faq-illustration">
+              <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#8B5CF6" />
+                    <stop offset="100%" stop-color="#EC4899" />
+                  </linearGradient>
+                  <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#F97316" />
+                    <stop offset="100%" stop-color="#FBBF24" />
+                  </linearGradient>
+                  <radialGradient id="glow" cx="50%" cy="50%">
+                    <stop offset="0%" stop-color="#A855F7" stop-opacity=".4" />
+                    <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+                <!-- Background glow -->
+                <circle cx="200" cy="200" r="180" fill="url(#glow)" />
+                <!-- Big question mark -->
+                <text
+                  x="200"
+                  y="270"
+                  font-family="Inter, sans-serif"
+                  font-size="240"
+                  font-weight="900"
+                  text-anchor="middle"
+                  fill="url(#g1)"
+                  opacity="0.95"
+                >
+                  ?
+                </text>
+                <!-- Small dots -->
+                <circle cx="90" cy="100" r="8" fill="#A855F7" opacity="0.6" />
+                <circle cx="330" cy="120" r="6" fill="#EC4899" opacity="0.7" />
+                <circle cx="70" cy="300" r="10" fill="#F97316" opacity="0.5" />
+                <circle cx="340" cy="320" r="7" fill="#FBBF24" opacity="0.6" />
+                <circle cx="200" cy="50" r="5" fill="#14B8A6" opacity="0.7" />
+                <circle cx="200" cy="380" r="6" fill="#06B6D4" opacity="0.6" />
+                <!-- Floating badges -->
+                <rect x="40" y="180" width="60" height="26" rx="13" fill="url(#g2)" opacity="0.9" />
+                <text
+                  x="70"
+                  y="198"
+                  font-family="Inter"
+                  font-size="12"
+                  font-weight="800"
+                  text-anchor="middle"
+                  fill="#1a1a1a"
+                >
+                  FAQ
+                </text>
+                <rect x="300" y="240" width="70" height="26" rx="13" fill="url(#g1)" opacity="0.9" />
+                <text
+                  x="335"
+                  y="258"
+                  font-family="Inter"
+                  font-size="12"
+                  font-weight="800"
+                  text-anchor="middle"
+                  fill="#fff"
+                >
+                  Help
+                </text>
+              </svg>
             </div>
+            <h2>
+              Got
+              <span
+                class="grad"
+                style="
+                  background: var(--grad-hero);
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  background-clip: text;
+                "
+                >Questions?</span
+              >
+            </h2>
+            <p>
+              Everything you need to know about the app, pricing, data privacy, and more. Still stuck? Reach out on the
+              contact page.
+            </p>
           </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">Where is my data stored? Is it safe?</div>
-            <div class="faq-a">
-              Your data is stored encrypted on Supabase's secure servers. Only you can see your data — no one else can
-              access it.
+          <!-- RIGHT: FAQ Items -->
+          <div class="faq-list">
+            <div class="faq-item reveal">
+              <div class="faq-q">Is the app really free?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Yes. All core features (timer, syllabus, revision, PYQ tracker, notes, current affairs) are free
+                forever. Advanced analytics and premium features have an optional paid plan.
+              </div>
             </div>
-          </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">Does it work on mobile?</div>
-            <div class="faq-a">
-              Absolutely. The website is fully responsive — it works perfectly on phone, tablet, and desktop. You get
-              touch-friendly controls on mobile.
+            <div class="faq-item reveal d1">
+              <div class="faq-q">Where is my data stored? Is it safe?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Your data is stored encrypted on Supabase's secure servers with Row Level Security. Only you can see
+                your data — no one else, including us, can access it.
+              </div>
             </div>
-          </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">How do I make a payment?</div>
-            <div class="faq-a">Secure payments through Razorpay. We support UPI, cards, and netbanking.</div>
-          </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">How do I cancel if I change my mind?</div>
-            <div class="faq-a">
-              No commitment. You can cancel your monthly plan anytime — no charges from the next billing cycle. The
-              yearly plan is a one-time payment.
+            <div class="faq-item reveal d2">
+              <div class="faq-q">Does it work on mobile?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Absolutely. The website is fully responsive — it works perfectly on phone, tablet, and desktop. You get
+                touch-friendly controls on mobile and it's installable as a PWA.
+              </div>
             </div>
-          </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">Can my data be deleted?</div>
-            <div class="faq-a">
-              You can export all your data anytime from Settings. Or if you wish, you can delete your account — all data
-              will be permanently removed.
+            <div class="faq-item reveal">
+              <div class="faq-q">How do I make a payment?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Secure payments through Razorpay. We support UPI, credit/debit cards, and netbanking. All transactions
+                are encrypted and PCI-compliant.
+              </div>
             </div>
-          </div>
-          <div class="faq-item reveal">
-            <div class="faq-q">Why is this better than Notion?</div>
-            <div class="faq-a">
-              With Notion you have to build your own templates, write formulas, and tracking becomes difficult. Here the
-              complete UPSC syllabus is pre-loaded, revisions auto-schedule, and zero setup is needed.
+            <div class="faq-item reveal d1">
+              <div class="faq-q">How do I cancel if I change my mind?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                No commitment. You can cancel your monthly plan anytime — no charges from the next billing cycle. The
+                yearly plan is a one-time payment with no auto-renewal.
+              </div>
+            </div>
+            <div class="faq-item reveal d2">
+              <div class="faq-q">Can my data be deleted?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Yes, absolutely. You can export all your data anytime from Settings as JSON or CSV. Or delete your
+                entire account — all data will be permanently removed within 30 days.
+              </div>
+            </div>
+            <div class="faq-item reveal">
+              <div class="faq-q">Why is this better than Notion?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                With Notion you have to build your own templates, write formulas, and tracking becomes difficult. Here
+                the complete UPSC syllabus is pre-loaded, revisions auto-schedule, and zero setup is needed. Just login
+                and start.
+              </div>
             </div>
           </div>
         </div>
@@ -3131,7 +3571,7 @@
 
     <!-- FINAL CTA -->
     <section class="cta-section">
-      <div class="container">
+      <div class="wrap">
         <div class="cta-box reveal">
           <h2>Ready to <span class="grad">Crack UPSC?</span></h2>
           <p>Join 500+ aspirants using data-driven preparation. Free forever core features — no credit card needed.</p>
@@ -3144,7 +3584,7 @@
 
     <!-- FOOTER -->
     <footer>
-      <div class="container">
+      <div class="wrap">
         <div class="footer-grid">
           <div class="footer-brand">
             <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo" />
@@ -3155,36 +3595,61 @@
                 target="_blank"
                 rel="noopener"
                 title="WhatsApp"
-                >📱</a
               >
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                  />
+                </svg>
+              </a>
               <a
                 href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker"
                 target="_blank"
                 rel="noopener"
-                title="Twitter/X"
-                >𝕏</a
+                title="X"
               >
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                  />
+                </svg>
+              </a>
               <a
                 href="https://t.me/share/url?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker"
                 target="_blank"
                 rel="noopener"
                 title="Telegram"
-                >✈️</a
               >
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"
+                  />
+                </svg>
+              </a>
               <a
                 href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fupscstudytracker.co.in"
                 target="_blank"
                 rel="noopener"
                 title="LinkedIn"
-                >in</a
               >
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                  />
+                </svg>
+              </a>
               <a
                 href="https://www.reddit.com/submit?url=https%3A%2F%2Fupscstudytracker.co.in&title=Free%20UPSC%20Study%20Tracker"
                 target="_blank"
                 rel="noopener"
                 title="Reddit"
-                >👽</a
               >
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.688-.561-1.249-1.249-1.249zm-5.466 3.321a.32.32 0 0 0-.217.062c-.005.005-.041.037-.041.074 0 .035.031.078.043.091.82.816 2.192 1.066 3.431 1.066 1.24 0 2.61-.25 3.432-1.066.012-.013.043-.056.043-.091 0-.037-.036-.069-.041-.074a.32.32 0 0 0-.217-.062.352.352 0 0 0-.143.036c-.729.329-1.585.487-2.533.487-.947 0-1.803-.158-2.533-.487a.352.352 0 0 0-.143-.036z"
+                  />
+                </svg>
+              </a>
             </div>
           </div>
           <div class="footer-col">
@@ -3218,41 +3683,40 @@
     <script>
       /* ═══ SCROLL PROGRESS ═══ */
       const scrollProgress = document.getElementById('scrollProgress');
-      let scrollTicking = false;
+      let sTick = false;
       window.addEventListener(
         'scroll',
         () => {
-          if (!scrollTicking) {
+          if (!sTick) {
             requestAnimationFrame(() => {
               const h = document.documentElement;
-              const scrolled = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-              scrollProgress.style.width = scrolled + '%';
-              scrollTicking = false;
+              scrollProgress.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100 + '%';
+              sTick = false;
             });
-            scrollTicking = true;
+            sTick = true;
           }
         },
         { passive: true },
       );
 
-      /* ═══ NAVBAR SCROLL ═══ */
+      /* ═══ NAVBAR ═══ */
       const navbar = document.getElementById('navbar');
-      let navTicking = false;
+      let nTick = false;
       window.addEventListener(
         'scroll',
         () => {
-          if (!navTicking) {
+          if (!nTick) {
             requestAnimationFrame(() => {
               navbar.classList.toggle('scrolled', window.scrollY > 50);
-              navTicking = false;
+              nTick = false;
             });
-            navTicking = true;
+            nTick = true;
           }
         },
         { passive: true },
       );
 
-      /* ═══ FAQ TOGGLE ═══ */
+      /* ═══ FAQ ═══ */
       document.querySelectorAll('.faq-item').forEach((item) => {
         item.querySelector('.faq-q').addEventListener('click', () => {
           const wasOpen = item.classList.contains('open');
@@ -3264,56 +3728,54 @@
       /* ═══ SMOOTH SCROLL ═══ */
       document.querySelectorAll('a[href^="#"]').forEach((a) => {
         a.addEventListener('click', (e) => {
-          const target = document.querySelector(a.getAttribute('href'));
-          if (target) {
+          const t = document.querySelector(a.getAttribute('href'));
+          if (t) {
             e.preventDefault();
-            const offset = 80;
-            const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+            const top = t.getBoundingClientRect().top + window.pageYOffset - 90;
             window.scrollTo({ top, behavior: 'smooth' });
           }
         });
       });
 
-      /* ═══ REVEAL ON SCROLL ═══ */
-      const revealObserver = new IntersectionObserver(
+      /* ═══ REVEAL ═══ */
+      const revealObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               entry.target.classList.add('visible');
-              revealObserver.unobserve(entry.target);
+              revealObs.unobserve(entry.target);
             }
           });
         },
         { threshold: 0.12, rootMargin: '0px 0px -60px 0px' },
       );
-      document.querySelectorAll('.reveal').forEach((el) => revealObserver.observe(el));
+      document.querySelectorAll('.reveal').forEach((el) => revealObs.observe(el));
 
-      /* ═══ STATS COUNTER ═══ */
-      const statObserver = new IntersectionObserver(
+      /* ═══ STATS ═══ */
+      const statObs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
             if (entry.isIntersecting) {
               const el = entry.target;
               const target = parseInt(el.dataset.count, 10);
               const suffix = el.dataset.suffix || '';
-              const duration = 2000;
               const start = performance.now();
+              const dur = 2000;
               const animate = (now) => {
-                const elapsed = now - start;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = 1 - Math.pow(1 - progress, 4);
-                const value = Math.round(target * eased);
-                el.textContent = target >= 1000 ? value.toLocaleString('en-IN') + suffix : value + suffix;
-                if (progress < 1) requestAnimationFrame(animate);
+                const prog = Math.min((now - start) / dur, 1);
+                const eased = 1 - Math.pow(1 - prog, 4);
+                const val = Math.round(target * eased);
+                el.textContent = target >= 1000 ? val.toLocaleString('en-IN') + suffix : val + suffix;
+                if (prog < 1) requestAnimationFrame(animate);
               };
               requestAnimationFrame(animate);
-              statObserver.unobserve(el);
+              statObs.unobserve(el);
             }
           });
         },
         { threshold: 0.5 },
       );
-      document.querySelectorAll('[data-count]').forEach((el) => statObserver.observe(el));
+      document.querySelectorAll('[data-count]').forEach((el) => statObs.observe(el));
 
       /* ═══ DEMO TABS ═══ */
       document.querySelectorAll('.demo-tab').forEach((tab) => {
@@ -3335,20 +3797,20 @@
         });
       });
 
-      /* ═══ LIVE DEMO TIMER ═══ */
+      /* ═══ DEMO TIMER ═══ */
       let demoTimerSeconds = 47 * 60 + 23;
-      const demoTimerEl = document.getElementById('demoTimer');
-      if (demoTimerEl) {
+      const demoEl = document.getElementById('demoTimer');
+      if (demoEl) {
         setInterval(() => {
           demoTimerSeconds++;
           const h = String(Math.floor(demoTimerSeconds / 3600)).padStart(2, '0');
           const m = String(Math.floor((demoTimerSeconds % 3600) / 60)).padStart(2, '0');
           const s = String(demoTimerSeconds % 60).padStart(2, '0');
-          demoTimerEl.textContent = `${h}:${m}:${s}`;
+          demoEl.textContent = `${h}:${m}:${s}`;
         }, 1000);
       }
 
-      /* ═══ QUOTE ROTATION ═══ */
+      /* ═══ QUOTES ═══ */
       const QUOTES = [
         { text: '"Success is the sum of small efforts repeated day in and day out."', author: '— Robert Collier' },
         { text: '"The only way to do great work is to love what you do."', author: '— Steve Jobs' },
@@ -3361,24 +3823,24 @@
         { text: '"Consistency is what transforms average into excellence."', author: '— Tony Robbins' },
         { text: '"The future depends on what you do today."', author: '— Mahatma Gandhi' },
       ];
-      let quoteIndex = 0;
+      let qIdx = 0;
       setInterval(() => {
-        quoteIndex = (quoteIndex + 1) % QUOTES.length;
-        const textEl = document.getElementById('quoteText');
-        const authorEl = document.getElementById('quoteAuthor');
-        if (textEl && authorEl) {
-          textEl.style.opacity = '0';
-          authorEl.style.opacity = '0';
+        qIdx = (qIdx + 1) % QUOTES.length;
+        const tEl = document.getElementById('quoteText');
+        const aEl = document.getElementById('quoteAuthor');
+        if (tEl && aEl) {
+          tEl.style.opacity = '0';
+          aEl.style.opacity = '0';
           setTimeout(() => {
-            textEl.textContent = QUOTES[quoteIndex].text;
-            authorEl.textContent = QUOTES[quoteIndex].author;
-            textEl.style.opacity = '1';
-            authorEl.style.opacity = '1';
+            tEl.textContent = QUOTES[qIdx].text;
+            aEl.textContent = QUOTES[qIdx].author;
+            tEl.style.opacity = '1';
+            aEl.style.opacity = '1';
           }, 400);
         }
       }, 6000);
 
-      /* ═══ RIPPLE EFFECT ═══ */
+      /* ═══ RIPPLE ═══ */
       document.querySelectorAll('[data-ripple]').forEach((el) => {
         el.addEventListener('click', function (e) {
           const rect = this.getBoundingClientRect();
@@ -3394,44 +3856,43 @@
       });
 
       /* ═══ COPY LINK ═══ */
-      const copyBtn = document.getElementById('copyLinkBtn');
-      if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
+      const cpBtn = document.getElementById('copyLinkBtn');
+      if (cpBtn) {
+        cpBtn.addEventListener('click', async () => {
           try {
             await navigator.clipboard.writeText('https://upscstudytracker.co.in');
-            const orig = copyBtn.textContent;
-            copyBtn.textContent = '✓';
-            setTimeout(() => (copyBtn.textContent = orig), 1500);
-          } catch (e) {
-            console.warn('Copy failed', e);
-          }
+            cpBtn.style.background = 'var(--grad-1)';
+            cpBtn.style.color = '#fff';
+            setTimeout(() => {
+              cpBtn.style.background = '';
+              cpBtn.style.color = '';
+            }, 1500);
+          } catch (e) {}
         });
       }
 
-      /* ═══ HERO PARALLAX ═══ */
+      /* ═══ PARALLAX ═══ */
       if (window.matchMedia('(min-width: 900px)').matches) {
-        let mouseX = 0,
-          mouseY = 0,
-          currentX = 0,
-          currentY = 0;
+        let mx = 0,
+          my = 0,
+          cx = 0,
+          cy = 0;
         document.addEventListener('mousemove', (e) => {
-          mouseX = (e.clientX / window.innerWidth - 0.5) * 20;
-          mouseY = (e.clientY / window.innerHeight - 0.5) * 20;
+          mx = (e.clientX / window.innerWidth - 0.5) * 25;
+          my = (e.clientY / window.innerHeight - 0.5) * 25;
         });
-        function animateParallax() {
-          currentX += (mouseX - currentX) * 0.08;
-          currentY += (mouseY - currentY) * 0.08;
-          const orbs = document.querySelectorAll('.bg-orbs .orb');
-          orbs.forEach((orb, i) => {
-            const factor = (i + 1) * 0.6;
-            orb.style.transform = `translate(${currentX * factor}px, ${currentY * factor}px)`;
+        (function anim() {
+          cx += (mx - cx) * 0.07;
+          cy += (my - cy) * 0.07;
+          document.querySelectorAll('.bg-orbs .orb').forEach((orb, i) => {
+            const f = (i + 1) * 0.7;
+            orb.style.transform = `translate(${cx * f}px, ${cy * f}px)`;
           });
-          requestAnimationFrame(animateParallax);
-        }
-        animateParallax();
+          requestAnimationFrame(anim);
+        })();
       }
 
-      /* ═══ MAGNETIC BUTTONS ═══ */
+      /* ═══ MAGNETIC ═══ */
       if (window.matchMedia('(min-width: 900px)').matches) {
         document.querySelectorAll('.btn-hero.primary, .nav-cta').forEach((btn) => {
           btn.addEventListener('mousemove', (e) => {
@@ -3446,23 +3907,8 @@
         });
       }
 
-      /* ═══ CARD TILT ═══ */
-      if (window.matchMedia('(min-width: 900px)').matches) {
-        document.querySelectorAll('.feature-card, .testimonial, .plan').forEach((card) => {
-          card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = (e.clientX - rect.left) / rect.width - 0.5;
-            const y = (e.clientY - rect.top) / rect.height - 0.5;
-            card.style.transform = `perspective(1000px) rotateX(${-y * 3}deg) rotateY(${x * 3}deg) translateY(-6px)`;
-          });
-          card.addEventListener('mouseleave', () => {
-            card.style.transform = '';
-          });
-        });
-      }
-
       console.log(
-        '%c✅ UPSC Study Tracker — Premium Landing Loaded',
+        '%c✅ UPSC Study Tracker — Premium Landing v2',
         'background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;padding:6px 14px;border-radius:6px;font-weight:800;font-size:12px',
       );
     </script>
