@@ -457,7 +457,7 @@ function authMsg(text, type='info') {
   const el = $('#authMsg');
   if (!text) { el.classList.remove('show'); return; }
   el.className = 'auth-msg show ' + type;
-  el.textContent = text;
+  el.innerHTML = text; // ✅ YEH SAHI HAI (HTML render karega)
 }
 
 /* ═══════════════ SUPABASE ═══════════════ */
@@ -521,15 +521,20 @@ async function handleAuthSubmit(e) {
   const password = $('#authPassword').value;
   const name = $('#authName').value.trim();
 
-    // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
-  if (isDevPreview) {
-    if (!OWNER_EMAILS.includes(email.toLowerCase())) {
-      authMsg(`⚠️ This is a dev preview environment. Please use the production site.<br><br>
-        <a href="https://upscstudytracker.co.in" class="btn btn-primary" style="text-decoration:none; display:inline-flex; width:100%; justify-content:center;">Go to Live Production Site</a>`, 'err');
-      return;
-    }
+    if (isDevPreview) {
+  if (!OWNER_EMAILS.includes(email.toLowerCase())) {
+    authMsg(`
+      ⚠️ <strong>This is a dev preview environment.</strong><br>
+      Please use the production site.<br><br>
+      <a href="https://upscstudytracker.co.in" 
+         class="btn btn-primary" 
+         style="text-decoration:none; display:flex; width:100%; justify-content:center; box-sizing:border-box; padding:10px;">
+         Go to Live Production Site
+      </a>
+    `, 'err');
+    return;
   }
-  // ═══════════════════════════════════════════════════════════════
+}
 
   if (!email || !password) { authMsg('Enter email and password.', 'err'); return; }
   if (password.length < 6) { authMsg('Password must be 6+ characters.', 'err'); return; }
@@ -756,11 +761,15 @@ async function boot() {
 
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
-      if (isDevPreview) {
+            if (isDevPreview) {
         const userEmail = (session.user.email || '').toLowerCase();
         if (!OWNER_EMAILS.includes(userEmail)) {
           await supa.auth.signOut();
-          authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein.', 'err');
+          authMsg(`
+            ⚠️ <strong>This is a dev preview environment.</strong><br>
+            Please use the production site.<br><br>
+            <a href="https://upscstudytracker.co.in" class="btn btn-primary" style="text-decoration:none; display:flex; width:100%; justify-content:center; box-sizing:border-box; padding:10px;">Go to Live Production Site</a>
+          `, 'err');
           return;
         }
       }

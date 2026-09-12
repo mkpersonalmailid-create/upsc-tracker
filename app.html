@@ -3645,7 +3645,7 @@ async function loadAnnouncement() {
 
 async function bootAfterLogin(session) {
   state.user = session.user; state.session = session;
-  /// ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
+  // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
   const OWNER_EMAILS = [
     'mkpersonalmailid@gmail.com',
     'dev@gmail.com',
@@ -3658,7 +3658,7 @@ async function bootAfterLogin(session) {
     await supa.auth.signOut();
     alert('⚠️ This is a dev preview environment. Please use the production site.\n\nRedirecting you to the live site now...');
     window.location.href = 'https://upscstudytracker.co.in';
-    return;
+    return; // Yahan ruk jao, aage mat badho
   }
   // ═══════════════════════════════════════════════════════════════
   $('#authScreen').classList.add('hidden');
