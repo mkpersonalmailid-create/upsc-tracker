@@ -11,14 +11,13 @@ const MODELS = [
   'llama-3.1-70b-versatile',
   'openai/gpt-oss-120b',
   'llama-3.1-8b-instant',
-  'gemma2-9b-it'
+  'gemma2-9b-it',
 ];
 
 /* ═══════════════════════════════════════════════════════════
    TOPICS — 60+ across 8 categories
    ═══════════════════════════════════════════════════════════ */
 const TOPICS = [
-  // ── Time Management (8) ──
   'Effective Time Management for UPSC Preparation',
   'How to Reduce Screen Time During UPSC Prep',
   'Balancing Job and UPSC Preparation',
@@ -27,8 +26,6 @@ const TOPICS = [
   'Early Morning Study Routine for UPSC CSE',
   'How to Stay Consistent in UPSC Preparation',
   'Weekend Study Strategy for Working Aspirants',
-
-  // ── Subject-wise Strategy (10) ──
   'How to Prepare Indian Polity for UPSC Prelims',
   'Best Approach to Study Modern Indian History for UPSC',
   'How to Master Geography for UPSC CSE',
@@ -39,8 +36,6 @@ const TOPICS = [
   'Indian Society and Social Justice Preparation',
   'Internal Security Preparation Strategy for UPSC',
   'Ethics and Integrity Preparation for UPSC Mains',
-
-  // ── Answer Writing (8) ──
   'UPSC Mains Answer Writing Tips for Beginners',
   'How to Structure UPSC Mains Answers Effectively',
   'Common Mistakes in UPSC Mains Answer Writing',
@@ -49,87 +44,77 @@ const TOPICS = [
   'Essay Writing Strategy for UPSC',
   'How to Write Introductions in UPSC Mains',
   'Role of Examples in UPSC Answer Writing',
-
-  // ── PYQ & Analysis (6) ──
   'How to Analyze UPSC Previous Year Questions',
   'Why PYQs Are Essential for UPSC Preparation',
   'How to Use UPSC PYQs for Revision',
   'Subject-wise PYQ Analysis for UPSC Prelims',
   'Common Patterns in UPSC Prelims Questions',
   'How to Track UPSC PYQ Progress Effectively',
-
-  // ── Books & Resources (6) ──
   'Best Books for UPSC Prelims 2026',
   'Best Books for UPSC Mains GS Papers',
   'Standard Reference Books for UPSC Preparation',
   'Free Online Resources for UPSC Aspirants',
   'How to Choose the Right UPSC Coaching',
   'Newspaper Reading Strategy for UPSC',
-
-  // ── Current Affairs (6) ──
   'Role of Current Affairs in UPSC CSE',
   'How to Prepare Current Affairs for UPSC 2026',
   'Best Sources for UPSC Current Affairs',
   'How to Make Notes from Current Affairs',
   'Monthly Current Affairs Compilation Strategy',
   'Current Affairs Revision Techniques',
-
-  // ── Optional Subject (6) ──
   'UPSC Optional Subject Selection Guide',
   'How to Prepare Sociology Optional for UPSC',
   'Political Science Optional Strategy for UPSC',
   'History Optional Preparation Guide',
   'Geography Optional Strategy for UPSC',
   'How to Score High in Optional Subject',
-
-  // ── Mock Tests & Revision (6) ──
   'Importance of Revision in UPSC Preparation',
   'How to Use Mock Tests for UPSC Prelims',
   'Full-Length Test Strategy for UPSC',
   'Spaced Repetition for UPSC Revision',
   'How to Analyze Mock Test Performance',
   'Best Time to Start Mock Tests',
-
-  // ── Mental Health & Motivation (6) ──
   'Handling Failure in UPSC Preparation',
   'How to Stay Motivated During UPSC Journey',
   'Mental Health Tips for UPSC Aspirants',
   'Dealing with Peer Pressure During UPSC Prep',
   'How to Handle Family Expectations in UPSC',
-  'Building Resilience for Long UPSC Preparation'
+  'Building Resilience for Long UPSC Preparation',
 ];
 
 /* ═══════════════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════════════ */
 
-// Convert topic string to slug
 function topicToSlug(topic) {
-  return topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return topic
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
-// Get list of used topic slugs from existing blog posts
 function getUsedTopicSlugs() {
   try {
     if (!fs.existsSync('blog')) return [];
-    return fs.readdirSync('blog')
-      .filter(f => f.endsWith('.html') && f !== 'index.html')
-      .map(f => f.replace(/-\d{8}\.html$/, '').toLowerCase());
+    return fs
+      .readdirSync('blog')
+      .filter((f) => f.endsWith('.html') && f !== 'index.html')
+      .map((f) => f.replace(/-\d{8}\.html$/, '').toLowerCase());
   } catch (e) {
     console.warn('⚠️ Could not read blog folder:', e.message);
     return [];
   }
 }
 
-// Get recent blog posts for "Read Next" section
 function getRecentBlogPosts(excludeSlug = '', limit = 3) {
   try {
     if (!fs.existsSync('blog')) return [];
-    const files = fs.readdirSync('blog')
-      .filter(f => f.endsWith('.html') && f !== 'index.html' && !f.startsWith(excludeSlug))
-      .map(f => ({
+    const files = fs
+      .readdirSync('blog')
+      .filter((f) => f.endsWith('.html') && f !== 'index.html' && !f.startsWith(excludeSlug))
+      .map((f) => ({
         file: f,
-        mtime: fs.statSync(path.join('blog', f)).mtime
+        mtime: fs.statSync(path.join('blog', f)).mtime,
       }))
       .sort((a, b) => b.mtime - a.mtime)
       .slice(0, limit);
@@ -138,9 +123,7 @@ function getRecentBlogPosts(excludeSlug = '', limit = 3) {
       try {
         const content = fs.readFileSync(path.join('blog', file), 'utf8');
         const titleMatch = content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-        const title = titleMatch
-          ? titleMatch[1].trim()
-          : file.replace('.html', '').replace(/-/g, ' ');
+        const title = titleMatch ? titleMatch[1].trim() : file.replace('.html', '').replace(/-/g, ' ');
         return { slug: file.replace('.html', ''), title };
       } catch (e) {
         return { slug: file.replace('.html', ''), title: file.replace('.html', '') };
@@ -151,10 +134,9 @@ function getRecentBlogPosts(excludeSlug = '', limit = 3) {
   }
 }
 
-// Choose best topic (unused preferred)
 function pickTopic() {
   const usedSlugs = getUsedTopicSlugs();
-  const available = TOPICS.filter(t => !usedSlugs.includes(topicToSlug(t)));
+  const available = TOPICS.filter((t) => !usedSlugs.includes(topicToSlug(t)));
 
   if (available.length > 0) {
     console.log(`📊 ${available.length}/${TOPICS.length} topics unused`);
@@ -166,18 +148,84 @@ function pickTopic() {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   SHARED NAVBAR + FOOTER + CSS
+   ═══════════════════════════════════════════════════════════ */
+
+const NAVBAR_HTML = `<nav class="navbar" id="navbar">
+  <div class="nav-wrap">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Study Tracker">
+        <span>UPSC Study Tracker</span>
+      </a>
+      <div class="nav-links">
+        <a href="/#features">Features</a>
+        <a href="/#how">How it works</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/blog/">Blog</a>
+        <a href="/#faq">FAQ</a>
+        <a href="/auth.html" class="nav-cta">LOGIN/SIGN UP →</a>
+      </div>
+    </div>
+  </div>
+</nav>`;
+
+const FOOTER_HTML = `<footer>
+  <div class="footer-wrap">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo">
+        <p>The all-in-one study tracker for serious UPSC aspirants. Track, analyze, and crack UPSC with data.</p>
+        <div class="footer-social">
+          <a href="https://wa.me/?text=Check%20out%20UPSC%20Study%20Tracker%3A%20https%3A%2F%2Fupscstudytracker.co.in" target="_blank" rel="noopener" title="WhatsApp"><svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+          <a href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker" target="_blank" rel="noopener" title="X"><svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+          <a href="https://t.me/share/url?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker" target="_blank" rel="noopener" title="Telegram"><svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg></a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fupscstudytracker.co.in" target="_blank" rel="noopener" title="LinkedIn"><svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+          <a href="https://www.reddit.com/submit?url=https%3A%2F%2Fupscstudytracker.co.in&title=Free%20UPSC%20Study%20Tracker" target="_blank" rel="noopener" title="Reddit"><svg viewBox="0 0 24 24"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.688-.561-1.249-1.249-1.249zm-5.466 3.321a.32.32 0 0 0-.217.062c-.005.005-.041.037-.041.074 0 .035.031.078.043.091.82.816 2.192 1.066 3.431 1.066 1.24 0 2.61-.25 3.432-1.066.012-.013.043-.056.043-.091 0-.037-.036-.069-.041-.074a.32.32 0 0 0-.217-.062.352.352 0 0 0-.143.036c-.729.329-1.585.487-2.533.487-.947 0-1.803-.158-2.533-.487a.352.352 0 0 0-.143-.036z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="/auth.html">App</a>
+        <a href="/#features">Features</a>
+        <a href="/#pricing">Pricing</a>
+        <a href="/#faq">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="/blog/">Blog</a>
+        <a href="/blog/">Beginner's Guide</a>
+        <a href="/blog/">Book List</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="/about.html">About</a>
+        <a href="/contact.html">Contact</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="/terms.html">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 UPSC Study Tracker · Built with ❤️ for aspirants</div>
+      <div>Made in India 🇮🇳</div>
+    </div>
+  </div>
+</footer>`;
+
+/* ═══════════════════════════════════════════════════════════
    HTML TEMPLATE
    ═══════════════════════════════════════════════════════════ */
 function buildHtmlTemplate({ title, description, content, dateStr, slug, readNext }) {
-  const readNextHtml = (readNext && readNext.length)
-    ? `
+  const readNextHtml =
+    readNext && readNext.length
+      ? `
     <div class="read-next">
       <h3 style="margin:0 0 16px;font-size:1.1rem;color:var(--text)">📚 Read Next</h3>
       <ul style="list-style:none;margin:0;padding:0">
-        ${readNext.map(p => `<li style="margin-bottom:10px"><a href="/blog/${p.slug}.html">→ ${p.title}</a></li>`).join('')}
+        ${readNext.map((p) => `<li style="margin-bottom:10px"><a href="/blog/${p.slug}.html">→ ${p.title}</a></li>`).join('')}
       </ul>
     </div>`
-    : '';
+      : '';
 
   return `<!DOCTYPE html>
 <html lang="en" data-theme="dark">
@@ -237,20 +285,30 @@ function buildHtmlTemplate({ title, description, content, dateStr, slug, readNex
 </script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0A0612;--bg-2:#120A1E;--card:#171026;--card-2:#1F1633;--border:#2A1E42;--border-2:#3D2C5E;--text:#FFF;--text-2:#B8A8D9;--text-3:#6E5F8C;--pink:#EC4899;--purple:#A855F7;--amber:#FBBF24;--emerald:#34D399;--grad-1:linear-gradient(135deg,#8B5CF6,#EC4899)}
+:root{--bg:#08040F;--bg-2:#0F0818;--card:#141024;--card-2:#1C1630;--border:rgba(255,255,255,.06);--border-2:rgba(255,255,255,.12);--text:#FFF;--text-2:#A99BC7;--text-3:#645682;--pink:#EC4899;--purple:#A855F7;--amber:#FBBF24;--emerald:#34D399;--grad-1:linear-gradient(135deg,#8B5CF6,#EC4899)}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;font-size:16.5px;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%)}
 a{color:var(--purple);text-decoration:none;font-weight:600}
 a:hover{color:var(--pink);text-decoration:underline}
 .container{max-width:780px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 
-.navbar{padding:16px 0;border-bottom:1px solid var(--border);background:rgba(10,6,18,.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
-.nav-inner{display:flex;justify-content:space-between;align-items:center;max-width:1100px;margin:0 auto;padding:0 20px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text);font-size:1.05rem}
-.logo img{width:36px;height:36px;border-radius:9px}
-.nav-cta{background:var(--grad-1);color:#fff!important;padding:10px 20px;border-radius:10px;font-weight:800;font-size:.85rem;box-shadow:0 4px 14px rgba(168,85,247,.4)}
+/* ═══ UNIFIED NAVBAR ═══ */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:100;padding:18px 0;background:rgba(8,4,15,.5);backdrop-filter:blur(24px) saturate(180%);-webkit-backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid transparent;transition:all .4s cubic-bezier(0.32,0.72,0,1)}
+.navbar.scrolled{background:rgba(8,4,15,.88);border-bottom-color:var(--border);padding:12px 0;box-shadow:0 8px 32px rgba(0,0,0,.4)}
+.nav-wrap{max-width:1400px;margin:0 auto;padding:0 32px}
+.nav-inner{display:flex;justify-content:space-between;align-items:center;max-width:none;padding:0}
+.nav-logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:1.05rem;color:var(--text);transition:transform .3s cubic-bezier(0.34,1.56,0.64,1);text-decoration:none}
+.nav-logo:hover{transform:scale(1.02)}
+.nav-logo img{width:38px;height:38px;border-radius:11px;box-shadow:0 4px 14px rgba(168,85,247,.4)}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:.9rem;color:var(--text-2);font-weight:600;transition:color .25s;text-decoration:none;position:relative}
+.nav-links a:not(.nav-cta):hover{color:var(--text)}
+.nav-cta{background:var(--grad-1);color:#fff!important;padding:11px 22px;border-radius:12px;font-weight:800;font-size:.86rem;box-shadow:0 6px 20px rgba(168,85,247,.4);transition:all .3s cubic-bezier(0.34,1.56,0.64,1);text-decoration:none}
+.nav-cta:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(236,72,153,.55);filter:brightness(1.08)}
+@media(max-width:860px){.nav-links a:not(.nav-cta){display:none}}
 
-.article{padding:50px 0 80px;position:relative;z-index:1}
+/* ═══ ARTICLE ═══ */
+.article{padding:150px 0 80px;position:relative;z-index:1}
 .breadcrumb{font-size:.82rem;color:var(--text-3);margin-bottom:20px}
 .breadcrumb a{color:var(--text-2);font-weight:500}
 h1{font-size:clamp(1.9rem,4.5vw,2.8rem);font-weight:900;letter-spacing:-.03em;line-height:1.15;margin-bottom:18px;background:linear-gradient(135deg,#fff 0%,#C4B5FD 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -287,14 +345,28 @@ blockquote{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,15
 .faq-a{padding:0 22px;max-height:0;overflow:hidden;transition:.3s;color:var(--text-2);font-size:.92rem}
 .faq-item.open .faq-a{padding:0 22px 20px;max-height:600px}
 
-footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--text-3);font-size:.85rem;background:var(--bg-2);position:relative;z-index:1;margin-top:60px}
-footer a{color:var(--text-2);margin:0 8px}
+/* ═══ UNIFIED FOOTER ═══ */
+footer{padding:80px 32px 32px;border-top:1px solid var(--border);background:var(--bg-2);position:relative;z-index:1;margin-top:100px;text-align:left}
+.footer-wrap{max-width:1400px;margin:0 auto}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:60px;margin-bottom:56px}
+@media(max-width:768px){.footer-grid{grid-template-columns:1fr 1fr;gap:40px}}
+.footer-brand img{width:48px;height:48px;border-radius:12px;margin-bottom:16px;box-shadow:0 6px 18px rgba(168,85,247,.35)}
+.footer-brand p{color:var(--text-3);font-size:.88rem;max-width:300px;line-height:1.7;margin-bottom:20px}
+.footer-social{display:flex;gap:10px;flex-wrap:wrap}
+.footer-social a{width:40px;height:40px;border-radius:11px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text-2);transition:all .3s cubic-bezier(0.34,1.56,0.64,1);margin:0}
+.footer-social a svg{width:18px;height:18px;fill:currentColor}
+.footer-social a:hover{background:var(--grad-1);color:#fff;border-color:transparent;transform:translateY(-3px) scale(1.05);box-shadow:0 10px 28px rgba(168,85,247,.45)}
+.footer-col h4{font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--text);margin-bottom:20px}
+.footer-col a{display:block;color:var(--text-3);font-size:.88rem;margin-bottom:12px;transition:all .3s;text-decoration:none}
+.footer-col a:hover{color:var(--purple);transform:translateX(4px);text-decoration:none}
+.footer-bottom{padding-top:32px;border-top:1px solid var(--border);text-align:center;color:var(--text-3);font-size:.83rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center}
+@media(max-width:600px){.footer-bottom{justify-content:center;text-align:center}}
 
 @media(max-width:600px){
   body{font-size:15.5px}
   h1{font-size:1.65rem}
   h2{font-size:1.25rem}
-  .article{padding:30px 0 60px}
+  .article{padding:130px 0 60px}
   .cta-box{padding:24px 20px}
   .nav-cta{padding:8px 14px;font-size:.78rem}
   .read-next{padding:18px}
@@ -303,15 +375,7 @@ footer a{color:var(--text-2);margin:0 8px}
 </head>
 <body>
 
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="/" class="logo">
-      <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Tracker">
-      <span>UPSC Study Tracker</span>
-    </a>
-    <a href="/app.html" class="nav-cta">Start Free →</a>
-  </div>
-</nav>
+${NAVBAR_HTML}
 
 <article class="article">
   <div class="container">
@@ -340,13 +404,10 @@ footer a{color:var(--text-2);margin:0 8px}
   </div>
 </article>
 
-<footer>
-  <div class="container">
-    <p>© 2026 UPSC Study Tracker · <a href="/">Home</a> · <a href="/blog/">Blog</a> · <a href="/app.html">App</a></p>
-  </div>
-</footer>
+${FOOTER_HTML}
 
 <script>
+/* FAQ toggle */
 document.querySelectorAll('.faq-item').forEach(item => {
   item.querySelector('.faq-q').addEventListener('click', () => {
     const wasOpen = item.classList.contains('open');
@@ -354,6 +415,22 @@ document.querySelectorAll('.faq-item').forEach(item => {
     if (!wasOpen) item.classList.add('open');
   });
 });
+
+/* Navbar scroll state */
+(function(){
+  var navbar = document.getElementById('navbar');
+  if (!navbar) return;
+  var ticking = false;
+  window.addEventListener('scroll', function(){
+    if (!ticking) {
+      requestAnimationFrame(function(){
+        navbar.classList.toggle('scrolled', window.scrollY > 40);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }, { passive: true });
+})();
 </script>
 
 </body>
@@ -376,7 +453,6 @@ async function main() {
     console.log(`📝 Topic: ${topic}`);
     console.log(`📁 Target: ${filePath}`);
 
-    // Read recent posts for "Read Next" section
     const readNext = getRecentBlogPosts(slug, 3);
     console.log(`🔗 Read Next: ${readNext.length} posts found`);
 
@@ -442,14 +518,14 @@ RULES:
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
+            Authorization: `Bearer ${API_KEY}`,
           },
           body: JSON.stringify({
             model: model,
             messages: [{ role: 'user', content: PROMPT }],
             temperature: 0.7,
-            max_tokens: 8000
-          })
+            max_tokens: 8000,
+          }),
         });
 
         if (response.ok) {
@@ -475,48 +551,45 @@ RULES:
     const data = await response.json();
     let content = data.choices[0].message.content;
 
-    // Markdown fences hatao
-    content = content.replace(/^```html\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+    content = content
+      .replace(/^```html\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```\s*$/i, '')
+      .trim();
 
-    // Agar AI ne galti se full HTML de diya, to body nikaalo
     if (content.includes('<body')) {
       const match = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
       if (match) content = match[1];
     }
-    // Head/style/script tags hatao agar hain
     content = content.replace(/<head[\s\S]*?<\/head>/gi, '');
     content = content.replace(/<style[\s\S]*?<\/style>/gi, '');
     content = content.replace(/<script[\s\S]*?<\/script>/gi, '');
     content = content.replace(/<!DOCTYPE[^>]*>/gi, '');
     content = content.replace(/<\/?(html|head|body)[^>]*>/gi, '');
 
-    // Auto internal linking — homepage link add karo end me
     content += `
 <div class="callout">
   <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
 </div>`;
 
-    // Description banao (first paragraph se)
     const descMatch = content.match(/<p[^>]*>([^<]+)<\/p>/i);
     const description = descMatch
       ? descMatch[1].slice(0, 155).trim() + '...'
       : `Complete guide on ${topic} for UPSC aspirants.`;
 
-    // Template me wrap karo
     const finalHtml = buildHtmlTemplate({
       title: topic,
       description,
       content,
       dateStr,
       slug,
-      readNext
+      readNext,
     });
 
     if (!fs.existsSync('blog')) fs.mkdirSync('blog');
     fs.writeFileSync(filePath, finalHtml, 'utf8');
     console.log(`✅ Blog post created: ${filePath}`);
     console.log(`📄 Size: ${(finalHtml.length / 1024).toFixed(1)} KB`);
-
   } catch (error) {
     console.error('❌ Error:', error.message);
     process.exit(1);
