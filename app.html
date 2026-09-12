@@ -3645,7 +3645,7 @@ async function loadAnnouncement() {
 
 async function bootAfterLogin(session) {
   state.user = session.user; state.session = session;
-  // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
+  /// ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
   const OWNER_EMAILS = [
     'mkpersonalmailid@gmail.com',
     'dev@gmail.com',
@@ -3656,7 +3656,7 @@ async function bootAfterLogin(session) {
   
   if (isDevPreview && !OWNER_EMAILS.includes(userEmail)) {
     await supa.auth.signOut();
-    alert('⚠️ Yeh dev preview environment hai.\n\nKripya production site use karein: https://upscstudytracker.co.in');
+    alert('⚠️ This is a dev preview environment. Please use the production site.\n\nRedirecting you to the live site now...');
     window.location.href = 'https://upscstudytracker.co.in';
     return;
   }

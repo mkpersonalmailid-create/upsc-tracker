@@ -521,10 +521,11 @@ async function handleAuthSubmit(e) {
   const password = $('#authPassword').value;
   const name = $('#authName').value.trim();
 
-  // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
+    // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
   if (isDevPreview) {
     if (!OWNER_EMAILS.includes(email.toLowerCase())) {
-      authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein: upscstudytracker.co.in', 'err');
+      authMsg(`⚠️ This is a dev preview environment. Please use the production site.<br><br>
+        <a href="https://upscstudytracker.co.in" class="btn btn-primary" style="text-decoration:none; display:inline-flex; width:100%; justify-content:center;">Go to Live Production Site</a>`, 'err');
       return;
     }
   }
