@@ -1,20 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v7 (FINAL)
+   UPSC TRACKER — Goals Extras v8 (FINAL)
    ─────────────────────────────────────────────────────────────
-   ✅ Goal Study Mode (pick goal → timer auto-link)
-   ✅ No double-prompt — chip visible = skip dropdown
-   ✅ FORCE-SAVE — sessions reliably saved to history
-   ✅ Units: Hours only
-   ✅ Session ↔ Goal auto-increment
-   ✅ Analytics strip on Goals page
-   ✅ Planner + Goals → Calendar markers
-   ✅ Tasks nav hidden
+   ✅ Goal Study Mode
+   ✅ No double-prompt (chip visible = skip dropdown)
+   ✅ FORCE-SAVE — works for BOTH timer sessions AND manual log
+   ✅ Manual log uses slice(-3) check — no ts filter
+   ✅ Upsert (safe even if row exists)
+   ✅ Handles start_time as number OR string
+   ✅ Full error logging
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v7 loaded');
+  console.log('[goals-extras] v8 loaded');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -54,6 +53,16 @@
       }
     }
     return '';
+  }
+
+  function toISO(t) {
+    if (!t) return new Date().toISOString();
+    if (typeof t === 'number') return new Date(t).toISOString();
+    if (typeof t === 'string') {
+      const d = new Date(t);
+      return isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+    }
+    return new Date().toISOString();
   }
 
   /* ═══════════════ 1. HIDE TASKS ═══════════════ */
@@ -670,13 +679,11 @@
         const hasMlType = !!box.querySelector('#mlType');
         if (!hasSessType && !hasMlType) return;
 
-        /* SKIP if goal-timer chip already injected */
         if (box.querySelector('.goal-timer-chip')) return;
-        /* SKIP if a timer-linked goal flag is set */
         if (state._timerHasGoal) return;
 
         injectGoalLink(box, hasSessType);
-      }, 200); /* Longer timeout ensures chip is added first */
+      }, 200);
     };
 
     try {
@@ -710,7 +717,7 @@
     true,
   );
 
-  /* ═══════════════ 12. FORCE-SAVE SESSIONS (history reliability) ═══════════════ */
+  /* ═══════════════ 12. FORCE-SAVE SESSIONS (FIXED) ═══════════════ */
   function patchForceSaveSessions() {
     document.addEventListener(
       'click',
@@ -718,19 +725,21 @@
         const btn = e.target && e.target.closest && e.target.closest('#confirmSave, #mlSave');
         if (!btn) return;
 
-        /* Wait for original async save to finish */
+        /* Wait for original save to finish */
         setTimeout(async () => {
           if (typeof supa === 'undefined' || !supa || !state.user) return;
 
           const sessions = state.sessions || [];
           if (!sessions.length) return;
 
-          /* Find sessions created in last 30 seconds */
-          const recent = sessions.filter((s) => s.ts && Date.now() - s.ts < 30000);
-          if (!recent.length) return;
+          /* ⬇️ KEY FIX: Check last 3 sessions — no ts filter (manual log has no ts) */
+          const recent = sessions.slice(-3);
 
           for (const sess of recent) {
+            if (!sess || !sess.id) continue;
+
             try {
+              /* Check if session exists in DB */
               const { data, error: checkErr } = await supa
                 .from('study_sessions')
                 .select('id')
@@ -738,20 +747,20 @@
                 .maybeSingle();
 
               if (checkErr) {
-                console.warn('[goals-extras] DB check error:', checkErr);
-                continue;
+                console.warn('[goals-extras] DB check warning:', checkErr.message);
               }
-              if (data) continue; /* Already saved */
 
-              console.log('[goals-extras] Force-saving session:', sess.id);
+              if (data) continue; /* Already saved — good */
 
-              /* Build clean payload — only known columns */
+              console.log('[goals-extras] Force-saving session:', sess.id, '| subject:', sess.subject);
+
+              /* Build payload — only known columns, no category */
               const payload = {
                 id: sess.id,
                 user_id: state.user.id,
                 date: sess.date || todayKey(),
-                start_time: new Date(sess.start_time || Date.now()).toISOString(),
-                end_time: new Date(sess.end_time || Date.now()).toISOString(),
+                start_time: toISO(sess.start_time || sess.ts),
+                end_time: toISO(sess.end_time || sess.ts || Date.now()),
                 duration_seconds: sess.duration || 0,
                 subject: sess.subject || 'General Study',
                 topic: sess.topic || null,
@@ -762,16 +771,17 @@
                 paper: sess.paper || sess.subject || 'General Study',
               };
 
-              const { error: insErr } = await supa.from('study_sessions').insert(payload);
+              /* UPSERT — safe even if row exists */
+              const { error: insErr } = await supa.from('study_sessions').upsert(payload, { onConflict: 'id' });
 
               if (insErr) {
                 console.error('[goals-extras] ❌ Force save failed:', insErr);
-                console.error('   code:', insErr.code, '| message:', insErr.message);
+                console.error('   code:', insErr.code, '| message:', insErr.message, '| details:', insErr.details);
                 if (typeof toast === 'function') {
-                  toast('⚠️ Save issue: ' + (insErr.message || 'Unknown'), 'warn', 5000);
+                  toast('⚠️ Save issue: ' + (insErr.message || 'Unknown'), 'warn', 6000);
                 }
               } else {
-                console.log('[goals-extras] ✅ Force save OK');
+                console.log('[goals-extras] ✅ Force save OK:', sess.id);
               }
             } catch (err) {
               console.error('[goals-extras] Force save exception:', err);
@@ -1055,7 +1065,7 @@
         if (state.timer) {
           state.timer.goalId = gid;
           state.timer.goalTitle = goal.title;
-          state._timerHasGoal = true; /* ⬅️ FLAG — skip double-prompt */
+          state._timerHasGoal = true;
           try {
             localStorage.setItem('upsc_tracker_v5_state.timer', JSON.stringify(state.timer));
           } catch (e) {}
@@ -1073,7 +1083,7 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 16. SAVE MODAL — Add chip when goal linked ═══════════════ */
+  /* ═══════════════ 16. SAVE MODAL — Add chip ═══════════════ */
   function patchSaveSessionModalForGoal() {
     const _orig = window.openSaveSessionModal;
     if (typeof _orig !== 'function') return;
@@ -1082,7 +1092,6 @@
       _orig.call(this, snap);
 
       if (snap && snap.goalId) {
-        /* Add chip FAST (30ms) so openModal's 200ms check skips dropdown */
         setTimeout(() => {
           const notesEl = document.getElementById('sessNotes');
           if (notesEl) {
@@ -1143,7 +1152,6 @@
     (e) => {
       const btn = e.target && e.target.closest && e.target.closest('#confirmSave, #mlSave, [data-close]');
       if (!btn) return;
-      /* Delay reset so save handler completes */
       setTimeout(() => {
         state._timerHasGoal = false;
       }, 2200);
@@ -1170,7 +1178,7 @@
       patchStartTimerForGoalMode();
       patchSaveSessionModalForGoal();
       patchManualLogForGoal();
-      patchForceSaveSessions(); /* ⬅️ NEW — force save fix */
+      patchForceSaveSessions();
 
       setTimeout(() => {
         patchCalendarMarkers();
@@ -1179,7 +1187,6 @@
         if (typeof renderCalendar === 'function') renderCalendar();
       }, 500);
 
-      /* Auto-refresh Goal Study panel */
       setInterval(() => {
         if (state._goalStudyMode) {
           const panel = document.getElementById('goalStudyPanel');
