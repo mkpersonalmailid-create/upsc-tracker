@@ -694,8 +694,10 @@
         const hasSessType = !!box.querySelector('#sessType');
         const hasMlType = !!box.querySelector('#mlType');
         if (!hasSessType && !hasMlType) return;
+        /* ⬇️ YEH 1 LINE ADD — skip if timer already linked a goal */
+        if (box.querySelector('.goal-timer-chip')) return;
         injectGoalLink(box, hasSessType);
-      }, 40);
+      }, 100); /* ⬅️ 40 → 100 */
     };
 
     try {
