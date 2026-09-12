@@ -5826,6 +5826,7 @@
         currentAffairs: [],
         plans: [],
         testRecords: [],
+        notePinnedOnly: false,
         timer: null,
         draft: { category: null, subject: null, topic: null },
         view: 'study',
@@ -11638,239 +11639,240 @@ ${
 
       /* ═══════════════ EVENTS ═══════════════ */
       function wireEvents() {
-        // Auth
-        $$('.auth-tab').forEach((t) => (t.onclick = () => setAuthMode(t.dataset.authMode)));
-        $('#authForm').onsubmit = handleAuthSubmit;
-        $('#forgotPwBtn').onclick = handleForgotPassword;
-        $('#togglePw').onclick = () => {
-          const p = $('#authPassword');
-          p.type = p.type === 'password' ? 'text' : 'password';
-          $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
-        };
+        try {
+          // Auth
+          $$('.auth-tab').forEach((t) => (t.onclick = () => setAuthMode(t.dataset.authMode)));
+          $('#authForm').onsubmit = handleAuthSubmit;
+          $('#forgotPwBtn').onclick = handleForgotPassword;
+          $('#togglePw').onclick = () => {
+            const p = $('#authPassword');
+            p.type = p.type === 'password' ? 'text' : 'password';
+            $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
+          };
 
-        // Nav
-        $$('.nav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
-        $$('.bnav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
-        // ═══ Sidebar Toggle + Mobile Close ═══
-        $('#collapseBtn').onclick = () => {
-          const sb = $('#sidebar');
-          if (window.innerWidth <= 900) {
-            sb.classList.toggle('open');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
-            document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
-              el.style.display = sb.classList.contains('open') ? 'none' : '';
-            });
-          } else {
-            sb.classList.toggle('collapsed');
-          }
-        };
-
-        const sbCloseBtn = document.getElementById('sidebarClose');
-        if (sbCloseBtn) {
-          sbCloseBtn.addEventListener('click', () => {
-            const sb = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sb) sb.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-          });
-        }
-
-        const sbOverlay = document.getElementById('sidebarOverlay');
-        if (sbOverlay) {
-          sbOverlay.addEventListener('click', () => {
-            const sb = document.getElementById('sidebar');
-            if (sb) sb.classList.remove('open');
-            sbOverlay.classList.remove('active');
-            document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-          });
-        }
-
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            const sb = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sb && sb.classList.contains('open')) {
-              sb.classList.remove('open');
-              if (overlay) overlay.classList.remove('active');
-              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+          // Nav
+          $$('.nav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
+          $$('.bnav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
+          // ═══ Sidebar Toggle + Mobile Close ═══
+          $('#collapseBtn').onclick = () => {
+            const sb = $('#sidebar');
+            if (window.innerWidth <= 900) {
+              sb.classList.toggle('open');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
+                el.style.display = sb.classList.contains('open') ? 'none' : '';
+              });
+            } else {
+              sb.classList.toggle('collapsed');
             }
-          }
-        });
+          };
 
-        document.addEventListener('click', (e) => {
-          if (window.innerWidth <= 900 && e.target.closest('.nav-item')) {
-            setTimeout(() => {
+          const sbCloseBtn = document.getElementById('sidebarClose');
+          if (sbCloseBtn) {
+            sbCloseBtn.addEventListener('click', () => {
               const sb = document.getElementById('sidebar');
               const overlay = document.getElementById('sidebarOverlay');
               if (sb) sb.classList.remove('open');
               if (overlay) overlay.classList.remove('active');
               document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-            }, 100);
+            });
           }
-        });
-        $('#sbUser').onclick = () => switchView('settings');
-        $('#topAvatar').onclick = () => switchView('settings');
-        $('#settingsBtn').onclick = () => switchView('settings');
-        $('#supportBtn').onclick = () => switchView('support');
-        $('#feedbackBtn').onclick = () => {
-          switchView('support');
-          state.supportTab = 'feedback';
-          renderSupport();
-        };
 
-        // Theme
-        $('#themeBtn').onclick = () => {
-          const cur = document.documentElement.getAttribute('data-theme');
-          applyTheme(cur === 'dark' ? 'light' : 'dark');
-        };
-        $$('.theme-opt').forEach(
-          (b) =>
-            (b.onclick = () => {
-              applyTheme(b.dataset.theme);
-              renderSettings();
-            }),
-        );
-
-        // Plan badge
-        $('#planBadgeBtn').onclick = () => {
-          if (isPremiumUser() || isAdminUser()) switchView('settings');
-          else switchView('premium');
-        };
-
-        // Timer modes
-        $('#timerModes').addEventListener('click', (e) => {
-          const b = e.target.closest('.mode-chip');
-          if (!b) return;
-          $$('.mode-chip').forEach((x) => x.classList.toggle('active', x === b));
-          const m = b.dataset.mode;
-          $('#countdownField').classList.toggle('hidden', m !== 'countdown');
-          $('#pomodoroField').classList.toggle('hidden', m !== 'pomodoro');
-        });
-        $('#pomodoroPreset').onchange = (e) =>
-          ($('#customPomodoro').style.display = e.target.value === 'custom' ? 'grid' : 'none');
-
-        // Support tabs
-        $('#supportTabs').addEventListener('click', (e) => {
-          const b = e.target.closest('.chart-tab');
-          if (!b) return;
-          $$('#supportTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-          state.supportTab = b.dataset.tab;
-          renderSupportTab();
-        });
-
-        // Admin
-        $('#refreshAdminBtn').onclick = refreshAdmin;
-        // Revenue chart range tabs
-        const revTabs = document.getElementById('revRangeTabs');
-        if (revTabs) {
-          revTabs.addEventListener('click', (e) => {
-            const b = e.target.closest('[data-range]');
-            if (!b) return;
-            revTabs.querySelectorAll('.chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            currentRevRange = parseInt(b.dataset.range, 10);
-            loadRevenueData();
-          });
-        }
-        $('#adminTicketFilter').onchange = loadAdminTickets;
-        $('#adminFbFilter').onchange = loadAdminFeedback;
-        $('#manageAnnBtn').onclick = openAnnouncementEditor;
-        // Auto-refresh banner when admin publishes
-        window.refreshBanner = loadAnnouncement;
-
-        // FAB
-        $('#fab').onclick = () => $('#fabMenu').classList.toggle('active');
-        document.addEventListener('click', (e) => {
-          if (!e.target.closest('#fab') && !e.target.closest('#fabMenu')) $('#fabMenu').classList.remove('active');
-        });
-        $$('.fab-item').forEach(
-          (b) =>
-            (b.onclick = () => {
-              $('#fabMenu').classList.remove('active');
-              const a = b.dataset.action;
-              if (a === 'log-session') openManualLogModal();
-              else if (a === 'add-task') openTaskModal();
-              else if (a === 'add-note') openNoteModal();
-              else if (a === 'add-goal') openGoalModal();
-              else if (a === 'help') switchView('support');
-            }),
-        );
-
-        // Search
-        $('#searchTrigger').onclick = openSearch;
-        $('#searchInput').oninput = (e) => runSearch(e.target.value);
-        $('#searchOverlay').onclick = (e) => {
-          if (e.target.id === 'searchOverlay') closeSearch();
-        };
-        document.addEventListener('keydown', (e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-            e.preventDefault();
-            openSearch();
+          const sbOverlay = document.getElementById('sidebarOverlay');
+          if (sbOverlay) {
+            sbOverlay.addEventListener('click', () => {
+              const sb = document.getElementById('sidebar');
+              if (sb) sb.classList.remove('open');
+              sbOverlay.classList.remove('active');
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+            });
           }
-          if (e.key === 'Escape') {
-            closeSearch();
-            closeModal();
-          }
-        });
 
-        // Settings save
-        $('#saveProfileBtn').onclick = async () => {
-          state.profile.name = $('#setName').value.trim();
-          state.profile.exam = $('#setExam').value.trim();
-          state.profile.prep_year = $('#setPrepYear').value.trim();
-          state.profile.exam_date_prelims = $('#setPrelimsDate').value || null;
-          state.profile.exam_date_mains = $('#setMainsDate').value || null;
-          state.profile.optional_subject = $('#setOptionalSubject').value;
-          saveLocal();
-          if (supa && state.user) {
-            try {
-              await supa
-                .from('profiles')
-                .update({
-                  name: state.profile.name,
-                  exam: state.profile.exam,
-                  preparation_year: state.profile.prep_year || null,
-                  exam_date_prelims: state.profile.exam_date_prelims,
-                  exam_date_mains: state.profile.exam_date_mains,
-                  optional_subject: state.profile.optional_subject,
-                })
-                .eq('id', state.user.id);
-            } catch (e) {
-              console.warn('save profile', e);
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              const sb = document.getElementById('sidebar');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (sb && sb.classList.contains('open')) {
+                sb.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+              }
             }
+          });
+
+          document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 900 && e.target.closest('.nav-item')) {
+              setTimeout(() => {
+                const sb = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sb) sb.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+              }, 100);
+            }
+          });
+          $('#sbUser').onclick = () => switchView('settings');
+          $('#topAvatar').onclick = () => switchView('settings');
+          $('#settingsBtn').onclick = () => switchView('settings');
+          $('#supportBtn').onclick = () => switchView('support');
+          $('#feedbackBtn').onclick = () => {
+            switchView('support');
+            state.supportTab = 'feedback';
+            renderSupport();
+          };
+
+          // Theme
+          $('#themeBtn').onclick = () => {
+            const cur = document.documentElement.getAttribute('data-theme');
+            applyTheme(cur === 'dark' ? 'light' : 'dark');
+          };
+          $$('.theme-opt').forEach(
+            (b) =>
+              (b.onclick = () => {
+                applyTheme(b.dataset.theme);
+                renderSettings();
+              }),
+          );
+
+          // Plan badge
+          $('#planBadgeBtn').onclick = () => {
+            if (isPremiumUser() || isAdminUser()) switchView('settings');
+            else switchView('premium');
+          };
+
+          // Timer modes
+          $('#timerModes').addEventListener('click', (e) => {
+            const b = e.target.closest('.mode-chip');
+            if (!b) return;
+            $$('.mode-chip').forEach((x) => x.classList.toggle('active', x === b));
+            const m = b.dataset.mode;
+            $('#countdownField').classList.toggle('hidden', m !== 'countdown');
+            $('#pomodoroField').classList.toggle('hidden', m !== 'pomodoro');
+          });
+          $('#pomodoroPreset').onchange = (e) =>
+            ($('#customPomodoro').style.display = e.target.value === 'custom' ? 'grid' : 'none');
+
+          // Support tabs
+          $('#supportTabs').addEventListener('click', (e) => {
+            const b = e.target.closest('.chart-tab');
+            if (!b) return;
+            $$('#supportTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+            state.supportTab = b.dataset.tab;
+            renderSupportTab();
+          });
+
+          // Admin
+          $('#refreshAdminBtn').onclick = refreshAdmin;
+          // Revenue chart range tabs
+          const revTabs = document.getElementById('revRangeTabs');
+          if (revTabs) {
+            revTabs.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-range]');
+              if (!b) return;
+              revTabs.querySelectorAll('.chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              currentRevRange = parseInt(b.dataset.range, 10);
+              loadRevenueData();
+            });
           }
-          updateSidebarUser();
-          toast('Profile saved!', 'ok');
-        };
-        $('#saveSettingsBtn').onclick = async () => {
-          state.settings.daily_target = parseFloat($('#setDailyTarget').value) || 8;
-          state.settings.weekly_target = parseFloat($('#setWeeklyTarget').value) || 50;
-          state.settings.monthly_target = parseFloat($('#setMonthlyTarget').value) || 200;
-          state.settings.min_session_minutes = parseInt($('#setMinSession').value, 10) || 10;
-          state.settings.pomodoro_work = parseInt($('#setPomoWork').value, 10) || 25;
-          state.settings.pomodoro_break = parseInt($('#setPomoBreak').value, 10) || 5;
-          state.settings.max_revisions = parseInt($('#setMaxRevisions').value, 10) || 3;
-          saveLocal();
-          if (supa && state.user) {
-            try {
-              await supa
-                .from('user_settings')
-                .upsert({ user_id: state.user.id, settings: state.settings }, { onConflict: 'user_id' });
-            } catch (e) {}
-          }
-          renderAll();
-          toast('Settings saved!', 'ok');
-        };
-        // Set/Change Password (for Google users)
-        const setPwBtn = document.getElementById('setPasswordBtn');
-        if (setPwBtn) {
-          setPwBtn.onclick = () => {
-            openModal(
-              modalShell({
-                title: '🔐 Set Password',
-                subtitle: 'Apna new password set karein',
-                body: `
+          $('#adminTicketFilter').onchange = loadAdminTickets;
+          $('#adminFbFilter').onchange = loadAdminFeedback;
+          $('#manageAnnBtn').onclick = openAnnouncementEditor;
+          // Auto-refresh banner when admin publishes
+          window.refreshBanner = loadAnnouncement;
+
+          // FAB
+          $('#fab').onclick = () => $('#fabMenu').classList.toggle('active');
+          document.addEventListener('click', (e) => {
+            if (!e.target.closest('#fab') && !e.target.closest('#fabMenu')) $('#fabMenu').classList.remove('active');
+          });
+          $$('.fab-item').forEach(
+            (b) =>
+              (b.onclick = () => {
+                $('#fabMenu').classList.remove('active');
+                const a = b.dataset.action;
+                if (a === 'log-session') openManualLogModal();
+                else if (a === 'add-task') openTaskModal();
+                else if (a === 'add-note') openNoteModal();
+                else if (a === 'add-goal') openGoalModal();
+                else if (a === 'help') switchView('support');
+              }),
+          );
+
+          // Search
+          $('#searchTrigger').onclick = openSearch;
+          $('#searchInput').oninput = (e) => runSearch(e.target.value);
+          $('#searchOverlay').onclick = (e) => {
+            if (e.target.id === 'searchOverlay') closeSearch();
+          };
+          document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+              e.preventDefault();
+              openSearch();
+            }
+            if (e.key === 'Escape') {
+              closeSearch();
+              closeModal();
+            }
+          });
+
+          // Settings save
+          $('#saveProfileBtn').onclick = async () => {
+            state.profile.name = $('#setName').value.trim();
+            state.profile.exam = $('#setExam').value.trim();
+            state.profile.prep_year = $('#setPrepYear').value.trim();
+            state.profile.exam_date_prelims = $('#setPrelimsDate').value || null;
+            state.profile.exam_date_mains = $('#setMainsDate').value || null;
+            state.profile.optional_subject = $('#setOptionalSubject').value;
+            saveLocal();
+            if (supa && state.user) {
+              try {
+                await supa
+                  .from('profiles')
+                  .update({
+                    name: state.profile.name,
+                    exam: state.profile.exam,
+                    preparation_year: state.profile.prep_year || null,
+                    exam_date_prelims: state.profile.exam_date_prelims,
+                    exam_date_mains: state.profile.exam_date_mains,
+                    optional_subject: state.profile.optional_subject,
+                  })
+                  .eq('id', state.user.id);
+              } catch (e) {
+                console.warn('save profile', e);
+              }
+            }
+            updateSidebarUser();
+            toast('Profile saved!', 'ok');
+          };
+          $('#saveSettingsBtn').onclick = async () => {
+            state.settings.daily_target = parseFloat($('#setDailyTarget').value) || 8;
+            state.settings.weekly_target = parseFloat($('#setWeeklyTarget').value) || 50;
+            state.settings.monthly_target = parseFloat($('#setMonthlyTarget').value) || 200;
+            state.settings.min_session_minutes = parseInt($('#setMinSession').value, 10) || 10;
+            state.settings.pomodoro_work = parseInt($('#setPomoWork').value, 10) || 25;
+            state.settings.pomodoro_break = parseInt($('#setPomoBreak').value, 10) || 5;
+            state.settings.max_revisions = parseInt($('#setMaxRevisions').value, 10) || 3;
+            saveLocal();
+            if (supa && state.user) {
+              try {
+                await supa
+                  .from('user_settings')
+                  .upsert({ user_id: state.user.id, settings: state.settings }, { onConflict: 'user_id' });
+              } catch (e) {}
+            }
+            renderAll();
+            toast('Settings saved!', 'ok');
+          };
+          // Set/Change Password (for Google users)
+          const setPwBtn = document.getElementById('setPasswordBtn');
+          if (setPwBtn) {
+            setPwBtn.onclick = () => {
+              openModal(
+                modalShell({
+                  title: '🔐 Set Password',
+                  subtitle: 'Apna new password set karein',
+                  body: `
           <div class="field"><label>New Password</label>
             <input type="password" id="sp1" placeholder="At least 6 characters"></div>
           <div class="field"><label>Confirm Password</label>
@@ -11878,113 +11880,113 @@ ${
           <p style="font-size:.78rem;color:var(--text-3);margin-top:8px">
             Password set karne ke baad aap Google ya email dono se login kar sakte ho.
           </p>`,
-                actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                  actions: `<button class="btn btn-ghost" data-close>Cancel</button>
           <button class="btn btn-primary" id="saveNewPwBtn">Save Password</button>`,
-              }),
-              {
-                onMount() {
-                  document.getElementById('saveNewPwBtn').onclick = async () => {
-                    const p1 = document.getElementById('sp1').value;
-                    const p2 = document.getElementById('sp2').value;
-                    if (!p1 || p1.length < 6) {
-                      toast('Password 6+ chars ka hona chahiye', 'err');
-                      return;
-                    }
-                    if (p1 !== p2) {
-                      toast('Passwords match nahi kar rahe', 'err');
-                      return;
-                    }
-                    try {
-                      const { error } = await supa.auth.updateUser({ password: p1 });
-                      if (error) throw error;
-                      closeModal();
-                      confetti();
-                      toast('✅ Password set ho gaya! Ab aap dono tarike se login kar sakte ho', 'ok', 5000);
-                    } catch (e) {
-                      toast('Failed: ' + e.message, 'err');
-                    }
-                  };
+                }),
+                {
+                  onMount() {
+                    document.getElementById('saveNewPwBtn').onclick = async () => {
+                      const p1 = document.getElementById('sp1').value;
+                      const p2 = document.getElementById('sp2').value;
+                      if (!p1 || p1.length < 6) {
+                        toast('Password 6+ chars ka hona chahiye', 'err');
+                        return;
+                      }
+                      if (p1 !== p2) {
+                        toast('Passwords match nahi kar rahe', 'err');
+                        return;
+                      }
+                      try {
+                        const { error } = await supa.auth.updateUser({ password: p1 });
+                        if (error) throw error;
+                        closeModal();
+                        confetti();
+                        toast('✅ Password set ho gaya! Ab aap dono tarike se login kar sakte ho', 'ok', 5000);
+                      } catch (e) {
+                        toast('Failed: ' + e.message, 'err');
+                      }
+                    };
+                  },
                 },
-              },
-            );
-          };
-        }
-
-        $('#signOutBtn').onclick = async () => {
-          const ok = await customConfirm({
-            title: 'Sign out?',
-            message: 'You will be logged out of your account. Your data will remain safe.',
-            confirmText: 'Sign Out',
-            cancelText: 'Stay',
-            icon: '👋',
-            type: 'danger',
-          });
-          if (ok) logout();
-        };
-
-        // History filters
-        ['#histSearch', '#histFrom', '#histTo', '#histSort'].forEach((s) => {
-          const el = $(s);
-          if (el) {
-            el.oninput = renderHistory;
-            el.onchange = renderHistory;
+              );
+            };
           }
-        });
-        $('#histClear').onclick = () => {
-          ['#histSearch', '#histFrom', '#histTo'].forEach((s) => ($(s).value = ''));
-          $('#histSort').value = 'newest';
-          renderHistory();
-        };
-        $('#gotoHistoryBtn').onclick = () => switchView('history');
 
-        // Analytics
-        $('#anRangeTabs').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-range]');
-          if (!b) return;
-          $$('#anRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-          anRange = b.dataset.range === 'all' ? 'all' : parseInt(b.dataset.range, 10);
-          renderAnalytics();
-        });
-        $('#anChartType').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-type]');
-          if (!b) return;
-          anChartType = b.dataset.type;
-          $$('#anChartType .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-          renderAnalytics();
-        });
+          $('#signOutBtn').onclick = async () => {
+            const ok = await customConfirm({
+              title: 'Sign out?',
+              message: 'You will be logged out of your account. Your data will remain safe.',
+              confirmText: 'Sign Out',
+              cancelText: 'Stay',
+              icon: '👋',
+              type: 'danger',
+            });
+            if (ok) logout();
+          };
 
-        // Calendar
-        $('#calPrev').onclick = () => {
-          calMonth.setMonth(calMonth.getMonth() - 1);
-          renderCalendar();
-        };
-        $('#calNext').onclick = () => {
-          calMonth.setMonth(calMonth.getMonth() + 1);
-          renderCalendar();
-        };
-        $('#calToday').onclick = () => {
-          calMonth = new Date();
-          renderCalendar();
-        };
-        $('#calAddBtn').onclick = openManualLogModal;
+          // History filters
+          ['#histSearch', '#histFrom', '#histTo', '#histSort'].forEach((s) => {
+            const el = $(s);
+            if (el) {
+              el.oninput = renderHistory;
+              el.onchange = renderHistory;
+            }
+          });
+          $('#histClear').onclick = () => {
+            ['#histSearch', '#histFrom', '#histTo'].forEach((s) => ($(s).value = ''));
+            $('#histSort').value = 'newest';
+            renderHistory();
+          };
+          $('#gotoHistoryBtn').onclick = () => switchView('history');
 
-        // Dashboard range
-        $('#dashRangeTabs').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-range]');
-          if (!b) return;
-          $$('#dashRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-          drawDashChart(parseInt(b.dataset.range, 10));
-        });
+          // Analytics
+          $('#anRangeTabs').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-range]');
+            if (!b) return;
+            $$('#anRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+            anRange = b.dataset.range === 'all' ? 'all' : parseInt(b.dataset.range, 10);
+            renderAnalytics();
+          });
+          $('#anChartType').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-type]');
+            if (!b) return;
+            anChartType = b.dataset.type;
+            $$('#anChartType .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+            renderAnalytics();
+          });
 
-        // Syllabus
-        $('#expandAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.add('open'));
-        $('#collapseAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.remove('open'));
-        $('#addSyllabusBtn').onclick = () => {
-          // Open add topic modal
-          openModal(
-            modalShell({
-              title: 'Add Custom Topic',
-              body: `
+          // Calendar
+          $('#calPrev').onclick = () => {
+            calMonth.setMonth(calMonth.getMonth() - 1);
+            renderCalendar();
+          };
+          $('#calNext').onclick = () => {
+            calMonth.setMonth(calMonth.getMonth() + 1);
+            renderCalendar();
+          };
+          $('#calToday').onclick = () => {
+            calMonth = new Date();
+            renderCalendar();
+          };
+          $('#calAddBtn').onclick = openManualLogModal;
+
+          // Dashboard range
+          $('#dashRangeTabs').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-range]');
+            if (!b) return;
+            $$('#dashRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+            drawDashChart(parseInt(b.dataset.range, 10));
+          });
+
+          // Syllabus
+          $('#expandAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.add('open'));
+          $('#collapseAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.remove('open'));
+          $('#addSyllabusBtn').onclick = () => {
+            // Open add topic modal
+            openModal(
+              modalShell({
+                title: 'Add Custom Topic',
+                body: `
         <div class="field"><label>Category</label>
           <select id="atCategory">
             <option value="prelims-gs1">GS Prelims I</option>
@@ -11997,68 +11999,71 @@ ${
           </select></div>
         <div class="field"><label>Subject</label><input id="atSubject" placeholder="e.g. History"></div>
         <div class="field"><label>Topic</label><input id="atTopic" placeholder="e.g. Specific chapter"></div>`,
-              actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                actions: `<button class="btn btn-ghost" data-close>Cancel</button>
         <button class="btn btn-primary" id="atSave">Add</button>`,
-            }),
-            {
-              onMount() {
-                $('#atSave').onclick = () => {
-                  const paper = $('#atCategory').value;
-                  const subject = $('#atSubject').value.trim();
-                  const topic = $('#atTopic').value.trim();
-                  if (!subject || !topic) {
-                    toast('Enter subject and topic.', 'err');
-                    return;
-                  }
-                  const t = {
-                    id: uuid(),
-                    paper,
-                    subject,
-                    topic,
-                    status: 'not_started',
-                    category: SYLLABUS[paper]?.category || 'Prelims',
+              }),
+              {
+                onMount() {
+                  $('#atSave').onclick = () => {
+                    const paper = $('#atCategory').value;
+                    const subject = $('#atSubject').value.trim();
+                    const topic = $('#atTopic').value.trim();
+                    if (!subject || !topic) {
+                      toast('Enter subject and topic.', 'err');
+                      return;
+                    }
+                    const t = {
+                      id: uuid(),
+                      paper,
+                      subject,
+                      topic,
+                      status: 'not_started',
+                      category: SYLLABUS[paper]?.category || 'Prelims',
+                    };
+                    state.syllabus.push(t);
+                    saveLocal();
+                    syncSyllabus(t);
+                    closeModal();
+                    renderSyllabus();
+                    toast('Topic added!', 'ok');
                   };
-                  state.syllabus.push(t);
-                  saveLocal();
-                  syncSyllabus(t);
-                  closeModal();
-                  renderSyllabus();
-                  toast('Topic added!', 'ok');
-                };
+                },
               },
-            },
-          );
-        };
+            );
+          };
 
-        // Subject add
-        $('#addSubjectBtn').onclick = () => {
-          const name = prompt('Subject name:');
-          if (!name) return;
-          const s = { id: uuid(), name, color: getSubjectColor(name), archived: false };
-          state.subjects.push(s);
-          saveLocal();
-          if (supa && state.user) {
-            supa
-              .from('subjects')
-              .insert({ id: s.id, user_id: state.user.id, name: s.name, color: s.color, archived: false })
-              .catch(() => {});
-          }
-          renderSubjects();
-          toast('Subject added!', 'ok');
-        };
+          // Subject add
+          $('#addSubjectBtn').onclick = () => {
+            const name = prompt('Subject name:');
+            if (!name) return;
+            const s = { id: uuid(), name, color: getSubjectColor(name), archived: false };
+            state.subjects.push(s);
+            saveLocal();
+            if (supa && state.user) {
+              supa
+                .from('subjects')
+                .insert({ id: s.id, user_id: state.user.id, name: s.name, color: s.color, archived: false })
+                .catch(() => {});
+            }
+            renderSubjects();
+            toast('Subject added!', 'ok');
+          };
 
-        // Add buttons
-        $('#addGoalBtn').onclick = () => openGoalModal();
-        $('#addTaskBtn').onclick = openTaskModal;
-        $('#addNoteBtn').onclick = () => openNoteModal();
-        $('#addPyqBtn').onclick = openPyqModal;
-        $('#addMockBtn').onclick = openMockModal;
-        $('#addCaBtn').onclick = openCaModal;
-        $('#addRevisionBtn').onclick = () => {
-          openModal(
-            modalShell({
-              title: 'Schedule Revision',
-              body: `
+          // Add buttons
+          $('#addGoalBtn').onclick = () => openGoalModal();
+          $('#addTaskBtn').onclick = openTaskModal;
+          $('#addNoteBtn').onclick = () => openNoteModal();
+          const _pyqBtn = $('#addPyqBtn');
+          if (_pyqBtn) _pyqBtn.onclick = openPyqModal;
+          const _mockBtn = $('#addMockBtn');
+          if (_mockBtn) _mockBtn.onclick = openMockModal;
+          const _caBtn = $('#addCaBtn');
+          if (_caBtn) _caBtn.onclick = openCaModal;
+          $('#addRevisionBtn').onclick = () => {
+            openModal(
+              modalShell({
+                title: 'Schedule Revision',
+                body: `
         <div class="field"><label>Subject</label><input id="rvSubject" placeholder="Subject"></div>
         <div class="field"><label>Topic</label><input id="rvTopic" placeholder="Topic"></div>
         <div class="form-grid">
@@ -12066,91 +12071,95 @@ ${
           <div class="field"><label>Due Date</label><input type="date" id="rvDue" value="${dateKey(addDays(new Date(), 1))}"></div>
         </div>
         <div class="field"><label>Revision #</label><input type="number" id="rvNum" value="1" min="1"></div>`,
-              actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                actions: `<button class="btn btn-ghost" data-close>Cancel</button>
         <button class="btn btn-primary" id="rvSave">Schedule</button>`,
-            }),
-            {
-              onMount() {
-                $('#rvSave').onclick = async () => {
-                  const r = {
-                    id: uuid(),
-                    subject: $('#rvSubject').value,
-                    topic: $('#rvTopic').value,
-                    original_date: $('#rvOriginal').value,
-                    due_date: $('#rvDue').value,
-                    revision_number: parseInt($('#rvNum').value, 10) || 1,
-                    status: 'pending',
+              }),
+              {
+                onMount() {
+                  $('#rvSave').onclick = async () => {
+                    const r = {
+                      id: uuid(),
+                      subject: $('#rvSubject').value,
+                      topic: $('#rvTopic').value,
+                      original_date: $('#rvOriginal').value,
+                      due_date: $('#rvDue').value,
+                      revision_number: parseInt($('#rvNum').value, 10) || 1,
+                      status: 'pending',
+                    };
+                    state.revisions.push(r);
+                    saveLocal();
+                    if (supa && state.user) {
+                      try {
+                        await supa.from('revisions').insert({ ...r, user_id: state.user.id });
+                      } catch (e) {}
+                    }
+                    closeModal();
+                    renderRevisions();
+                    updateBadges();
+                    toast('Scheduled!', 'ok');
                   };
-                  state.revisions.push(r);
-                  saveLocal();
-                  if (supa && state.user) {
-                    try {
-                      await supa.from('revisions').insert({ ...r, user_id: state.user.id });
-                    } catch (e) {}
-                  }
-                  closeModal();
-                  renderRevisions();
-                  updateBadges();
-                  toast('Scheduled!', 'ok');
-                };
+                },
               },
-            },
-          );
-        };
-        $('#addPlanBlockBtn').onclick = () => addPlanBlock($('#planDate').value);
-        $('#planDate').onchange = renderPlanner;
+            );
+          };
+          $('#addPlanBlockBtn').onclick = () => addPlanBlock($('#planDate').value);
+          $('#planDate').onchange = renderPlanner;
 
-        // Tasks filter
-        ['#taskSearch', '#taskPriorityFilter', '#taskStatusFilter'].forEach((s) => {
-          const el = $(s);
-          el.oninput = renderTasks;
-          el.onchange = renderTasks;
-        });
+          // Tasks filter
+          ['#taskSearch', '#taskPriorityFilter', '#taskStatusFilter'].forEach((s) => {
+            const el = $(s);
+            el.oninput = renderTasks;
+            el.onchange = renderTasks;
+          });
 
-        // Notes filter
-        $('#noteSearch').oninput = renderNotes;
-        $('#notePinnedToggle').onclick = () => {
-          notePinnedOnly = !notePinnedOnly;
-          $('#notePinnedToggle').style.background = notePinnedOnly ? 'var(--accent-soft)' : '';
-          renderNotes();
-        };
+          // Notes filter
+          $('#noteSearch').oninput = renderNotes;
+          $('#notePinnedToggle').onclick = () => {
+            notePinnedOnly = !notePinnedOnly;
+            $('#notePinnedToggle').style.background = notePinnedOnly ? 'var(--accent-soft)' : '';
+            renderNotes();
+          };
 
-        // CA filter
-        ['#caSearch', '#caStatusFilter'].forEach((s) => {
-          const el = $(s);
-          el.oninput = renderCurrentAffairs;
-          el.onchange = renderCurrentAffairs;
-        });
+          // CA filter
+          ['#caSearch', '#caStatusFilter'].forEach((s) => {
+            const el = $(s);
+            if (!el) return;
+            el.oninput = renderCurrentAffairs;
+            el.onchange = renderCurrentAffairs;
+          });
 
-        // Revision filter
-        $('#revFilterTabs').addEventListener('click', (e) => {
-          const b = e.target.closest('[data-filter]');
-          if (!b) return;
-          revFilter = b.dataset.filter;
-          $$('#revFilterTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-          renderRevisions();
-        });
+          // Revision filter
+          $('#revFilterTabs').addEventListener('click', (e) => {
+            const b = e.target.closest('[data-filter]');
+            if (!b) return;
+            revFilter = b.dataset.filter;
+            $$('#revFilterTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+            renderRevisions();
+          });
 
-        // Export
-        $('#exportJsonBtn').onclick = () => {
-          const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-          download(blob, `upsc-${todayKey()}.json`);
-        };
-        $('#exportCsvBtn').onclick = () => {
-          const rows = [['Date', 'Subject', 'Topic', 'Minutes', 'Type']];
-          state.sessions.forEach((s) =>
-            rows.push([s.date, s.subject, s.topic || '', Math.round(s.duration / 60), s.study_type || '']),
-          );
-          const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-          download(new Blob([csv], { type: 'text/csv' }), `sessions-${todayKey()}.csv`);
-        };
-        function download(blob, name) {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = name;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          // Export
+          $('#exportJsonBtn').onclick = () => {
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            download(blob, `upsc-${todayKey()}.json`);
+          };
+          $('#exportCsvBtn').onclick = () => {
+            const rows = [['Date', 'Subject', 'Topic', 'Minutes', 'Type']];
+            state.sessions.forEach((s) =>
+              rows.push([s.date, s.subject, s.topic || '', Math.round(s.duration / 60), s.study_type || '']),
+            );
+            const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+            download(new Blob([csv], { type: 'text/csv' }), `sessions-${todayKey()}.csv`);
+          };
+          function download(blob, name) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = name;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+        } catch (e) {
+          console.warn('[wireEvents] crashed:', e);
         }
       }
 
