@@ -1,20 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Revision Extras v6 (FINAL)
+   UPSC TRACKER — Revision Extras v7 (FINAL)
    ─────────────────────────────────────────────────────────────
    ✅ "By Rev Level" view — Revision 1/2/3... → Broad Categories → Topics
    ✅ Dual-source merge (syllabus + revisions history)
    ✅ Dropdown expand/collapse + summary chips
-   ✅ Schedule modal: Category → Subject → Topic (like Manual Log)
-   ✅ Custom subject SUPPORTED (shows in Subject dropdown)
-   ✅ Custom topics SUPPORTED (pulled from state.syllabus)
+   ✅ Schedule modal: Category → Subject → Topic
+   ✅ Custom subject + custom topic SUPPORTED
    ✅ Fixed Study Type = Revision
    ✅ On "✓ Done" → syllabus status auto-updates
+   ✅ Schedule tabs with count badges (Due Today 0, Upcoming 1, etc.)
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[revision-extras] v6 loaded');
+  console.log('[revision-extras] v7 loaded');
 
   /* ═══════════════ CONSTANTS ═══════════════ */
   const BROAD_CATS = [
@@ -592,6 +592,56 @@
     if (typeof attachRipples === 'function') attachRipples();
   }
 
+  /* ═══════════════ FILTER TAB COUNTS (NEW) ═══════════════ */
+  function updateRevisionTabCounts() {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const all = state.revisions;
+    const counts = {
+      due: all.filter((r) => r.status === 'pending' && new Date(r.due_date + 'T00:00:00') <= now).length,
+      overdue: all.filter((r) => r.status === 'pending' && new Date(r.due_date + 'T00:00:00') < now).length,
+      upcoming: all.filter((r) => r.status === 'pending' && new Date(r.due_date + 'T00:00:00') > now).length,
+      completed: all.filter((r) => r.status === 'completed').length,
+      all: all.length,
+    };
+
+    const tabs = document.getElementById('revFilterTabs');
+    if (!tabs) return;
+
+    const labels = {
+      due: 'Due Today',
+      overdue: 'Overdue',
+      upcoming: 'Upcoming',
+      completed: 'Completed',
+      all: 'All',
+    };
+
+    tabs.querySelectorAll('[data-filter]').forEach((btn) => {
+      const key = btn.dataset.filter;
+      const cnt = counts[key] ?? 0;
+      const isActive = btn.classList.contains('active');
+
+      btn.innerHTML = `
+        ${labels[key] || ''}
+        <span style="
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-width: 18px;
+          height: 18px;
+          padding: 0 6px;
+          margin-left: 6px;
+          border-radius: 20px;
+          font-size: 0.68rem;
+          font-weight: 900;
+          letter-spacing: 0;
+          background: ${isActive ? 'rgba(255,255,255,0.28)' : 'rgba(168,85,247,0.18)'};
+          color: ${isActive ? '#fff' : '#C4B5FD'};
+        ">${cnt}</span>`;
+    });
+  }
+
   /* ═══════════════ PATCH renderRevisions ═══════════════ */
   function patchRenderRevisions() {
     const _orig = window.renderRevisions;
@@ -651,6 +701,9 @@
         if (kpiGrid) kpiGrid.style.display = '';
         if (tabs) tabs.style.display = '';
         _orig.call(this);
+
+        /* ⬇️⬇️ COUNT BADGES — Tab pe numbers ⬇️⬇️ */
+        updateRevisionTabCounts();
       }
     };
 
@@ -663,7 +716,6 @@
 
   /* ═══════════════════════════════════════════════════════════════
      Schedule Revision modal — Category → Subject → Topic
-     v6: Custom subjects AND custom topics supported
      ═══════════════════════════════════════════════════════════════ */
   function openEnhancedScheduleRevisionModal() {
     const maxRevs = Math.max(1, parseInt(state.settings.max_revisions, 10) || 3);
@@ -746,7 +798,6 @@
           const subjSel = document.getElementById('rvSubject');
           const topicSel = document.getElementById('rvTopic');
 
-          /* ── Category change → populate subjects ── */
           catSel.onchange = () => {
             const cat = catSel.value;
 
@@ -758,8 +809,6 @@
               return;
             }
 
-            /* getSubjectsForCategory is patched by subjects-extras.js
-               to include custom subjects from CAT_MAP */
             const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
 
             if (!subjects.length) {
@@ -776,7 +825,6 @@
             topicSel.disabled = true;
           };
 
-          /* ── Subject change → populate topics (v6: ALSO from syllabus) ── */
           subjSel.onchange = () => {
             const cat = catSel.value;
             const subj = subjSel.value;
@@ -787,18 +835,13 @@
               return;
             }
 
-            /* 1. Default topics from SYLLABUS object (via patched helper) */
             const defaultTopics =
               (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
 
-            /* 2. Custom topics from state.syllabus — for BOTH:
-                  (a) custom subjects added via Subjects page
-                  (b) custom topics added to default subjects */
             const customTopics = (state.syllabus || [])
               .filter((s) => s.subject === subj && s.topic)
               .map((s) => s.topic);
 
-            /* 3. Merge — unique only */
             const topics = [...new Set([...defaultTopics, ...customTopics])];
 
             if (!topics.length) {
@@ -814,7 +857,6 @@
 
           setTimeout(() => catSel.focus(), 80);
 
-          /* ── Save ── */
           document.getElementById('rvSave').onclick = async () => {
             const category = catSel.value;
             const subject = subjSel.value;
@@ -840,7 +882,6 @@
               return;
             }
 
-            /* Resolve paper id */
             let paperId = category;
             if (typeof SYLLABUS === 'object' && SYLLABUS) {
               for (const [pid, paper] of Object.entries(SYLLABUS)) {
