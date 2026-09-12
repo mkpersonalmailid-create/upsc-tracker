@@ -3874,13 +3874,14 @@ function renderCategoryChips() {
     `<button class="cat-chip ${c.cls} ${state.draft.category === c.id ? 'selected' : ''}" data-cat="${c.id}">${esc(c.label)}</button>`
   ).join('');
   container.querySelectorAll('[data-cat]').forEach(b => b.onclick = () => {
-    state.draft.category = b.dataset.cat;
-    state.draft.subject = null;
-    state.draft.topic = null;
-    renderCategoryChips();
-    renderSubjectSelector();
-    renderTopicSelect();
-  });
+  state.draft.category = b.dataset.cat;
+  state.draft.subject = null;
+  state.draft.topic = null;
+  clearSelectionWarning(); // ✅ Warning auto-hide
+  renderCategoryChips();
+  renderSubjectSelector();
+  renderTopicSelect();
+});
 }
 
 function getSubjectsForCategory(cat) {
@@ -3909,11 +3910,12 @@ function renderSubjectSelector() {
     `<button class="subject-pill ${state.draft.subject === s ? 'selected' : ''}" data-subj="${esc(s)}">${esc(s)}</button>`
   ).join('');
   container.querySelectorAll('[data-subj]').forEach(b => b.onclick = () => {
-    state.draft.subject = b.dataset.subj;
-    state.draft.topic = null;
-    renderSubjectSelector();
-    renderTopicSelect();
-  });
+  state.draft.subject = b.dataset.subj;
+  state.draft.topic = null;
+  clearSelectionWarning(); // ✅ Warning auto-hide
+  renderSubjectSelector();
+  renderTopicSelect();
+});
 }
 
 function getTopicsForCategorySubject(cat, subj) {
@@ -3962,6 +3964,61 @@ function saveTimerLocal() {
 }
 function loadTimerLocal() {
   try { const raw = localStorage.getItem(LOCAL_KEY + '.timer'); if (raw) state.timer = JSON.parse(raw); } catch(e) {}
+}
+/* ═══════════════ SELECTION VALIDATION HELPER ═══════════════ */
+function highlightSelectionError() {
+  // 1. Toast
+  toast('Please select category and subject first', 'err', 3000);
+
+  // 2. Section dhundho
+  const section = document.querySelector('.what-studying');
+  if (!section) return;
+
+  // 3. Section ko screen par laao
+  section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // 4. Purana warning hatao
+  const oldWarn = section.querySelector('.selection-warning');
+  if (oldWarn) oldWarn.remove();
+
+  // 5. Naya warning add karo
+  const warning = document.createElement('div');
+  warning.className = 'selection-warning';
+  warning.innerHTML = `
+    <span class="warn-ico">⚠️</span>
+    <div>
+      <strong>Please select what you're studying first!</strong><br>
+      <span style="font-size:.8rem;opacity:.85">Category aur Subject select karein, phir Start Session dabayein.</span>
+    </div>
+  `;
+  section.insertBefore(warning, section.firstChild);
+
+  // 6. Shake animation
+  section.classList.remove('highlight-error');
+  void section.offsetWidth;
+  section.classList.add('highlight-error');
+  setTimeout(() => section.classList.remove('highlight-error'), 4000);
+
+  // 7. Warning auto-hide
+  setTimeout(() => {
+    if (warning.parentElement) {
+      warning.style.opacity = '0';
+      warning.style.transition = 'opacity .3s';
+      setTimeout(() => warning.remove(), 300);
+    }
+  }, 5000);
+}
+
+/* Warning auto-clear jab user select kare */
+function clearSelectionWarning() {
+  const section = document.querySelector('.what-studying');
+  if (!section) return;
+  const warn = section.querySelector('.selection-warning');
+  if (warn) {
+    warn.style.opacity = '0';
+    warn.style.transition = 'opacity .2s';
+    setTimeout(() => warn.remove(), 200);
+  }
 }
 function startTimer() {
   // ═══ VALIDATION — Highlight the section instead of toast only ═══
