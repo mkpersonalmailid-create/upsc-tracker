@@ -1,23 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v6 (FINAL)
+   UPSC TRACKER — Goals Extras v7 (FINAL)
    ─────────────────────────────────────────────────────────────
-   ✅ Goal Study Mode — pick goal, then start timer
-   ✅ Auto-refresh goal panel when clicking Goal Study mode
-   ✅ Units: Hours only (study time + history)
-   ✅ "Is this part of a goal?" dropdown in session modals
-   ✅ Auto-fill subject/topic from linked goal
-   ✅ Session → Goal auto-increment (smart matching)
-   ✅ Category/Subject/Topic cascade in goal modal (collapsible)
-   ✅ Analytics strip at top of Goals page
-   ✅ Goal complete → auto-creates study session
+   ✅ Goal Study Mode (pick goal → timer auto-link)
+   ✅ No double-prompt — chip visible = skip dropdown
+   ✅ FORCE-SAVE — sessions reliably saved to history
+   ✅ Units: Hours only
+   ✅ Session ↔ Goal auto-increment
+   ✅ Analytics strip on Goals page
+   ✅ Planner + Goals → Calendar markers
    ✅ Tasks nav hidden
-   ✅ Planner + Goals show in Calendar
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v6 loaded');
+  console.log('[goals-extras] v7 loaded');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -90,13 +87,7 @@
   /* ═══════════════ 3. INCREMENT GOAL FROM SESSION ═══════════════ */
   async function incrementGoalFromSession(goal, session) {
     if (!goal || goal.current >= goal.target) return false;
-
-    const unit = (goal.unit || '').toLowerCase();
-    let increment = 0;
-
-    if (unit.includes('hour') || unit.includes('hr')) increment = (session.duration || 0) / 3600;
-    else return false;
-
+    const increment = (session.duration || 0) / 3600;
     if (increment <= 0) return false;
 
     goal.current = Math.min(goal.target, Math.round(((goal.current || 0) + increment) * 100) / 100);
@@ -116,7 +107,7 @@
     if (session._goalProcessed) return;
     session._goalProcessed = true;
 
-    /* A. Explicit tag (from modal "Link to Goal" dropdown) */
+    /* A. Explicit goal tag */
     const taggedId = extractGoalId(session.notes);
     if (taggedId) {
       const goal = state.goals.find((g) => g.id === taggedId);
@@ -130,7 +121,7 @@
       }
     }
 
-    /* B. Auto-match by subject */
+    /* B. Auto-match */
     const matched = [];
     state.goals.forEach((g) => {
       if (g.current >= g.target) return;
@@ -138,8 +129,6 @@
       if (!unit.includes('hour') && !unit.includes('hr')) return;
       if (g.subject && g.subject === session.subject) matched.push(g);
     });
-
-    /* C. Global goals (no subject) also count */
     state.goals.forEach((g) => {
       if (g.current >= g.target) return;
       const unit = (g.unit || '').toLowerCase();
@@ -147,12 +136,10 @@
       if (!g.subject) matched.push(g);
     });
 
-    /* Dedupe */
     const unique = [...new Set(matched)];
     if (!unique.length) return;
 
     for (const g of unique) await incrementGoalFromSession(g, session);
-
     if (typeof toast === 'function') {
       toast(`🎯 ${unique.length} goal${unique.length > 1 ? 's' : ''} auto-updated`, 'ok', 2000);
     }
@@ -179,7 +166,6 @@
   async function toggleGoalComplete(goal) {
     const wasDone = goal.current >= goal.target;
     const tag = goalSessionTag(goal.id);
-
     const linkedSession = state.sessions.find((s) => (s.notes || '').includes(tag));
 
     if (wasDone) {
@@ -198,13 +184,11 @@
           await supa.from('goals').update({ current_value: 0 }).eq('id', goal.id).eq('user_id', state.user.id);
         } catch (e) {}
       }
-      if (typeof toast === 'function') {
-        toast('↺ Goal reset · session removed', 'info', 2200);
-      }
+      if (typeof toast === 'function') toast('↺ Goal reset · session removed', 'info', 2200);
     } else {
       goal.current = goal.target;
-
       const durationSec = computeGoalDurationSeconds(goal);
+
       if (durationSec > 0) {
         const now = Date.now();
         const sessionId = linkedSession?.id || safeUUID();
@@ -249,13 +233,11 @@
               },
               { onConflict: 'id' },
             );
-          } catch (e) {
-            console.warn('[goals-extras] session insert:', e);
-          }
+          } catch (e) {}
         }
 
         if (typeof toast === 'function') {
-          toast(`🎉 Goal complete · ${(durationSec / 3600).toFixed(1)}h added to Study Time`, 'ok', 3500);
+          toast(`🎉 Goal complete · ${(durationSec / 3600).toFixed(1)}h added`, 'ok', 3500);
         }
       }
 
@@ -326,8 +308,7 @@
         <div class="kpi-label">${c.label}</div>
         <div class="kpi-value" style="font-size:1.4rem">${c.value}</div>
         <div class="kpi-sub">${c.sub}</div>
-      </div>
-    `,
+      </div>`,
       )
       .join('');
 
@@ -366,7 +347,7 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 9. GOAL MODAL — Collapsible link section ═══════════════ */
+  /* ═══════════════ 9. GOAL MODAL ═══════════════ */
   function buildLinkSection(g) {
     const CATS = [
       { id: '', label: '— Any Category —' },
@@ -404,8 +385,7 @@
             Leave empty to count <strong>all study sessions (global)</strong>. Pick a subject to only count that subject.
           </div>
         </div>
-      </div>
-    `;
+      </div>`;
   }
 
   function patchOpenGoalModal() {
@@ -591,8 +571,6 @@
               }
               if (typeof closeModal === 'function') closeModal();
               if (typeof renderGoals === 'function') renderGoals();
-
-              /* Refresh Goal Study panel if visible */
               if (typeof renderGoalStudyPanelContent === 'function') {
                 setTimeout(renderGoalStudyPanelContent, 100);
               }
@@ -607,7 +585,7 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 10. INJECT "LINK TO GOAL" IN SESSION MODALS ═══════════════ */
+  /* ═══════════════ 10. INJECT GOAL LINK IN SESSION MODALS ═══════════════ */
   function injectGoalLink(modalBox, isSaveSession) {
     if (!modalBox || modalBox.querySelector('#sessionGoalLink')) return;
 
@@ -635,8 +613,7 @@
           ${opts}
         </select>
         <div id="sessionGoalHint" style="font-size:.72rem;color:#C4B5FD;margin-top:8px;line-height:1.5;display:none;padding:8px 10px;background:rgba(0,0,0,.22);border-radius:8px"></div>
-      </div>
-    `;
+      </div>`;
 
     body.insertAdjacentHTML('afterbegin', html);
 
@@ -653,14 +630,12 @@
       if (!goal) return;
 
       const remaining = Math.max(0, goal.target - goal.current);
-
       hint.style.display = 'block';
       hint.innerHTML = `
         ✨ This session will count toward <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong>.<br>
-        ⏱ <strong>${remaining.toFixed(1)} ${goal.unit || 'hours'}</strong> remaining. Hours will be added automatically.
+        ⏱ <strong>${remaining.toFixed(1)} ${goal.unit || 'hours'}</strong> remaining.
       `;
 
-      /* For Manual Log — auto-fill subject/topic */
       if (!isSaveSession && goal.subject) {
         const catSel = document.getElementById('mlCategory');
         const subjSel = document.getElementById('mlSubject');
@@ -681,7 +656,7 @@
     };
   }
 
-  /* Patch openModal to inject after mount */
+  /* Patch openModal — skip dropdown when chip present */
   function patchOpenModal() {
     const _orig = window.openModal;
     if (typeof _orig !== 'function') return;
@@ -694,10 +669,14 @@
         const hasSessType = !!box.querySelector('#sessType');
         const hasMlType = !!box.querySelector('#mlType');
         if (!hasSessType && !hasMlType) return;
-        /* ⬇️ YEH 1 LINE ADD — skip if timer already linked a goal */
+
+        /* SKIP if goal-timer chip already injected */
         if (box.querySelector('.goal-timer-chip')) return;
+        /* SKIP if a timer-linked goal flag is set */
+        if (state._timerHasGoal) return;
+
         injectGoalLink(box, hasSessType);
-      }, 100); /* ⬅️ 40 → 100 */
+      }, 200); /* Longer timeout ensures chip is added first */
     };
 
     try {
@@ -731,7 +710,81 @@
     true,
   );
 
-  /* ═══════════════ 12. CALENDAR SYNC ═══════════════ */
+  /* ═══════════════ 12. FORCE-SAVE SESSIONS (history reliability) ═══════════════ */
+  function patchForceSaveSessions() {
+    document.addEventListener(
+      'click',
+      async (e) => {
+        const btn = e.target && e.target.closest && e.target.closest('#confirmSave, #mlSave');
+        if (!btn) return;
+
+        /* Wait for original async save to finish */
+        setTimeout(async () => {
+          if (typeof supa === 'undefined' || !supa || !state.user) return;
+
+          const sessions = state.sessions || [];
+          if (!sessions.length) return;
+
+          /* Find sessions created in last 30 seconds */
+          const recent = sessions.filter((s) => s.ts && Date.now() - s.ts < 30000);
+          if (!recent.length) return;
+
+          for (const sess of recent) {
+            try {
+              const { data, error: checkErr } = await supa
+                .from('study_sessions')
+                .select('id')
+                .eq('id', sess.id)
+                .maybeSingle();
+
+              if (checkErr) {
+                console.warn('[goals-extras] DB check error:', checkErr);
+                continue;
+              }
+              if (data) continue; /* Already saved */
+
+              console.log('[goals-extras] Force-saving session:', sess.id);
+
+              /* Build clean payload — only known columns */
+              const payload = {
+                id: sess.id,
+                user_id: state.user.id,
+                date: sess.date || todayKey(),
+                start_time: new Date(sess.start_time || Date.now()).toISOString(),
+                end_time: new Date(sess.end_time || Date.now()).toISOString(),
+                duration_seconds: sess.duration || 0,
+                subject: sess.subject || 'General Study',
+                topic: sess.topic || null,
+                study_type: sess.study_type || 'New Learning',
+                notes: sess.notes || '',
+                productivity: sess.productivity || 3,
+                energy: sess.energy || 3,
+                paper: sess.paper || sess.subject || 'General Study',
+              };
+
+              const { error: insErr } = await supa.from('study_sessions').insert(payload);
+
+              if (insErr) {
+                console.error('[goals-extras] ❌ Force save failed:', insErr);
+                console.error('   code:', insErr.code, '| message:', insErr.message);
+                if (typeof toast === 'function') {
+                  toast('⚠️ Save issue: ' + (insErr.message || 'Unknown'), 'warn', 5000);
+                }
+              } else {
+                console.log('[goals-extras] ✅ Force save OK');
+              }
+            } catch (err) {
+              console.error('[goals-extras] Force save exception:', err);
+            }
+          }
+        }, 1800);
+      },
+      true,
+    );
+    console.log('[goals-extras] patched: forceSaveSessions');
+  }
+
+  /* ═══════════════ 13. CALENDAR SYNC ═══════════════ */
   function patchCalendarMarkers() {
     const _orig = window.renderCalendar;
     if (typeof _orig !== 'function') return;
@@ -813,7 +866,7 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 13. GOAL STUDY MODE — Panel Content (rebuildable) ═══════════════ */
+  /* ═══════════════ 14. GOAL STUDY MODE — Panel Content ═══════════════ */
   function renderGoalStudyPanelContent() {
     const panel = document.getElementById('goalStudyPanel');
     if (!panel) return;
@@ -835,8 +888,7 @@
           <div style="font-size:1.5rem;margin-bottom:6px">📭</div>
           No active goals yet.<br>
           <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="switchView('goals');setTimeout(()=>document.getElementById('addGoalBtn').click(),200)">+ Create Goal</button>
-        </div>
-      `
+        </div>`
           : `
         <div class="field">
           <label style="color:#FBBF24">Select Goal</label>
@@ -850,18 +902,14 @@
               .join('')}
           </select>
         </div>
-        <div id="goalStudyInfo" style="display:none;padding:12px 14px;background:rgba(0,0,0,.22);border-radius:10px;font-size:.82rem;color:#C4B5FD;line-height:1.65;margin-top:10px"></div>
-      `
-      }
-    `;
+        <div id="goalStudyInfo" style="display:none;padding:12px 14px;background:rgba(0,0,0,.22);border-radius:10px;font-size:.82rem;color:#C4B5FD;line-height:1.65;margin-top:10px"></div>`
+      }`;
 
-    /* Wire dropdown */
     const sel = document.getElementById('goalStudySelect');
     if (sel) {
       sel.onchange = () => {
         const gid = sel.value;
         const info = document.getElementById('goalStudyInfo');
-
         if (!gid) {
           info.style.display = 'none';
           return;
@@ -871,16 +919,13 @@
         if (!goal) return;
 
         const remaining = Math.max(0, goal.target - goal.current);
-
         info.style.display = 'block';
         info.innerHTML = `
           <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong><br>
           ⏱ ${remaining.toFixed(1)} ${escHtml(goal.unit || 'hours')} remaining — timer hours will auto-add to this goal.
           ${goal.subject ? `<br>📚 Subject: <strong style="color:#E9D5FF">${escHtml(goal.subject)}</strong>` : ''}
-          ${goal.topic ? `<br>📖 Topic: <strong style="color:#E9D5FF">${escHtml(goal.topic)}</strong>` : ''}
-        `;
+          ${goal.topic ? `<br>📖 Topic: <strong style="color:#E9D5FF">${escHtml(goal.topic)}</strong>` : ''}`;
 
-        /* Set draft so timer carries goal's subject/topic */
         if (goal.subject) {
           state.draft.category = goal.category || findCategoryForSubject(goal.subject) || 'prelims';
           state.draft.subject = goal.subject;
@@ -897,12 +942,11 @@
     }
   }
 
-  /* ═══════════════ 13b. GOAL STUDY MODE — Panel inject + mode chip ═══════════════ */
+  /* ═══════════════ 14b. GOAL STUDY MODE — Panel inject ═══════════════ */
   function injectGoalStudyMode() {
     const modesEl = document.getElementById('timerModes');
     if (!modesEl) return;
 
-    /* Add Goal Study chip once */
     if (!modesEl.querySelector('[data-mode="goal"]')) {
       const chip = document.createElement('button');
       chip.className = 'mode-chip';
@@ -914,7 +958,6 @@
     const whatStudying = document.querySelector('.what-studying');
     if (!whatStudying) return;
 
-    /* Create panel container once */
     let panel = document.getElementById('goalStudyPanel');
     if (!panel) {
       panel = document.createElement('div');
@@ -922,14 +965,10 @@
       panel.style.cssText =
         'display:none;padding:18px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;margin-bottom:18px';
       const catChips = document.getElementById('categoryChips');
-      if (catChips && catChips.parentElement) {
-        catChips.parentElement.insertBefore(panel, catChips);
-      } else {
-        whatStudying.insertBefore(panel, whatStudying.firstChild);
-      }
+      if (catChips && catChips.parentElement) catChips.parentElement.insertBefore(panel, catChips);
+      else whatStudying.insertBefore(panel, whatStudying.firstChild);
     }
 
-    /* Wire mode click once */
     if (!modesEl._goalModeWired) {
       modesEl._goalModeWired = true;
       modesEl.addEventListener('click', (e) => {
@@ -946,7 +985,7 @@
           state._goalStudyMode = true;
           if (panelEl) {
             panelEl.style.display = 'block';
-            renderGoalStudyPanelContent(); /* ⬅️ refresh with latest goals */
+            renderGoalStudyPanelContent();
           }
           if (catChipsEl) catChipsEl.style.display = 'none';
           if (subjSelector) subjSelector.style.display = 'none';
@@ -963,7 +1002,6 @@
       });
     }
 
-    /* Initial content build (so it's ready when clicked) */
     renderGoalStudyPanelContent();
   }
 
@@ -979,6 +1017,7 @@
     } catch (e) {}
   }
 
+  /* ═══════════════ 15. START TIMER WITH GOAL ═══════════════ */
   function patchStartTimerForGoalMode() {
     const _orig = window.startTimer;
     if (typeof _orig !== 'function') return;
@@ -1016,6 +1055,7 @@
         if (state.timer) {
           state.timer.goalId = gid;
           state.timer.goalTitle = goal.title;
+          state._timerHasGoal = true; /* ⬅️ FLAG — skip double-prompt */
           try {
             localStorage.setItem('upsc_tracker_v5_state.timer', JSON.stringify(state.timer));
           } catch (e) {}
@@ -1033,6 +1073,7 @@
     } catch (e) {}
   }
 
+  /* ═══════════════ 16. SAVE MODAL — Add chip when goal linked ═══════════════ */
   function patchSaveSessionModalForGoal() {
     const _orig = window.openSaveSessionModal;
     if (typeof _orig !== 'function') return;
@@ -1041,6 +1082,7 @@
       _orig.call(this, snap);
 
       if (snap && snap.goalId) {
+        /* Add chip FAST (30ms) so openModal's 200ms check skips dropdown */
         setTimeout(() => {
           const notesEl = document.getElementById('sessNotes');
           if (notesEl) {
@@ -1058,7 +1100,7 @@
             chip.innerHTML = `<span>🎯</span><div>Linked to goal: <strong>${escHtml(snap.goalTitle || 'Goal')}</strong></div>`;
             modal.insertBefore(chip, modal.firstChild);
           }
-        }, 50);
+        }, 30);
       }
     };
 
@@ -1067,6 +1109,7 @@
     } catch (e) {}
   }
 
+  /* ═══════════════ 17. MANUAL LOG — Auto-select goal ═══════════════ */
   function patchManualLogForGoal() {
     const _orig = window.openManualLogModal;
     if (typeof _orig !== 'function') return;
@@ -1094,6 +1137,20 @@
     } catch (e) {}
   }
 
+  /* ═══════════════ 18. RESET FLAG AFTER SAVE ═══════════════ */
+  document.addEventListener(
+    'click',
+    (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('#confirmSave, #mlSave, [data-close]');
+      if (!btn) return;
+      /* Delay reset so save handler completes */
+      setTimeout(() => {
+        state._timerHasGoal = false;
+      }, 2200);
+    },
+    true,
+  );
+
   /* ═══════════════ INIT ═══════════════ */
   let attempts = 0;
   function waitThenStart() {
@@ -1113,6 +1170,7 @@
       patchStartTimerForGoalMode();
       patchSaveSessionModalForGoal();
       patchManualLogForGoal();
+      patchForceSaveSessions(); /* ⬅️ NEW — force save fix */
 
       setTimeout(() => {
         patchCalendarMarkers();
@@ -1121,14 +1179,13 @@
         if (typeof renderCalendar === 'function') renderCalendar();
       }, 500);
 
-      /* Also refresh Goal Study panel when goals change */
+      /* Auto-refresh Goal Study panel */
       setInterval(() => {
         if (state._goalStudyMode) {
           const panel = document.getElementById('goalStudyPanel');
           if (panel && panel.style.display !== 'none') {
             const sel = document.getElementById('goalStudySelect');
             const currentVal = sel ? sel.value : '';
-            /* Only rebuild if user hasn't selected a goal yet */
             if (!currentVal) renderGoalStudyPanelContent();
           }
         }
