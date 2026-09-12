@@ -8769,8 +8769,7 @@ ${
         $('#syllabusProgress').textContent = `${doneCount} tracked · ${state.syllabus.length} custom`;
         // ⬇️⬇️⬇️ NAYI CODE — YAHAN SE PASTE KARO ⬇️⬇️⬇️
 
-        // ════════ STATS BADGES AT TOP (Filterable) ════════
-        const allSyl = state.syllabus;
+        // ════════ STATS BADGES AT TOP (Filterable + correct count) ════════
         const statsEl = document.getElementById('syllabusStatsBadges');
 
         if (statsEl) {
@@ -8783,19 +8782,55 @@ ${
             { id: 'rev3', label: 'Rev 3', cls: 'ts-rev3', icon: '🔵' },
           ];
 
-          if (allSyl.length === 0) {
+          // Count ALL topics (tracked + untracked)
+          const counts = {};
+          badgeList.forEach((b) => {
+            counts[b.id] = countTopicsByFilter(b.id);
+          });
+
+          const totalAll = Object.values(counts).reduce((a, b) => a + b, 0);
+
+          if (totalAll === 0) {
             statsEl.innerHTML = `<div style="font-size:.82rem;color:var(--text-3);font-style:italic">Start marking topics to see your progress here</div>`;
           } else {
-            statsEl.innerHTML = badgeList
+            // Badges row
+            const badgesHTML = badgeList
               .map((b) => {
                 const isActive = syllabusFilter === b.id;
+                const cnt = counts[b.id];
                 return `<span class="pill ${b.cls}" data-syl-filter="${b.id}" 
-        style="cursor:pointer;transition:all .2s;user-select:none;${isActive ? 'outline:2px solid var(--purple);outline-offset:2px;transform:scale(1.08);box-shadow:0 4px 14px rgba(168,85,247,.4)' : ''}">
-        ${b.icon} ${b.label}
-      </span>`;
+          style="cursor:pointer;transition:all .2s;user-select:none;display:inline-flex;align-items:center;gap:5px;
+          ${isActive ? 'outline:2px solid var(--purple);outline-offset:2px;transform:scale(1.06);box-shadow:0 4px 14px rgba(168,85,247,.4)' : ''}
+          ${cnt === 0 ? 'opacity:.45' : ''}">
+          ${b.icon} ${b.label}
+          <span style="background:rgba(0,0,0,.22);padding:1px 7px;border-radius:20px;font-size:.62rem;font-weight:900">${cnt}</span>
+        </span>`;
               })
               .join('');
 
+            // Active filter bar — proper button UI
+            let filterBarHTML = '';
+            if (syllabusFilter) {
+              const filterLabel = badgeList.find((b) => b.id === syllabusFilter)?.label || syllabusFilter;
+              const matchCount = counts[syllabusFilter] || 0;
+              filterBarHTML = `
+          <div style="width:100%;margin-top:12px;padding:10px 14px;background:linear-gradient(90deg,rgba(168,85,247,.15),rgba(236,72,153,.08));border:1px solid rgba(168,85,247,.35);border-radius:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;animation:fadeIn .25s">
+            <div style="display:flex;align-items:center;gap:10px;font-size:.82rem">
+              <span style="font-size:1rem">🔍</span>
+              <span style="color:var(--text-2)">Showing only</span>
+              <strong style="color:var(--purple);font-weight:800">"${filterLabel}"</strong>
+              <span style="background:rgba(168,85,247,.2);padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:800;color:#C4B5FD">${matchCount} topics</span>
+            </div>
+            <button id="clearSylFilter" class="btn btn-secondary btn-sm" 
+              style="padding:6px 14px;font-size:.75rem;display:inline-flex;align-items:center;gap:5px;border-radius:8px">
+              ✕ Clear Filter
+            </button>
+          </div>`;
+            }
+
+            statsEl.innerHTML = badgesHTML + filterBarHTML;
+
+            // Wire badge clicks
             statsEl.querySelectorAll('[data-syl-filter]').forEach((el) => {
               el.onclick = () => {
                 const filter = el.dataset.sylFilter;
@@ -8804,21 +8839,13 @@ ${
               };
             });
 
-            if (syllabusFilter) {
-              const filterLabel = badgeList.find((b) => b.id === syllabusFilter)?.label || syllabusFilter;
-              const matchCount = allSyl.filter((s) => (s.status || 'not_started') === syllabusFilter).length;
-              statsEl.innerHTML += `<div style="width:100%;font-size:.78rem;color:var(--text-3);margin-top:8px;font-style:italic;display:flex;align-items:center;gap:8px">
-        <span>Showing only <strong style="color:var(--purple)">"${filterLabel}"</strong> topics (${matchCount})</span>
-        <span id="clearSylFilter" style="color:var(--pink);cursor:pointer;text-decoration:underline;font-weight:700">Clear filter ✕</span>
-      </div>`;
-              setTimeout(() => {
-                const clearBtn = document.getElementById('clearSylFilter');
-                if (clearBtn)
-                  clearBtn.onclick = () => {
-                    syllabusFilter = null;
-                    renderSyllabus();
-                  };
-              }, 50);
+            // Wire clear button
+            const clearBtn = document.getElementById('clearSylFilter');
+            if (clearBtn) {
+              clearBtn.onclick = () => {
+                syllabusFilter = null;
+                renderSyllabus();
+              };
             }
           }
         }
@@ -8873,10 +8900,16 @@ ${
                     </div>`;
                   })
                   .join('')}
-                ${subSyl
-                  .filter((s) => !sub.topics.includes(s.topic))
-                  .map(
-                    (s) => `
+                                ${subSyl
+                                  .filter((s) => !sub.topics.includes(s.topic))
+                                  .filter((s) => {
+                                    // ⬇️ Filter check for custom topics
+                                    if (!syllabusFilter) return true;
+                                    return (s.status || 'not_started') === syllabusFilter;
+                                    // ⬆️
+                                  })
+                                  .map(
+                                    (s) => `
                   <div class="syl-topic">
                     <span class="syl-topic-status ts-${s.status || 'not_started'}" data-syl-toggle-id="${s.id}">${(s.status || 'not_started').replace(/_/g, ' ')}</span>
                     <span class="syl-topic-name">${esc(s.topic)}</span>
@@ -8885,8 +8918,8 @@ ${
                       <button class="icon-mini" title="Delete" data-syl-del="${s.id}" style="color:var(--red)">✕</button>
                     </div>
                   </div>`,
-                  )
-                  .join('')}
+                                  )
+                                  .join('')}
               </div>`;
             })
             .join('')}
@@ -9548,6 +9581,37 @@ ${
       /* ═══════════════ REVISION ═══════════════ */
       let syllabusFilter = null;
       let revFilter = 'due';
+      /* ═══════════════ FILTER COUNT HELPER ═══════════════ */
+      function countTopicsByFilter(filter) {
+        if (!filter) return 0;
+        let count = 0;
+
+        // 1. Saare SYLLABUS topics count karo (tracked + untracked)
+        Object.entries(SYLLABUS).forEach(([pid, paper]) => {
+          paper.subjects.forEach((sub) => {
+            sub.topics.forEach((topic) => {
+              const existing = state.syllabus.find(
+                (x) => x.paper === pid && x.subject === sub.name && x.topic === topic,
+              );
+              const st = existing?.status || 'not_started';
+              if (st === filter) count++;
+            });
+          });
+        });
+
+        // 2. Custom topics count karo (jo SYLLABUS me nahi hain)
+        state.syllabus.forEach((s) => {
+          const paper = SYLLABUS[s.paper];
+          let isCustom = true;
+          if (paper) {
+            const subj = paper.subjects.find((x) => x.name === s.subject);
+            if (subj && subj.topics.includes(s.topic)) isCustom = false;
+          }
+          if (isCustom && (s.status || 'not_started') === filter) count++;
+        });
+
+        return count;
+      }
 
       function renderRevisions() {
         const now = startOfDay(new Date());
