@@ -484,27 +484,29 @@
   }
 
   /* ═══════════ PATCH 5: renderStudy (Organized Layout) ═══════════ */
-  function patchStudyView() {
-    const _orig = renderStudy;
-    window.renderStudy = function () {
-      _orig.call(this);
-      setTimeout(addStudyLabels, 0);
-    };
-    try {
-      renderStudy = window.renderStudy;
-    } catch (e) {}
-    console.log('[subjects-extras] patched: renderStudy');
-  }
-
   function addStudyLabels() {
     const section = document.querySelector('.what-studying');
     if (!section) return;
 
-    section.querySelectorAll('.step-label').forEach((el) => el.remove());
-
     const catChips = document.getElementById('categoryChips');
     const subjSel = document.getElementById('subjectSelector');
     const topicPicker = section.querySelector('.topic-picker');
+
+    // ✅ IDEMPOTENT: agar saare 3 labels already present hain toh skip karo
+    const existingLabels = section.querySelectorAll('.step-label');
+    const neededCount = [catChips, subjSel, topicPicker].filter(Boolean).length;
+
+    if (existingLabels.length === neededCount) {
+      // Verify labels still attached to correct parents (not stale)
+      const stillValid = [...existingLabels].every((lbl) => {
+        const next = lbl.nextElementSibling;
+        return next === catChips || next === subjSel || next === topicPicker;
+      });
+      if (stillValid) return; // ✅ already correct, no flicker
+    }
+
+    // Sirf tab rebuild karo jab actually missing ho
+    existingLabels.forEach((el) => el.remove());
 
     const labels = [
       { el: catChips, num: 1, emoji: '📂', title: 'Category', sub: 'What are you studying?' },
@@ -522,7 +524,6 @@
 
     if (typeof attachRipples === 'function') attachRipples();
   }
-
   /* ═══════════ PATCH 6: GS Mains Split into Paper I/II/III/IV ═══════════ */
 
   // ═══ Category chips — split GS Mains ═══
@@ -545,24 +546,35 @@
         { id: 'essay', label: '✍️ Essay', cls: 'c-essay' },
         { id: 'csat', label: '🧮 CSAT', cls: 'c-csat' },
       ];
+
+      // ✅ DIFF SIGNATURE — agar same hai toh skip
+      const sig = cats
+        .map((c) => c.id + '|' + c.label + '|' + c.cls + '|' + (state.draft.category === c.id))
+        .join('##');
+
+      if (container.dataset.sig === sig && container.children.length === cats.length) {
+        return; // ✅ no change, skip re-render → NO FLICKER
+      }
+      container.dataset.sig = sig;
+
       container.innerHTML = cats
         .map(
           (c) =>
             `<button class="cat-chip ${c.cls} ${state.draft.category === c.id ? 'selected' : ''}" data-cat="${c.id}">${esc(c.label)}</button>`,
         )
         .join('');
-      container.querySelectorAll('[data-cat]').forEach(
-        (b) =>
-          (b.onclick = () => {
-            state.draft.category = b.dataset.cat;
-            state.draft.subject = null;
-            state.draft.topic = null;
-            if (typeof clearSelectionWarning === 'function') clearSelectionWarning();
-            window.renderCategoryChips();
-            if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
-            if (typeof renderTopicSelect === 'function') renderTopicSelect();
-          }),
-      );
+
+      container.querySelectorAll('[data-cat]').forEach((b) => {
+        b.onclick = () => {
+          state.draft.category = b.dataset.cat;
+          state.draft.subject = null;
+          state.draft.topic = null;
+          if (typeof clearSelectionWarning === 'function') clearSelectionWarning();
+          window.renderCategoryChips();
+          if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
+          if (typeof renderTopicSelect === 'function') renderTopicSelect();
+        };
+      });
     };
     try {
       renderCategoryChips = window.renderCategoryChips;
