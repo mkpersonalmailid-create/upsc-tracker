@@ -4812,6 +4812,11 @@
         background: linear-gradient(180deg, #a855f7, #ec4899);
         border-color: #f7f4fb;
       }
+      /* ═══════════════ Remove duplicate diamond on avatar ═══════════════ */
+      .sb-avatar.premium::after {
+        content: none !important;
+        display: none !important;
+      }
     </style>
   </head>
   <body>
@@ -6816,7 +6821,7 @@
           indicator.id = 'sidebarPlanIndicator';
           indicator.className = 'sidebar-plan-indicator';
           indicator.innerHTML = `
-      <div class="plan-icon">👑</div>
+      <div class="plan-icon">💎</div>
       <div class="plan-info">
         <div class="plan-name">Premium</div>
         <div class="plan-desc">Unlock all features</div>
