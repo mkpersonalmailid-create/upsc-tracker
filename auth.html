@@ -397,6 +397,28 @@ button.toggle-pw{
         </button>
       </form>
 
+              <button type="submit" class="auth-btn" id="authSubmit">
+          <span id="authSubmitText">Sign In</span>
+        </button>
+      </form>
+      <!-- 👇 YAHAN PASTE KAREIN (</form> ke baad, <p> tag se pehle) 👇 -->
+      
+      <!-- Google Login Button -->
+      <div style="margin-top: 20px; text-align: center;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+          <div style="flex: 1; height: 1px; background: var(--border);"></div>
+          <span style="font-size: 0.75rem; color: var(--text-3); font-weight: 700;">OR</span>
+          <div style="flex: 1; height: 1px; background: var(--border);"></div>
+        </div>
+        <button type="button" id="googleLoginBtn" class="btn" style="width: 100%; background: var(--card); border: 1.5px solid var(--border); color: var(--text); padding: 12px;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px; margin-right: 8px;">
+          Continue with Google
+        </button>
+      </div>
+      <!-- 👆 YAHAN TAK 👆 -->
+
+      <p class="auth-foot">Your data is private and securely synced.</p>
+
       <p class="auth-foot">Your data is private and securely synced.</p>
     </div>
   </div>
@@ -543,6 +565,35 @@ async function handleAuthSubmit(e) {
   }
 }
 
+/* ═══════════════ GOOGLE LOGIN ═══════════════ */
+async function signInWithGoogle() {
+  if (!supa) { toast('Supabase not ready.', 'err'); return; }
+  
+  const btn = document.getElementById('googleLoginBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Connecting...';
+
+  try {
+    const { error } = await supa.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        // Yeh line automatic aapki live website ya localhost par redirect kar degi
+        redirectTo: window.location.origin + APP_URL 
+      }
+    });
+    
+    if (error) throw error;
+    // Agar sab sahi hai, toh user Google page par redirect ho jayega
+    
+  } catch (error) {
+    console.error('Google login error:', error);
+    toast('Google login failed: ' + error.message, 'err');
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
 /* ═══════════════ MODAL HELPERS ═══════════════ */
 function openModal(html, opts = {}) {
   const box = $('#modalBox');
@@ -632,6 +683,11 @@ async function handleForgotPassword() {
 function wireEvents() {
   $$('.auth-tab').forEach(t => t.onclick = () => setAuthMode(t.dataset.authMode));
   $('#authForm').onsubmit = handleAuthSubmit;
+    // Google Login button wire karein
+  const googleBtn = document.getElementById('googleLoginBtn');
+  if (googleBtn) {
+    googleBtn.addEventListener('click', signInWithGoogle);
+  }
   $('#forgotPwBtn').onclick = handleForgotPassword;
 
   $('#togglePw').onclick = () => {
