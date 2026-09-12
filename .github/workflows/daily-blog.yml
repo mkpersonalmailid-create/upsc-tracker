@@ -9,7 +9,7 @@ on:
 jobs:
   generate-blog:
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: write   # Repo me push karne ki permission
 
@@ -34,13 +34,10 @@ jobs:
 
       - name: 📝 Update sitemap.xml
         run: |
-          # Latest blog post ka URL nikal
           LATEST=$(ls -t blog/*.html | grep -v "blog/index.html" | head -1 | sed 's|^|https://upscstudytracker.co.in/|')
           echo "Latest post: $LATEST"
-          
-          # Sitemap me entry add karo agar nahi hai
+
           if ! grep -q "$LATEST" sitemap.xml; then
-            # </urlset> tag se pehle insert karo
             sed -i "s|</urlset>|  <url>\n    <loc>$LATEST</loc>\n    <lastmod>$(date +%Y-%m-%d)</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n</urlset>|" sitemap.xml
           fi
 
@@ -49,7 +46,7 @@ jobs:
           git config user.name "UPSC Tracker Bot"
           git config user.email "bot@upscstudytracker.co.in"
           git add blog/ sitemap.xml
-          
+
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
