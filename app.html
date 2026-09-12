@@ -8254,8 +8254,17 @@ ${
       </select></div>
     <div class="field"><label>Subject</label><select id="mlSubject"></select></div>
     <div class="field"><label>Topic (optional)</label><input type="text" id="mlTopic" placeholder="Topic"></div>
-    <div class="field"><label>Study Type</label>
+        <div class="field"><label>Study Type</label>
       <select id="mlType">${STUDY_TYPES.map((t) => `<option>${t}</option>`).join('')}</select></div>
+    <div class="field"><label>Update Topic Status (optional)</label>
+      <select id="mlStatus">
+        <option value="">— Don't change —</option>
+        <option value="learning">🟡 Learning</option>
+        <option value="completed">🟢 Completed</option>
+        <option value="rev1">🟣 Rev 1</option>
+        <option value="rev2">🟣 Rev 2</option>
+        <option value="rev3">🟣 Rev 3</option>
+      </select></div>
     <div class="field"><label>Notes</label><textarea id="mlNotes" rows="2"></textarea></div>`;
         openModal(
           modalShell({
@@ -8297,6 +8306,7 @@ ${
                 const cat = $('#mlCategory').value;
                 const subject = $('#mlSubject').value;
                 const topic = $('#mlTopic').value.trim();
+                const newStatus = $('#mlStatus').value; // ⬅️ NAYA
                 const duration = mins * 60;
                 const startDate = startStr ? new Date(`${date}T${startStr}:00`) : new Date(`${date}T09:00:00`);
                 const session = {
@@ -8337,6 +8347,43 @@ ${
                     );
                   } catch (e) {}
                 }
+
+                // ⬇️⬇️⬇️ NAYA CODE — Topic status update karo ⬇️⬇️⬇️
+                if (newStatus && topic) {
+                  let existing = state.syllabus.find((s) => s.subject === subject && s.topic === topic);
+
+                  if (existing) {
+                    existing.status = newStatus;
+                    syncSyllabus(existing);
+                  } else {
+                    // SYLLABUS object se sahi paper ID dhundho
+                    let correctPaperId = null;
+                    for (const [pid, paper] of Object.entries(SYLLABUS)) {
+                      if (paper.subjects.some((sub) => sub.name === subject)) {
+                        correctPaperId = pid;
+                        break;
+                      }
+                    }
+                    correctPaperId = correctPaperId || cat;
+
+                    const newEntry = {
+                      id: uuid(),
+                      paper: correctPaperId,
+                      subject: subject,
+                      topic: topic,
+                      status: newStatus,
+                      category: SYLLABUS[correctPaperId]?.category || cat,
+                    };
+                    state.syllabus.push(newEntry);
+                    syncSyllabus(newEntry);
+                  }
+
+                  // UI refresh
+                  renderSyllabus();
+                  renderSubjects();
+                }
+                // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
+
                 closeModal();
                 toast('Session logged!', 'ok');
                 renderAll();
