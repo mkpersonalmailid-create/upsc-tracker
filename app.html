@@ -6036,7 +6036,15 @@
 
         try {
           const { data: s } = await supa.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
-          if (s?.settings) Object.assign(state.settings, s.settings);
+          try {
+            const { data: s } = await supa.from('user_settings').select('*').eq('user_id', uid).maybeSingle();
+            if (s?.settings) {
+              // ✅ Preserve local theme — user's local choice should never be overridden by cloud
+              const localTheme = state.settings.theme;
+              Object.assign(state.settings, s.settings);
+              if (localTheme) state.settings.theme = localTheme;
+            }
+          } catch (e) {}
         } catch (e) {}
 
         try {
@@ -12368,14 +12376,26 @@ ${
       }
 
       /* ═══════════════ THEME ═══════════════ */
-      function applyTheme(theme) {
+      async function applyTheme(theme) {
         state.settings.theme = theme;
         let effective = theme;
         if (theme === 'system')
           effective = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', effective);
-        $('#themeBtn').textContent = effective === 'dark' ? '🌙' : '☀';
+        const themeBtn = $('#themeBtn');
+        if (themeBtn) themeBtn.textContent = effective === 'dark' ? '🌙' : '☀';
         saveLocal();
+
+        // ✅ Also persist theme to cloud (so it syncs across devices)
+        if (typeof supa !== 'undefined' && supa && state.user) {
+          try {
+            await supa
+              .from('user_settings')
+              .upsert({ user_id: state.user.id, settings: state.settings }, { onConflict: 'user_id' });
+          } catch (e) {
+            console.warn('[theme] cloud save failed:', e);
+          }
+        }
       }
 
       /* ═══════════════ BOOT ═══════════════ */
