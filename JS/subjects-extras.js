@@ -1,24 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Subjects Extras (Phase 1)
-   - Custom subjects ko Study/Manual Log/Pomodoro me dikhata hai
-   - Apni category mapping alag maintain karta hai
-   Loaded AFTER inline script in app.html
+   UPSC TRACKER — Subjects Extras (Phase 1) — v3 BULLETPROOF
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[subjects-extras] script loaded');
+  console.log('[subjects-extras] v3 loaded');
 
-  /* ═══════════════════════════════════════════════════════════
-     LOCAL MAP — subject name → category
-     Ye DB se load hoga, aur DB me save bhi karega
-     ═══════════════════════════════════════════════════════════ */
   const CAT_MAP = {};
+  let patched = false;
 
-  /* ═══════════════════════════════════════════════════════════
-     WAIT for main app to be ready
-     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════ WAIT FOR APP ═══════════ */
   let attempts = 0;
 
   function appReady() {
@@ -41,28 +33,41 @@
     }
     attempts++;
     if (attempts > 200) {
-      console.error('[subjects-extras] Timed out — main app never became ready');
+      console.error('[subjects-extras] Timeout waiting for app');
       return;
     }
     setTimeout(waitThenStart, 50);
   }
 
   function start() {
-    console.log('[subjects-extras] main app ready — patching');
+    console.log('[subjects-extras] app ready — patching');
+
+    // Patch 1: getSubjectsForCategory
     patchGetSubjects();
+
+    // Patch 2: Add Subject Button — MULTIPLE METHODS
     patchAddSubjectButton();
-    wireLoginListener();
+
+    // Load user's custom categories from DB
+    pollForUser();
+
+    if (supa && supa.auth && supa.auth.onAuthStateChange) {
+      supa.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) setTimeout(loadCustomCategories, 1000);
+      });
+    }
+
     console.log('[subjects-extras] ✅ patched');
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     PATCH 1 — getSubjectsForCategory
-     Custom subjects ko inject karo jinka category match kare
-     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════ PATCH 1: getSubjectsForCategory ═══════════ */
   function patchGetSubjects() {
+    if (patched) return;
+    patched = true;
+
     const _orig = getSubjectsForCategory;
 
-    getSubjectsForCategory = function (cat) {
+    window.getSubjectsForCategory = function (cat) {
       const base = (_orig.call(this, cat) || []).slice();
       if (!cat) return base;
 
@@ -70,30 +75,59 @@
         .filter(([_, c]) => c === cat)
         .map(([n]) => n);
 
-      const result = [...new Set([...base, ...custom])];
-      console.log('[subjects-extras] getSubjectsForCategory("' + cat + '") →', result.length, 'items');
-      return result;
+      return [...new Set([...base, ...custom])];
     };
+
+    // Also try direct assignment (in case window is different scope)
+    try {
+      getSubjectsForCategory = window.getSubjectsForCategory;
+    } catch (e) {}
 
     console.log('[subjects-extras] patched: getSubjectsForCategory');
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     PATCH 2 — Add Subject button
-     Modal with: Name + Category + Color
-     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════ PATCH 2: Add Subject Button ═══════════ */
   function patchAddSubjectButton() {
-    const btn = document.getElementById('addSubjectBtn');
-    if (!btn) {
+    const oldBtn = document.getElementById('addSubjectBtn');
+
+    if (!oldBtn) {
       setTimeout(patchAddSubjectButton, 300);
       return;
     }
 
-    btn.onclick = openNewSubjectModal;
-    console.log('[subjects-extras] patched: addSubjectBtn');
+    // METHOD A: Clone to remove ALL existing listeners
+    try {
+      const newBtn = oldBtn.cloneNode(true);
+      newBtn.onclick = null; // Clear cloned onclick
+      oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+      newBtn.onclick = openNewSubjectModal;
+      console.log('[subjects-extras] patched: addSubjectBtn (clone)');
+    } catch (e) {
+      console.warn('[subjects-extras] clone failed:', e);
+    }
+
+    // METHOD B: Capture-phase listener (bulletproof backup)
+    document.addEventListener(
+      'click',
+      function (e) {
+        const btn = e.target.closest && e.target.closest('#addSubjectBtn');
+        if (btn) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          openNewSubjectModal();
+        }
+      },
+      true,
+    ); // capture phase — runs BEFORE any onclick
+
+    console.log('[subjects-extras] patched: addSubjectBtn (capture listener)');
   }
 
+  /* ═══════════ NEW SUBJECT MODAL ═══════════ */
   function openNewSubjectModal() {
+    // Prevent double-open
+    if (document.querySelector('#modalRoot.active')) return;
+
     const COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#10B981', '#6366F1', '#EF4444'];
     const CATS = [
       { id: 'prelims', label: '🎯 GS Prelims' },
@@ -141,22 +175,22 @@
         onMount() {
           let selectedColor = COLORS[0];
 
-          document
-            .getElementById('newSubjColors')
-            .querySelectorAll('.color-swatch')
-            .forEach((sw) => {
+          const colorsDiv = document.getElementById('newSubjColors');
+          if (colorsDiv) {
+            colorsDiv.querySelectorAll('.color-swatch').forEach((sw) => {
               sw.onclick = () => {
                 selectedColor = sw.dataset.color;
-                document
-                  .getElementById('newSubjColors')
-                  .querySelectorAll('.color-swatch')
-                  .forEach((b) => {
-                    b.style.borderColor = b.dataset.color === selectedColor ? 'var(--text)' : 'transparent';
-                  });
+                colorsDiv.querySelectorAll('.color-swatch').forEach((b) => {
+                  b.style.borderColor = b.dataset.color === selectedColor ? 'var(--text)' : 'transparent';
+                });
               };
             });
+          }
 
-          setTimeout(() => document.getElementById('newSubjName').focus(), 100);
+          setTimeout(() => {
+            const inp = document.getElementById('newSubjName');
+            if (inp) inp.focus();
+          }, 100);
 
           document.getElementById('saveNewSubj').onclick = async () => {
             const name = document.getElementById('newSubjName').value.trim();
@@ -193,30 +227,16 @@
 
             closeModal();
             toast(`✅ "${name}" created`, 'ok');
-            if (state.view === 'subjects') renderSubjects();
+            if (state.view === 'subjects' && typeof renderSubjects === 'function') {
+              renderSubjects();
+            }
           };
         },
       },
     );
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     LOAD categories on login (from DB)
-     ═══════════════════════════════════════════════════════════ */
-  function wireLoginListener() {
-    // If already logged in, load now
-    pollForUser();
-
-    // Also listen for future logins
-    if (supa && supa.auth && supa.auth.onAuthStateChange) {
-      supa.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          setTimeout(loadCustomCategories, 1000);
-        }
-      });
-    }
-  }
-
+  /* ═══════════ LOAD CATEGORIES FROM DB ═══════════ */
   function pollForUser() {
     if (state.user) {
       loadCustomCategories();
@@ -241,14 +261,12 @@
           if (s.category) CAT_MAP[s.name] = s.category;
         });
       }
-      console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'custom subjects');
+      console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'subjects');
     } catch (e) {
       console.warn('[subjects-extras] load error:', e);
     }
   }
 
-  /* ═══════════════════════════════════════════════════════════
-     START
-     ═══════════════════════════════════════════════════════════ */
+  /* ═══════════ START ═══════════ */
   waitThenStart();
 })();
