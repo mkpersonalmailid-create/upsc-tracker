@@ -113,19 +113,38 @@
   }
 
   /* ═══════════════ 4. SESSION → GOAL MATCHING ═══════════════ */
+  /* ═══════════════ 4. SESSION → GOAL MATCHING ═══════════════ */
   async function processSession(session) {
     if (session._goalProcessed) return;
     session._goalProcessed = true;
 
+    const notes = session.notes || '';
+
+    /* v9.1 FIX: If already counted, skip — prevents double-count on refresh */
+    if (notes.includes('[GOALCOUNTED]')) return;
+
     /* ONLY explicit [GOAL:id] tags count. No auto-match at all. */
-    const taggedId = extractGoalId(session.notes);
+    const taggedId = extractGoalId(notes);
     if (!taggedId) return;
 
     const goal = state.goals.find((g) => g.id === taggedId);
     if (!goal || goal.current >= goal.target) return;
 
     const ok = await incrementGoalFromSession(goal, session);
-    if (ok && typeof toast === 'function') {
+    if (!ok) return;
+
+    /* ⬇️ Permanently mark this session as counted */
+    session.notes = notes ? `${notes}\n[GOALCOUNTED]` : '[GOALCOUNTED]';
+
+    if (supa && state.user) {
+      try {
+        await supa.from('study_sessions').update({ notes: session.notes }).eq('id', session.id);
+      } catch (e) {
+        console.warn('[goals-extras] failed to persist GOALCOUNTED marker:', e);
+      }
+    }
+
+    if (typeof toast === 'function') {
       toast(`🎯 Goal updated: ${goal.current} / ${goal.target} ${goal.unit || ''}`, 'ok', 2200);
     }
     if (typeof renderGoals === 'function') renderGoals();
