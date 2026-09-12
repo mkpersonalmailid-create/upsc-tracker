@@ -882,18 +882,7 @@
               return;
             }
 
-            let paperId = category;
-            if (typeof SYLLABUS === 'object' && SYLLABUS) {
-              for (const [pid, paper] of Object.entries(SYLLABUS)) {
-                if ((paper.subjects || []).some((s) => s.name === subject)) {
-                  if (paper.category === category || category === 'mains') {
-                    paperId = pid;
-                    break;
-                  }
-                }
-              }
-            }
-
+            /* Local state object — extra fields only used in memory */
             const r = {
               id: safeUUID(),
               subject,
@@ -902,18 +891,31 @@
               due_date: dueDate,
               revision_number: revNum,
               status: 'pending',
-              paper: paperId,
-              category,
             };
 
             state.revisions.push(r);
-            if (typeof saveLocal === 'function') saveLocal();
 
+            /* ═══ DB INSERT — only send columns that exist in `revisions` table ═══ */
             if (typeof supa !== 'undefined' && supa && state.user) {
               try {
-                await supa.from('revisions').insert({ ...r, user_id: state.user.id });
+                const { error } = await supa.from('revisions').insert({
+                  id: r.id,
+                  user_id: state.user.id,
+                  subject: r.subject,
+                  topic: r.topic,
+                  original_date: r.original_date,
+                  due_date: r.due_date,
+                  revision_number: r.revision_number,
+                  status: r.status,
+                });
+
+                if (error) {
+                  console.error('[revision-extras] insert failed:', error);
+                  toast('⚠️ Cloud save failed — check console', 'warn', 4000);
+                }
               } catch (e) {
-                console.warn('revision insert error:', e);
+                console.error('[revision-extras] insert exception:', e);
+                toast('⚠️ Cloud save failed', 'warn', 4000);
               }
             }
 
