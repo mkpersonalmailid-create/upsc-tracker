@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v5 (FINAL)
+   UPSC TRACKER — Goals Extras v6 (FINAL)
    ─────────────────────────────────────────────────────────────
    ✅ Goal Study Mode — pick goal, then start timer
+   ✅ Auto-refresh goal panel when clicking Goal Study mode
+   ✅ Units: Hours only (study time + history)
    ✅ "Is this part of a goal?" dropdown in session modals
    ✅ Auto-fill subject/topic from linked goal
    ✅ Session → Goal auto-increment (smart matching)
-   ✅ Units: Hours (study time) | Topics (tracked only)
    ✅ Category/Subject/Topic cascade in goal modal (collapsible)
    ✅ Analytics strip at top of Goals page
    ✅ Goal complete → auto-creates study session
@@ -16,7 +17,7 @@
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v5 loaded');
+  console.log('[goals-extras] v6 loaded');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -94,7 +95,6 @@
     let increment = 0;
 
     if (unit.includes('hour') || unit.includes('hr')) increment = (session.duration || 0) / 3600;
-    else if (unit.includes('topic')) increment = 1;
     else return false;
 
     if (increment <= 0) return false;
@@ -179,8 +179,6 @@
   async function toggleGoalComplete(goal) {
     const wasDone = goal.current >= goal.target;
     const tag = goalSessionTag(goal.id);
-    const unit = (goal.unit || '').toLowerCase();
-    const isHourGoal = unit.includes('hour') || unit.includes('hr');
 
     const linkedSession = state.sessions.find((s) => (s.notes || '').includes(tag));
 
@@ -201,69 +199,63 @@
         } catch (e) {}
       }
       if (typeof toast === 'function') {
-        toast(isHourGoal ? '↺ Goal reset · session removed' : '↺ Goal reset', 'info', 2200);
+        toast('↺ Goal reset · session removed', 'info', 2200);
       }
     } else {
       goal.current = goal.target;
 
-      if (isHourGoal) {
-        const durationSec = computeGoalDurationSeconds(goal);
-        if (durationSec > 0) {
-          const now = Date.now();
-          const sessionId = linkedSession?.id || safeUUID();
-          const session = {
-            id: sessionId,
-            date: todayKey(),
-            ts: now,
-            start_time: now - durationSec * 1000,
-            end_time: now,
-            duration: durationSec,
-            subject: goal.subject || 'General Study',
-            topic: goal.topic || goal.title,
-            study_type: 'New Learning',
-            notes: `${tag} Auto-logged from goal: ${goal.title}`,
-            productivity: 3,
-            energy: 3,
-            category: goal.category || null,
-            paper: goal.subject || 'General Study',
-            _goalGenerated: true,
-          };
+      const durationSec = computeGoalDurationSeconds(goal);
+      if (durationSec > 0) {
+        const now = Date.now();
+        const sessionId = linkedSession?.id || safeUUID();
+        const session = {
+          id: sessionId,
+          date: todayKey(),
+          ts: now,
+          start_time: now - durationSec * 1000,
+          end_time: now,
+          duration: durationSec,
+          subject: goal.subject || 'General Study',
+          topic: goal.topic || goal.title,
+          study_type: 'New Learning',
+          notes: `${tag} Auto-logged from goal: ${goal.title}`,
+          productivity: 3,
+          energy: 3,
+          category: goal.category || null,
+          paper: goal.subject || 'General Study',
+          _goalGenerated: true,
+        };
 
-          const existIdx = state.sessions.findIndex((s) => s.id === sessionId);
-          if (existIdx >= 0) state.sessions[existIdx] = session;
-          else state.sessions.push(session);
-          processedSessionIds.add(sessionId);
+        const existIdx = state.sessions.findIndex((s) => s.id === sessionId);
+        if (existIdx >= 0) state.sessions[existIdx] = session;
+        else state.sessions.push(session);
+        processedSessionIds.add(sessionId);
 
-          if (supa && state.user) {
-            try {
-              await supa.from('study_sessions').upsert(
-                {
-                  id: session.id,
-                  user_id: state.user.id,
-                  date: session.date,
-                  start_time: new Date(session.start_time).toISOString(),
-                  end_time: new Date(session.end_time).toISOString(),
-                  duration_seconds: session.duration,
-                  subject: session.subject,
-                  topic: session.topic,
-                  study_type: session.study_type,
-                  notes: session.notes,
-                  paper: session.paper,
-                },
-                { onConflict: 'id' },
-              );
-            } catch (e) {
-              console.warn('[goals-extras] session insert:', e);
-            }
-          }
-
-          if (typeof toast === 'function') {
-            toast(`🎉 Goal complete · ${(durationSec / 3600).toFixed(1)}h added to Study Time`, 'ok', 3500);
+        if (supa && state.user) {
+          try {
+            await supa.from('study_sessions').upsert(
+              {
+                id: session.id,
+                user_id: state.user.id,
+                date: session.date,
+                start_time: new Date(session.start_time).toISOString(),
+                end_time: new Date(session.end_time).toISOString(),
+                duration_seconds: session.duration,
+                subject: session.subject,
+                topic: session.topic,
+                study_type: session.study_type,
+                notes: session.notes,
+                paper: session.paper,
+              },
+              { onConflict: 'id' },
+            );
+          } catch (e) {
+            console.warn('[goals-extras] session insert:', e);
           }
         }
-      } else {
+
         if (typeof toast === 'function') {
-          toast(`🎉 Goal complete (tracked only — no time added)`, 'ok', 3000);
+          toast(`🎉 Goal complete · ${(durationSec / 3600).toFixed(1)}h added to Study Time`, 'ok', 3500);
         }
       }
 
@@ -455,8 +447,7 @@
               <div class="field">
                 <label>Unit</label>
                 <select id="gmUnit">
-                  <option value="hours" ${g.unit === 'hours' ? 'selected' : ''}>⏱ Hours</option>
-                  <option value="topics" ${g.unit === 'topics' ? 'selected' : ''}>📖 Topics</option>
+                  <option value="hours" selected>⏱ Hours</option>
                 </select>
               </div>
             </div>
@@ -473,9 +464,8 @@
             ${buildLinkSection(g)}
             <div style="padding:12px 14px;background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.28);border-radius:10px;font-size:.78rem;color:#C4B5FD;line-height:1.65;margin-top:6px">
               <div style="font-weight:800;color:#E9D5FF;margin-bottom:6px">💡 How it works</div>
-              <div style="display:flex;gap:8px;margin-bottom:4px"><span>⏱</span><div><strong>Hours unit</strong> — Adds those hours to your <strong>Study Time &amp; History</strong> when completed.</div></div>
-              <div style="display:flex;gap:8px;margin-bottom:4px"><span>📖</span><div><strong>Topics unit</strong> — Only tracked inside Goals section. No time is added.</div></div>
-              <div style="display:flex;gap:8px"><span>🔗</span><div><strong>Link</strong> — Optional. Leave empty for <em>global (all sessions)</em>.</div></div>
+              <div style="display:flex;gap:8px;margin-bottom:4px"><span>⏱</span><div><strong>Hours</strong> — Completing the goal adds those hours to your <strong>Study Time &amp; History</strong>.</div></div>
+              <div style="display:flex;gap:8px"><span>🔗</span><div><strong>Link</strong> — Optional. Leave empty to count <em>all sessions (global)</em>.</div></div>
             </div>
           `,
           actions: `<button class="btn btn-ghost" data-close>Cancel</button>
@@ -558,7 +548,7 @@
                 type: document.getElementById('gmType').value,
                 title,
                 target: parseFloat(document.getElementById('gmTarget').value) || 1,
-                unit: document.getElementById('gmUnit').value,
+                unit: 'hours',
                 deadline: document.getElementById('gmDeadline').value || null,
                 subject: subjSel.value || null,
                 topic: topicSel.value || null,
@@ -601,6 +591,11 @@
               }
               if (typeof closeModal === 'function') closeModal();
               if (typeof renderGoals === 'function') renderGoals();
+
+              /* Refresh Goal Study panel if visible */
+              if (typeof renderGoalStudyPanelContent === 'function') {
+                setTimeout(renderGoalStudyPanelContent, 100);
+              }
             };
           },
         },
@@ -616,7 +611,7 @@
   function injectGoalLink(modalBox, isSaveSession) {
     if (!modalBox || modalBox.querySelector('#sessionGoalLink')) return;
 
-    const activeGoals = (state.goals || []).filter((g) => g.status !== 'completed' && g.current < g.target);
+    const activeGoals = (state.goals || []).filter((g) => g.current < g.target);
     if (!activeGoals.length) return;
 
     const body = modalBox.querySelector('.modal-body');
@@ -657,13 +652,12 @@
       const goal = state.goals.find((g) => g.id === gid);
       if (!goal) return;
 
-      const unit = (goal.unit || '').toLowerCase();
       const remaining = Math.max(0, goal.target - goal.current);
 
       hint.style.display = 'block';
       hint.innerHTML = `
         ✨ This session will count toward <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong>.<br>
-        ${unit.includes('hour') ? `⏱ <strong>${remaining.toFixed(1)} ${goal.unit}</strong> remaining. Hours will be added automatically.` : `📖 Goal progress will be tracked.`}
+        ⏱ <strong>${remaining.toFixed(1)} ${goal.unit || 'hours'}</strong> remaining. Hours will be added automatically.
       `;
 
       /* For Manual Log — auto-fill subject/topic */
@@ -709,7 +703,7 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 11. TAG NOTES ON SAVE (capture phase) ═══════════════ */
+  /* ═══════════════ 11. TAG NOTES ON SAVE ═══════════════ */
   document.addEventListener(
     'click',
     (e) => {
@@ -817,32 +811,13 @@
     } catch (e) {}
   }
 
-  /* ═══════════════ 13. GOAL STUDY MODE ═══════════════ */
-  function injectGoalStudyMode() {
-    const modesEl = document.getElementById('timerModes');
-    if (!modesEl) return;
-    if (modesEl.querySelector('[data-mode="goal"]')) return;
+  /* ═══════════════ 13. GOAL STUDY MODE — Panel Content (rebuildable) ═══════════════ */
+  function renderGoalStudyPanelContent() {
+    const panel = document.getElementById('goalStudyPanel');
+    if (!panel) return;
 
-    /* Add new mode chip */
-    const chip = document.createElement('button');
-    chip.className = 'mode-chip';
-    chip.dataset.mode = 'goal';
-    chip.textContent = '🎯 Goal Study';
-    modesEl.appendChild(chip);
+    const activeGoals = (state.goals || []).filter((g) => g.current < g.target);
 
-    /* Create goal selector panel */
-    const whatStudying = document.querySelector('.what-studying');
-    if (!whatStudying) return;
-
-    const oldPanel = document.getElementById('goalStudyPanel');
-    if (oldPanel) oldPanel.remove();
-
-    const activeGoals = (state.goals || []).filter((g) => g.status !== 'completed' && g.current < g.target);
-
-    const panel = document.createElement('div');
-    panel.id = 'goalStudyPanel';
-    panel.style.cssText =
-      'display:none;padding:18px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;margin-bottom:18px';
     panel.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <span style="font-size:1.4rem">🎯</span>
@@ -878,14 +853,7 @@
       }
     `;
 
-    const catChips = document.getElementById('categoryChips');
-    if (catChips && catChips.parentElement) {
-      catChips.parentElement.insertBefore(panel, catChips);
-    } else {
-      whatStudying.insertBefore(panel, whatStudying.firstChild);
-    }
-
-    /* Wire goal dropdown */
+    /* Wire dropdown */
     const sel = document.getElementById('goalStudySelect');
     if (sel) {
       sel.onchange = () => {
@@ -900,17 +868,12 @@
         const goal = state.goals.find((g) => g.id === gid);
         if (!goal) return;
 
-        const unit = (goal.unit || '').toLowerCase();
         const remaining = Math.max(0, goal.target - goal.current);
 
         info.style.display = 'block';
         info.innerHTML = `
           <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong><br>
-          ${
-            unit.includes('hour') || unit.includes('hr')
-              ? `⏱ ${remaining.toFixed(1)} ${escHtml(goal.unit || 'hours')} remaining — timer hours will auto-add to this goal.`
-              : `📖 Goal will be tracked.`
-          }
+          ⏱ ${remaining.toFixed(1)} ${escHtml(goal.unit || 'hours')} remaining — timer hours will auto-add to this goal.
           ${goal.subject ? `<br>📚 Subject: <strong style="color:#E9D5FF">${escHtml(goal.subject)}</strong>` : ''}
           ${goal.topic ? `<br>📖 Topic: <strong style="color:#E9D5FF">${escHtml(goal.topic)}</strong>` : ''}
         `;
@@ -930,34 +893,76 @@
         }
       };
     }
+  }
 
-    /* Listen for mode chip changes */
-    modesEl.addEventListener('click', (e) => {
-      const chip = e.target.closest('.mode-chip');
-      if (!chip) return;
-      const mode = chip.dataset.mode;
+  /* ═══════════════ 13b. GOAL STUDY MODE — Panel inject + mode chip ═══════════════ */
+  function injectGoalStudyMode() {
+    const modesEl = document.getElementById('timerModes');
+    if (!modesEl) return;
 
-      const panelEl = document.getElementById('goalStudyPanel');
-      const catChipsEl = document.getElementById('categoryChips');
-      const subjSelector = document.getElementById('subjectSelector');
-      const topicPicker = document.querySelector('.topic-picker');
+    /* Add Goal Study chip once */
+    if (!modesEl.querySelector('[data-mode="goal"]')) {
+      const chip = document.createElement('button');
+      chip.className = 'mode-chip';
+      chip.dataset.mode = 'goal';
+      chip.textContent = '🎯 Goal Study';
+      modesEl.appendChild(chip);
+    }
 
-      if (mode === 'goal') {
-        state._goalStudyMode = true;
-        if (panelEl) panelEl.style.display = 'block';
-        if (catChipsEl) catChipsEl.style.display = 'none';
-        if (subjSelector) subjSelector.style.display = 'none';
-        if (topicPicker) topicPicker.style.display = 'none';
-        document.querySelectorAll('.step-label').forEach((el) => (el.style.display = 'none'));
+    const whatStudying = document.querySelector('.what-studying');
+    if (!whatStudying) return;
+
+    /* Create panel container once */
+    let panel = document.getElementById('goalStudyPanel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'goalStudyPanel';
+      panel.style.cssText =
+        'display:none;padding:18px;background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(236,72,153,.06));border:1.5px solid rgba(251,191,36,.4);border-radius:14px;margin-bottom:18px';
+      const catChips = document.getElementById('categoryChips');
+      if (catChips && catChips.parentElement) {
+        catChips.parentElement.insertBefore(panel, catChips);
       } else {
-        state._goalStudyMode = false;
-        if (panelEl) panelEl.style.display = 'none';
-        if (catChipsEl) catChipsEl.style.display = '';
-        if (subjSelector) subjSelector.style.display = '';
-        if (topicPicker) topicPicker.style.display = '';
-        document.querySelectorAll('.step-label').forEach((el) => (el.style.display = ''));
+        whatStudying.insertBefore(panel, whatStudying.firstChild);
       }
-    });
+    }
+
+    /* Wire mode click once */
+    if (!modesEl._goalModeWired) {
+      modesEl._goalModeWired = true;
+      modesEl.addEventListener('click', (e) => {
+        const chip = e.target.closest('.mode-chip');
+        if (!chip) return;
+        const mode = chip.dataset.mode;
+
+        const panelEl = document.getElementById('goalStudyPanel');
+        const catChipsEl = document.getElementById('categoryChips');
+        const subjSelector = document.getElementById('subjectSelector');
+        const topicPicker = document.querySelector('.topic-picker');
+
+        if (mode === 'goal') {
+          state._goalStudyMode = true;
+          if (panelEl) {
+            panelEl.style.display = 'block';
+            renderGoalStudyPanelContent(); /* ⬅️ refresh with latest goals */
+          }
+          if (catChipsEl) catChipsEl.style.display = 'none';
+          if (subjSelector) subjSelector.style.display = 'none';
+          if (topicPicker) topicPicker.style.display = 'none';
+          document.querySelectorAll('.step-label').forEach((el) => (el.style.display = 'none'));
+        } else {
+          state._goalStudyMode = false;
+          if (panelEl) panelEl.style.display = 'none';
+          if (catChipsEl) catChipsEl.style.display = '';
+          if (subjSelector) subjSelector.style.display = '';
+          if (topicPicker) topicPicker.style.display = '';
+          document.querySelectorAll('.step-label').forEach((el) => (el.style.display = ''));
+        }
+      });
+    }
+
+    /* Initial content build (so it's ready when clicked) */
+    renderGoalStudyPanelContent();
   }
 
   function patchRenderStudyForGoalMode() {
@@ -1113,6 +1118,19 @@
         injectGoalStudyMode();
         if (typeof renderCalendar === 'function') renderCalendar();
       }, 500);
+
+      /* Also refresh Goal Study panel when goals change */
+      setInterval(() => {
+        if (state._goalStudyMode) {
+          const panel = document.getElementById('goalStudyPanel');
+          if (panel && panel.style.display !== 'none') {
+            const sel = document.getElementById('goalStudySelect');
+            const currentVal = sel ? sel.value : '';
+            /* Only rebuild if user hasn't selected a goal yet */
+            if (!currentVal) renderGoalStudyPanelContent();
+          }
+        }
+      }, 3000);
 
       console.log('[goals-extras] ✅ patched all');
     } else {
