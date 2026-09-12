@@ -172,9 +172,6 @@ a{color:var(--pink);text-decoration:none}
   background:var(--card);
 }
 
-/* ═══════════════════════════════════════════════
-   EMAIL INPUT WITH @gmail.com SUFFIX
-   ═══════════════════════════════════════════════ */
 .email-input-wrap{
   position:relative;
   display:flex;
@@ -218,8 +215,6 @@ a{color:var(--pink);text-decoration:none}
   white-space:nowrap;
   transition:opacity .2s cubic-bezier(0.32,0.72,0,1);
 }
-
-/* ═══ TRIPLE-LAYER HIDE (CSS + class + inline style) ═══ */
 .email-input-wrap.hide-suffix .email-suffix,
 .email-suffix[style*="display: none"],
 .email-suffix.hidden-suffix{
@@ -431,14 +426,16 @@ const DEFAULT_EMAIL_DOMAIN = '@gmail.com';
 const APP_URL = '/app.html';
 
 // ═══════════════ DEV PREVIEW RESTRICTION CONFIG ═══════════════
-const OWNER_EMAILS = ['mkpersonalmailid@gmail.com',
+const OWNER_EMAILS = [
+  'mkpersonalmailid@gmail.com',
   'dev@gmail.com',
-  'admin33@gmail.com']; // Apni email(s) yahan daalein
-// ✅ Only dev.* subdomain is treated as dev preview
-// Production domains (upscstudytracker.co.in, upsctrackertime.pages.dev) work normally
+  'admin33@gmail.com'
+];
+
+// Only dev.* subdomain is treated as dev preview
 function checkIsDevPreview() {
   const h = (window.location.hostname || '').toLowerCase();
-  return h.startsWith('dev.');  // only dev.xxx.pages.dev
+  return h.startsWith('dev.');
 }
 const isDevPreview = checkIsDevPreview();
 // ═══════════════════════════════════════════════════════════════
@@ -463,7 +460,7 @@ function authMsg(text, type='info') {
   const el = $('#authMsg');
   if (!text) { el.classList.remove('show'); return; }
   el.className = 'auth-msg show ' + type;
-  el.innerHTML = text; // ✅ YEH SAHI HAI (HTML render karega)
+  el.innerHTML = text;
 }
 
 /* ═══════════════ SUPABASE ═══════════════ */
@@ -496,7 +493,7 @@ function normalizeEmail(raw) {
   return val + DEFAULT_EMAIL_DOMAIN;
 }
 
-/* ═══════════════ SUFFIX AUTO-HIDE (TRIPLE LAYER) ═══════════════ */
+/* ═══════════════ SUFFIX AUTO-HIDE ═══════════════ */
 function toggleEmailSuffix(input) {
   if (!input) return;
   const wrap = input.closest('.email-input-wrap');
@@ -527,20 +524,21 @@ async function handleAuthSubmit(e) {
   const password = $('#authPassword').value;
   const name = $('#authName').value.trim();
 
-    if (isDevPreview) {
-  if (!OWNER_EMAILS.includes(email.toLowerCase())) {
-    authMsg(`
-      ⚠️ <strong>This is a dev preview environment.</strong><br>
-      Please use the production site.<br><br>
-      <a href="https://upscstudytracker.co.in" 
-         class="btn btn-primary" 
-         style="text-decoration:none; display:flex; width:100%; justify-content:center; box-sizing:border-box; padding:10px;">
-         Go to Live Production Site
-      </a>
-    `, 'err');
-    return;
+  // Dev preview restriction
+  if (isDevPreview) {
+    if (!OWNER_EMAILS.includes(email.toLowerCase())) {
+      authMsg(`
+        ⚠️ <strong>This is a dev preview environment.</strong><br>
+        Please use the production site.<br><br>
+        <a href="https://upscstudytracker.co.in"
+           class="btn btn-primary"
+           style="text-decoration:none; display:flex; width:100%; justify-content:center; box-sizing:border-box; padding:10px;">
+           Go to Live Production Site
+        </a>
+      `, 'err');
+      return;
+    }
   }
-}
 
   if (!email || !password) { authMsg('Enter email and password.', 'err'); return; }
   if (password.length < 6) { authMsg('Password must be 6+ characters.', 'err'); return; }
@@ -571,97 +569,94 @@ async function handleAuthSubmit(e) {
         setTimeout(() => window.location.href = APP_URL, 1500);
       }
     }
-  }  catch(err) {
-  const msg = (err.message || '').toLowerCase();
-  
-  // ═══ SMART ERROR HANDLING ═══
-  if (authMode === 'signin' && (
-    msg.includes('invalid login') || 
-    msg.includes('invalid credentials') ||
-    msg.includes('user not found')
-  )) {
-    // Sign In me account nahi mila → Create Account ka option do
-    const emailVal = email; // already normalized upar
-    authMsg(`
-      ⚠️ <strong>Account not found.</strong><br>
-      Is email se koi account nahi hai. Pehle account banaiye.<br><br>
-      <button type="button" class="btn btn-primary" id="switchToSignupBtn"
-        style="text-decoration:none; display:flex; width:100%; justify-content:center; padding:10px;">
-        ✨ Create Account with ${esc(emailVal)}
-      </button>
-    `, 'err');
-    
-    // Button pe click → Signup tab par switch karein aur email pre-fill karein
-    setTimeout(() => {
-      const btn = document.getElementById('switchToSignupBtn');
-      if (btn) {
-        btn.onclick = () => {
-          setAuthMode('signup');
-          $('#authEmail').value = emailVal.split('@')[0]; // prefix only (suffix auto lag jayega)
-          toggleEmailSuffix($('#authEmail'));
-          authMsg('');
-          setTimeout(() => $('#authPassword').focus(), 100);
-        };
-      }
-    }, 50);
-  } 
-  else if (authMode === 'signup' && msg.includes('already registered')) {
-    // Signup me email already exists → Sign In karne ko bolo
-    authMsg(`
-      ℹ️ <strong>Account already exists.</strong><br>
-      Is email se account pehle se bana hua hai. Please sign in karein.<br><br>
-      <button type="button" class="btn btn-primary" id="switchToSigninBtn"
-        style="display:flex; width:100%; justify-content:center; padding:10px;">
-        🔑 Sign In Instead
-      </button>
-    `, 'info');
-    
-    setTimeout(() => {
-      const btn = document.getElementById('switchToSigninBtn');
-      if (btn) {
-        btn.onclick = () => {
-          setAuthMode('signin');
-          $('#authEmail').value = email.split('@')[0];
-          toggleEmailSuffix($('#authEmail'));
-          authMsg('');
-          setTimeout(() => $('#authPassword').focus(), 100);
-        };
-      }
-    }, 50);
-  }
-  else if (msg.includes('email not confirmed')) {
-    authMsg('📧 Please confirm your email first. Check your inbox.', 'info');
-  }
-  else {
-    authMsg(err.message || 'Authentication failed.', 'err');
-  }
-} finally {
-  btn.disabled = false;
-  $('#authSubmitText').textContent = orig;
-}
+  } catch(err) {
+    const msg = (err.message || '').toLowerCase();
 
+    // ═══ SMART ERROR HANDLING ═══
+    if (authMode === 'signin' && (
+      msg.includes('invalid login') ||
+      msg.includes('invalid credentials') ||
+      msg.includes('user not found')
+    )) {
+      // Sign In me account nahi mila → Create Account ka option do
+      const emailVal = email;
+      authMsg(`
+        ⚠️ <strong>Account not found.</strong><br>
+        Is email se koi account nahi hai. Pehle account banaiye.<br><br>
+        <button type="button" class="btn btn-primary" id="switchToSignupBtn"
+          style="text-decoration:none; display:flex; width:100%; justify-content:center; padding:10px;">
+          ✨ Create Account with ${esc(emailVal)}
+        </button>
+      `, 'err');
+
+      setTimeout(() => {
+        const b = document.getElementById('switchToSignupBtn');
+        if (b) {
+          b.onclick = () => {
+            setAuthMode('signup');
+            $('#authEmail').value = emailVal.split('@')[0];
+            toggleEmailSuffix($('#authEmail'));
+            authMsg('');
+            setTimeout(() => $('#authPassword').focus(), 100);
+          };
+        }
+      }, 50);
+    }
+    else if (authMode === 'signup' && msg.includes('already registered')) {
+      // Signup me email already exists → Sign In karne ko bolo
+      authMsg(`
+        ℹ️ <strong>Account already exists.</strong><br>
+        Is email se account pehle se bana hua hai. Please sign in karein.<br><br>
+        <button type="button" class="btn btn-primary" id="switchToSigninBtn"
+          style="display:flex; width:100%; justify-content:center; padding:10px;">
+          🔑 Sign In Instead
+        </button>
+      `, 'info');
+
+      setTimeout(() => {
+        const b = document.getElementById('switchToSigninBtn');
+        if (b) {
+          b.onclick = () => {
+            setAuthMode('signin');
+            $('#authEmail').value = email.split('@')[0];
+            toggleEmailSuffix($('#authEmail'));
+            authMsg('');
+            setTimeout(() => $('#authPassword').focus(), 100);
+          };
+        }
+      }, 50);
+    }
+    else if (msg.includes('email not confirmed')) {
+      authMsg('📧 Please confirm your email first. Check your inbox.', 'info');
+    }
+    else {
+      authMsg(err.message || 'Authentication failed.', 'err');
+    }
+  } finally {
+    btn.disabled = false;
+    $('#authSubmitText').textContent = orig;
+  }
+}
 
 /* ═══════════════ GOOGLE LOGIN ═══════════════ */
 async function signInWithGoogle() {
   if (!supa) { toast('Supabase not ready.', 'err'); return; }
-  
+
   const btn = document.getElementById('googleLoginBtn');
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Connecting...';
 
   try {
-    // Note: Dev restriction Google ke liye app.html me handle hogi
-    // kyunki redirect ke baad hi email pata chalti hai.
     const { error } = await supa.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + APP_URL 
+        redirectTo: window.location.origin + APP_URL
       }
     });
-    
+
     if (error) throw error;
-    
+
   } catch (error) {
     console.error('Google login error:', error);
     toast('Google login failed: ' + error.message, 'err');
@@ -699,7 +694,8 @@ async function handleForgotPassword() {
     <div class="field">
       <label>Email address</label>
       <div class="email-input-wrap">
-       <input type="text" id="resetEmailInput" placeholder="yourname" autocomplete="email" inputmode="email">        <span class="email-suffix">@gmail.com</span>
+        <input type="text" id="resetEmailInput" placeholder="yourname" autocomplete="email" inputmode="email">
+        <span class="email-suffix">@gmail.com</span>
       </div>
     </div>
     <p style="font-size:.82rem;color:var(--text-3)">We'll send a password reset link to your email.</p>
@@ -759,12 +755,12 @@ async function handleForgotPassword() {
 function wireEvents() {
   $$('.auth-tab').forEach(t => t.onclick = () => setAuthMode(t.dataset.authMode));
   $('#authForm').onsubmit = handleAuthSubmit;
-  
+
   const googleBtn = document.getElementById('googleLoginBtn');
   if (googleBtn) {
     googleBtn.addEventListener('click', signInWithGoogle);
   }
-  
+
   $('#forgotPwBtn').onclick = handleForgotPassword;
 
   $('#togglePw').onclick = () => {
@@ -810,16 +806,19 @@ async function boot() {
   try {
     const { data: { session } } = await supa.auth.getSession();
     if (session) {
-      // ═══════════════ DEV PREVIEW RESTRICTION (Existing Session) ═══════════════
+      // Dev preview restriction for existing session
       if (isDevPreview) {
         const userEmail = (session.user.email || '').toLowerCase();
         if (!OWNER_EMAILS.includes(userEmail)) {
           await supa.auth.signOut();
-          authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein: upscstudytracker.co.in', 'err');
-          return; // Stop boot
+          authMsg(`
+            ⚠️ <strong>This is a dev preview environment.</strong><br>
+            Please use the production site.<br><br>
+            <a href="https://upscstudytracker.co.in" class="btn btn-primary" style="text-decoration:none; display:flex; width:100%; justify-content:center; box-sizing:border-box; padding:10px;">Go to Live Production Site</a>
+          `, 'err');
+          return;
         }
       }
-      // ═══════════════════════════════════════════════════════════════════════════
       window.location.href = APP_URL;
       return;
     }
@@ -829,7 +828,7 @@ async function boot() {
 
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
-            if (isDevPreview) {
+      if (isDevPreview) {
         const userEmail = (session.user.email || '').toLowerCase();
         if (!OWNER_EMAILS.includes(userEmail)) {
           await supa.auth.signOut();
