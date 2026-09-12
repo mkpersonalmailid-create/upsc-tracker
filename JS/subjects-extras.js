@@ -1,18 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Subjects Extras (Phase 1 + 2) — v5 FIXED
-   Phase 1: Custom subjects category selector me dikhana
-   Phase 2: Edit, Delete (custom), Hide (default), Restore
-   Fix v5: Default subjects ko "Hide" treat karo (delete nahi)
+   UPSC TRACKER — Subjects Extras v6 (FINAL)
+   - Phase 1: Custom subjects category selector me dikhana
+   - Phase 2: Edit, Delete (custom), Hide (default), Restore
+   - Phase 3: Syllabus page me Custom Subjects section + topics add
+   - Fix: Default subjects always treated as "Hide" (never delete)
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[subjects-extras] v5 loaded (fixed default-subject handling)');
+  console.log('[subjects-extras] v6 loaded (Phase 1+2+3 FINAL)');
 
   const CAT_MAP = {};
 
-  /* ═══════════ HELPER: Check if subject is from SYLLABUS (default) ═══════════ */
+  /* ═══════════ HELPER: Check if subject is from SYLLABUS ═══════════ */
   function isDefaultSubject(name) {
     return Object.values(SYLLABUS).some((p) => p.subjects.some((sub) => sub.name === name));
   }
@@ -72,6 +73,9 @@
         background: none;
         border: none;
         padding: 0 4px;
+      }
+      #customSubjSylSection {
+        animation: fadeIn 0.3s;
       }
     `;
     document.head.appendChild(style);
@@ -191,7 +195,6 @@
             if (c.rev2 > 0) badges.push(`<span class="pill ts-rev2" title="${c.rev2} topics">🔵 Rev 2</span>`);
             if (c.rev3 > 0) badges.push(`<span class="pill ts-rev3" title="${c.rev3} topics">🔵 Rev 3</span>`);
 
-            // ✅ FIX: subject is "custom" only if it's in state.subjects AND NOT in SYLLABUS
             const isDefault = isDefaultSubject(name);
             const isCustom = state.subjects.some((s) => s.name === name) && !isDefault;
 
@@ -247,6 +250,238 @@
       renderSubjects = window.renderSubjects;
     } catch (e) {}
     console.log('[subjects-extras] patched: renderSubjects');
+  }
+
+  /* ═══════════ PATCH 4: renderSyllabus (Custom Subjects Section) ═══════════ */
+  function patchRenderSyllabus() {
+    const _orig = renderSyllabus;
+    window.renderSyllabus = function () {
+      _orig.call(this);
+
+      const tree = document.getElementById('syllabusTree');
+      if (!tree) return;
+
+      // Remove old custom section
+      const old = document.getElementById('customSubjSylSection');
+      if (old) old.remove();
+
+      // Get custom subjects (not in SYLLABUS, not archived)
+      const customSubjects = state.subjects.filter((s) => !isDefaultSubject(s.name) && !s.archived);
+      if (!customSubjects.length) return;
+
+      const CAT_LABEL = {
+        prelims: '🎯 GS Prelims',
+        mains: '📚 GS Mains',
+        optional: '⭐ Optional',
+        essay: '✍️ Essay',
+        csat: '🧮 CSAT',
+      };
+
+      const section = document.createElement('div');
+      section.id = 'customSubjSylSection';
+      section.style.cssText =
+        'margin-top:20px;padding:16px;background:var(--card);border:1px dashed var(--border-2);border-radius:14px';
+
+      section.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div style="font-weight:800;font-size:1rem;display:flex;align-items:center;gap:10px">
+          <span>✨</span>
+          <span>My Custom Subjects (${customSubjects.length})</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        ${customSubjects
+          .map((subj) => {
+            const topics = state.syllabus.filter((t) => t.subject === subj.name);
+            const catLabel = CAT_LABEL[subj.category] || subj.category || 'Prelims';
+
+            return `
+            <div style="padding:12px 14px;background:var(--card-2);border-radius:10px;border-left:3px solid ${subj.color || '#A855F7'}">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">
+                <div>
+                  <div style="font-weight:800;font-size:.92rem">${esc(subj.name)}</div>
+                  <div style="font-size:.72rem;color:var(--text-3);margin-top:3px">${catLabel} · ${topics.length} topic${topics.length !== 1 ? 's' : ''}</div>
+                </div>
+                <button class="btn btn-primary btn-sm" data-add-custom-topic="${esc(subj.name)}" style="padding:6px 12px;font-size:.75rem">
+                  ＋ Add Topic
+                </button>
+              </div>
+              ${
+                topics.length > 0
+                  ? `
+                <div style="display:flex;flex-direction:column;gap:6px">
+                  ${topics
+                    .map(
+                      (t) => `
+                    <div class="syl-topic" style="padding:8px 10px">
+                      <span class="syl-topic-status ts-${t.status || 'not_started'}" data-cust-syl-toggle="${t.id}">${(t.status || 'not_started').replace(/_/g, ' ')}</span>
+                      <span class="syl-topic-name">${esc(t.topic)}</span>
+                      <div class="syl-topic-actions">
+                        <button class="icon-mini" title="Delete" data-cust-syl-del="${t.id}" style="color:var(--red)">✕</button>
+                      </div>
+                    </div>
+                  `,
+                    )
+                    .join('')}
+                </div>
+              `
+                  : `
+                <div style="font-size:.78rem;color:var(--text-3);font-style:italic;text-align:center;padding:12px">
+                  No topics yet — click "＋ Add Topic" to start
+                </div>
+              `
+              }
+            </div>`;
+          })
+          .join('')}
+      </div>`;
+
+      tree.appendChild(section);
+
+      // Wire Add Topic buttons
+      section.querySelectorAll('[data-add-custom-topic]').forEach((btn) => {
+        btn.onclick = () => openAddTopicToCustomSubject(btn.dataset.addCustomTopic);
+      });
+
+      // Wire status toggle
+      section.querySelectorAll('[data-cust-syl-toggle]').forEach((el) => {
+        el.onclick = () => {
+          const s = state.syllabus.find((x) => x.id === el.dataset.custSylToggle);
+          if (!s) return;
+          const order = ['not_started', 'learning', 'completed', 'rev1', 'rev2', 'rev3'];
+          const next = order[(order.indexOf(s.status) + 1) % order.length];
+          s.status = next;
+          if (typeof syncSyllabus === 'function') syncSyllabus(s);
+          saveLocal();
+          window.renderSyllabus();
+        };
+      });
+
+      // Wire delete topic
+      section.querySelectorAll('[data-cust-syl-del]').forEach((el) => {
+        el.onclick = async () => {
+          const ok = await customConfirm({
+            title: 'Delete Topic?',
+            message: 'This topic will be removed from your custom subject.',
+            confirmText: 'Delete',
+            cancelText: 'Cancel',
+            icon: '🗑️',
+            type: 'danger',
+          });
+          if (!ok) return;
+          state.syllabus = state.syllabus.filter((x) => x.id !== el.dataset.custSylDel);
+          saveLocal();
+          if (supa && state.user) {
+            try {
+              await supa.from('syllabus_topics').delete().eq('id', el.dataset.custSylDel);
+            } catch (e) {}
+          }
+          window.renderSyllabus();
+        };
+      });
+
+      if (typeof attachRipples === 'function') attachRipples();
+    };
+
+    try {
+      renderSyllabus = window.renderSyllabus;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: renderSyllabus');
+  }
+
+  /* ═══════════ ADD TOPIC TO CUSTOM SUBJECT ═══════════ */
+  function openAddTopicToCustomSubject(subjectName) {
+    const subj = state.subjects.find((s) => s.name === subjectName);
+    if (!subj) {
+      toast('Subject not found', 'err');
+      return;
+    }
+
+    const body = `
+      <div style="padding:12px 14px;background:var(--card-2);border-radius:10px;margin-bottom:10px">
+        <div style="font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text-3)">Custom Subject</div>
+        <div style="font-weight:800;font-size:.95rem;margin-top:4px">${esc(subj.name)}</div>
+      </div>
+      <div class="field">
+        <label>Topic Name</label>
+        <input type="text" id="newCustTopicName" placeholder="e.g. Chapter 1: Introduction" maxlength="200" autocomplete="off">
+        <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
+          Add a specific topic you want to track.
+        </div>
+      </div>
+      <div class="field">
+        <label>Initial Status</label>
+        <select id="newCustTopicStatus">
+          <option value="not_started">⚪ Not Started</option>
+          <option value="learning">🟡 Learning</option>
+          <option value="completed">✅ Completed</option>
+        </select>
+      </div>`;
+
+    openModal(
+      modalShell({
+        title: '✨ Add Topic',
+        subtitle: 'to ' + subj.name,
+        body,
+        actions: `<button class="btn btn-secondary" data-close>Cancel</button>
+          <button class="btn btn-primary" id="saveCustTopic">Add Topic</button>`,
+      }),
+      {
+        onMount() {
+          setTimeout(() => document.getElementById('newCustTopicName').focus(), 100);
+
+          document.getElementById('saveCustTopic').onclick = async () => {
+            const topicName = document.getElementById('newCustTopicName').value.trim();
+            const status = document.getElementById('newCustTopicStatus').value;
+
+            if (!topicName || topicName.length < 2) {
+              toast('Enter a topic name (2+ chars)', 'err');
+              return;
+            }
+
+            if (state.syllabus.some((t) => t.subject === subj.name && t.topic === topicName)) {
+              toast('This topic already exists', 'err');
+              return;
+            }
+
+            const entry = {
+              id: uuid(),
+              paper: subj.category || 'prelims',
+              subject: subj.name,
+              topic: topicName,
+              status: status,
+              category: subj.category || 'Prelims',
+            };
+
+            state.syllabus.push(entry);
+
+            if (supa && state.user) {
+              try {
+                await supa.from('syllabus_topics').upsert(
+                  {
+                    id: entry.id,
+                    user_id: state.user.id,
+                    paper: entry.paper,
+                    subject: entry.subject,
+                    topic: entry.topic,
+                    status: entry.status,
+                    category: entry.category,
+                  },
+                  { onConflict: 'id' },
+                );
+              } catch (e) {
+                console.warn('[subjects-extras] topic insert error:', e);
+                toast('Cloud save failed', 'warn', 4000);
+              }
+            }
+
+            closeModal();
+            toast(`✅ Topic added!`, 'ok');
+            window.renderSyllabus();
+          };
+        },
+      },
+    );
   }
 
   /* ═══════════ HIDDEN SUBJECTS SECTION ═══════════ */
@@ -310,7 +545,7 @@
           ${CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}
         </select>
         <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
-          Ye subject is category ke selector me dikhega (Study / Manual Log / Pomodoro).
+          Ye subject is category ke selector me dikhega (Study / Manual Log / Pomodoro / Syllabus).
         </div>
       </div>
       <div class="field">
@@ -360,7 +595,6 @@
               toast('Subject already exists', 'err');
               return;
             }
-            // Block creating subject with same name as default
             if (isDefaultSubject(name)) {
               toast('This name is already a default subject. Choose another.', 'err', 4000);
               return;
@@ -395,7 +629,7 @@
     );
   }
 
-  /* ═══════════ EDIT SUBJECT MODAL (custom only) ═══════════ */
+  /* ═══════════ EDIT SUBJECT MODAL ═══════════ */
   function openEditSubjectModal(oldName) {
     const subj = state.subjects.find((s) => s.name === oldName);
     if (!subj) {
@@ -474,16 +708,13 @@
 
             const nameChanged = newName !== oldName;
 
-            // Update local subject
             subj.name = newName;
             subj.color = selectedColor;
             subj.category = newCat;
 
-            // Update CAT_MAP
             if (nameChanged) delete CAT_MAP[oldName];
             CAT_MAP[newName] = newCat;
 
-            // Cascade rename in local state
             if (nameChanged) {
               state.sessions.forEach((s) => {
                 if (s.subject === oldName) s.subject = newName;
@@ -503,7 +734,6 @@
               });
             }
 
-            // Sync to Supabase
             if (supa && state.user) {
               try {
                 await supa
@@ -542,6 +772,7 @@
             closeModal();
             toast(`✅ Subject updated!`, 'ok');
             if (state.view === 'subjects') window.renderSubjects();
+            if (state.view === 'syllabus') window.renderSyllabus();
             if (typeof renderAll === 'function') renderAll();
           };
         },
@@ -551,11 +782,9 @@
 
   /* ═══════════ DELETE (custom) / HIDE (default) ═══════════ */
   async function confirmDeleteOrHide(name, isCustom) {
-    // ✅ Extra safety: force isCustom=false if subject is in SYLLABUS
     const actuallyCustom = isCustom && !isDefaultSubject(name);
 
     if (actuallyCustom) {
-      // ═══ CUSTOM SUBJECT → HARD DELETE ═══
       const ok = await customConfirm({
         title: 'Delete Subject?',
         message: `"${name}" will be permanently deleted. Sessions and syllabus entries will remain in your history but the subject name will become orphaned.`,
@@ -580,9 +809,9 @@
 
       toast(`Deleted "${name}"`, 'ok');
       if (state.view === 'subjects') window.renderSubjects();
+      if (state.view === 'syllabus') window.renderSyllabus();
       if (typeof renderAll === 'function') renderAll();
     } else {
-      // ═══ DEFAULT SUBJECT → SOFT HIDE ═══
       const ok = await customConfirm({
         title: 'Hide Subject?',
         message: `"${name}" will be hidden from your Subjects page. You can restore it anytime from the "Hidden Subjects" section below.`,
@@ -639,13 +868,11 @@
       }
       if (data?.length) {
         for (const s of data) {
-          // ✅ Cleanup: if it's a default subject name, remove from DB + state.subjects
           if (isDefaultSubject(s.name)) {
             console.warn('[subjects-extras] removing duplicate of default subject:', s.name);
             try {
               await supa.from('subjects').delete().eq('id', s.id);
             } catch (e) {}
-            // Remove from local state
             state.subjects = state.subjects.filter((x) => x.name !== s.name);
             continue;
           }
@@ -653,6 +880,9 @@
         }
       }
       console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'custom subjects');
+
+      // Refresh syllabus to show custom subjects
+      if (state.view === 'syllabus') window.renderSyllabus();
     } catch (e) {
       console.warn('[subjects-extras] load error:', e);
     }
@@ -680,6 +910,7 @@
       patchGetSubjects();
       patchAddSubjectButton();
       patchRenderSubjects();
+      patchRenderSyllabus();
       pollForUser();
       if (supa && supa.auth && supa.auth.onAuthStateChange) {
         supa.auth.onAuthStateChange((event, session) => {
