@@ -4081,7 +4081,9 @@
           }
         }
       }
-      /* ═══ APP LOADER ═══ */
+      /* ═══════════════════════════════════════════════
+   APP LOADER v2 — Premium Full Screen
+   ═══════════════════════════════════════════════ */
       #appLoader {
         position: fixed;
         inset: 0;
@@ -4089,10 +4091,11 @@
         display: none;
         align-items: center;
         justify-content: center;
-        z-index: 9998;
+        z-index: 99998;
         opacity: 0;
-        transition: opacity 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+        transition: opacity 0.5s cubic-bezier(0.32, 0.72, 0, 1);
         pointer-events: none;
+        overflow: hidden;
       }
       #appLoader.active {
         display: flex;
@@ -4101,69 +4104,275 @@
       }
       #appLoader.fade-out {
         opacity: 0;
+        transform: scale(1.02);
       }
+
+      /* Ambient gradient orbs */
+      #appLoader::before,
+      #appLoader::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(100px);
+        pointer-events: none;
+        animation: loaderOrb 8s ease-in-out infinite;
+      }
+      #appLoader::before {
+        top: -20%;
+        left: -10%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(168, 85, 247, 0.35), transparent 70%);
+      }
+      #appLoader::after {
+        bottom: -20%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(236, 72, 153, 0.3), transparent 70%);
+        animation-delay: -4s;
+      }
+      @keyframes loaderOrb {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        50% {
+          transform: translate(40px, -30px) scale(1.1);
+        }
+      }
+
       .app-loader-inner {
         text-align: center;
-        animation: fadeIn 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        position: relative;
+        z-index: 1;
+        animation: loaderIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
+      @keyframes loaderIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.94);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      /* ═══ Logo wrapper with ripple rings ═══ */
+      .app-loader-logo-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* Ripple rings */
+      .app-loader-ripple {
+        position: absolute;
+        inset: 0;
+        border-radius: 32px;
+        border: 2px solid rgba(168, 85, 247, 0.4);
+        animation: loaderRipple 2.5s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+        pointer-events: none;
+      }
+      .app-loader-ripple:nth-child(2) {
+        animation-delay: 0.8s;
+      }
+      .app-loader-ripple:nth-child(3) {
+        animation-delay: 1.6s;
+      }
+      @keyframes loaderRipple {
+        0% {
+          transform: scale(1);
+          opacity: 0.7;
+        }
+        100% {
+          transform: scale(1.5);
+          opacity: 0;
+        }
+      }
+
+      /* ═══ Logo box ═══ */
       .app-loader-logo {
-        width: 90px;
-        height: 90px;
-        margin: 0 auto 24px;
-        border-radius: 22px;
+        width: 140px;
+        height: 140px;
+        border-radius: 32px;
         background: var(--grad-1);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 14px 44px rgba(168, 85, 247, 0.5);
-        animation: glow 2s ease-in-out infinite;
+        box-shadow:
+          0 24px 60px rgba(168, 85, 247, 0.55),
+          0 0 80px rgba(236, 72, 153, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
         overflow: hidden;
-        font-size: 2rem;
-        font-weight: 900;
-        color: #fff;
+        position: relative;
+        z-index: 2;
+        animation: loaderLogoBreath 3s ease-in-out infinite;
+      }
+      @keyframes loaderLogoBreath {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow:
+            0 24px 60px rgba(168, 85, 247, 0.55),
+            0 0 80px rgba(236, 72, 153, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        50% {
+          transform: scale(1.04);
+          box-shadow:
+            0 28px 72px rgba(168, 85, 247, 0.7),
+            0 0 100px rgba(236, 72, 153, 0.55),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
       }
       .app-loader-logo img {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        display: block;
+        opacity: 0;
+        transition: opacity 0.4s ease;
       }
+      .app-loader-logo img.loaded {
+        opacity: 1;
+      }
+      /* Fallback "U" letter — hidden by default */
+      .app-loader-logo .loader-letter {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: #fff;
+        letter-spacing: -0.05em;
+      }
+      .app-loader-logo.no-image .loader-letter {
+        display: flex;
+      }
+      .app-loader-logo.no-image img {
+        display: none;
+      }
+
+      /* ═══ Text ═══ */
       .app-loader-text {
-        font-size: 1rem;
-        font-weight: 800;
-        color: var(--text);
-        letter-spacing: -0.01em;
-        margin-bottom: 6px;
+        font-size: 1.5rem;
+        font-weight: 900;
+        letter-spacing: -0.03em;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #fff 0%, #c4b5fd 60%, #f9a8d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeIn 0.5s ease 0.15s backwards;
       }
       .app-loader-sub {
-        font-size: 0.82rem;
+        font-size: 0.88rem;
         color: var(--text-3);
-        margin-bottom: 22px;
-        min-height: 18px;
+        margin-bottom: 32px;
+        min-height: 20px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+        animation: fadeIn 0.5s ease 0.25s backwards;
       }
+
+      /* ═══ Progress bar ═══ */
       .app-loader-bar {
-        width: 220px;
-        height: 4px;
-        background: var(--card-2);
+        width: 260px;
+        height: 5px;
+        background: rgba(255, 255, 255, 0.06);
         border-radius: 20px;
         overflow: hidden;
         margin: 0 auto;
+        position: relative;
+        animation: fadeIn 0.5s ease 0.35s backwards;
       }
       .app-loader-bar-fill {
         height: 100%;
-        width: 40%;
-        background: var(--grad-1);
+        width: 45%;
+        background: linear-gradient(90deg, #8b5cf6, #ec4899, #f97316, #8b5cf6);
+        background-size: 300% 100%;
         border-radius: 20px;
-        animation: loaderSlide 1.4s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+        animation:
+          loaderSlide 1.6s cubic-bezier(0.32, 0.72, 0, 1) infinite,
+          gradientShift 2.5s ease infinite;
+        box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
       }
       @keyframes loaderSlide {
         0% {
-          transform: translateX(-100%);
+          transform: translateX(-110%);
         }
         100% {
-          transform: translateX(350%);
+          transform: translateX(340%);
         }
       }
-      /* ═══ Shake + Highlight for missing selection ═══ */
+
+      /* Loading dots */
+      .app-loader-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 20px;
+        animation: fadeIn 0.5s ease 0.45s backwards;
+      }
+      .app-loader-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        animation: loaderDotPulse 1.4s ease-in-out infinite;
+      }
+      .app-loader-dots span:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .app-loader-dots span:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+      @keyframes loaderDotPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.4;
+        }
+        50% {
+          transform: scale(1.4);
+          opacity: 1;
+          box-shadow: 0 0 12px rgba(236, 72, 153, 0.7);
+        }
+      }
+
+      /* Mobile adjustments */
+      @media (max-width: 600px) {
+        .app-loader-logo-wrap {
+          width: 110px;
+          height: 110px;
+          margin-bottom: 24px;
+        }
+        .app-loader-logo {
+          width: 110px;
+          height: 110px;
+          border-radius: 26px;
+        }
+        .app-loader-logo .loader-letter {
+          font-size: 2.8rem;
+        }
+        .app-loader-text {
+          font-size: 1.25rem;
+        }
+        .app-loader-sub {
+          font-size: 0.82rem;
+        }
+        .app-loader-bar {
+          width: 200px;
+        }
+      } /* ═══ Shake + Highlight for missing selection ═══ */
       @keyframes shake {
         0%,
         100% {
@@ -7906,7 +8115,7 @@ ${
         };
       }
 
-      /* ═══ APP LOADER HELPERS ═══ */
+      /* ═══ APP LOADER HELPERS v2 ═══ */
       function showAppLoader(msg) {
         let loader = document.getElementById('appLoader');
         if (!loader) {
@@ -7914,20 +8123,53 @@ ${
           loader.id = 'appLoader';
           loader.innerHTML = `
       <div class="app-loader-inner">
-        <div class="app-loader-logo">
-          <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo"
-            onerror="this.style.display='none';this.parentElement.textContent='U'">
+        <div class="app-loader-logo-wrap">
+          <div class="app-loader-ripple"></div>
+          <div class="app-loader-ripple"></div>
+          <div class="app-loader-ripple"></div>
+          <div class="app-loader-logo" id="appLoaderLogo">
+            <span class="loader-letter">U</span>
+            <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Tracker Logo" id="appLoaderImg">
+          </div>
         </div>
         <div class="app-loader-text">UPSC Tracker</div>
-        <div class="app-loader-sub" id="appLoaderSub">${msg || 'Loading…'}</div>
+        <div class="app-loader-sub" id="appLoaderSub">${msg || 'Loading your workspace…'}</div>
         <div class="app-loader-bar"><div class="app-loader-bar-fill"></div></div>
+        <div class="app-loader-dots">
+          <span></span><span></span><span></span>
+        </div>
       </div>`;
           document.body.appendChild(loader);
+
+          /* Image load/error handling — prevents "half-half" bug */
+          const img = loader.querySelector('#appLoaderImg');
+          const logoBox = loader.querySelector('#appLoaderLogo');
+
+          if (img) {
+            img.onload = () => {
+              img.classList.add('loaded');
+              logoBox.classList.remove('no-image');
+            };
+            img.onerror = () => {
+              logoBox.classList.add('no-image');
+            };
+            /* If already cached/loaded */
+            if (img.complete) {
+              if (img.naturalWidth > 0) {
+                img.classList.add('loaded');
+                logoBox.classList.remove('no-image');
+              } else {
+                logoBox.classList.add('no-image');
+              }
+            }
+          }
         } else {
           const sub = document.getElementById('appLoaderSub');
           if (sub) sub.textContent = msg || 'Loading…';
         }
-        requestAnimationFrame(() => loader.classList.add('active'));
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => loader.classList.add('active'));
+        });
       }
 
       function hideAppLoader() {
@@ -7936,9 +8178,10 @@ ${
         loader.classList.add('fade-out');
         setTimeout(() => {
           loader.classList.remove('active', 'fade-out');
-        }, 450);
+          /* Remove entire loader after fade so it re-creates fresh next time */
+          if (loader.parentNode) loader.parentNode.removeChild(loader);
+        }, 500);
       }
-
       function updateSidebarUser() {
         const name = state.profile.name || state.user?.email?.split('@')[0] || 'Student';
         $('#sbUserName').textContent = name;
