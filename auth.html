@@ -572,13 +572,11 @@ async function handleAuthSubmit(e) {
   } catch(err) {
     const msg = (err.message || '').toLowerCase();
 
-    // ═══ SMART ERROR HANDLING ═══
     if (authMode === 'signin' && (
       msg.includes('invalid login') ||
       msg.includes('invalid credentials') ||
       msg.includes('user not found')
     )) {
-      // Sign In me account nahi mila → Create Account ka option do
       const emailVal = email;
       authMsg(`
         ⚠️ <strong>Account not found.</strong><br>
@@ -603,7 +601,6 @@ async function handleAuthSubmit(e) {
       }, 50);
     }
     else if (authMode === 'signup' && msg.includes('already registered')) {
-      // Signup me email already exists → Sign In karne ko bolo
       authMsg(`
         ℹ️ <strong>Account already exists.</strong><br>
         Is email se account pehle se bana hua hai. Please sign in karein.<br><br>
@@ -732,8 +729,9 @@ async function handleForgotPassword() {
         btn.textContent = '⏳ Sending…';
 
         try {
+          // ✅ IMPORTANT: ?type=recovery add kiya taaki app.html detect kar sake
           const { error } = await supa.auth.resetPasswordForEmail(inputEmail, {
-            redirectTo: window.location.origin + APP_URL
+            redirectTo: window.location.origin + APP_URL + '?type=recovery'
           });
           if (error) throw error;
           closeModal();
@@ -802,11 +800,9 @@ async function boot() {
     if (authEmailInput && authEmailInput.value) toggleEmailSuffix(authEmailInput);
   }, 150);
 
-  // Check existing session
   try {
     const { data: { session } } = await supa.auth.getSession();
     if (session) {
-      // Dev preview restriction for existing session
       if (isDevPreview) {
         const userEmail = (session.user.email || '').toLowerCase();
         if (!OWNER_EMAILS.includes(userEmail)) {

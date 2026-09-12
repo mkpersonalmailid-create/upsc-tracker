@@ -2273,6 +2273,14 @@ button.fab.hidden,
           </div>
         </div>
 
+                <div class="card" style="margin-top:18px">
+          <div class="card-header"><span class="card-title-lg">🔐 Security</span></div>
+          <p style="font-size:.82rem;color:var(--text-2);margin-bottom:14px">
+            Google se login karne wale users yahan password set kar sakte hain, taaki email/password se bhi login kar sakein.
+          </p>
+          <button class="btn btn-primary" id="setPasswordBtn">🔐 Set / Change Password</button>
+        </div>
+
         <div class="card" style="margin-top:18px">
           <div class="card-header"><span class="card-title-lg">Appearance</span></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -3731,6 +3739,90 @@ async function bootAfterLogin(session) {
   } finally {
     hideAppLoader();
   }
+}
+/* ═══════════════ SET PASSWORD SCREEN (for recovery links) ═══════════════ */
+function showSetPasswordScreen() {
+  document.body.innerHTML = `
+    <div style="position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999">
+      <div style="max-width:440px;width:100%;background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px 28px;box-shadow:0 24px 64px rgba(0,0,0,.55)">
+        <div style="text-align:center;margin-bottom:24px">
+          <div style="width:70px;height:70px;margin:0 auto 16px;border-radius:20px;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 10px 32px rgba(168,85,247,.45)">🔐</div>
+          <h1 style="font-size:1.5rem;font-weight:900;letter-spacing:-.02em;margin-bottom:6px;color:var(--text)">Set Your Password</h1>
+          <p style="font-size:.86rem;color:var(--text-2);line-height:1.5">
+            Apna new password set karo. Iske baad aap email/password se bhi sign in kar sakte ho.
+          </p>
+        </div>
+
+        <div id="setPwMsg" style="padding:12px 14px;border-radius:11px;font-size:.83rem;margin-bottom:14px;display:none"></div>
+
+        <div style="margin-bottom:14px">
+          <label style="font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--text-2);text-transform:uppercase;display:block;margin-bottom:6px">New Password</label>
+          <input type="password" id="newPw1" placeholder="At least 6 characters" 
+            style="width:100%;background:var(--bg-2);border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:.9rem;color:var(--text);outline:none">
+        </div>
+
+        <div style="margin-bottom:20px">
+          <label style="font-size:.7rem;font-weight:800;letter-spacing:.06em;color:var(--text-2);text-transform:uppercase;display:block;margin-bottom:6px">Confirm Password</label>
+          <input type="password" id="newPw2" placeholder="Re-enter password"
+            style="width:100%;background:var(--bg-2);border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:.9rem;color:var(--text);outline:none">
+        </div>
+
+        <button id="savePwBtn" 
+          style="width:100%;padding:14px;border-radius:12px;font-weight:800;font-size:.95rem;background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border:none;cursor:pointer;box-shadow:0 8px 24px rgba(168,85,247,.4)">
+          🔐 Set Password & Continue
+        </button>
+
+        <p style="text-align:center;font-size:.75rem;color:var(--text-3);margin-top:16px;line-height:1.5">
+          Password set karne ke baad aap automatically dashboard me pahunch jaoge.
+        </p>
+      </div>
+    </div>`;
+
+  const showMsg = (text, type) => {
+    const el = document.getElementById('setPwMsg');
+    el.style.display = 'block';
+    if (type === 'ok') {
+      el.style.background = 'rgba(16,185,129,.12)';
+      el.style.color = '#6EE7B7';
+      el.style.border = '1px solid rgba(16,185,129,.3)';
+    } else {
+      el.style.background = 'rgba(239,68,68,.12)';
+      el.style.color = '#FCA5A5';
+      el.style.border = '1px solid rgba(239,68,68,.3)';
+    }
+    el.textContent = text;
+  };
+
+  document.getElementById('savePwBtn').onclick = async () => {
+    const pw1 = document.getElementById('newPw1').value;
+    const pw2 = document.getElementById('newPw2').value;
+    const btn = document.getElementById('savePwBtn');
+
+    if (!pw1 || pw1.length < 6) { showMsg('Password must be at least 6 characters', 'err'); return; }
+    if (pw1 !== pw2) { showMsg('Passwords do not match', 'err'); return; }
+
+    btn.disabled = true;
+    btn.textContent = '⏳ Setting password...';
+
+    try {
+      const { error } = await supa.auth.updateUser({ password: pw1 });
+      if (error) throw error;
+
+      showMsg('✅ Password set! Redirecting to dashboard...', 'ok');
+
+      // URL clean karo (recovery tokens hatao)
+      window.history.replaceState(null, '', window.location.pathname);
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+
+    } catch (err) {
+      showMsg(err.message || 'Failed to set password', 'err');
+      btn.disabled = false;
+      btn.textContent = '🔐 Set Password & Continue';
+    }
+  };
 }
 
 /* ═══ APP LOADER HELPERS ═══ */
@@ -6583,6 +6675,46 @@ function wireEvents() {
     }
     renderAll(); toast('Settings saved!', 'ok');
   };
+    // Set/Change Password (for Google users)
+  const setPwBtn = document.getElementById('setPasswordBtn');
+  if (setPwBtn) {
+    setPwBtn.onclick = () => {
+      openModal(modalShell({
+        title: '🔐 Set Password',
+        subtitle: 'Apna new password set karein',
+        body: `
+          <div class="field"><label>New Password</label>
+            <input type="password" id="sp1" placeholder="At least 6 characters"></div>
+          <div class="field"><label>Confirm Password</label>
+            <input type="password" id="sp2" placeholder="Re-enter password"></div>
+          <p style="font-size:.78rem;color:var(--text-3);margin-top:8px">
+            Password set karne ke baad aap Google ya email dono se login kar sakte ho.
+          </p>`,
+        actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+          <button class="btn btn-primary" id="saveNewPwBtn">Save Password</button>`
+      }), {
+        onMount() {
+          document.getElementById('saveNewPwBtn').onclick = async () => {
+            const p1 = document.getElementById('sp1').value;
+            const p2 = document.getElementById('sp2').value;
+            if (!p1 || p1.length < 6) { toast('Password 6+ chars ka hona chahiye', 'err'); return; }
+            if (p1 !== p2) { toast('Passwords match nahi kar rahe', 'err'); return; }
+            try {
+              const { error } = await supa.auth.updateUser({ password: p1 });
+              if (error) throw error;
+              closeModal();
+              confetti();
+              toast('✅ Password set ho gaya! Ab aap dono tarike se login kar sakte ho', 'ok', 5000);
+            } catch(e) {
+              toast('Failed: ' + e.message, 'err');
+            }
+          };
+        }
+      });
+    };
+  }
+
+
   $('#signOutBtn').onclick = async () => {
   const ok = await customConfirm({
     title: 'Sign out?',
@@ -6825,9 +6957,21 @@ async function boot() {
   applyTheme(state.settings.theme || 'dark');
   if (!initSupabase()) { console.error('Supabase failed to load'); return; }
 
-  wireEvents();
+    wireEvents();
   setAuthMode('signin');
   attachRipples();
+
+  // ═══════════════ PASSWORD RECOVERY DETECTION ═══════════════
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const queryParams = new URLSearchParams(window.location.search);
+  const isRecovery = hashParams.get('type') === 'recovery' 
+                  || queryParams.get('type') === 'recovery';
+
+  if (isRecovery) {
+    showSetPasswordScreen();
+    return; // Dashboard mat kholo abhi
+  }
+  // ═══════════════════════════════════════════════════════════
 
   // Check session
   try {
