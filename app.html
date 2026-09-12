@@ -8009,16 +8009,6 @@ ${
 
           // FAB wapas dikhao
           $('#fab').classList.remove('hidden');
-          // ✅ YAHAN ADD KARO
-          setTimeout(function () {
-            if (typeof renderAll === 'function') {
-              try {
-                renderAll();
-              } catch (e) {
-                console.warn('[boot] re-render failed:', e);
-              }
-            }
-          }, 600);
         } catch (e) {
           console.error('bootAfterLogin failed:', e);
         } finally {
@@ -8414,28 +8404,38 @@ ${
         const container = $('#subjectSelector');
         const cat = state.draft.category;
         if (!cat) {
+          // ✅ Signature check for empty state too
+          if (container.dataset.sig === 'EMPTY') return;
+          container.dataset.sig = 'EMPTY';
           container.innerHTML = `<div class="subject-empty">👆 Pick a category above to see subjects</div>`;
           return;
         }
+
         const subjects = getSubjectsForCategory(cat);
+
+        // ✅ DIFF SIGNATURE — same hai toh skip (NO FLICKER)
+        const sig = cat + '::' + subjects.join('|') + '::' + (state.draft.subject || '');
+        if (container.dataset.sig === sig && container.children.length === subjects.length) return;
+        container.dataset.sig = sig;
+
         container.innerHTML = subjects
           .map(
             (s) =>
               `<button class="subject-pill ${state.draft.subject === s ? 'selected' : ''}" data-subj="${esc(s)}">${esc(s)}</button>`,
           )
           .join('');
+
         container.querySelectorAll('[data-subj]').forEach(
           (b) =>
             (b.onclick = () => {
               state.draft.subject = b.dataset.subj;
               state.draft.topic = null;
-              clearSelectionWarning(); // ✅ Warning auto-hide
+              clearSelectionWarning();
               renderSubjectSelector();
               renderTopicSelect();
             }),
         );
       }
-
       function getTopicsForCategorySubject(cat, subj) {
         if (!cat || !subj) return [];
         if (cat === 'optional') {
@@ -8462,15 +8462,31 @@ ${
       function renderTopicSelect() {
         const sel = $('#topicSelect');
         if (!state.draft.category || !state.draft.subject) {
+          if (sel.dataset.sig === 'EMPTY') return;
+          sel.dataset.sig = 'EMPTY';
           sel.innerHTML = '<option value="">— Select category & subject first —</option>';
           return;
         }
         const topics = getTopicsForCategorySubject(state.draft.category, state.draft.subject);
+
+        // ✅ DIFF SIGNATURE
+        const sig =
+          state.draft.category +
+          '::' +
+          state.draft.subject +
+          '::' +
+          topics.join('|') +
+          '::' +
+          (state.draft.topic || '');
+        if (sel.dataset.sig === sig && sel.options.length === topics.length + 1) return;
+        sel.dataset.sig = sig;
+
         sel.innerHTML =
           `<option value="">— Select a topic (optional) —</option>` +
           topics
             .map((t) => `<option value="${esc(t)}" ${state.draft.topic === t ? 'selected' : ''}>${esc(t)}</option>`)
             .join('');
+
         sel.onchange = () => {
           state.draft.topic = sel.value || null;
         };
