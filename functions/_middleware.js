@@ -18,16 +18,27 @@ export async function onRequest(context) {
 
   // ═══════════════════════════════════════════════════════════
   //  3. API ROUTES BYPASS — /api/* 
-  //  Reason: API routes are already protected by Supabase JWT
-  //  (Bearer token in Authorization header).
-  //  Basic Auth here would cause annoying popup during payment.
   // ═══════════════════════════════════════════════════════════
   if (url.pathname.startsWith('/api/')) {
     return next();
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  4. BASIC AUTH for preview pages (.pages.dev HTML/JS/CSS)
+  //  4. OAUTH & APP ROUTES BYPASS (Important for Google Login)
+  //  Google redirect wapas / ya /app.html par karega, isliye
+  //  in pages par Basic Auth nahi lagana chahiye.
+  // ═══════════════════════════════════════════════════════════
+  if (
+    url.pathname === '/' || 
+    url.pathname === '/index.html' || 
+    url.pathname === '/auth.html' || 
+    url.pathname === '/app.html'
+  ) {
+    return next();
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  5. BASIC AUTH for other preview pages (.pages.dev HTML/JS/CSS)
   // ═══════════════════════════════════════════════════════════
   const user = env.PREVIEW_USERNAME || 'mukund';
   const pass = env.PREVIEW_PASSWORD || 'UpscDev@2026';
