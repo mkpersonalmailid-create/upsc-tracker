@@ -1,19 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Custom Dropdown v2
+   UPSC TRACKER — Custom Dropdown v3
    ─────────────────────────────────────────────────────────────
    ✅ Replaces ALL <select> with custom designed dropdown
    ✅ Matches website design (purple gradient, rounded, etc.)
    ✅ Dark + Light theme support
    ✅ Works with dynamically added selects (MutationObserver)
-   ✅ Keyboard support (arrow, enter, escape, tab)
+   ✅ Keyboard support (arrow, enter, escape)
    ✅ Search for long lists (auto if >=8 options)
    ✅ FIX: Search input cursor position preserved (no reverse typing)
+   ✅ FIX: Body scroll locked when dropdown open (no background scroll)
    ✅ Syncs value + dispatches change event to original select
    ✅ No changes needed in existing code
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[custom-dropdown] v2 loaded');
+  console.log('[custom-dropdown] v3 loaded');
 
   const SEARCH_THRESHOLD = 8;
 
@@ -231,6 +232,15 @@
         border-radius: 9px;
       }
 
+      /* ═══ Body scroll lock when dropdown open ═══ */
+      body.cd-scroll-locked {
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+      }
+
       /* ═══ Light theme ═══ */
       html[data-theme='light'] .cd-trigger {
         background: #ffffff;
@@ -352,7 +362,6 @@
     let optionsWrap = null;
 
     function ensureStructure() {
-      /* Search box — created once, never destroyed */
       if (shouldShowSearch(select)) {
         if (!searchWrap) {
           searchWrap = document.createElement('div');
@@ -361,12 +370,10 @@
           panel.appendChild(searchWrap);
           searchInput = searchWrap.querySelector('.cd-search');
 
-          /* Search input handler — preserves cursor */
           searchInput.addEventListener('input', (e) => {
             const val = e.target.value;
             const cursorPos = e.target.selectionStart;
             renderOptions(val);
-            /* Restore cursor position after options re-render */
             if (document.activeElement === searchInput) {
               try {
                 searchInput.setSelectionRange(cursorPos, cursorPos);
@@ -374,11 +381,9 @@
             }
           });
 
-          /* Prevent Enter in search from closing dropdown */
           searchInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
               e.preventDefault();
-              /* Pick first filtered option */
               if (currentOptions.length) {
                 const first = currentOptions[0];
                 if (first && !first.disabled) {
@@ -401,7 +406,6 @@
         }
       }
 
-      /* Options container — created once, only innerHTML changes */
       if (!optionsWrap) {
         optionsWrap = document.createElement('div');
         optionsWrap.className = 'cd-options-wrap';
@@ -443,7 +447,6 @@
 
       optionsWrap.innerHTML = html;
 
-      /* Wire options */
       optionsWrap.querySelectorAll('.cd-option').forEach((el) => {
         el.addEventListener('click', () => {
           const idx = parseInt(el.dataset.index, 10);
@@ -493,10 +496,19 @@
       }
     }
 
-    /* ═══ Open / Close ═══ */
+    /* ═══ Open panel — with body scroll lock ═══ */
     function openPanel() {
       if (isOpen) return;
       isOpen = true;
+
+      /* ═══ Preserve scroll position before locking ═══ */
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      document.body.style.top = '-' + scrollY + 'px';
+      document.body.dataset.cdScrollY = scrollY;
+
+      /* ═══ Lock body scroll ═══ */
+      document.body.classList.add('cd-scroll-locked');
+
       wrap.classList.add('cd-open');
       panel.classList.add('cd-open');
       trigger.setAttribute('aria-expanded', 'true');
@@ -516,12 +528,25 @@
         }, 60);
       }
 
+      /* Prevent panel scroll from bubbling to body */
       panel.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
+      panel.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: false });
     }
 
+    /* ═══ Close panel — with scroll unlock ═══ */
     function closePanel() {
       if (!isOpen) return;
       isOpen = false;
+
+      /* ═══ Unlock body scroll ═══ */
+      const scrollY = parseInt(document.body.dataset.cdScrollY || '0', 10);
+      document.body.classList.remove('cd-scroll-locked');
+      document.body.style.top = '';
+      delete document.body.dataset.cdScrollY;
+
+      /* Restore scroll position */
+      window.scrollTo(0, scrollY);
+
       wrap.classList.remove('cd-open');
       panel.classList.remove('cd-open');
       trigger.setAttribute('aria-expanded', 'false');
@@ -555,7 +580,6 @@
         return;
       }
 
-      /* Skip arrow/enter keys if search input is focused */
       if (document.activeElement === searchInput) return;
 
       if (e.key === 'ArrowDown') {
@@ -660,7 +684,7 @@
       convertAll();
       pageObserver.observe(document.body, { childList: true, subtree: true });
       setInterval(convertAll, 800);
-      console.log('[custom-dropdown] ✅ v2 initialized');
+      console.log('[custom-dropdown] ✅ v3 initialized');
     } else {
       attempts++;
       if (attempts > 200) return console.error('[custom-dropdown] timeout');
