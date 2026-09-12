@@ -1,17 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Revision Extras v4 (FINAL)
+   UPSC TRACKER — Revision Extras v5 (FINAL)
    ─────────────────────────────────────────────────────────────
    ✅ "By Rev Level" view — Revision 1/2/3... → Broad Categories → Topics
    ✅ Dual-source merge (syllabus + revisions history)
-   ✅ Dropdown expand/collapse + summary chips (jump to card)
-   ✅ NEW: Schedule Revision modal — Subject/Topic/Rev# as DROPDOWNS
-   ✅ NEW: On "✓ Done" → syllabus status auto-updates → reflects in By Rev Level
+   ✅ Dropdown expand/collapse + summary chips
+   ✅ Schedule modal: Category → Subject → Topic (like Manual Log)
+   ✅ Fixed Study Type = Revision
+   ✅ Custom topic hint (add custom subject first)
+   ✅ On "✓ Done" → syllabus status auto-updates
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[revision-extras] v4 loaded');
+  console.log('[revision-extras] v5 loaded');
 
   /* ═══════════════ CONSTANTS ═══════════════ */
   const BROAD_CATS = [
@@ -24,6 +26,18 @@
   ];
 
   const REV_COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#10B981', '#6366F1'];
+
+  /* Category dropdown options — same as Manual Log / Study */
+  const CATEGORY_OPTIONS = [
+    { id: 'prelims', label: '🎯 GS Prelims' },
+    { id: 'mains-gs1', label: '📘 GS Mains · Paper I' },
+    { id: 'mains-gs2', label: '📗 GS Mains · Paper II' },
+    { id: 'mains-gs3', label: '📙 GS Mains · Paper III' },
+    { id: 'mains-gs4', label: '📕 GS Mains · Paper IV' },
+    { id: 'optional', label: '⭐ Optional' },
+    { id: 'essay', label: '✍️ Essay' },
+    { id: 'csat', label: '🧮 CSAT' },
+  ];
 
   /* ═══════════════ STATE ═══════════════ */
   let revViewMode = localStorage.getItem('upsc_rev_view') || 'schedule';
@@ -101,7 +115,6 @@
     const revStatus = `rev${revNum}`;
     const map = new Map();
 
-    // Source 1: syllabus current status = rev${N}
     state.syllabus.forEach((t) => {
       if (t.status === revStatus) {
         const key = `${t.subject}|${t.topic}`;
@@ -115,7 +128,6 @@
       }
     });
 
-    // Source 2: completed revisions history
     state.revisions.forEach((r) => {
       if (r.revision_number === revNum && r.status === 'completed') {
         const key = `${r.subject}|${r.topic}`;
@@ -124,8 +136,8 @@
           map.set(key, {
             subject: r.subject,
             topic: r.topic,
-            paper: syl?.paper || '',
-            category: syl?.category || '',
+            paper: syl?.paper || r.paper || '',
+            category: syl?.category || r.category || '',
             source: 'history',
           });
         }
@@ -359,6 +371,44 @@
         margin-bottom: 10px;
         opacity: 0.55;
       }
+
+      /* ═══ Custom topic hint ═══ */
+      .rev-custom-hint {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        background: linear-gradient(135deg, rgba(168,85,247,0.09), rgba(236,72,153,0.05));
+        border: 1px solid rgba(168,85,247,0.28);
+        border-radius: 10px;
+        font-size: 0.78rem;
+        color: #C4B5FD;
+        line-height: 1.55;
+      }
+      .rev-custom-hint .hint-ico {
+        font-size: 1.1rem;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+      .rev-custom-hint strong { color: #E9D5FF; font-weight: 800; }
+
+      /* ═══ Fixed study-type indicator ═══ */
+      .rev-fixed-type {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: rgba(168,85,247,0.1);
+        border: 1px solid rgba(168,85,247,0.3);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        color: #C4B5FD;
+      }
+      .rev-fixed-type .type-ico {
+        font-size: 1.3rem;
+        flex-shrink: 0;
+      }
+      .rev-fixed-type strong { color: #E9D5FF; }
 
       @media (max-width: 700px) {
         .rev-view-toggle { width: 100%; justify-content: stretch; }
@@ -614,84 +664,54 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     NEW: Schedule Revision modal — dropdowns for Subject/Topic/Rev#
+     Schedule Revision modal — Category → Subject → Topic
+     (Same flow as Manual Log, but Study Type FIXED = Revision)
      ═══════════════════════════════════════════════════════════════ */
-
-  function getAllSubjectTopics() {
-    // Map: subject → Set(topic)
-    const map = new Map();
-
-    // From state.syllabus (tracked topics)
-    state.syllabus.forEach((t) => {
-      if (!t.subject || !t.topic) return;
-      if (!map.has(t.subject)) map.set(t.subject, new Set());
-      map.get(t.subject).add(t.topic);
-    });
-
-    // From SYLLABUS defaults (paper.subjects[].topics[])
-    if (typeof SYLLABUS === 'object' && SYLLABUS) {
-      Object.values(SYLLABUS).forEach((paper) => {
-        (paper.subjects || []).forEach((sub) => {
-          if (!map.has(sub.name)) map.set(sub.name, new Set());
-          (sub.topics || []).forEach((t) => map.get(sub.name).add(t));
-        });
-      });
-    }
-
-    // From state.subjects (custom subjects — no topics by default)
-    state.subjects.forEach((s) => {
-      if (s.name && !map.has(s.name)) map.set(s.name, new Set());
-    });
-
-    return map;
-  }
-
-  function findPaperForSubject(subjectName) {
-    if (typeof SYLLABUS !== 'object' || !SYLLABUS) return null;
-    for (const [pid, paper] of Object.entries(SYLLABUS)) {
-      if ((paper.subjects || []).some((s) => s.name === subjectName)) {
-        return { paper: pid, category: paper.category };
-      }
-    }
-    return null;
-  }
-
   function openEnhancedScheduleRevisionModal() {
-    const map = getAllSubjectTopics();
-    const subjects = [...map.keys()].sort();
-
-    if (!subjects.length) {
-      if (typeof toast === 'function') toast('Pehle koi subject add karo (Syllabus / Subjects page)', 'err', 4000);
-      return;
-    }
-
     const maxRevs = Math.max(1, parseInt(state.settings.max_revisions, 10) || 3);
+
     let revOpts = '';
     for (let i = 1; i <= maxRevs; i++) {
       revOpts += `<option value="${i}">Revision ${i}${i === maxRevs ? ' (Final)' : ''}</option>`;
     }
 
-    const subjOpts = subjects.map((s) => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+    const catOpts = CATEGORY_OPTIONS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
 
     const body = `
       <div class="field">
+        <label>Category</label>
+        <select id="rvCategory">
+          <option value="">— Select a category —</option>
+          ${catOpts}
+        </select>
+      </div>
+
+      <div class="field">
         <label>Subject</label>
-        <select id="rvSubject">${subjOpts}</select>
+        <select id="rvSubject" disabled>
+          <option value="">— Select a category first —</option>
+        </select>
       </div>
 
       <div class="field">
         <label>Topic</label>
-        <select id="rvTopic">
-          <option value="">— Select a topic —</option>
+        <select id="rvTopic" disabled>
+          <option value="">— Select a subject first —</option>
         </select>
-        <div style="font-size:.72rem;color:var(--text-3);margin-top:6px;line-height:1.5">
-          Ya <button type="button" id="rvTopicCustomBtn" style="background:none;border:none;color:var(--purple);font-weight:700;cursor:pointer;padding:0;font-size:.72rem;text-decoration:underline">custom topic add karo</button>
+      </div>
+
+      <div class="rev-custom-hint">
+        <span class="hint-ico">💡</span>
+        <div>
+          Want to add a <strong>custom topic</strong>? Please add a <strong>custom subject</strong> first
+          (from <strong>Subjects</strong> page), then add the custom topic in that subject — it will automatically
+          appear in this dropdown.
         </div>
       </div>
 
-      <div class="field" id="rvCustomTopicWrap" style="display:none">
-        <label>Custom Topic Name</label>
-        <input type="text" id="rvCustomTopic" placeholder="Enter topic name" maxlength="200">
+      <div class="rev-fixed-type">
+        <span class="type-ico">🔁</span>
+        <div>Study Type: <strong>Revision</strong> (fixed)</div>
       </div>
 
       <div class="form-grid">
@@ -717,71 +737,109 @@
     openModal(
       modalShell({
         title: '📅 Schedule Revision',
-        subtitle: 'Pick subject, topic, and revision number',
+        subtitle: 'Pick category, subject, and topic',
         body,
         actions: `<button class="btn btn-secondary" data-close>Cancel</button>
           <button class="btn btn-primary" id="rvSave">Schedule</button>`,
       }),
       {
         onMount() {
+          const catSel = document.getElementById('rvCategory');
           const subjSel = document.getElementById('rvSubject');
           const topicSel = document.getElementById('rvTopic');
-          const customBtn = document.getElementById('rvTopicCustomBtn');
-          const customWrap = document.getElementById('rvCustomTopicWrap');
-          const customInput = document.getElementById('rvCustomTopic');
 
-          function populateTopics(subject) {
-            const set = map.get(subject) || new Set();
-            const topics = [...set].sort();
-            topicSel.innerHTML =
-              '<option value="">— Select a topic —</option>' +
-              topics.map((t) => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join('');
-            // Reset custom
-            customWrap.style.display = 'none';
-            customInput.value = '';
-          }
+          /* ── Category change → populate subjects ── */
+          catSel.onchange = () => {
+            const cat = catSel.value;
 
-          populateTopics(subjSel.value);
+            if (!cat) {
+              subjSel.innerHTML = '<option value="">— Select a category first —</option>';
+              subjSel.disabled = true;
+              topicSel.innerHTML = '<option value="">— Select a subject first —</option>';
+              topicSel.disabled = true;
+              return;
+            }
 
-          subjSel.onchange = () => populateTopics(subjSel.value);
+            const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
 
-          customBtn.onclick = () => {
-            const show = customWrap.style.display === 'none';
-            customWrap.style.display = show ? 'flex' : 'none';
-            if (show) {
-              topicSel.value = '';
-              setTimeout(() => customInput.focus(), 50);
+            if (!subjects.length) {
+              subjSel.innerHTML = '<option value="">— No subjects in this category —</option>';
+              subjSel.disabled = true;
+            } else {
+              subjSel.innerHTML =
+                '<option value="">— Select a subject —</option>' +
+                subjects.map((s) => `<option value="${escapeHTML(s)}">${escapeHTML(s)}</option>`).join('');
+              subjSel.disabled = false;
+            }
+
+            topicSel.innerHTML = '<option value="">— Select a subject first —</option>';
+            topicSel.disabled = true;
+          };
+
+          /* ── Subject change → populate topics ── */
+          subjSel.onchange = () => {
+            const cat = catSel.value;
+            const subj = subjSel.value;
+
+            if (!subj) {
+              topicSel.innerHTML = '<option value="">— Select a subject first —</option>';
+              topicSel.disabled = true;
+              return;
+            }
+
+            const topics =
+              (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
+
+            if (!topics.length) {
+              topicSel.innerHTML = '<option value="">— No topics available —</option>';
+              topicSel.disabled = true;
+            } else {
+              topicSel.innerHTML =
+                '<option value="">— Select a topic —</option>' +
+                topics.map((t) => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join('');
+              topicSel.disabled = false;
             }
           };
 
-          // Focus first field
-          setTimeout(() => subjSel.focus(), 80);
+          setTimeout(() => catSel.focus(), 80);
 
+          /* ── Save ── */
           document.getElementById('rvSave').onclick = async () => {
+            const category = catSel.value;
             const subject = subjSel.value;
-            let topic = topicSel.value;
-
-            // Custom topic override
-            if (customWrap.style.display !== 'none' && customInput.value.trim()) {
-              topic = customInput.value.trim();
-            }
-
-            if (!subject) {
-              if (typeof toast === 'function') toast('Please select a subject', 'err');
-              return;
-            }
-            if (!topic) {
-              if (typeof toast === 'function') toast('Please select or enter a topic', 'err');
-              return;
-            }
-
+            const topic = topicSel.value;
             const originalDate = document.getElementById('rvOriginal').value;
             const dueDate = document.getElementById('rvDue').value;
             const revNum = parseInt(document.getElementById('rvNum').value, 10) || 1;
 
-            if (!originalDate || !dueDate) {
-              if (typeof toast === 'function') toast('Please pick both dates', 'err');
+            if (!category) {
+              toast('Please select a category', 'err');
               return;
+            }
+            if (!subject) {
+              toast('Please select a subject', 'err');
+              return;
+            }
+            if (!topic) {
+              toast('Please select a topic', 'err');
+              return;
+            }
+            if (!originalDate || !dueDate) {
+              toast('Please pick both dates', 'err');
+              return;
+            }
+
+            /* Resolve paper id */
+            let paperId = category;
+            if (typeof SYLLABUS === 'object' && SYLLABUS) {
+              for (const [pid, paper] of Object.entries(SYLLABUS)) {
+                if ((paper.subjects || []).some((s) => s.name === subject)) {
+                  if (paper.category === category || category === 'mains') {
+                    paperId = pid;
+                    break;
+                  }
+                }
+              }
             }
 
             const r = {
@@ -792,10 +850,11 @@
               due_date: dueDate,
               revision_number: revNum,
               status: 'pending',
+              paper: paperId,
+              category,
             };
 
             state.revisions.push(r);
-
             if (typeof saveLocal === 'function') saveLocal();
 
             if (typeof supa !== 'undefined' && supa && state.user) {
@@ -811,7 +870,7 @@
             if (typeof updateBadges === 'function') updateBadges();
             if (typeof confetti === 'function') confetti();
             if (typeof toast === 'function') {
-              toast(`✅ Revision ${revNum} scheduled for "${topic}"`, 'ok', 3500);
+              toast(`✅ Revision ${revNum} scheduled: ${topic}`, 'ok', 3500);
             }
           };
         },
@@ -820,7 +879,7 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     NEW: Override Schedule Revision button
+     Override Schedule Revision button
      ═══════════════════════════════════════════════════════════════ */
   function patchAddRevisionBtn() {
     const btn = document.getElementById('addRevisionBtn');
@@ -837,7 +896,7 @@
   }
 
   /* ═══════════════════════════════════════════════════════════════
-     NEW: completeRevision — also update syllabus status
+     completeRevision — also update syllabus status
      ═══════════════════════════════════════════════════════════════ */
   function patchCompleteRevision() {
     const _orig = window.completeRevision;
@@ -850,14 +909,12 @@
       const revNum = parseInt(r.revision_number, 10) || 1;
       const newStatus = revNum >= maxRevs ? 'completed' : `rev${revNum}`;
 
-      // Find syllabus entry (by subject + topic)
-      let existing = state.syllabus.find(
-        (s) => s.subject === r.subject && (s.topic === r.topic || (!s.topic && s.subject === r.topic)),
-      );
+      // Try to find existing syllabus entry
+      let existing = state.syllabus.find((s) => s.subject === r.subject && s.topic === r.topic);
 
-      // Fallback: match by subject if topic empty
-      if (!existing && r.topic) {
-        existing = state.syllabus.find((s) => s.subject === r.subject && s.topic === r.topic);
+      // Fallback: subject-only match
+      if (!existing) {
+        existing = state.syllabus.find((s) => s.subject === r.subject && (!s.topic || s.topic === r.subject));
       }
 
       if (existing) {
@@ -869,15 +926,28 @@
         }
       } else {
         // Create new syllabus entry
-        const found = findPaperForSubject(r.subject);
+        let paperId = r.paper;
+        let cat = r.category;
+
+        if (!paperId && typeof SYLLABUS === 'object' && SYLLABUS) {
+          for (const [pid, paper] of Object.entries(SYLLABUS)) {
+            if ((paper.subjects || []).some((s) => s.name === r.subject)) {
+              paperId = pid;
+              cat = cat || paper.category;
+              break;
+            }
+          }
+        }
+
         const newEntry = {
           id: safeUUID(),
-          paper: found?.paper || 'prelims-gs1',
+          paper: paperId || 'prelims-gs1',
           subject: r.subject,
           topic: r.topic || r.subject,
           status: newStatus,
-          category: found?.category || 'Prelims',
+          category: cat || 'Prelims',
         };
+
         state.syllabus.push(newEntry);
         if (typeof window.syncSyllabus === 'function') {
           try {
@@ -886,7 +956,7 @@
         }
       }
 
-      // Call original completeRevision (marks r.status = 'completed' + updates DB)
+      // Call original completeRevision (marks r.status='completed' + DB update)
       if (typeof _orig === 'function') {
         try {
           await _orig.call(this, id);
