@@ -5290,6 +5290,13 @@
                   <label>Pomodoro Break (min)</label
                   ><input type="number" id="setPomoBreak" min="1" max="60" value="5" />
                 </div>
+                <div class="field">
+                  <label>Max Revisions (before complete)</label>
+                  <input type="number" id="setMaxRevisions" min="1" max="10" value="3" />
+                  <div style="font-size: 0.72rem; color: var(--text-3); margin-top: 6px">
+                    Kitne revisions ke baad topic auto-complete ho jayega
+                  </div>
+                </div>
               </div>
               <div style="display: flex; justify-content: flex-start; margin-top: 18px">
                 <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
@@ -5740,18 +5747,7 @@
         },
       };
 
-      const STUDY_TYPES = [
-        'New Learning',
-        'Revision',
-        'PYQ',
-        'Test',
-        'Lecture',
-        'Reading',
-        'Notes',
-        'Mock Test',
-        'Practice',
-        'Other',
-      ];
+      const STUDY_TYPES = ['New Learning', 'Revision', 'Test'];
       const REVISION_INTERVALS = [1, 3, 7, 14, 30, 60];
 
       /* ═══════════════ UTILS ═══════════════ */
@@ -5874,6 +5870,7 @@
           min_session_minutes: 10,
           pomodoro_work: 25,
           pomodoro_break: 5,
+          max_revisions: 3,
           theme: 'dark',
           time_format: '12h',
         },
@@ -8103,8 +8100,14 @@ ${
         toast('PiP mode OFF', 'info');
       }
 
-      /* ═══════════════ SAVE SESSION MODAL ═══════════════ */
       function openSaveSessionModal(snap) {
+        const maxRevs = state.settings.max_revisions || 3;
+
+        let revOptions = '<option value="">— Select revision number —</option>';
+        for (let i = 1; i <= maxRevs; i++) {
+          revOptions += `<option value="rev${i}">🔵 Rev ${i}${i === maxRevs ? ' (Final)' : ''}</option>`;
+        }
+
         const body = `
     <div style="text-align:center;padding:20px;background:var(--card-2);border-radius:14px">
       <div style="font-size:3rem;margin-bottom:8px">🎯</div>
@@ -8114,24 +8117,25 @@ ${
       ${snap.topic ? `<div style="font-size:.8rem;color:var(--text-2);margin-top:6px;line-height:1.5">${esc(snap.topic)}</div>` : ''}
     </div>
     <div class="field"><label>Date</label><input type="date" id="sessDate" value="${todayKey()}"></div>
+    
     <div class="field"><label>Study Type</label>
-      <select id="sessType">${STUDY_TYPES.map((t) => `<option>${t}</option>`).join('')}</select></div>
+      <select id="sessType">
+        <option value="New Learning">📖 New Learning</option>
+        <option value="Revision">🔁 Revision</option>
+        <option value="Test">📝 Test</option>
+      </select>
+    </div>
+    
+    <div id="sessStatusWrap"></div>
+    
     <div class="field"><label>Notes (optional)</label><textarea id="sessNotes" rows="3" placeholder="What did you cover?"></textarea></div>
     <div class="form-grid">
       <div class="field"><label>Productivity</label>
         <select id="sessProd"><option value="5">⭐⭐⭐⭐⭐</option><option value="4">⭐⭐⭐⭐</option><option value="3" selected>⭐⭐⭐</option><option value="2">⭐⭐</option><option value="1">⭐</option></select></div>
       <div class="field"><label>Energy</label>
         <select id="sessEnergy"><option value="5">Very high</option><option value="4">High</option><option value="3" selected>Moderate</option><option value="2">Low</option><option value="1">Very low</option></select></div>
-    </div>
-    <div class="field"><label>Update Topic Status</label>
-      <select id="sessStatus">
-        <option value="">— Don't change —</option>
-        <option value="learning">🟡 Learning</option>
-        <option value="completed">🟢 Completed</option>
-        <option value="rev1">🟣 Rev 1</option>
-        <option value="rev2">🟣 Rev 2</option>
-        <option value="rev3">🟣 Rev 3</option>
-      </select></div>`;
+    </div>`;
+
         openModal(
           modalShell({
             title: '💾 Save Session',
@@ -8142,10 +8146,56 @@ ${
           }),
           {
             onMount() {
+              function updateStatusField() {
+                const type = $('#sessType').value;
+                const wrap = $('#sessStatusWrap');
+
+                if (type === 'New Learning') {
+                  wrap.innerHTML = `
+              <div style="padding:12px 16px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:12px;font-size:.85rem;color:#FBBF24;display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.3rem">🟡</span>
+                <div>Topic status will be set to <strong>Learning</strong> automatically</div>
+              </div>`;
+                } else if (type === 'Revision') {
+                  wrap.innerHTML = `
+              <div class="field">
+                <label>Revision Number</label>
+                <select id="sessRevNum">${revOptions}</select>
+                <div style="font-size:.72rem;color:var(--text-3);margin-top:6px;line-height:1.5">
+                  Rev ${maxRevs} ke baad topic automatically <strong>Completed</strong> mark ho jayega. Next revision auto-schedule hogi.
+                </div>
+              </div>`;
+                } else {
+                  wrap.innerHTML = `
+              <div style="padding:12px 16px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:12px;font-size:.85rem;color:#C4B5FD;display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.3rem">📝</span>
+                <div>Test session — topic status <strong>nahi</strong> badlega</div>
+              </div>`;
+                }
+              }
+
+              $('#sessType').onchange = updateStatusField;
+              updateStatusField();
+
               $('#confirmSave').onclick = async () => {
                 const date = $('#sessDate').value || todayKey();
                 const notes = $('#sessNotes').value.trim();
-                const newStatus = $('#sessStatus').value;
+                const studyType = $('#sessType').value;
+                let newStatus = null;
+                let revNum = 0;
+
+                if (studyType === 'New Learning') {
+                  newStatus = 'learning';
+                } else if (studyType === 'Revision') {
+                  const revVal = $('#sessRevNum')?.value;
+                  if (!revVal) {
+                    toast('Please select a revision number', 'err');
+                    return;
+                  }
+                  revNum = parseInt(revVal.replace('rev', ''), 10);
+                  newStatus = `rev${revNum}`;
+                }
+
                 const session = {
                   id: uuid(),
                   date,
@@ -8155,7 +8205,7 @@ ${
                   duration: snap.seconds,
                   subject: snap.subject,
                   topic: snap.topic || '',
-                  study_type: $('#sessType').value,
+                  study_type: studyType,
                   notes,
                   productivity: parseInt($('#sessProd').value, 10) || 3,
                   energy: parseInt($('#sessEnergy').value, 10) || 3,
@@ -8164,6 +8214,7 @@ ${
                 };
                 state.sessions.push(session);
                 saveLocal();
+
                 if (supa && state.user) {
                   try {
                     await supa.from('study_sessions').upsert(
@@ -8189,42 +8240,96 @@ ${
                     console.warn('save cloud', e);
                   }
                 }
+
                 if (newStatus) {
-                  // Match by subject+topic only (paper ID match nahi karna)
                   let existing = state.syllabus.find(
                     (s) => s.subject === snap.subject && s.topic === (snap.topic || snap.subject),
                   );
 
+                  let correctPaperId = null;
+                  for (const [pid, paper] of Object.entries(SYLLABUS)) {
+                    if (paper.subjects.some((sub) => sub.name === snap.subject)) {
+                      correctPaperId = pid;
+                      break;
+                    }
+                  }
+                  correctPaperId = correctPaperId || snap.category;
+
+                  let finalStatus = newStatus;
+                  if (studyType === 'Revision' && revNum >= maxRevs) {
+                    finalStatus = 'completed';
+                  }
+
                   if (existing) {
-                    existing.status = newStatus;
+                    existing.status = finalStatus;
                     syncSyllabus(existing);
                   } else {
-                    // SYLLABUS object se sahi paper ID dhundho
-                    let correctPaperId = null;
-                    for (const [pid, paper] of Object.entries(SYLLABUS)) {
-                      if (paper.subjects.some((sub) => sub.name === snap.subject)) {
-                        correctPaperId = pid;
-                        break;
-                      }
-                    }
-                    correctPaperId = correctPaperId || snap.category;
-
                     const newEntry = {
                       id: uuid(),
                       paper: correctPaperId,
                       subject: snap.subject,
                       topic: snap.topic || snap.subject,
-                      status: newStatus,
+                      status: finalStatus,
                       category: SYLLABUS[correctPaperId]?.category || snap.category,
                     };
                     state.syllabus.push(newEntry);
                     syncSyllabus(newEntry);
                   }
 
-                  // UI refresh karo taaki turant dikhe
+                  if (studyType === 'Revision' && revNum > 0) {
+                    const completedRev = {
+                      id: uuid(),
+                      subject: snap.subject,
+                      topic: snap.topic || snap.subject,
+                      original_date: date,
+                      revision_number: revNum,
+                      due_date: date,
+                      status: 'completed',
+                      notes: `Rev ${revNum} done via study session`,
+                    };
+                    state.revisions.push(completedRev);
+
+                    if (supa && state.user) {
+                      try {
+                        await supa.from('revisions').insert({ ...completedRev, user_id: state.user.id });
+                      } catch (e) {
+                        console.warn('save revision', e);
+                      }
+                    }
+
+                    if (revNum < maxRevs) {
+                      const nextRevNum = revNum + 1;
+                      const intervalDays = REVISION_INTERVALS[nextRevNum] || 14;
+                      const nextDueDate = dateKey(addDays(new Date(), intervalDays));
+
+                      const nextRevision = {
+                        id: uuid(),
+                        subject: snap.subject,
+                        topic: snap.topic || snap.subject,
+                        original_date: date,
+                        revision_number: nextRevNum,
+                        due_date: nextDueDate,
+                        status: 'pending',
+                        notes: `Auto-scheduled after Rev ${revNum}`,
+                      };
+                      state.revisions.push(nextRevision);
+
+                      if (supa && state.user) {
+                        try {
+                          await supa.from('revisions').insert({ ...nextRevision, user_id: state.user.id });
+                        } catch (e) {
+                          console.warn('save next revision', e);
+                        }
+                      }
+                    }
+                  }
+
                   renderSyllabus();
                   renderSubjects();
+                  renderRevisions();
+                  updateBadges();
                 }
+
                 closeModal();
                 confetti();
                 toast('Session saved! Keep going 🚀', 'ok');
@@ -11416,7 +11521,7 @@ ${
         $('#setMonthlyTarget').value = state.settings.monthly_target;
         $('#setMinSession').value = state.settings.min_session_minutes;
         $('#setPomoWork').value = state.settings.pomodoro_work;
-        $('#setPomoBreak').value = state.settings.pomodoro_break;
+        $('#setMaxRevisions').value = state.settings.max_revisions || 3;
         $('#setOptionalSubject').innerHTML = OPTIONAL_SUBJECTS.map(
           (s) => `<option ${state.profile.optional_subject === s ? 'selected' : ''}>${esc(s)}</option>`,
         ).join('');
@@ -11710,6 +11815,7 @@ ${
           state.settings.min_session_minutes = parseInt($('#setMinSession').value, 10) || 10;
           state.settings.pomodoro_work = parseInt($('#setPomoWork').value, 10) || 25;
           state.settings.pomodoro_break = parseInt($('#setPomoBreak').value, 10) || 5;
+          state.settings.max_revisions = parseInt($('#setMaxRevisions').value, 10) || 3;
           saveLocal();
           if (supa && state.user) {
             try {
