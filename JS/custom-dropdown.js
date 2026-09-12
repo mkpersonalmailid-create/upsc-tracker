@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Custom Dropdown v3
+   UPSC TRACKER — Custom Dropdown v4
    ─────────────────────────────────────────────────────────────
    ✅ Replaces ALL <select> with custom designed dropdown
    ✅ Matches website design (purple gradient, rounded, etc.)
@@ -7,14 +7,13 @@
    ✅ Works with dynamically added selects (MutationObserver)
    ✅ Keyboard support (arrow, enter, escape)
    ✅ Search for long lists (auto if >=8 options)
-   ✅ FIX: Search input cursor position preserved (no reverse typing)
-   ✅ FIX: Body scroll locked when dropdown open (no background scroll)
+   ✅ FIX: Search input cursor preserved (no reverse typing)
+   ✅ FIX: Locks BOTH body AND .content scroll (real scroll container)
    ✅ Syncs value + dispatches change event to original select
-   ✅ No changes needed in existing code
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[custom-dropdown] v3 loaded');
+  console.log('[custom-dropdown] v4 loaded');
 
   const SEARCH_THRESHOLD = 8;
 
@@ -232,13 +231,12 @@
         border-radius: 9px;
       }
 
-      /* ═══ Body scroll lock when dropdown open ═══ */
+      /* ═══ Scroll lock helper (fallback) ═══ */
       body.cd-scroll-locked {
         overflow: hidden !important;
-        position: fixed !important;
-        width: 100% !important;
-        left: 0 !important;
-        right: 0 !important;
+      }
+      body.cd-scroll-locked #content {
+        overflow: hidden !important;
       }
 
       /* ═══ Light theme ═══ */
@@ -308,6 +306,43 @@
       /[&<>"']/g,
       (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
     );
+  }
+
+  /* ═══════════════ Scroll Lock Helpers ═══════════════ */
+  function lockScroll() {
+    /* Lock both body AND #content (the real scroll container in app.html) */
+    document.body.classList.add('cd-scroll-locked');
+
+    const contentEl = document.getElementById('content');
+    if (contentEl) {
+      contentEl.dataset.cdPrevOverflow = contentEl.style.overflow || '';
+      contentEl.style.overflow = 'hidden';
+    }
+
+    /* Also lock any .modal-overlay if present (in case dropdown is inside modal) */
+    const modals = document.querySelectorAll('.modal-overlay.active, .modal.active');
+    modals.forEach((m) => {
+      m.dataset.cdPrevOverflow = m.style.overflow || '';
+      m.style.overflow = 'hidden';
+    });
+  }
+
+  function unlockScroll() {
+    document.body.classList.remove('cd-scroll-locked');
+
+    const contentEl = document.getElementById('content');
+    if (contentEl) {
+      contentEl.style.overflow = contentEl.dataset.cdPrevOverflow || '';
+      delete contentEl.dataset.cdPrevOverflow;
+    }
+
+    const modals = document.querySelectorAll('.modal-overlay, .modal');
+    modals.forEach((m) => {
+      if (m.dataset.cdPrevOverflow !== undefined) {
+        m.style.overflow = m.dataset.cdPrevOverflow || '';
+        delete m.dataset.cdPrevOverflow;
+      }
+    });
   }
 
   /* ═══════════════ Convert One Select ═══════════════ */
@@ -496,18 +531,13 @@
       }
     }
 
-    /* ═══ Open panel — with body scroll lock ═══ */
+    /* ═══ Open panel — with scroll lock ═══ */
     function openPanel() {
       if (isOpen) return;
       isOpen = true;
 
-      /* ═══ Preserve scroll position before locking ═══ */
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      document.body.style.top = '-' + scrollY + 'px';
-      document.body.dataset.cdScrollY = scrollY;
-
-      /* ═══ Lock body scroll ═══ */
-      document.body.classList.add('cd-scroll-locked');
+      /* Lock body + #content scroll */
+      lockScroll();
 
       wrap.classList.add('cd-open');
       panel.classList.add('cd-open');
@@ -528,7 +558,7 @@
         }, 60);
       }
 
-      /* Prevent panel scroll from bubbling to body */
+      /* Prevent panel scroll from bubbling to parent */
       panel.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
       panel.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: false });
     }
@@ -538,14 +568,8 @@
       if (!isOpen) return;
       isOpen = false;
 
-      /* ═══ Unlock body scroll ═══ */
-      const scrollY = parseInt(document.body.dataset.cdScrollY || '0', 10);
-      document.body.classList.remove('cd-scroll-locked');
-      document.body.style.top = '';
-      delete document.body.dataset.cdScrollY;
-
-      /* Restore scroll position */
-      window.scrollTo(0, scrollY);
+      /* Unlock scroll */
+      unlockScroll();
 
       wrap.classList.remove('cd-open');
       panel.classList.remove('cd-open');
@@ -613,12 +637,13 @@
     }
     document.addEventListener('keydown', onKeyDown);
 
+    /* Reposition on scroll of ANY parent */
     window.addEventListener(
       'scroll',
       () => {
         if (isOpen) positionPanel();
       },
-      { passive: true },
+      { passive: true, capture: true },
     );
     window.addEventListener(
       'resize',
@@ -684,7 +709,7 @@
       convertAll();
       pageObserver.observe(document.body, { childList: true, subtree: true });
       setInterval(convertAll, 800);
-      console.log('[custom-dropdown] ✅ v3 initialized');
+      console.log('[custom-dropdown] ✅ v4 initialized');
     } else {
       attempts++;
       if (attempts > 200) return console.error('[custom-dropdown] timeout');
