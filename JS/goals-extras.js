@@ -1,19 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v8 (FINAL)
+   UPSC TRACKER — Goals Extras v9 (FINAL)
    ─────────────────────────────────────────────────────────────
    ✅ Goal Study Mode
    ✅ No double-prompt (chip visible = skip dropdown)
    ✅ FORCE-SAVE — works for BOTH timer sessions AND manual log
-   ✅ Manual log uses slice(-3) check — no ts filter
+   ✅ Manual log uses slice(-10) check — no ts filter
    ✅ Upsert (safe even if row exists)
    ✅ Handles start_time as number OR string
    ✅ Full error logging
+   ✅ v9 FIX: Auto-match REMOVED — only explicit [GOAL:id] tags count
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v8 loaded');
+  console.log('[goals-extras] v9 loaded — explicit tags only');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -116,41 +117,16 @@
     if (session._goalProcessed) return;
     session._goalProcessed = true;
 
-    /* A. Explicit goal tag */
+    /* ONLY explicit [GOAL:id] tags count. No auto-match at all. */
     const taggedId = extractGoalId(session.notes);
-    if (taggedId) {
-      const goal = state.goals.find((g) => g.id === taggedId);
-      if (goal && goal.current < goal.target) {
-        const ok = await incrementGoalFromSession(goal, session);
-        if (ok && typeof toast === 'function') {
-          toast(`🎯 Goal updated: ${goal.current} / ${goal.target} ${goal.unit || ''}`, 'ok', 2200);
-        }
-        if (typeof renderGoals === 'function') renderGoals();
-        return;
-      }
-    }
+    if (!taggedId) return;
 
-    /* B. Auto-match */
-    const matched = [];
-    state.goals.forEach((g) => {
-      if (g.current >= g.target) return;
-      const unit = (g.unit || '').toLowerCase();
-      if (!unit.includes('hour') && !unit.includes('hr')) return;
-      if (g.subject && g.subject === session.subject) matched.push(g);
-    });
-    state.goals.forEach((g) => {
-      if (g.current >= g.target) return;
-      const unit = (g.unit || '').toLowerCase();
-      if (!unit.includes('hour') && !unit.includes('hr')) return;
-      if (!g.subject) matched.push(g);
-    });
+    const goal = state.goals.find((g) => g.id === taggedId);
+    if (!goal || goal.current >= goal.target) return;
 
-    const unique = [...new Set(matched)];
-    if (!unique.length) return;
-
-    for (const g of unique) await incrementGoalFromSession(g, session);
-    if (typeof toast === 'function') {
-      toast(`🎯 ${unique.length} goal${unique.length > 1 ? 's' : ''} auto-updated`, 'ok', 2000);
+    const ok = await incrementGoalFromSession(goal, session);
+    if (ok && typeof toast === 'function') {
+      toast(`🎯 Goal updated: ${goal.current} / ${goal.target} ${goal.unit || ''}`, 'ok', 2200);
     }
     if (typeof renderGoals === 'function') renderGoals();
   }
@@ -732,8 +708,8 @@
           const sessions = state.sessions || [];
           if (!sessions.length) return;
 
-          /* ⬇️ KEY FIX: Check last 3 sessions — no ts filter (manual log has no ts) */
-          const recent = sessions.slice(-3);
+          /* ⬇️ v9 FIX: Check last 10 sessions — no ts filter (manual log has no ts) */
+          const recent = sessions.slice(-10);
 
           for (const sess of recent) {
             if (!sess || !sess.id) continue;
@@ -787,7 +763,7 @@
               console.error('[goals-extras] Force save exception:', err);
             }
           }
-        }, 1800);
+        }, 1200);
       },
       true,
     );
@@ -1198,7 +1174,7 @@
         }
       }, 3000);
 
-      console.log('[goals-extras] ✅ patched all');
+      console.log('[goals-extras] ✅ v9 patched all');
     } else {
       attempts++;
       if (attempts > 200) {
