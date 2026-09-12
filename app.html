@@ -4494,8 +4494,7 @@
             </button>
           </div>
           <div class="topbar-right">
-            <button class="top-icon-btn" id="supportBtn" title="Help & Support">🆘</button>
-            <button class="top-icon-btn" id="feedbackBtn" title="Feedback">💬</button>
+            <button class="top-icon-btn" id="logoutBtn" title="Sign Out" style="color: #fca5a5">🚪</button>
             <button class="top-icon-btn" id="settingsBtn" title="Settings">⚙</button>
             <button class="top-icon-btn" id="notifBtn" title="Notifications">🔔</button>
             <button class="top-icon-btn" id="themeBtn" title="Theme">🌙</button>
@@ -11715,11 +11714,16 @@ ${
           $('#sbUser').onclick = () => switchView('settings');
           $('#topAvatar').onclick = () => switchView('settings');
           $('#settingsBtn').onclick = () => switchView('settings');
-          $('#supportBtn').onclick = () => switchView('support');
-          $('#feedbackBtn').onclick = () => {
-            switchView('support');
-            state.supportTab = 'feedback';
-            renderSupport();
+          $('#logoutBtn').onclick = async () => {
+            const ok = await customConfirm({
+              title: 'Sign out?',
+              message: 'You will be logged out. Data safe rahega.',
+              confirmText: 'Sign Out',
+              cancelText: 'Stay',
+              icon: '👋',
+              type: 'danger',
+            });
+            if (ok) logout();
           };
 
           // Theme
@@ -12348,5 +12352,6 @@ ${
     <script src="/JS/notes-extras.js"></script>
     <!-- NEW -->
     <script src="/JS/tests-extras.js"></script>
+    <script src="/JS/notifications-extras.js"></script>
   </body>
 </html>
