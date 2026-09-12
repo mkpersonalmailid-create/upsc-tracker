@@ -1,15 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Notifications Extras v1
+   UPSC TRACKER — Notifications Extras v2
    ─────────────────────────────────────────────────────────────
    ✅ Per-user notifications
    ✅ Unread badge count on bell
    ✅ Modal to view all + mark as read
-   ✅ Admin can send to all users / specific user
+   ✅ Admin can send to all users / search + specific user
    ✅ Auto-refresh every 60s
+   ✅ Fixed: Send button sits properly beside Refresh
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[notifications-extras] v1 loaded');
+  console.log('[notifications-extras] v2 loaded');
 
   let myNotifications = [];
   let unreadCount = 0;
@@ -87,10 +88,7 @@
       .notif-item.unread {
         background: linear-gradient(90deg, rgba(168,85,247,.08), var(--card-2));
       }
-      .notif-icon {
-        font-size: 1.3rem;
-        flex-shrink: 0;
-      }
+      .notif-icon { font-size: 1.3rem; flex-shrink: 0; }
       .notif-body { flex: 1; min-width: 0; }
       .notif-title {
         font-weight: 800;
@@ -120,15 +118,37 @@
         box-shadow: 0 0 8px rgba(236,72,153,.6);
       }
 
-      .notif-empty {
-        text-align: center;
-        padding: 40px 20px;
-        color: var(--text-3);
+      .notif-empty { text-align: center; padding: 40px 20px; color: var(--text-3); }
+      .notif-empty-icon { font-size: 2.4rem; margin-bottom: 10px; opacity: .5; }
+
+      /* ═══ Search user picker ═══ */
+      .notif-user-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all .15s;
+        border: 1px solid transparent;
       }
-      .notif-empty-icon {
-        font-size: 2.4rem;
-        margin-bottom: 10px;
-        opacity: .5;
+      .notif-user-item:hover { background: var(--card-2); }
+      .notif-user-item.selected {
+        background: linear-gradient(90deg, rgba(168,85,247,.2), rgba(236,72,153,.1));
+        border-color: rgba(168,85,247,.4);
+      }
+      .notif-user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--grad-1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 800;
+        font-size: .75rem;
+        flex-shrink: 0;
       }
     `;
     document.head.appendChild(style);
@@ -138,11 +158,8 @@
   function updateBadge() {
     const bellBtn = document.getElementById('notifBtn');
     if (!bellBtn) return;
-
     bellBtn.style.position = 'relative';
-
     let badge = bellBtn.querySelector('.notif-badge');
-
     if (unreadCount > 0) {
       if (!badge) {
         badge = document.createElement('span');
@@ -256,7 +273,7 @@
     openNotificationsModal();
   }
 
-  /* ═══════════════ MODAL ═══════════════ */
+  /* ═══════════════ NOTIFICATIONS MODAL (Bell popup) ═══════════════ */
   function openNotificationsModal() {
     if (typeof openModal !== 'function' || typeof modalShell !== 'function') return;
 
@@ -315,7 +332,6 @@
       }),
       {
         onMount: function () {
-          /* Click item → mark as read */
           document.querySelectorAll('[data-notif-id]').forEach(function (el) {
             el.onclick = function (e) {
               if (e.target.closest('[data-notif-del]')) return;
@@ -332,7 +348,6 @@
             };
           });
 
-          /* Delete buttons */
           document.querySelectorAll('[data-notif-del]').forEach(function (btn) {
             btn.onclick = function (e) {
               e.stopPropagation();
@@ -340,7 +355,6 @@
             };
           });
 
-          /* Mark all button */
           const markAllBtn = document.getElementById('notifMarkAllBtn');
           if (markAllBtn) {
             markAllBtn.onclick = async function () {
@@ -363,7 +377,7 @@
     };
   }
 
-  /* ═══════════════ ADMIN: SEND NOTIFICATION ═══════════════ */
+  /* ═══════════════ ADMIN: SEND NOTIFICATION MODAL ═══════════════ */
   async function openSendNotificationModal() {
     if (!state.user || state.profile?.is_admin !== true) {
       if (typeof toast === 'function') toast('Admin only', 'err');
@@ -378,20 +392,34 @@
       console.warn('[notifications] users fetch failed:', e);
     }
 
+    /* Remove current admin from list */
+    const filteredUsers = users.filter(function (u) {
+      return u.id !== state.user.id;
+    });
+
     const body =
       '<div class="field">' +
       '<label>Target</label>' +
-      '<select id="sendNotifTarget">' +
+      '<select id="sendNotifTargetType">' +
       '<option value="all">📢 All Users (broadcast)</option>' +
-      users
-        .filter(function (u) {
-          return u.id !== state.user.id;
-        })
-        .map(function (u) {
-          return '<option value="' + u.id + '">👤 ' + escHtml(u.name || u.email || u.id.slice(0, 8)) + '</option>';
-        })
-        .join('') +
+      '<option value="specific">👤 Specific User</option>' +
       '</select>' +
+      '</div>' +
+      /* Search + User list (hidden by default) */
+      '<div id="sendNotifUserPicker" style="display:none">' +
+      '<div class="field">' +
+      '<label>Search User</label>' +
+      '<input type="text" id="sendNotifUserSearch" placeholder="🔍 Search by name or email…" autocomplete="off">' +
+      '</div>' +
+      '<div class="field">' +
+      '<label>Select User</label>' +
+      '<div id="sendNotifUserList" style="max-height:180px;overflow-y:auto;background:var(--bg-2);border:1.5px solid var(--border);border-radius:11px;padding:6px"></div>' +
+      '<div style="font-size:.72rem;color:var(--text-3);margin-top:6px">' +
+      '<span id="sendNotifUserCount">' +
+      filteredUsers.length +
+      ' users</span>' +
+      '</div>' +
+      '</div>' +
       '</div>' +
       '<div class="field">' +
       '<label>Type</label>' +
@@ -424,7 +452,7 @@
       '</select>' +
       '</div>' +
       '<div style="padding:10px 14px;background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.28);border-radius:10px;font-size:.78rem;color:#C4B5FD;line-height:1.5">' +
-      '💡 <strong>Tip:</strong> Broadcast sends to all users. Targeted sends to specific user only.' +
+      '💡 <strong>Tip:</strong> Broadcast sends to all users. Specific user = targeted notification.' +
       '</div>';
 
     openModal(
@@ -438,8 +466,88 @@
       }),
       {
         onMount: function () {
+          let selectedUserId = null;
+
+          const targetTypeSel = document.getElementById('sendNotifTargetType');
+          const userPicker = document.getElementById('sendNotifUserPicker');
+          const userSearch = document.getElementById('sendNotifUserSearch');
+          const userList = document.getElementById('sendNotifUserList');
+          const userCount = document.getElementById('sendNotifUserCount');
+
+          /* ═══ Render user list with filter ═══ */
+          function renderUserList(query) {
+            const q = (query || '').toLowerCase().trim();
+            const filtered = filteredUsers.filter(function (u) {
+              if (!q) return true;
+              const name = (u.name || '').toLowerCase();
+              const email = (u.email || '').toLowerCase();
+              return name.indexOf(q) !== -1 || email.indexOf(q) !== -1;
+            });
+
+            userCount.textContent = filtered.length + ' user' + (filtered.length !== 1 ? 's' : '');
+
+            if (!filtered.length) {
+              userList.innerHTML =
+                '<div style="padding:16px;text-align:center;font-size:.8rem;color:var(--text-3)">No users found</div>';
+              return;
+            }
+
+            userList.innerHTML = filtered
+              .map(function (u) {
+                const displayName = u.name || u.email || u.id.slice(0, 8);
+                const initial = (displayName[0] || 'U').toUpperCase();
+                const isSelected = selectedUserId === u.id;
+                return (
+                  '<div class="notif-user-item' +
+                  (isSelected ? ' selected' : '') +
+                  '" data-uid="' +
+                  u.id +
+                  '">' +
+                  '<div class="notif-user-avatar">' +
+                  initial +
+                  '</div>' +
+                  '<div style="flex:1;min-width:0">' +
+                  '<div style="font-size:.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                  escHtml(displayName) +
+                  '</div>' +
+                  '<div style="font-size:.68rem;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+                  escHtml(u.email || '') +
+                  '</div>' +
+                  '</div>' +
+                  (isSelected ? '<span style="color:var(--emerald);font-weight:900;font-size:1rem">✓</span>' : '') +
+                  '</div>'
+                );
+              })
+              .join('');
+
+            userList.querySelectorAll('[data-uid]').forEach(function (el) {
+              el.onclick = function () {
+                selectedUserId = el.dataset.uid;
+                renderUserList(userSearch.value);
+              };
+            });
+          }
+
+          /* ═══ Toggle between broadcast and specific ═══ */
+          targetTypeSel.onchange = function () {
+            const isSpecific = targetTypeSel.value === 'specific';
+            userPicker.style.display = isSpecific ? 'block' : 'none';
+            if (isSpecific) {
+              renderUserList('');
+              setTimeout(function () {
+                userSearch.focus();
+              }, 100);
+            }
+          };
+
+          /* ═══ Search input ═══ */
+          userSearch.oninput = function () {
+            renderUserList(userSearch.value);
+          };
+
+          /* ═══ Send button ═══ */
           document.getElementById('sendNotifBtn').onclick = async function () {
-            const target = document.getElementById('sendNotifTarget').value;
+            const targetType = targetTypeSel.value;
             const type = document.getElementById('sendNotifType').value;
             const title = document.getElementById('sendNotifTitle').value.trim();
             const message = document.getElementById('sendNotifMsg').value.trim();
@@ -450,22 +558,29 @@
               return;
             }
 
+            let targetUserIds = [];
+            if (targetType === 'all') {
+              targetUserIds = users.map(function (u) {
+                return u.id;
+              });
+            } else {
+              if (!selectedUserId) {
+                if (typeof toast === 'function') toast('Please select a user', 'err');
+                return;
+              }
+              targetUserIds = [selectedUserId];
+            }
+
+            if (!targetUserIds.length) {
+              if (typeof toast === 'function') toast('No target users', 'err');
+              return;
+            }
+
             const btn = document.getElementById('sendNotifBtn');
             btn.disabled = true;
             btn.textContent = '⏳ Sending…';
 
             try {
-              let targetUserIds = [];
-              if (target === 'all') {
-                targetUserIds = users.map(function (u) {
-                  return u.id;
-                });
-              } else {
-                targetUserIds = [target];
-              }
-
-              if (!targetUserIds.length) throw new Error('No target users');
-
               const rows = targetUserIds.map(function (uid) {
                 return {
                   user_id: uid,
@@ -498,7 +613,7 @@
     );
   }
 
-  /* ═══════════════ ADMIN PANEL: Add Send Button ═══════════════ */
+  /* ═══════════════ ADMIN PANEL: Inject Send Button (FIXED PLACEMENT) ═══════════════ */
   function injectAdminSendButton() {
     if (state.profile?.is_admin !== true) return;
 
@@ -514,16 +629,32 @@
     const refreshBtn = header.querySelector('#refreshAdminBtn');
     if (!refreshBtn) return;
 
+    /* ═══ Wrap both buttons in a flex group so they stay together on the right ═══ */
+    let btnGroup = header.querySelector('.admin-header-btn-group');
+    if (!btnGroup) {
+      btnGroup = document.createElement('div');
+      btnGroup.className = 'admin-header-btn-group';
+      btnGroup.style.display = 'flex';
+      btnGroup.style.gap = '8px';
+      btnGroup.style.alignItems = 'center';
+      btnGroup.style.flexShrink = '0';
+
+      /* Move refresh button into group */
+      refreshBtn.parentNode.insertBefore(btnGroup, refreshBtn);
+      btnGroup.appendChild(refreshBtn);
+    }
+
+    /* Create Send Notification button */
     const btn = document.createElement('button');
     btn.className = 'btn btn-primary btn-sm';
     btn.id = 'adminSendNotifBtn';
     btn.textContent = '📤 Send Notification';
-    btn.style.marginRight = '8px';
     btn.onclick = function () {
       openSendNotificationModal();
     };
 
-    refreshBtn.parentNode.insertBefore(btn, refreshBtn);
+    /* Insert before Refresh button */
+    btnGroup.insertBefore(btn, btnGroup.firstChild);
   }
 
   /* ═══════════════ INIT ═══════════════ */
@@ -544,7 +675,7 @@
         }
       }, 500);
 
-      console.log('[notifications-extras] ✅ patched all');
+      console.log('[notifications-extras] ✅ v2 patched all');
     } else {
       attempts++;
       if (attempts > 200) {
