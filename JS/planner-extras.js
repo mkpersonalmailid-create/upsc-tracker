@@ -1,18 +1,19 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Planner Extras v2 (IMPROVED UI)
+   UPSC TRACKER — Planner Extras v3 (FULL UI)
    ─────────────────────────────────────────────────────────────
-   ✅ Stats strip — Total / Completed / Pending / Planned Hours
-   ✅ Progress bar for the selected day
+   ✅ Stats strip — Total / Completed / Pending / Progress
+   ✅ Progress bar for selected day
+   ✅ Overdue section — past pending blocks
+   ✅ Upcoming section — future dated blocks (grouped by date)
+   ✅ Quick nav chips — Today / Tomorrow / Next days
    ✅ Better block cards with time chip + duration
-   ✅ Planner blocks persist on refresh (Supabase)
-   ✅ Toggle complete / Delete syncs to DB
-   ✅ Loads all plans on login
+   ✅ Persist to Supabase (toggle/delete/add)
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[planner-extras] v2 loaded');
+  console.log('[planner-extras] v3 loaded');
 
   /* ═══════════════ HELPERS ═══════════════ */
   function escHtml(str) {
@@ -25,6 +26,56 @@
   function safeUUID() {
     if (crypto && crypto.randomUUID) return crypto.randomUUID();
     return 'pln-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function dateKey(d) {
+    const x = new Date(d);
+    return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+  }
+
+  function todayKey() {
+    return dateKey(new Date());
+  }
+
+  function parseDate(k) {
+    return new Date(k + 'T00:00:00');
+  }
+
+  function addDays(d, n) {
+    const x = new Date(d);
+    x.setDate(x.getDate() + n);
+    return x;
+  }
+
+  function diffDays(a, b) {
+    const A = new Date(a);
+    A.setHours(0, 0, 0, 0);
+    const B = new Date(b);
+    B.setHours(0, 0, 0, 0);
+    return Math.round((A - B) / 86400000);
+  }
+
+  function fmtRelativeDate(key) {
+    if (!key) return '';
+    const today = todayKey();
+    const diff = diffDays(parseDate(key), parseDate(today));
+    if (diff === 0) return 'Today';
+    if (diff === 1) return 'Tomorrow';
+    if (diff === -1) return 'Yesterday';
+    if (diff < 0) return `${Math.abs(diff)} days ago`;
+    if (diff < 7) return `In ${diff} days`;
+    // Fallback to date
+    const d = parseDate(key);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', weekday: 'short' });
+  }
+
+  function fmtDateShort(key) {
+    const d = parseDate(key);
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   function fmtMinutes(mins) {
@@ -100,6 +151,64 @@
         font-weight: 600;
       }
 
+      /* ═══ Quick nav ═══ */
+      .pl-quicknav {
+        display: flex;
+        gap: 6px;
+        overflow-x: auto;
+        margin-bottom: 14px;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+      }
+      .pl-quicknav::-webkit-scrollbar { display: none; }
+      .pl-qn-chip {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 68px;
+        padding: 8px 12px;
+        border-radius: 11px;
+        background: var(--card-2);
+        border: 1.5px solid var(--border);
+        cursor: pointer;
+        transition: all .2s;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      .pl-qn-chip:hover {
+        border-color: var(--purple);
+        transform: translateY(-2px);
+      }
+      .pl-qn-chip.active {
+        background: linear-gradient(135deg, rgba(168,85,247,.25), rgba(236,72,153,.15));
+        border-color: var(--purple);
+        box-shadow: 0 4px 14px rgba(168,85,247,.35);
+      }
+      .pl-qn-day {
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+      .pl-qn-chip.active .pl-qn-day { color: #C4B5FD; }
+      .pl-qn-num {
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--text);
+        margin-top: 2px;
+      }
+      .pl-qn-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--amber);
+        margin-top: 4px;
+        box-shadow: 0 0 6px var(--amber);
+      }
+      .pl-qn-dot.hidden { display: none; }
+
       /* ═══ Progress bar ═══ */
       .pl-progress-wrap {
         background: var(--card-2);
@@ -158,7 +267,7 @@
         align-items: center;
         gap: 8px;
         margin-bottom: 10px;
-        margin-top: 16px;
+        margin-top: 20px;
         padding-bottom: 8px;
         border-bottom: 1px dashed var(--border);
       }
@@ -185,6 +294,39 @@
         color: var(--text-3);
       }
 
+      /* ═══ Date group header (for Overdue & Upcoming) ═══ */
+      .pl-date-group {
+        margin-bottom: 14px;
+      }
+      .pl-date-group-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: var(--bg-2);
+        border-radius: 9px;
+        margin-bottom: 8px;
+        font-size: .8rem;
+      }
+      .pl-date-group-rel {
+        font-weight: 800;
+        color: var(--text);
+      }
+      .pl-date-group-date {
+        font-size: .72rem;
+        color: var(--text-3);
+        font-weight: 600;
+      }
+      .pl-date-group-count {
+        margin-left: auto;
+        font-size: .68rem;
+        font-weight: 800;
+        padding: 2px 10px;
+        border-radius: 20px;
+        background: var(--card-2);
+        color: var(--text-3);
+      }
+
       /* ═══ Block card ═══ */
       .pl-block {
         display: flex;
@@ -203,12 +345,18 @@
         border-color: var(--border-2);
         transform: translateX(3px);
       }
-      .pl-block.done {
-        opacity: .65;
-      }
+      .pl-block.done { opacity: .6; }
       .pl-block.done .pl-block-title {
         text-decoration: line-through;
         color: var(--text-3);
+      }
+      .pl-block.overdue {
+        background: linear-gradient(135deg, rgba(239,68,68,.06), rgba(239,68,68,.02));
+        border-color: rgba(239,68,68,.3);
+      }
+      .pl-block.upcoming {
+        background: linear-gradient(135deg, rgba(99,102,241,.06), rgba(99,102,241,.02));
+        border-color: rgba(99,102,241,.3);
       }
       .pl-block::before {
         content: '';
@@ -233,18 +381,13 @@
         color: transparent;
         font-weight: 900;
       }
-      .pl-block-check:hover {
-        border-color: var(--purple);
-      }
+      .pl-block-check:hover { border-color: var(--purple); }
       .pl-block.done .pl-block-check {
         background: linear-gradient(135deg, #10B981, #34D399);
         border-color: transparent;
         color: #fff;
       }
-      .pl-block-body {
-        flex: 1;
-        min-width: 0;
-      }
+      .pl-block-body { flex: 1; min-width: 0; }
       .pl-block-title {
         font-weight: 800;
         font-size: .92rem;
@@ -282,6 +425,18 @@
         font-weight: 700;
         background: rgba(20,184,166,.12);
         color: #5EEAD4;
+        white-space: nowrap;
+      }
+      .pl-overdue-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 800;
+        background: rgba(239,68,68,.15);
+        color: #FCA5A5;
         white-space: nowrap;
       }
       .pl-block-del {
@@ -327,12 +482,21 @@
         line-height: 1.6;
         margin-bottom: 16px;
       }
+      .pl-empty-mini {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-3);
+        font-size: .82rem;
+        font-style: italic;
+      }
 
       @media (max-width: 600px) {
         .pl-stat-card { padding: 10px 12px; }
         .pl-stat-val { font-size: 1.15rem; }
         .pl-block { padding: 12px 12px; gap: 10px; }
         .pl-block-title { font-size: .85rem; }
+        .pl-qn-chip { min-width: 58px; padding: 7px 10px; }
+        .pl-qn-num { font-size: .92rem; }
       }
     `;
     document.head.appendChild(style);
@@ -369,8 +533,8 @@
     }
   }
 
-  /* ═══════════════ RENDER STATS STRIP ═══════════════ */
-  function renderPlannerStats(blocks) {
+  /* ═══════════════ STATS STRIP ═══════════════ */
+  function buildStatsStrip(blocks) {
     const total = blocks.length;
     const completed = blocks.filter((b) => b.completed).length;
     const pending = total - completed;
@@ -379,30 +543,15 @@
     const pct = total ? Math.round((completed / total) * 100) : 0;
 
     const cards = [
-      {
-        label: 'Total Blocks',
-        value: total,
-        sub: `${fmtMinutes(totalMinutes)} planned`,
-        color: 'var(--purple)',
-      },
-      {
-        label: 'Completed',
-        value: completed,
-        sub: `${fmtMinutes(doneMinutes)} done`,
-        color: 'var(--emerald)',
-      },
+      { label: 'Total Blocks', value: total, sub: `${fmtMinutes(totalMinutes)} planned`, color: 'var(--purple)' },
+      { label: 'Completed', value: completed, sub: `${fmtMinutes(doneMinutes)} done`, color: 'var(--emerald)' },
       {
         label: 'Pending',
         value: pending,
         sub: `${fmtMinutes(totalMinutes - doneMinutes)} left`,
         color: 'var(--amber)',
       },
-      {
-        label: 'Progress',
-        value: pct + '%',
-        sub: `${completed}/${total} blocks`,
-        color: 'var(--pink)',
-      },
+      { label: 'Progress', value: pct + '%', sub: `${completed}/${total} blocks`, color: 'var(--pink)' },
     ];
 
     const strip = document.createElement('div');
@@ -420,8 +569,8 @@
     return strip;
   }
 
-  /* ═══════════════ RENDER PROGRESS BAR ═══════════════ */
-  function renderProgressBar(blocks) {
+  /* ═══════════════ PROGRESS BAR ═══════════════ */
+  function buildProgressBar(blocks) {
     const total = blocks.length;
     const completed = blocks.filter((b) => b.completed).length;
     const pct = total ? Math.round((completed / total) * 100) : 0;
@@ -440,21 +589,188 @@
     return wrap;
   }
 
-  /* ═══════════════ RENDER A SINGLE BLOCK ═══════════════ */
-  function renderBlock(p) {
-    const color = p.completed ? 'var(--emerald)' : 'var(--purple)';
-    return `
-      <div class="pl-block ${p.completed ? 'done' : ''}" style="--bc:${color}" data-plan-id="${p.id}">
+  /* ═══════════════ SECTION HEAD ═══════════════ */
+  function buildSectionHead(label, count, color) {
+    const head = document.createElement('div');
+    head.className = 'pl-section-head';
+    head.innerHTML = `
+      <span class="pl-section-dot" style="background:${color}"></span>
+      <span class="pl-section-title">${label}</span>
+      <span class="pl-section-count">${count}</span>
+    `;
+    return head;
+  }
+
+  /* ═══════════════ BLOCK CARD ═══════════════ */
+  function buildBlock(p, opts = {}) {
+    const isOverdue = opts.overdue && !p.completed;
+    const isUpcoming = opts.upcoming && !p.completed;
+
+    let color = 'var(--purple)';
+    if (p.completed) color = 'var(--emerald)';
+    else if (isOverdue) color = 'var(--red)';
+    else if (isUpcoming) color = 'var(--indigo)';
+
+    const classes = ['pl-block'];
+    if (p.completed) classes.push('done');
+    if (isOverdue) classes.push('overdue');
+    if (isUpcoming) classes.push('upcoming');
+
+    const overdueChip = isOverdue ? `<span class="pl-overdue-chip">⚠ ${fmtRelativeDate(p.date)}</span>` : '';
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = `
+      <div class="${classes.join(' ')}" style="--bc:${color}">
         <button class="pl-block-check" data-plan-toggle="${p.id}" title="${p.completed ? 'Mark incomplete' : 'Mark complete'}">✓</button>
         <div class="pl-block-body">
           <div class="pl-block-title">${escHtml(p.subject)}</div>
           <div class="pl-block-meta">
             <span class="pl-time-chip">🕐 ${fmtTime12(p.start)} – ${fmtTime12(p.end)}</span>
             <span class="pl-dur-chip">⏱ ${fmtMinutes(p.target_minutes)}</span>
+            ${overdueChip}
           </div>
         </div>
         <button class="pl-block-del" data-plan-del="${p.id}" title="Delete">✕</button>
       </div>`;
+    return wrapper.firstElementChild;
+  }
+
+  /* ═══════════════ QUICK NAV ═══════════════ */
+  function buildQuickNav(selectedKey) {
+    const today = new Date();
+    const allPlans = state.plans || [];
+    const chips = [];
+
+    // Show: Today, +1, +2, +3, +4, +5, +6 days
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(today, i);
+      const key = dateKey(d);
+      const hasBlocks = allPlans.some((p) => p.date === key);
+      const dow = i === 0 ? 'TODAY' : d.toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase();
+      const num = d.getDate();
+      chips.push({ key, dow, num, hasBlocks, isActive: key === selectedKey });
+    }
+
+    const strip = document.createElement('div');
+    strip.className = 'pl-quicknav';
+    strip.innerHTML = chips
+      .map(
+        (c) => `
+      <button class="pl-qn-chip ${c.isActive ? 'active' : ''}" data-qn-date="${c.key}">
+        <span class="pl-qn-day">${c.dow}</span>
+        <span class="pl-qn-num">${c.num}</span>
+        <span class="pl-qn-dot ${c.hasBlocks ? '' : 'hidden'}"></span>
+      </button>`,
+      )
+      .join('');
+
+    return strip;
+  }
+
+  /* ═══════════════ RENDER BLOCKS BY DATE GROUP ═══════════════ */
+  function buildDateGroups(plans, opts = {}) {
+    // Group by date
+    const groups = {};
+    plans.forEach((p) => {
+      if (!groups[p.date]) groups[p.date] = [];
+      groups[p.date].push(p);
+    });
+
+    // Sort dates
+    const sortedDates = Object.keys(groups).sort();
+    if (opts.reverse) sortedDates.reverse();
+
+    const frag = document.createDocumentFragment();
+
+    sortedDates.forEach((dateKeyStr) => {
+      const groupBlocks = groups[dateKeyStr];
+      groupBlocks.sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
+
+      const group = document.createElement('div');
+      group.className = 'pl-date-group';
+
+      const head = document.createElement('div');
+      head.className = 'pl-date-group-head';
+      head.innerHTML = `
+        <span class="pl-date-group-rel">${fmtRelativeDate(dateKeyStr)}</span>
+        <span class="pl-date-group-date">${fmtDateShort(dateKeyStr)}</span>
+        <span class="pl-date-group-count">${groupBlocks.length}</span>
+      `;
+      group.appendChild(head);
+
+      groupBlocks.forEach((p) => {
+        group.appendChild(buildBlock(p, opts));
+      });
+
+      frag.appendChild(group);
+    });
+
+    return frag;
+  }
+
+  /* ═══════════════ WIRE TOGGLE & DELETE ═══════════════ */
+  function wireBlockActions(el) {
+    el.querySelectorAll('[data-plan-toggle]').forEach((b) => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const p = state.plans.find((x) => x.id === b.dataset.planToggle);
+        if (!p) return;
+        p.completed = !p.completed;
+
+        if (supa && state.user) {
+          try {
+            await supa.from('plans').update({ completed: p.completed }).eq('id', p.id).eq('user_id', state.user.id);
+          } catch (err) {
+            console.warn('[planner-extras] toggle error:', err);
+          }
+        }
+        window.renderPlanner();
+      };
+    });
+
+    el.querySelectorAll('[data-plan-del]').forEach((b) => {
+      b.onclick = async (e) => {
+        e.stopPropagation();
+        const id = b.dataset.planDel;
+        const plan = state.plans.find((x) => x.id === id);
+        const name = plan ? plan.subject : 'this block';
+
+        const ok =
+          typeof customConfirm === 'function'
+            ? await customConfirm({
+                title: 'Delete Block?',
+                message: `"${name}" will be removed from your planner.`,
+                confirmText: 'Delete',
+                cancelText: 'Cancel',
+                icon: '🗑️',
+                type: 'danger',
+              })
+            : confirm('Delete this block?');
+
+        if (!ok) return;
+
+        state.plans = state.plans.filter((x) => x.id !== id);
+
+        if (supa && state.user) {
+          try {
+            await supa.from('plans').delete().eq('id', id).eq('user_id', state.user.id);
+          } catch (err) {
+            console.warn('[planner-extras] delete error:', err);
+          }
+        }
+        window.renderPlanner();
+      };
+    });
+
+    el.querySelectorAll('[data-qn-date]').forEach((b) => {
+      b.onclick = () => {
+        const dateInput = document.getElementById('planDate');
+        if (dateInput) {
+          dateInput.value = b.dataset.qnDate;
+          window.renderPlanner();
+        }
+      };
+    });
   }
 
   /* ═══════════════ PATCH renderPlanner ═══════════════ */
@@ -468,139 +784,117 @@
       const dateInput = document.getElementById('planDate');
       if (dateInput && !dateInput.value) dateInput.value = todayKey();
 
-      const key = dateInput ? dateInput.value : todayKey();
-      const allBlocks = (state.plans || []).filter((p) => p.date === key);
+      const selectedKey = dateInput ? dateInput.value : todayKey();
+      const today = todayKey();
 
-      // Sort by start time
-      allBlocks.sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
+      const allPlans = state.plans || [];
+
+      // ═══ Categorize plans ═══
+      const selectedDateBlocks = allPlans
+        .filter((p) => p.date === selectedKey)
+        .sort((a, b) => String(a.start || '').localeCompare(String(b.start || '')));
+
+      const overdue = allPlans
+        .filter((p) => !p.completed && p.date < today)
+        .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+
+      const upcoming = allPlans
+        .filter((p) => !p.completed && p.date > today)
+        .sort((a, b) => String(a.date || '').localeCompare(String(b.date || '')));
 
       const el = document.getElementById('planList');
       if (!el) return;
 
-      // If no blocks — show stats (zeroed) + empty state
-      if (!allBlocks.length) {
+      el.innerHTML = '';
+
+      /* ═══════════════════════════════════════════
+         SECTION 1 — QUICK NAV
+         ═══════════════════════════════════════════ */
+      el.appendChild(buildQuickNav(selectedKey));
+
+      /* ═══════════════════════════════════════════
+         SECTION 2 — SELECTED DATE VIEW
+         ═══════════════════════════════════════════ */
+      const isToday = selectedKey === today;
+      const selectedLabel = isToday ? "Today's Plan" : `Plan for ${fmtRelativeDate(selectedKey)}`;
+
+      const selectedHead = buildSectionHead(
+        `📌 ${selectedLabel}`,
+        selectedDateBlocks.length,
+        isToday ? 'var(--pink)' : 'var(--purple)',
+      );
+      el.appendChild(selectedHead);
+
+      if (!selectedDateBlocks.length) {
+        const emptyMini = document.createElement('div');
+        emptyMini.className = 'pl-empty-mini';
+        emptyMini.textContent = 'No blocks planned for this day.';
+        el.appendChild(emptyMini);
+      } else {
+        // Stats + progress (only for selected date)
+        el.appendChild(buildStatsStrip(selectedDateBlocks));
+        el.appendChild(buildProgressBar(selectedDateBlocks));
+
+        const pending = selectedDateBlocks.filter((b) => !b.completed);
+        const done = selectedDateBlocks.filter((b) => b.completed);
+
+        if (pending.length) {
+          const subHead = buildSectionHead('Pending', pending.length, 'var(--amber)');
+          subHead.style.marginTop = '12px';
+          el.appendChild(subHead);
+          pending.forEach((p) => el.appendChild(buildBlock(p)));
+        }
+
+        if (done.length) {
+          const subHead = buildSectionHead('Completed', done.length, 'var(--emerald)');
+          subHead.style.marginTop = '12px';
+          el.appendChild(subHead);
+          done.forEach((p) => el.appendChild(buildBlock(p)));
+        }
+      }
+
+      /* ═══════════════════════════════════════════
+         SECTION 3 — OVERDUE
+         ═══════════════════════════════════════════ */
+      if (overdue.length) {
+        const head = buildSectionHead('⏰ Overdue', overdue.length, 'var(--red)');
+        head.style.marginTop = '24px';
+        el.appendChild(head);
+        el.appendChild(buildDateGroups(overdue, { overdue: true, reverse: true }));
+      }
+
+      /* ═══════════════════════════════════════════
+         SECTION 4 — UPCOMING
+         ═══════════════════════════════════════════ */
+      if (upcoming.length) {
+        const head = buildSectionHead('📅 Upcoming', upcoming.length, 'var(--indigo)');
+        head.style.marginTop = '24px';
+        el.appendChild(head);
+        el.appendChild(buildDateGroups(upcoming, { upcoming: true }));
+      }
+
+      /* ═══════════════════════════════════════════
+         SECTION 5 — IF NOTHING AT ALL
+         ═══════════════════════════════════════════ */
+      if (!allPlans.length) {
         el.innerHTML = '';
-        el.appendChild(renderPlannerStats([]));
+        el.appendChild(buildQuickNav(selectedKey));
 
         const empty = document.createElement('div');
         empty.className = 'pl-empty';
         empty.innerHTML = `
           <div class="pl-empty-icon">📅</div>
-          <div class="pl-empty-title">No blocks planned for this day</div>
+          <div class="pl-empty-title">No plans yet</div>
           <div class="pl-empty-sub">Plan your study sessions ahead — set subjects, times, and target minutes.</div>
           <button class="btn btn-primary" id="plEmptyAddBtn">＋ Add First Block</button>
         `;
         el.appendChild(empty);
 
         const addBtn = document.getElementById('plEmptyAddBtn');
-        if (addBtn) addBtn.onclick = () => addPlanBlock(key);
-        if (typeof attachRipples === 'function') attachRipples();
-        return;
+        if (addBtn) addBtn.onclick = () => addPlanBlock(selectedKey);
       }
 
-      // Build fresh content
-      el.innerHTML = '';
-
-      // 1. Stats strip
-      el.appendChild(renderPlannerStats(allBlocks));
-
-      // 2. Progress bar
-      el.appendChild(renderProgressBar(allBlocks));
-
-      // 3. Split into pending & completed
-      const pending = allBlocks.filter((b) => !b.completed);
-      const done = allBlocks.filter((b) => b.completed);
-
-      // 4. Pending section
-      if (pending.length) {
-        const head = document.createElement('div');
-        head.className = 'pl-section-head';
-        head.innerHTML = `
-          <span class="pl-section-dot" style="background:var(--amber)"></span>
-          <span class="pl-section-title">Pending</span>
-          <span class="pl-section-count">${pending.length}</span>
-        `;
-        el.appendChild(head);
-
-        pending.forEach((p) => {
-          const wrapper = document.createElement('div');
-          wrapper.innerHTML = renderBlock(p);
-          el.appendChild(wrapper.firstElementChild);
-        });
-      }
-
-      // 5. Completed section
-      if (done.length) {
-        const head = document.createElement('div');
-        head.className = 'pl-section-head';
-        head.innerHTML = `
-          <span class="pl-section-dot" style="background:var(--emerald)"></span>
-          <span class="pl-section-title">Completed</span>
-          <span class="pl-section-count">${done.length}</span>
-        `;
-        el.appendChild(head);
-
-        done.forEach((p) => {
-          const wrapper = document.createElement('div');
-          wrapper.innerHTML = renderBlock(p);
-          el.appendChild(wrapper.firstElementChild);
-        });
-      }
-
-      // 6. Wire toggle buttons
-      el.querySelectorAll('[data-plan-toggle]').forEach((b) => {
-        b.onclick = async (e) => {
-          e.stopPropagation();
-          const p = state.plans.find((x) => x.id === b.dataset.planToggle);
-          if (!p) return;
-          p.completed = !p.completed;
-
-          if (supa && state.user) {
-            try {
-              await supa.from('plans').update({ completed: p.completed }).eq('id', p.id).eq('user_id', state.user.id);
-            } catch (err) {
-              console.warn('[planner-extras] toggle error:', err);
-            }
-          }
-          window.renderPlanner();
-        };
-      });
-
-      // 7. Wire delete buttons
-      el.querySelectorAll('[data-plan-del]').forEach((b) => {
-        b.onclick = async (e) => {
-          e.stopPropagation();
-          const id = b.dataset.planDel;
-          const plan = state.plans.find((x) => x.id === id);
-          const name = plan ? plan.subject : 'this block';
-
-          const ok =
-            typeof customConfirm === 'function'
-              ? await customConfirm({
-                  title: 'Delete Block?',
-                  message: `"${name}" will be removed from your planner.`,
-                  confirmText: 'Delete',
-                  cancelText: 'Cancel',
-                  icon: '🗑️',
-                  type: 'danger',
-                })
-              : confirm('Delete this block?');
-
-          if (!ok) return;
-
-          state.plans = state.plans.filter((x) => x.id !== id);
-
-          if (supa && state.user) {
-            try {
-              await supa.from('plans').delete().eq('id', id).eq('user_id', state.user.id);
-            } catch (err) {
-              console.warn('[planner-extras] delete error:', err);
-            }
-          }
-          window.renderPlanner();
-        };
-      });
-
+      wireBlockActions(el);
       if (typeof attachRipples === 'function') attachRipples();
     };
 
@@ -618,7 +912,6 @@
     window.addPlanBlock = function (dateKeyStr) {
       _orig.call(this, dateKeyStr);
 
-      /* After modal opens, rewire save button */
       setTimeout(() => {
         const saveBtn = document.getElementById('pbSave');
         if (!saveBtn) return;
@@ -688,7 +981,6 @@
       patchAddPlanBlock();
       patchRenderPlanner();
 
-      /* Wait for user + supa to be ready, then load plans */
       const checkUser = setInterval(() => {
         if (state.user && supa) {
           clearInterval(checkUser);
@@ -698,7 +990,7 @@
         }
       }, 500);
 
-      console.log('[planner-extras] ✅ v2 patched all');
+      console.log('[planner-extras] ✅ v3 patched all');
     } else {
       attempts++;
       if (attempts > 200) {
