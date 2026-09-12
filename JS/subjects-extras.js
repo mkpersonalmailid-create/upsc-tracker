@@ -1,15 +1,16 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Subjects Extras v6 (FINAL)
+   UPSC TRACKER — Subjects Extras v7 (FINAL)
    - Phase 1: Custom subjects category selector me dikhana
    - Phase 2: Edit, Delete (custom), Hide (default), Restore
-   - Phase 3: Syllabus page me Custom Subjects section + topics add
-   - Fix: Default subjects always treated as "Hide" (never delete)
+   - Phase 3: Syllabus me custom subjects section + topics add
+   - Phase 4: Syllabus section collapsible + direct delete button
+   - Phase 5: Study page numbered step labels
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[subjects-extras] v6 loaded (Phase 1+2+3 FINAL)');
+  console.log('[subjects-extras] v7 loaded (FINAL)');
 
   const CAT_MAP = {};
 
@@ -24,6 +25,7 @@
     const style = document.createElement('style');
     style.id = 'subjExtrasCSS';
     style.textContent = `
+      /* ═══ Subject Cards ═══ */
       .subject-card { position: relative; }
       .subject-card-actions {
         position: absolute;
@@ -76,6 +78,67 @@
       }
       #customSubjSylSection {
         animation: fadeIn 0.3s;
+      }
+
+      /* ═══ Study Page — Numbered Step Labels ═══ */
+      .what-studying {
+        padding: 22px !important;
+      }
+      .what-studying .what-title {
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 8px !important;
+        font-size: 1.05rem !important;
+      }
+      .step-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed var(--border);
+        animation: fadeIn 0.25s;
+      }
+      .step-num {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8B5CF6, #EC4899);
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 900;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(168, 85, 247, 0.35);
+      }
+      .step-emoji {
+        font-size: 0.95rem;
+      }
+      .step-title {
+        font-size: 0.78rem;
+        font-weight: 800;
+        color: var(--text);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .step-sub {
+        font-size: 0.72rem;
+        color: var(--text-3);
+        font-weight: 500;
+        margin-left: auto;
+      }
+      @media (max-width: 600px) {
+        .step-sub { display: none; }
+      }
+      .what-studying .category-chips,
+      .what-studying .subject-selector {
+        margin-bottom: 4px !important;
+      }
+      .what-studying .topic-picker {
+        margin-top: 0 !important;
       }
     `;
     document.head.appendChild(style);
@@ -252,7 +315,7 @@
     console.log('[subjects-extras] patched: renderSubjects');
   }
 
-  /* ═══════════ PATCH 4: renderSyllabus (Custom Subjects Section) ═══════════ */
+  /* ═══════════ PATCH 4: renderSyllabus (Collapsible Custom Section) ═══════════ */
   function patchRenderSyllabus() {
     const _orig = renderSyllabus;
     window.renderSyllabus = function () {
@@ -265,9 +328,12 @@
       const old = document.getElementById('customSubjSylSection');
       if (old) old.remove();
 
-      // Get custom subjects (not in SYLLABUS, not archived)
+      // Get custom subjects
       const customSubjects = state.subjects.filter((s) => !isDefaultSubject(s.name) && !s.archived);
       if (!customSubjects.length) return;
+
+      // Collapse state from localStorage
+      const isCollapsed = localStorage.getItem('customSylCollapsed') !== '0';
 
       const CAT_LABEL = {
         prelims: '🎯 GS Prelims',
@@ -283,13 +349,16 @@
         'margin-top:20px;padding:16px;background:var(--card);border:1px dashed var(--border-2);border-radius:14px';
 
       section.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div id="customSylHeader" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:${isCollapsed ? '0' : '14px'};flex-wrap:wrap;gap:10px;cursor:pointer;user-select:none">
         <div style="font-weight:800;font-size:1rem;display:flex;align-items:center;gap:10px">
-          <span>✨</span>
-          <span>My Custom Subjects (${customSubjects.length})</span>
+          <span style="transform:rotate(${isCollapsed ? '0' : '90deg'});transition:transform .25s;display:inline-block" id="customSylArrow">▶</span>
+          <span>✨ My Custom Subjects (${customSubjects.length})</span>
+        </div>
+        <div style="font-size:.75rem;color:var(--text-3)" id="customSylHint">
+          ${isCollapsed ? 'Click to expand' : 'Click to collapse'}
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:14px">
+      <div id="customSylBody" style="display:${isCollapsed ? 'none' : 'flex'};flex-direction:column;gap:14px">
         ${customSubjects
           .map((subj) => {
             const topics = state.syllabus.filter((t) => t.subject === subj.name);
@@ -298,13 +367,18 @@
             return `
             <div style="padding:12px 14px;background:var(--card-2);border-radius:10px;border-left:3px solid ${subj.color || '#A855F7'}">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:10px;flex-wrap:wrap">
-                <div>
+                <div style="min-width:0;flex:1">
                   <div style="font-weight:800;font-size:.92rem">${esc(subj.name)}</div>
                   <div style="font-size:.72rem;color:var(--text-3);margin-top:3px">${catLabel} · ${topics.length} topic${topics.length !== 1 ? 's' : ''}</div>
                 </div>
-                <button class="btn btn-primary btn-sm" data-add-custom-topic="${esc(subj.name)}" style="padding:6px 12px;font-size:.75rem">
-                  ＋ Add Topic
-                </button>
+                <div style="display:flex;gap:6px;flex-shrink:0">
+                  <button class="btn btn-primary btn-sm" data-add-custom-topic="${esc(subj.name)}" style="padding:6px 12px;font-size:.75rem">
+                    ＋ Add Topic
+                  </button>
+                  <button class="btn btn-danger btn-sm" data-del-custom-subj="${esc(subj.name)}" style="padding:6px 10px;font-size:.75rem" title="Delete this custom subject">
+                    🗑️
+                  </button>
+                </div>
               </div>
               ${
                 topics.length > 0
@@ -338,14 +412,38 @@
 
       tree.appendChild(section);
 
-      // Wire Add Topic buttons
+      // ═══ Collapse toggle ═══
+      section.querySelector('#customSylHeader').onclick = () => {
+        const body = document.getElementById('customSylBody');
+        const arrow = document.getElementById('customSylArrow');
+        const hint = document.getElementById('customSylHint');
+        const nowCollapsed = body.style.display === 'none';
+        body.style.display = nowCollapsed ? 'flex' : 'none';
+        arrow.style.transform = nowCollapsed ? 'rotate(90deg)' : 'rotate(0deg)';
+        hint.textContent = nowCollapsed ? 'Click to collapse' : 'Click to expand';
+        localStorage.setItem('customSylCollapsed', nowCollapsed ? '0' : '1');
+      };
+
+      // ═══ Add Topic buttons ═══
       section.querySelectorAll('[data-add-custom-topic]').forEach((btn) => {
-        btn.onclick = () => openAddTopicToCustomSubject(btn.dataset.addCustomTopic);
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          openAddTopicToCustomSubject(btn.dataset.addCustomTopic);
+        };
       });
 
-      // Wire status toggle
+      // ═══ Delete Subject buttons ═══
+      section.querySelectorAll('[data-del-custom-subj]').forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          confirmDeleteOrHide(btn.dataset.delCustomSubj, true);
+        };
+      });
+
+      // ═══ Status toggle ═══
       section.querySelectorAll('[data-cust-syl-toggle]').forEach((el) => {
-        el.onclick = () => {
+        el.onclick = (e) => {
+          e.stopPropagation();
           const s = state.syllabus.find((x) => x.id === el.dataset.custSylToggle);
           if (!s) return;
           const order = ['not_started', 'learning', 'completed', 'rev1', 'rev2', 'rev3'];
@@ -357,9 +455,10 @@
         };
       });
 
-      // Wire delete topic
+      // ═══ Delete topic ═══
       section.querySelectorAll('[data-cust-syl-del]').forEach((el) => {
-        el.onclick = async () => {
+        el.onclick = async (e) => {
+          e.stopPropagation();
           const ok = await customConfirm({
             title: 'Delete Topic?',
             message: 'This topic will be removed from your custom subject.',
@@ -387,6 +486,47 @@
       renderSyllabus = window.renderSyllabus;
     } catch (e) {}
     console.log('[subjects-extras] patched: renderSyllabus');
+  }
+
+  /* ═══════════ PATCH 5: renderStudy (Organized Layout) ═══════════ */
+  function patchStudyView() {
+    const _orig = renderStudy;
+    window.renderStudy = function () {
+      _orig.call(this);
+      setTimeout(addStudyLabels, 0);
+    };
+    try {
+      renderStudy = window.renderStudy;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: renderStudy');
+  }
+
+  function addStudyLabels() {
+    const section = document.querySelector('.what-studying');
+    if (!section) return;
+
+    // Remove old labels
+    section.querySelectorAll('.step-label').forEach((el) => el.remove());
+
+    const catChips = document.getElementById('categoryChips');
+    const subjSel = document.getElementById('subjectSelector');
+    const topicPicker = section.querySelector('.topic-picker');
+
+    const labels = [
+      { el: catChips, num: 1, emoji: '📂', title: 'Category', sub: 'What are you studying?' },
+      { el: subjSel, num: 2, emoji: '📚', title: 'Subject', sub: 'Pick the specific subject' },
+      { el: topicPicker, num: 3, emoji: '📖', title: 'Topic', sub: 'Optional — select a topic' },
+    ];
+
+    labels.forEach(({ el, num, emoji, title, sub }) => {
+      if (!el) return;
+      const div = document.createElement('div');
+      div.className = 'step-label';
+      div.innerHTML = `<span class="step-num">${num}</span> <span class="step-emoji">${emoji}</span> <span class="step-title">${title}</span> <span class="step-sub">${sub}</span>`;
+      el.parentNode.insertBefore(div, el);
+    });
+
+    if (typeof attachRipples === 'function') attachRipples();
   }
 
   /* ═══════════ ADD TOPIC TO CUSTOM SUBJECT ═══════════ */
@@ -881,7 +1021,6 @@
       }
       console.log('[subjects-extras] loaded categories for', Object.keys(CAT_MAP).length, 'custom subjects');
 
-      // Refresh syllabus to show custom subjects
       if (state.view === 'syllabus') window.renderSyllabus();
     } catch (e) {
       console.warn('[subjects-extras] load error:', e);
@@ -911,6 +1050,7 @@
       patchAddSubjectButton();
       patchRenderSubjects();
       patchRenderSyllabus();
+      patchStudyView();
       pollForUser();
       if (supa && supa.auth && supa.auth.onAuthStateChange) {
         supa.auth.onAuthStateChange((event, session) => {
