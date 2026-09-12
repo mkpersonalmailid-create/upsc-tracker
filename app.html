@@ -4797,6 +4797,7 @@
                 Exact UPSC syllabus integrated. Click any status badge to cycle: Not Started → Learning → Completed →
                 Rev1 → Rev2 → Rev3.
               </p>
+              <div id="syllabusStatsBadges" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px"></div>
             </div>
             <div class="syl-tree" id="syllabusTree"></div>
           </section>
@@ -8765,7 +8766,33 @@ ${
           (s) => s.status === 'completed' || (s.status || '').startsWith('rev'),
         ).length;
         const pct = totalTopics ? Math.round((doneCount / (totalTopics + state.syllabus.length)) * 100) : 0;
-        $('#syllabusProgress').textContent = `${doneCount} tracked · ${state.syllabus.length} custom · ${pct}% overall`;
+        $('#syllabusProgress').textContent = `${doneCount} tracked · ${state.syllabus.length} custom`;
+        // ════════ STATS BADGES AT TOP ════════
+        const allSyl = state.syllabus;
+        const stats = {
+          not_started: allSyl.filter((s) => !s.status || s.status === 'not_started').length,
+          learning: allSyl.filter((s) => s.status === 'learning').length,
+          completed: allSyl.filter((s) => s.status === 'completed').length,
+          rev1: allSyl.filter((s) => s.status === 'rev1').length,
+          rev2: allSyl.filter((s) => s.status === 'rev2').length,
+          rev3: allSyl.filter((s) => s.status === 'rev3').length,
+        };
+
+        const statsEl = document.getElementById('syllabusStatsBadges');
+        if (statsEl) {
+          if (allSyl.length === 0) {
+            statsEl.innerHTML = `<div style="font-size:.82rem;color:var(--text-3);font-style:italic">Start marking topics to see your progress here</div>`;
+          } else {
+            const badges = [];
+            badges.push(`<span class="pill ts-not_started">⚪ ${stats.not_started} Not Started</span>`);
+            badges.push(`<span class="pill ts-learning">🟡 ${stats.learning} Learning</span>`);
+            badges.push(`<span class="pill ts-completed">✅ ${stats.completed} Completed</span>`);
+            badges.push(`<span class="pill ts-rev1">🔵 ${stats.rev1} Rev 1</span>`);
+            badges.push(`<span class="pill ts-rev2">🔵 ${stats.rev2} Rev 2</span>`);
+            badges.push(`<span class="pill ts-rev3">🔵 ${stats.rev3} Rev 3</span>`);
+            statsEl.innerHTML = badges.join('');
+          }
+        }
 
         tree.innerHTML = allPapers
           .map(([pid, paper]) => {
@@ -8774,20 +8801,15 @@ ${
             const paperDone = paperSyl.filter(
               (s) => s.status === 'completed' || (s.status || '').startsWith('rev'),
             ).length;
-            const paperPct =
-              paperTopics + paperSyl.length ? Math.round((paperDone / (paperTopics + paperSyl.length)) * 100) : 0;
 
             return `
-      <div class="syl-category">
-        <div class="syl-cat-head" data-cat="${pid}">
-          <span class="syl-arrow">▶</span>
-          <div class="syl-cat-info">
-            <div class="syl-cat-name" style="color:${paper.color}">${esc(paper.label)}</div>
-            <div class="syl-cat-meta">${paper.subjects.length} subjects · ${paperTopics} topics</div>
-          </div>
-          <div class="syl-cat-bar"><div class="syl-cat-bar-fill" style="width:${paperPct}%;background:linear-gradient(90deg,${paper.color},var(--pink))"></div></div>
-          <span class="syl-cat-pct">${paperPct}%</span>
-        </div>
+      <div class="syl-cat-head" data-cat="${pid}">
+  <span class="syl-arrow">▶</span>
+  <div class="syl-cat-info">
+    <div class="syl-cat-name" style="color:${paper.color}">${esc(paper.label)}</div>
+    <div class="syl-cat-meta">${paper.subjects.length} subjects · ${paperTopics} topics</div>
+  </div>
+</div>
         <div class="syl-cat-body">
           ${paper.subjects
             .map((sub) => {
@@ -9451,15 +9473,33 @@ ${
             const sec = totals[name] || 0;
             const sessions = state.sessions.filter((x) => x.subject === name).length;
             const syl = state.syllabus.filter((t) => t.subject === name);
-            const done = syl.filter((t) => t.status === 'completed' || (t.status || '').startsWith('rev')).length;
-            const pct = syl.length ? Math.round((done / syl.length) * 100) : 0;
+
+            const c = {
+              not_started: syl.filter((t) => !t.status || t.status === 'not_started').length,
+              learning: syl.filter((t) => t.status === 'learning').length,
+              completed: syl.filter((t) => t.status === 'completed').length,
+              rev1: syl.filter((t) => t.status === 'rev1').length,
+              rev2: syl.filter((t) => t.status === 'rev2').length,
+              rev3: syl.filter((t) => t.status === 'rev3').length,
+            };
+            const badges = [];
+            if (c.not_started > 0) badges.push(`<span class="pill ts-not_started">⚪ ${c.not_started}</span>`);
+            if (c.learning > 0) badges.push(`<span class="pill ts-learning">🟡 ${c.learning}</span>`);
+            if (c.completed > 0) badges.push(`<span class="pill ts-completed">✅ ${c.completed}</span>`);
+            if (c.rev1 > 0) badges.push(`<span class="pill ts-rev1">🔵 ${c.rev1}R1</span>`);
+            if (c.rev2 > 0) badges.push(`<span class="pill ts-rev2">🔵 ${c.rev2}R2</span>`);
+            if (c.rev3 > 0) badges.push(`<span class="pill ts-rev3">🔵 ${c.rev3}R3</span>`);
+
             return `<div class="card" style="border-left:4px solid ${getSubjectColor(name)}">
-      <div style="font-weight:800;font-size:1rem;margin-bottom:10px">${esc(name)}</div>
-      <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-3);margin-bottom:4px"><span>Time</span><strong style="color:var(--text)">${fmtDuration(sec)}</strong></div>
-      <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-3);margin-bottom:4px"><span>Sessions</span><strong style="color:var(--text)">${sessions}</strong></div>
-      <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-3);margin-bottom:10px"><span>Syllabus</span><strong style="color:var(--text)">${pct}%</strong></div>
-      <div class="progress"><div class="progress-fill" style="width:${pct}%;background:linear-gradient(90deg,${getSubjectColor(name)},var(--pink))"></div></div>
-    </div>`;
+  <div style="font-weight:800;font-size:1rem;margin-bottom:10px">${esc(name)}</div>
+  <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-3);margin-bottom:4px"><span>Time</span><strong style="color:var(--text)">${fmtDuration(sec)}</strong></div>
+  <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--text-3);margin-bottom:10px"><span>Sessions</span><strong style="color:var(--text)">${sessions}</strong></div>
+  ${
+    syl.length > 0
+      ? `<div style="display:flex;flex-wrap:wrap;gap:6px">${badges.join('')}</div>`
+      : `<div style="font-size:.75rem;color:var(--text-3);font-style:italic">Not tracked yet</div>`
+  }
+</div>`;
           })
           .join('');
       }
