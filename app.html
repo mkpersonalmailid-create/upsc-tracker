@@ -7936,6 +7936,9 @@ ${
         $('#sbAvatar').classList.toggle('premium', isPremiumUser() || isAdminUser());
       }
       async function logout() {
+        try {
+          localStorage.removeItem('upsc_last_view');
+        } catch (e) {}
         if (state.timer) {
           toast('Finish timer first.', 'err');
           return;
@@ -7967,6 +7970,9 @@ ${
           return;
         }
         state.view = name;
+        try {
+          localStorage.setItem('upsc_last_view', name);
+        } catch (e) {}
         $$('.view').forEach((v) => v.classList.toggle('active', v.id === 'view-' + name));
         $$('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.view === name));
         $('#sidebar').classList.remove('open');
@@ -12898,6 +12904,11 @@ ${
       /* ═══════════════ BOOT ═══════════════ */
       async function boot() {
         loadLocal();
+        // ✅ Restore last viewed page
+        try {
+          const lastView = localStorage.getItem('upsc_last_view');
+          if (lastView) state.view = lastView;
+        } catch (e) {}
         updateGreeting(); // ← YEH ADD KARO
         // ═══ Hide FAB on login page ═══
         const fabEl = document.getElementById('fab');
