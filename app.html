@@ -4443,16 +4443,10 @@
 
           <div class="sb-section-title">Library</div>
           <button class="nav-item" data-view="notes">
-            <span class="nav-icon">✎</span><span class="nav-label">Notes</span>
+            <span class="nav-icon">✎</span><span class="nav-label">Short Notes</span>
           </button>
-          <button class="nav-item" data-view="pyq">
-            <span class="nav-icon">📝</span><span class="nav-label">PYQs</span>
-          </button>
-          <button class="nav-item" data-view="mocks">
-            <span class="nav-icon">📋</span><span class="nav-label">Mock Tests</span>
-          </button>
-          <button class="nav-item" data-view="current-affairs">
-            <span class="nav-icon">📰</span><span class="nav-label">Current Affairs</span>
+          <button class="nav-item" data-view="tests">
+            <span class="nav-icon">📋</span><span class="nav-label">Tests</span>
           </button>
 
           <div class="sb-section-title">More</div>
@@ -4956,68 +4950,14 @@
               ></div>
             </div>
           </section>
-
-          <!-- ═════════ PYQ ═════════ -->
-          <section class="view" id="view-pyq">
-            <div class="kpi-grid" id="pyqKpis"></div>
-            <div class="card" style="margin-top: 18px">
-              <div class="card-header">
-                <span class="card-title-lg">📝 PYQ Tracker</span>
-                <button class="btn btn-primary btn-sm" id="addPyqBtn">＋ Add Entry</button>
-              </div>
-              <div id="pyqList" class="list"></div>
-            </div>
-          </section>
-
-          <!-- ═════════ MOCKS ═════════ -->
-          <section class="view" id="view-mocks">
-            <div class="kpi-grid" id="mockKpis"></div>
-            <div class="card" style="margin-top: 18px">
-              <div class="card-header">
-                <span class="card-title-lg">📋 Mock Tests</span>
-                <button class="btn btn-primary btn-sm" id="addMockBtn">＋ Add Test</button>
-              </div>
-              <div id="mockList" class="list"></div>
-            </div>
-          </section>
-
-          <!-- ═════════ CURRENT AFFAIRS ═════════ -->
-          <section class="view" id="view-current-affairs">
+          <!-- ═════════ TESTS (PYQ + Mock merged) ═════════ -->
+          <section class="view" id="view-tests">
             <div class="card">
               <div class="card-header">
-                <span class="card-title-lg">📰 Current Affairs</span>
-                <button class="btn btn-primary btn-sm" id="addCaBtn">＋ Add Item</button>
+                <span class="card-title-lg">📋 Tests</span>
+                <button class="btn btn-primary btn-sm" id="addTestBtn">＋ Log Test</button>
               </div>
-              <div class="filter-bar" style="display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap">
-                <input
-                  type="text"
-                  id="caSearch"
-                  placeholder="Search…"
-                  style="
-                    flex: 1;
-                    min-width: 200px;
-                    background: var(--bg-2);
-                    border: 1px solid var(--border);
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                  "
-                />
-                <select
-                  id="caStatusFilter"
-                  style="
-                    background: var(--bg-2);
-                    border: 1px solid var(--border);
-                    border-radius: 10px;
-                    padding: 10px 14px;
-                  "
-                >
-                  <option value="">All</option>
-                  <option value="unread">Unread</option>
-                  <option value="read">Read</option>
-                  <option value="important">Important</option>
-                </select>
-              </div>
-              <div id="caList" class="list"></div>
+              <div id="ttBody"></div>
             </div>
           </section>
 
@@ -5885,6 +5825,7 @@
         mocks: [],
         currentAffairs: [],
         plans: [],
+        testRecords: [],
         timer: null,
         draft: { category: null, subject: null, topic: null },
         view: 'study',
@@ -7460,15 +7401,11 @@ ${
           case 'notes':
             renderNotes();
             break;
-          case 'pyq':
-            renderPyqs();
+
+          case 'tests':
+            renderTests();
             break;
-          case 'mocks':
-            renderMocks();
-            break;
-          case 'current-affairs':
-            renderCurrentAffairs();
-            break;
+
           case 'premium':
             renderPremiumPage();
             break;
@@ -12399,5 +12336,8 @@ ${
     <script src="/JS/revision-extras.js"></script>
     <script src="/JS/goals-extras.js"></script>
     <script src="/JS/planner-extras.js"></script>
+    <script src="/JS/notes-extras.js"></script>
+    <!-- NEW -->
+    <script src="/JS/tests-extras.js"></script>
   </body>
 </html>
