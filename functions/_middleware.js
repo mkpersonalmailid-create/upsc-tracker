@@ -24,21 +24,25 @@ export async function onRequest(context) {
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  4. OAUTH & APP ROUTES BYPASS (Important for Google Login)
-  //  Google redirect wapas / ya /app.html par karega, isliye
-  //  in pages par Basic Auth nahi lagana chahiye.
+  //  4. OAUTH, HTML, CSS, JS BYPASS (Google Login Fix)
+  //  Isme CSS aur JS folders bhi add kar diye hain taaki
+  //  page load hote waqt dobara password na maange.
   // ═══════════════════════════════════════════════════════════
   if (
     url.pathname === '/' || 
     url.pathname === '/index.html' || 
     url.pathname === '/auth.html' || 
-    url.pathname === '/app.html'
+    url.pathname === '/app.html' ||
+    url.pathname === '/favicon.ico' ||
+    url.pathname.startsWith('/CSS/') || 
+    url.pathname.startsWith('/JS/') ||
+    url.pathname.startsWith('/assets/')
   ) {
-    return next();
+    return next(); // Bina password ke andar jaane do
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  5. BASIC AUTH for other preview pages (.pages.dev HTML/JS/CSS)
+  //  5. BASIC AUTH for other preview pages
   // ═══════════════════════════════════════════════════════════
   const user = env.PREVIEW_USERNAME || 'mukund';
   const pass = env.PREVIEW_PASSWORD || 'UpscDev@2026';
