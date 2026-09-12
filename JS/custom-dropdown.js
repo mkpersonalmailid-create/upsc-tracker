@@ -1,20 +1,21 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Custom Dropdown v1
+   UPSC TRACKER — Custom Dropdown v2
    ─────────────────────────────────────────────────────────────
    ✅ Replaces ALL <select> with custom designed dropdown
    ✅ Matches website design (purple gradient, rounded, etc.)
    ✅ Dark + Light theme support
    ✅ Works with dynamically added selects (MutationObserver)
    ✅ Keyboard support (arrow, enter, escape, tab)
-   ✅ Search for long lists (auto if >8 options)
+   ✅ Search for long lists (auto if >=8 options)
+   ✅ FIX: Search input cursor position preserved (no reverse typing)
    ✅ Syncs value + dispatches change event to original select
    ✅ No changes needed in existing code
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[custom-dropdown] v1 loaded');
+  console.log('[custom-dropdown] v2 loaded');
 
-  const SEARCH_THRESHOLD = 8; // Show search box if options >= 8
+  const SEARCH_THRESHOLD = 8;
 
   /* ═══════════════ CSS ═══════════════ */
   function injectCSS() {
@@ -22,7 +23,6 @@
     const style = document.createElement('style');
     style.id = 'cdDropdownCSS';
     style.textContent = `
-      /* ═══ Wrapper ═══ */
       .cd-wrap {
         position: relative;
         display: inline-block;
@@ -32,7 +32,6 @@
       .cd-wrap.cd-open {
         z-index: 9999;
       }
-      /* Hide the original select but keep it functional */
       .cd-wrap > select.cd-native-hidden {
         position: absolute !important;
         width: 1px !important;
@@ -47,7 +46,6 @@
         pointer-events: none !important;
       }
 
-      /* ═══ Trigger button ═══ */
       .cd-trigger {
         width: 100%;
         display: flex;
@@ -100,7 +98,6 @@
         transform: rotate(180deg);
       }
 
-      /* ═══ Dropdown panel ═══ */
       .cd-panel {
         position: fixed;
         z-index: 99999;
@@ -133,7 +130,6 @@
         border-radius: 10px;
       }
 
-      /* ═══ Search box ═══ */
       .cd-search-wrap {
         padding: 6px 6px 8px;
         margin-bottom: 4px;
@@ -154,6 +150,7 @@
         font-family: inherit;
         outline: none;
         transition: all 0.2s;
+        box-sizing: border-box;
       }
       .cd-search:focus {
         border-color: var(--purple);
@@ -163,7 +160,11 @@
         color: var(--text-3);
       }
 
-      /* ═══ Option row ═══ */
+      .cd-options-wrap {
+        display: flex;
+        flex-direction: column;
+      }
+
       .cd-option {
         display: flex;
         align-items: center;
@@ -207,7 +208,6 @@
         opacity: 1;
       }
 
-      /* ═══ Empty state ═══ */
       .cd-empty {
         padding: 18px 14px;
         text-align: center;
@@ -215,7 +215,6 @@
         color: var(--text-3);
       }
 
-      /* ═══ Group header (optgroup) ═══ */
       .cd-group-label {
         padding: 10px 12px 6px;
         font-size: 0.68rem;
@@ -225,7 +224,6 @@
         color: var(--text-3);
       }
 
-      /* ═══ Small size variant (for compact selects) ═══ */
       .cd-wrap.cd-sm .cd-trigger {
         padding: 8px 12px;
         font-size: 0.82rem;
@@ -233,7 +231,7 @@
         border-radius: 9px;
       }
 
-      /* ═══ Light theme adjustments ═══ */
+      /* ═══ Light theme ═══ */
       html[data-theme='light'] .cd-trigger {
         background: #ffffff;
         border-color: #e5dbf5;
@@ -262,7 +260,6 @@
 
   /* ═══════════════ Helpers ═══════════════ */
   function isHidden(select) {
-    // Skip selects inside hidden elements or with display:none
     if (select.offsetParent === null) return true;
     const style = window.getComputedStyle(select);
     if (style.display === 'none' || style.visibility === 'hidden') return true;
@@ -296,7 +293,6 @@
     return optCount >= SEARCH_THRESHOLD;
   }
 
-  /* ═══════════════ Escape HTML ═══════════════ */
   function escHtml(str) {
     return String(str || '').replace(
       /[&<>"']/g,
@@ -307,27 +303,20 @@
   /* ═══════════════ Convert One Select ═══════════════ */
   function convertSelect(select) {
     if (select.dataset.cdInitialized === '1') return;
-    if (isHidden(select)) {
-      // Will retry when visible
-      return;
-    }
+    if (isHidden(select)) return;
 
     select.dataset.cdInitialized = '1';
 
-    /* Create wrapper */
     const wrap = document.createElement('div');
     wrap.className = 'cd-wrap';
-    // Detect small selects (compact modal forms)
     if (select.classList.contains('cd-sm') || select.dataset.cdSize === 'sm') {
       wrap.classList.add('cd-sm');
     }
 
-    /* Insert wrapper before select, move select inside */
     select.parentNode.insertBefore(wrap, select);
     wrap.appendChild(select);
     select.classList.add('cd-native-hidden');
 
-    /* Create trigger button */
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'cd-trigger';
@@ -343,7 +332,6 @@
 
     const triggerText = trigger.querySelector('.cd-trigger-text');
 
-    /* Update trigger text */
     function updateTrigger() {
       const { label, value } = getSelectedOption(select);
       const isPlaceholder = !value || /^—|^--|Select/i.test(label);
@@ -352,40 +340,93 @@
     }
     updateTrigger();
 
-    /* Create panel */
+    /* ═══ Panel ═══ */
     const panel = document.createElement('div');
     panel.className = 'cd-panel';
     panel.setAttribute('role', 'listbox');
     document.body.appendChild(panel);
 
-    /* State */
+    /* ═══ Persistent search + options structure — created ONCE ═══ */
+    let searchWrap = null;
+    let searchInput = null;
+    let optionsWrap = null;
+
+    function ensureStructure() {
+      /* Search box — created once, never destroyed */
+      if (shouldShowSearch(select)) {
+        if (!searchWrap) {
+          searchWrap = document.createElement('div');
+          searchWrap.className = 'cd-search-wrap';
+          searchWrap.innerHTML = `<input type="text" class="cd-search" placeholder="🔍 Search..." autocomplete="off" spellcheck="false">`;
+          panel.appendChild(searchWrap);
+          searchInput = searchWrap.querySelector('.cd-search');
+
+          /* Search input handler — preserves cursor */
+          searchInput.addEventListener('input', (e) => {
+            const val = e.target.value;
+            const cursorPos = e.target.selectionStart;
+            renderOptions(val);
+            /* Restore cursor position after options re-render */
+            if (document.activeElement === searchInput) {
+              try {
+                searchInput.setSelectionRange(cursorPos, cursorPos);
+              } catch (err) {}
+            }
+          });
+
+          /* Prevent Enter in search from closing dropdown */
+          searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              /* Pick first filtered option */
+              if (currentOptions.length) {
+                const first = currentOptions[0];
+                if (first && !first.disabled) {
+                  select.value = first.value;
+                  select.dispatchEvent(new Event('change', { bubbles: true }));
+                  updateTrigger();
+                  closePanel();
+                  trigger.focus();
+                }
+              }
+              return;
+            }
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              closePanel();
+              trigger.focus();
+              return;
+            }
+          });
+        }
+      }
+
+      /* Options container — created once, only innerHTML changes */
+      if (!optionsWrap) {
+        optionsWrap = document.createElement('div');
+        optionsWrap.className = 'cd-options-wrap';
+        panel.appendChild(optionsWrap);
+      }
+    }
+
+    /* ═══ State ═══ */
     let isOpen = false;
     let focusedIndex = -1;
     let currentOptions = [];
 
-    /* Build panel content */
-    function buildPanel(searchQuery) {
+    /* ═══ Render options only (search input stays) ═══ */
+    function renderOptions(searchQuery) {
+      ensureStructure();
+
       const opts = getOptions(select);
       const q = (searchQuery || '').toLowerCase().trim();
-
       const filtered = q ? opts.filter((o) => o.label.toLowerCase().includes(q)) : opts;
 
       currentOptions = filtered;
 
       let html = '';
-
-      // Search box
-      if (shouldShowSearch(select)) {
-        html += `
-          <div class="cd-search-wrap">
-            <input type="text" class="cd-search" placeholder="🔍 Search..." value="${escHtml(searchQuery || '')}">
-          </div>
-        `;
-      }
-
-      // Options
       if (!filtered.length) {
-        html += `<div class="cd-empty">No results found</div>`;
+        html = `<div class="cd-empty">No results found</div>`;
       } else {
         filtered.forEach((opt, i) => {
           const selected = opt.value === select.value;
@@ -400,23 +441,10 @@
         });
       }
 
-      panel.innerHTML = html;
+      optionsWrap.innerHTML = html;
 
-      // Wire search
-      const searchInput = panel.querySelector('.cd-search');
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          buildPanel(e.target.value);
-          // Refocus search after rebuild
-          setTimeout(() => {
-            const si = panel.querySelector('.cd-search');
-            if (si) si.focus();
-          }, 0);
-        });
-      }
-
-      // Wire options
-      panel.querySelectorAll('.cd-option').forEach((el) => {
+      /* Wire options */
+      optionsWrap.querySelectorAll('.cd-option').forEach((el) => {
         el.addEventListener('click', () => {
           const idx = parseInt(el.dataset.index, 10);
           const opt = currentOptions[idx];
@@ -428,38 +456,34 @@
           closePanel();
         });
 
-        // Hover updates focused index
         el.addEventListener('mouseenter', () => {
           focusedIndex = parseInt(el.dataset.index, 10);
           updateFocus();
         });
       });
 
-      // Reset focused index
       focusedIndex = currentOptions.findIndex((o) => o.value === select.value);
       updateFocus();
     }
 
     function updateFocus() {
-      panel.querySelectorAll('.cd-option').forEach((el, i) => {
+      if (!optionsWrap) return;
+      optionsWrap.querySelectorAll('.cd-option').forEach((el, i) => {
         el.classList.toggle('cd-focused', i === focusedIndex);
       });
     }
 
-    /* Position panel */
+    /* ═══ Positioning ═══ */
     function positionPanel() {
       const rect = trigger.getBoundingClientRect();
       const panelHeight = Math.min(320, panel.scrollHeight || 300);
       const spaceBelow = window.innerHeight - rect.bottom;
       const spaceAbove = rect.top;
-
-      // Width: match trigger (min 200px)
       const width = Math.max(rect.width, 200);
 
       panel.style.width = width + 'px';
       panel.style.left = Math.min(rect.left, window.innerWidth - width - 10) + 'px';
 
-      // Position: below by default, above if not enough space
       if (spaceBelow < panelHeight + 20 && spaceAbove > spaceBelow) {
         panel.style.top = 'auto';
         panel.style.bottom = window.innerHeight - rect.top + 6 + 'px';
@@ -469,27 +493,32 @@
       }
     }
 
-    /* Open panel */
+    /* ═══ Open / Close ═══ */
     function openPanel() {
       if (isOpen) return;
       isOpen = true;
       wrap.classList.add('cd-open');
       panel.classList.add('cd-open');
       trigger.setAttribute('aria-expanded', 'true');
-      buildPanel('');
+
+      /* Reset search to empty on open */
+      if (searchInput) searchInput.value = '';
+
+      renderOptions('');
       positionPanel();
 
-      // Focus search if exists
-      const searchInput = panel.querySelector('.cd-search');
       if (searchInput) {
-        setTimeout(() => searchInput.focus(), 60);
+        setTimeout(() => {
+          try {
+            searchInput.focus();
+            searchInput.setSelectionRange(0, 0);
+          } catch (e) {}
+        }, 60);
       }
 
-      // Prevent page scroll on panel scroll
       panel.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
     }
 
-    /* Close panel */
     function closePanel() {
       if (!isOpen) return;
       isOpen = false;
@@ -499,7 +528,7 @@
       focusedIndex = -1;
     }
 
-    /* Trigger click */
+    /* ═══ Trigger ═══ */
     trigger.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -515,7 +544,7 @@
     }
     document.addEventListener('click', onDocClick, true);
 
-    /* Escape / Keyboard */
+    /* Keyboard */
     function onKeyDown(e) {
       if (!isOpen) return;
 
@@ -526,11 +555,14 @@
         return;
       }
 
+      /* Skip arrow/enter keys if search input is focused */
+      if (document.activeElement === searchInput) return;
+
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         focusedIndex = Math.min(currentOptions.length - 1, focusedIndex + 1);
         updateFocus();
-        panel.querySelectorAll('.cd-option')[focusedIndex]?.scrollIntoView({ block: 'nearest' });
+        optionsWrap?.querySelectorAll('.cd-option')[focusedIndex]?.scrollIntoView({ block: 'nearest' });
         return;
       }
 
@@ -538,7 +570,7 @@
         e.preventDefault();
         focusedIndex = Math.max(0, focusedIndex - 1);
         updateFocus();
-        panel.querySelectorAll('.cd-option')[focusedIndex]?.scrollIntoView({ block: 'nearest' });
+        optionsWrap?.querySelectorAll('.cd-option')[focusedIndex]?.scrollIntoView({ block: 'nearest' });
         return;
       }
 
@@ -557,7 +589,6 @@
     }
     document.addEventListener('keydown', onKeyDown);
 
-    /* Reposition on scroll/resize */
     window.addEventListener(
       'scroll',
       () => {
@@ -576,17 +607,16 @@
     /* Watch for value/options changes */
     const observer = new MutationObserver(() => {
       updateTrigger();
-      if (isOpen) buildPanel('');
+      if (isOpen) renderOptions(searchInput ? searchInput.value : '');
     });
     observer.observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
 
-    /* Also watch programmatic .value changes */
     let lastValue = select.value;
     setInterval(() => {
       if (select.value !== lastValue) {
         lastValue = select.value;
         updateTrigger();
-        if (isOpen) buildPanel('');
+        if (isOpen) renderOptions(searchInput ? searchInput.value : '');
       }
     }, 250);
   }
@@ -619,9 +649,7 @@
       }
       if (hasNewSelect) break;
     }
-    if (hasNewSelect) {
-      setTimeout(convertAll, 30);
-    }
+    if (hasNewSelect) setTimeout(convertAll, 30);
   });
 
   /* ═══════════════ INIT ═══════════════ */
@@ -630,14 +658,9 @@
     if (document.body) {
       injectCSS();
       convertAll();
-
-      // Observe DOM for dynamically added selects (modals, etc.)
       pageObserver.observe(document.body, { childList: true, subtree: true });
-
-      // Also periodically scan (for modals that mount quickly)
       setInterval(convertAll, 800);
-
-      console.log('[custom-dropdown] ✅ initialized');
+      console.log('[custom-dropdown] ✅ v2 initialized');
     } else {
       attempts++;
       if (attempts > 200) return console.error('[custom-dropdown] timeout');
@@ -646,6 +669,5 @@
   }
   waitThenStart();
 
-  /* Expose for manual trigger */
   window.cdRefresh = convertAll;
 })();
