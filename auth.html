@@ -571,13 +571,75 @@ async function handleAuthSubmit(e) {
         setTimeout(() => window.location.href = APP_URL, 1500);
       }
     }
-  } catch(err) {
-    authMsg(err.message || 'Authentication failed.', 'err');
-  } finally {
-    btn.disabled = false;
-    $('#authSubmitText').textContent = orig;
+  }  catch(err) {
+  const msg = (err.message || '').toLowerCase();
+  
+  // ═══ SMART ERROR HANDLING ═══
+  if (authMode === 'signin' && (
+    msg.includes('invalid login') || 
+    msg.includes('invalid credentials') ||
+    msg.includes('user not found')
+  )) {
+    // Sign In me account nahi mila → Create Account ka option do
+    const emailVal = email; // already normalized upar
+    authMsg(`
+      ⚠️ <strong>Account not found.</strong><br>
+      Is email se koi account nahi hai. Pehle account banaiye.<br><br>
+      <button type="button" class="btn btn-primary" id="switchToSignupBtn"
+        style="text-decoration:none; display:flex; width:100%; justify-content:center; padding:10px;">
+        ✨ Create Account with ${esc(emailVal)}
+      </button>
+    `, 'err');
+    
+    // Button pe click → Signup tab par switch karein aur email pre-fill karein
+    setTimeout(() => {
+      const btn = document.getElementById('switchToSignupBtn');
+      if (btn) {
+        btn.onclick = () => {
+          setAuthMode('signup');
+          $('#authEmail').value = emailVal.split('@')[0]; // prefix only (suffix auto lag jayega)
+          toggleEmailSuffix($('#authEmail'));
+          authMsg('');
+          setTimeout(() => $('#authPassword').focus(), 100);
+        };
+      }
+    }, 50);
+  } 
+  else if (authMode === 'signup' && msg.includes('already registered')) {
+    // Signup me email already exists → Sign In karne ko bolo
+    authMsg(`
+      ℹ️ <strong>Account already exists.</strong><br>
+      Is email se account pehle se bana hua hai. Please sign in karein.<br><br>
+      <button type="button" class="btn btn-primary" id="switchToSigninBtn"
+        style="display:flex; width:100%; justify-content:center; padding:10px;">
+        🔑 Sign In Instead
+      </button>
+    `, 'info');
+    
+    setTimeout(() => {
+      const btn = document.getElementById('switchToSigninBtn');
+      if (btn) {
+        btn.onclick = () => {
+          setAuthMode('signin');
+          $('#authEmail').value = email.split('@')[0];
+          toggleEmailSuffix($('#authEmail'));
+          authMsg('');
+          setTimeout(() => $('#authPassword').focus(), 100);
+        };
+      }
+    }, 50);
   }
+  else if (msg.includes('email not confirmed')) {
+    authMsg('📧 Please confirm your email first. Check your inbox.', 'info');
+  }
+  else {
+    authMsg(err.message || 'Authentication failed.', 'err');
+  }
+} finally {
+  btn.disabled = false;
+  $('#authSubmitText').textContent = orig;
 }
+
 
 /* ═══════════════ GOOGLE LOGIN ═══════════════ */
 async function signInWithGoogle() {
