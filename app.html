@@ -8340,8 +8340,15 @@ ${
         );
       }
 
-      /* ═══════════════ MANUAL LOG ═══════════════ */
+      // ⬇️⬇️⬇️ NAYA FUNCTION — YAHAN SE PASTE KARO ⬇️⬇️⬇️
       function openManualLogModal() {
+        const maxRevs = state.settings.max_revisions || 3;
+
+        let revOptions = '<option value="">— Select revision number —</option>';
+        for (let i = 1; i <= maxRevs; i++) {
+          revOptions += `<option value="rev${i}">🔵 Rev ${i}${i === maxRevs ? ' (Final)' : ''}</option>`;
+        }
+
         const body = `
     <div class="field"><label>Date</label><input type="date" id="mlDate" value="${todayKey()}"></div>
     <div class="form-grid">
@@ -8351,24 +8358,27 @@ ${
     <div class="field"><label>Duration (minutes)</label><input type="number" id="mlDuration" min="1" value="120"></div>
     <div class="field"><label>Category</label>
       <select id="mlCategory">
-        <option value="prelims">GS Prelims</option><option value="mains">GS Mains</option>
-        <option value="optional">Optional</option><option value="essay">Essay</option><option value="csat">CSAT</option>
+        <option value="prelims">GS Prelims</option>
+        <option value="mains">GS Mains</option>
+        <option value="optional">Optional</option>
+        <option value="essay">Essay</option>
+        <option value="csat">CSAT</option>
       </select></div>
     <div class="field"><label>Subject</label><select id="mlSubject"></select></div>
-        <div class="field"><label>Topic</label>
-      <select id="mlTopic"><option value="">— Select category & subject first —</option></select></div>
-        <div class="field"><label>Study Type</label>
-      <select id="mlType">${STUDY_TYPES.map((t) => `<option>${t}</option>`).join('')}</select></div>
-    <div class="field"><label>Update Topic Status (optional)</label>
-      <select id="mlStatus">
-        <option value="">— Don't change —</option>
-        <option value="learning">🟡 Learning</option>
-        <option value="completed">🟢 Completed</option>
-        <option value="rev1">🟣 Rev 1</option>
-        <option value="rev2">🟣 Rev 2</option>
-        <option value="rev3">🟣 Rev 3</option>
-      </select></div>
+    <div class="field"><label>Topic (optional)</label><input type="text" id="mlTopic" placeholder="Topic"></div>
+    
+    <div class="field"><label>Study Type</label>
+      <select id="mlType">
+        <option value="New Learning">📖 New Learning</option>
+        <option value="Revision">🔁 Revision</option>
+        <option value="Test">📝 Test</option>
+      </select>
+    </div>
+    
+    <div id="mlStatusWrap"></div>
+    
     <div class="field"><label>Notes</label><textarea id="mlNotes" rows="2"></textarea></div>`;
+
         openModal(
           modalShell({
             title: '⏱ Log Session Manually',
@@ -8379,32 +8389,16 @@ ${
           }),
           {
             onMount() {
-              // ⬇️⬇️⬇️ NAYA CODE — Topic dropdown ⬇️⬇️⬇️
-              const refreshTopics = () => {
-                const cat = $('#mlCategory').value;
-                const subject = $('#mlSubject').value;
-                const topics = getTopicsForCategorySubject(cat, subject);
-                const sel = $('#mlTopic');
-                if (!topics || !topics.length) {
-                  sel.innerHTML = '<option value="">— No topics found —</option>';
-                  return;
-                }
-                sel.innerHTML =
-                  '<option value="">— Select a topic —</option>' +
-                  topics.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-              };
-
+              // Subject dropdown refresh
               const refresh = () => {
                 const cat = $('#mlCategory').value;
                 const subs = getSubjectsForCategory(cat);
                 $('#mlSubject').innerHTML = subs.map((s) => `<option>${esc(s)}</option>`).join('');
-                refreshTopics();
               };
-
               $('#mlCategory').onchange = refresh;
-              $('#mlSubject').onchange = refreshTopics;
               refresh();
-              // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
+
+              // Auto-calculate duration
               const recalc = () => {
                 const sv = $('#mlStart').value,
                   ev = $('#mlEnd').value;
@@ -8417,6 +8411,39 @@ ${
               };
               $('#mlStart').onchange = recalc;
               $('#mlEnd').onchange = recalc;
+
+              // ═══ Dynamic Status Field (same as timer modal) ═══
+              function updateStatusField() {
+                const type = $('#mlType').value;
+                const wrap = $('#mlStatusWrap');
+
+                if (type === 'New Learning') {
+                  wrap.innerHTML = `
+              <div style="padding:12px 16px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:12px;font-size:.85rem;color:#FBBF24;display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.3rem">🟡</span>
+                <div>Topic status will be set to <strong>Learning</strong> automatically</div>
+              </div>`;
+                } else if (type === 'Revision') {
+                  wrap.innerHTML = `
+              <div class="field">
+                <label>Revision Number</label>
+                <select id="mlRevNum">${revOptions}</select>
+                <div style="font-size:.72rem;color:var(--text-3);margin-top:6px;line-height:1.5">
+                  Rev ${maxRevs} ke baad topic automatically <strong>Completed</strong> mark ho jayega. Next revision auto-schedule hogi.
+                </div>
+              </div>`;
+                } else {
+                  wrap.innerHTML = `
+              <div style="padding:12px 16px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.25);border-radius:12px;font-size:.85rem;color:#C4B5FD;display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.3rem">📝</span>
+                <div>Test session — topic status <strong>nahi</strong> badlega</div>
+              </div>`;
+                }
+              }
+              $('#mlType').onchange = updateStatusField;
+              updateStatusField();
+
+              // ═══ Save Handler ═══
               $('#mlSave').onclick = async () => {
                 const date = $('#mlDate').value,
                   startStr = $('#mlStart').value;
@@ -8428,9 +8455,25 @@ ${
                 const cat = $('#mlCategory').value;
                 const subject = $('#mlSubject').value;
                 const topic = $('#mlTopic').value.trim();
-                const newStatus = $('#mlStatus').value; // ⬅️ NAYA
                 const duration = mins * 60;
                 const startDate = startStr ? new Date(`${date}T${startStr}:00`) : new Date(`${date}T09:00:00`);
+                const studyType = $('#mlType').value;
+
+                let newStatus = null;
+                let revNum = 0;
+
+                if (studyType === 'New Learning') {
+                  newStatus = 'learning';
+                } else if (studyType === 'Revision') {
+                  const revVal = $('#mlRevNum')?.value;
+                  if (!revVal) {
+                    toast('Please select a revision number', 'err');
+                    return;
+                  }
+                  revNum = parseInt(revVal.replace('rev', ''), 10);
+                  newStatus = `rev${revNum}`;
+                }
+
                 const session = {
                   id: uuid(),
                   date,
@@ -8439,7 +8482,7 @@ ${
                   duration,
                   subject,
                   topic,
-                  study_type: $('#mlType').value,
+                  study_type: studyType,
                   notes: $('#mlNotes').value.trim(),
                   productivity: 3,
                   energy: 3,
@@ -8448,6 +8491,7 @@ ${
                 };
                 state.sessions.push(session);
                 saveLocal();
+
                 if (supa && state.user) {
                   try {
                     await supa.from('study_sessions').upsert(
@@ -8470,41 +8514,94 @@ ${
                   } catch (e) {}
                 }
 
-                // ⬇️⬇️⬇️ NAYA CODE — Topic status update karo ⬇️⬇️⬇️
-                if (newStatus && topic) {
-                  let existing = state.syllabus.find((s) => s.subject === subject && s.topic === topic);
+                // ═══ Topic Status Update + Revision Scheduling ═══
+                if (newStatus) {
+                  // Find correct paper ID
+                  let correctPaperId = null;
+                  for (const [pid, paper] of Object.entries(SYLLABUS)) {
+                    if (paper.subjects.some((sub) => sub.name === subject)) {
+                      correctPaperId = pid;
+                      break;
+                    }
+                  }
+                  correctPaperId = correctPaperId || cat;
+
+                  // Determine final status (auto-complete on max rev)
+                  let finalStatus = newStatus;
+                  if (studyType === 'Revision' && revNum >= maxRevs) {
+                    finalStatus = 'completed';
+                  }
+
+                  // Update/Create syllabus entry
+                  let existing = state.syllabus.find((s) => s.subject === subject && s.topic === (topic || subject));
 
                   if (existing) {
-                    existing.status = newStatus;
+                    existing.status = finalStatus;
                     syncSyllabus(existing);
                   } else {
-                    // SYLLABUS object se sahi paper ID dhundho
-                    let correctPaperId = null;
-                    for (const [pid, paper] of Object.entries(SYLLABUS)) {
-                      if (paper.subjects.some((sub) => sub.name === subject)) {
-                        correctPaperId = pid;
-                        break;
-                      }
-                    }
-                    correctPaperId = correctPaperId || cat;
-
                     const newEntry = {
                       id: uuid(),
                       paper: correctPaperId,
                       subject: subject,
-                      topic: topic,
-                      status: newStatus,
+                      topic: topic || subject,
+                      status: finalStatus,
                       category: SYLLABUS[correctPaperId]?.category || cat,
                     };
                     state.syllabus.push(newEntry);
                     syncSyllabus(newEntry);
                   }
 
-                  // UI refresh
+                  // Revision entry creation
+                  if (studyType === 'Revision' && revNum > 0) {
+                    const completedRev = {
+                      id: uuid(),
+                      subject: subject,
+                      topic: topic || subject,
+                      original_date: date,
+                      revision_number: revNum,
+                      due_date: date,
+                      status: 'completed',
+                      notes: `Rev ${revNum} done via manual log`,
+                    };
+                    state.revisions.push(completedRev);
+
+                    if (supa && state.user) {
+                      try {
+                        await supa.from('revisions').insert({ ...completedRev, user_id: state.user.id });
+                      } catch (e) {}
+                    }
+
+                    // Schedule next revision
+                    if (revNum < maxRevs) {
+                      const nextRevNum = revNum + 1;
+                      const intervalDays = REVISION_INTERVALS[nextRevNum] || 14;
+                      const nextDueDate = dateKey(addDays(new Date(), intervalDays));
+
+                      const nextRevision = {
+                        id: uuid(),
+                        subject: subject,
+                        topic: topic || subject,
+                        original_date: date,
+                        revision_number: nextRevNum,
+                        due_date: nextDueDate,
+                        status: 'pending',
+                        notes: `Auto-scheduled after Rev ${revNum}`,
+                      };
+                      state.revisions.push(nextRevision);
+
+                      if (supa && state.user) {
+                        try {
+                          await supa.from('revisions').insert({ ...nextRevision, user_id: state.user.id });
+                        } catch (e) {}
+                      }
+                    }
+                  }
+
                   renderSyllabus();
                   renderSubjects();
+                  renderRevisions();
+                  updateBadges();
                 }
-                // ⬆️⬆️⬆️ NAYA CODE ⬆️⬆️⬆️
 
                 closeModal();
                 toast('Session logged!', 'ok');
@@ -8514,6 +8611,7 @@ ${
           },
         );
       }
+      // ⬆️⬆️⬆️ NAYA FUNCTION YAHAN TAK ⬆️⬆️⬆️
 
       /* ═══════════════ DASHBOARD ═══════════════ */
       function renderDashboard() {
