@@ -397,9 +397,6 @@ button.toggle-pw{
         </button>
       </form>
 
-          
-      <!-- 👇 YAHAN PASTE KAREIN (</form> ke baad, <p> tag se pehle) 👇 -->
-      
       <!-- Google Login Button -->
       <div style="margin-top: 20px; text-align: center;">
         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
@@ -412,8 +409,6 @@ button.toggle-pw{
           Continue with Google
         </button>
       </div>
-      <!-- 👆 YAHAN TAK 👆 -->
-
 
       <p class="auth-foot">Your data is private and securely synced.</p>
     </div>
@@ -434,6 +429,13 @@ const SUPABASE_URL = 'https://zkmsgheoanyjvjfklqtg.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_nTr7Fmk_6G2u5F3dxjgxww_-dpQx5xN';
 const DEFAULT_EMAIL_DOMAIN = '@gmail.com';
 const APP_URL = '/app.html';
+
+// ═══════════════ DEV PREVIEW RESTRICTION CONFIG ═══════════════
+const OWNER_EMAILS = ['mkpersonalmaild@gmail.com',
+  'dev@gmail.com',
+  'admin33@gmail.com']; // Apni email(s) yahan daalein
+const isDevPreview = window.location.hostname.endsWith('.pages.dev');
+// ═══════════════════════════════════════════════════════════════
 
 let supa = null;
 let authMode = 'signin';
@@ -499,11 +501,8 @@ function toggleEmailSuffix(input) {
   const hasAt = (input.value || '').includes('@');
 
   if (hasAt) {
-    // Layer 1: CSS class
     wrap.classList.add('hide-suffix');
-    // Layer 2: Inline style
     suffix.style.display = 'none';
-    // Layer 3: Another class (fallback)
     suffix.classList.add('hidden-suffix');
   } else {
     wrap.classList.remove('hide-suffix');
@@ -511,11 +510,9 @@ function toggleEmailSuffix(input) {
     suffix.classList.remove('hidden-suffix');
   }
 }
-
-// Expose globally for oninput attribute
 window.toggleEmailSuffix = toggleEmailSuffix;
 
-/* ═══════════════ SUBMIT HANDLER ═══════════════ */
+/* ═══════════════ SUBMIT HANDLER (EMAIL/PASSWORD) ═══════════════ */
 async function handleAuthSubmit(e) {
   e.preventDefault();
   if (!supa) { authMsg('Supabase not ready.', 'err'); return; }
@@ -523,6 +520,15 @@ async function handleAuthSubmit(e) {
   const email = normalizeEmail($('#authEmail').value);
   const password = $('#authPassword').value;
   const name = $('#authName').value.trim();
+
+  // ═══════════════ DEV PREVIEW RESTRICTION ═══════════════
+  if (isDevPreview) {
+    if (!OWNER_EMAILS.includes(email.toLowerCase())) {
+      authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein: upscstudytracker.co.in', 'err');
+      return;
+    }
+  }
+  // ═══════════════════════════════════════════════════════════════
 
   if (!email || !password) { authMsg('Enter email and password.', 'err'); return; }
   if (password.length < 6) { authMsg('Password must be 6+ characters.', 'err'); return; }
@@ -571,16 +577,16 @@ async function signInWithGoogle() {
   btn.innerHTML = '<span class="spinner"></span> Connecting...';
 
   try {
+    // Note: Dev restriction Google ke liye app.html me handle hogi
+    // kyunki redirect ke baad hi email pata chalti hai.
     const { error } = await supa.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        // Yeh line automatic aapki live website ya localhost par redirect kar degi
         redirectTo: window.location.origin + APP_URL 
       }
     });
     
     if (error) throw error;
-    // Agar sab sahi hai, toh user Google page par redirect ho jayega
     
   } catch (error) {
     console.error('Google login error:', error);
@@ -679,11 +685,12 @@ async function handleForgotPassword() {
 function wireEvents() {
   $$('.auth-tab').forEach(t => t.onclick = () => setAuthMode(t.dataset.authMode));
   $('#authForm').onsubmit = handleAuthSubmit;
-    // Google Login button wire karein
+  
   const googleBtn = document.getElementById('googleLoginBtn');
   if (googleBtn) {
     googleBtn.addEventListener('click', signInWithGoogle);
   }
+  
   $('#forgotPwBtn').onclick = handleForgotPassword;
 
   $('#togglePw').onclick = () => {
@@ -692,13 +699,11 @@ function wireEvents() {
     $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
   };
 
-  // ⬇️ ATTACH INPUT LISTENER PROPERLY (instead of inline oninput)
   const emailInput = $('#authEmail');
   if (emailInput) {
     emailInput.addEventListener('input', function() {
       toggleEmailSuffix(this);
     });
-    // Initial state
     toggleEmailSuffix(emailInput);
   }
 
@@ -722,16 +727,25 @@ async function boot() {
   wireEvents();
   setAuthMode('signin');
 
-  // Initial check — if browser autofilled email with @, hide suffix
   setTimeout(() => {
     const authEmailInput = document.getElementById('authEmail');
     if (authEmailInput && authEmailInput.value) toggleEmailSuffix(authEmailInput);
   }, 150);
 
-  // Check existing session — already logged in? → redirect to app
+  // Check existing session
   try {
     const { data: { session } } = await supa.auth.getSession();
     if (session) {
+      // ═══════════════ DEV PREVIEW RESTRICTION (Existing Session) ═══════════════
+      if (isDevPreview) {
+        const userEmail = (session.user.email || '').toLowerCase();
+        if (!OWNER_EMAILS.includes(userEmail)) {
+          await supa.auth.signOut();
+          authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein: upscstudytracker.co.in', 'err');
+          return; // Stop boot
+        }
+      }
+      // ═══════════════════════════════════════════════════════════════════════════
       window.location.href = APP_URL;
       return;
     }
@@ -739,9 +753,16 @@ async function boot() {
     console.warn('Session check failed:', e);
   }
 
-  // Auth state change — if signin happens anywhere
   supa.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
+      if (isDevPreview) {
+        const userEmail = (session.user.email || '').toLowerCase();
+        if (!OWNER_EMAILS.includes(userEmail)) {
+          await supa.auth.signOut();
+          authMsg('⚠️ Yeh dev preview hai. Kripya production site use karein.', 'err');
+          return;
+        }
+      }
       setTimeout(() => window.location.href = APP_URL, 800);
     }
   });
