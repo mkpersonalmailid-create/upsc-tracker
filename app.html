@@ -8767,32 +8767,63 @@ ${
         ).length;
         const pct = totalTopics ? Math.round((doneCount / (totalTopics + state.syllabus.length)) * 100) : 0;
         $('#syllabusProgress').textContent = `${doneCount} tracked · ${state.syllabus.length} custom`;
-        // ════════ STATS BADGES AT TOP ════════
-        const allSyl = state.syllabus;
-        const stats = {
-          not_started: allSyl.filter((s) => !s.status || s.status === 'not_started').length,
-          learning: allSyl.filter((s) => s.status === 'learning').length,
-          completed: allSyl.filter((s) => s.status === 'completed').length,
-          rev1: allSyl.filter((s) => s.status === 'rev1').length,
-          rev2: allSyl.filter((s) => s.status === 'rev2').length,
-          rev3: allSyl.filter((s) => s.status === 'rev3').length,
-        };
+        // ⬇️⬇️⬇️ NAYI CODE — YAHAN SE PASTE KARO ⬇️⬇️⬇️
 
+        // ════════ STATS BADGES AT TOP (Filterable) ════════
+        const allSyl = state.syllabus;
         const statsEl = document.getElementById('syllabusStatsBadges');
+
         if (statsEl) {
+          const badgeList = [
+            { id: 'not_started', label: 'Not Started', cls: 'ts-not_started', icon: '⚪' },
+            { id: 'learning', label: 'Learning', cls: 'ts-learning', icon: '🟡' },
+            { id: 'completed', label: 'Completed', cls: 'ts-completed', icon: '✅' },
+            { id: 'rev1', label: 'Rev 1', cls: 'ts-rev1', icon: '🔵' },
+            { id: 'rev2', label: 'Rev 2', cls: 'ts-rev2', icon: '🔵' },
+            { id: 'rev3', label: 'Rev 3', cls: 'ts-rev3', icon: '🔵' },
+          ];
+
           if (allSyl.length === 0) {
             statsEl.innerHTML = `<div style="font-size:.82rem;color:var(--text-3);font-style:italic">Start marking topics to see your progress here</div>`;
           } else {
-            const badges = [];
-            badges.push(`<span class="pill ts-not_started">⚪ ${stats.not_started} Not Started</span>`);
-            badges.push(`<span class="pill ts-learning">🟡 ${stats.learning} Learning</span>`);
-            badges.push(`<span class="pill ts-completed">✅ ${stats.completed} Completed</span>`);
-            badges.push(`<span class="pill ts-rev1">🔵 ${stats.rev1} Rev 1</span>`);
-            badges.push(`<span class="pill ts-rev2">🔵 ${stats.rev2} Rev 2</span>`);
-            badges.push(`<span class="pill ts-rev3">🔵 ${stats.rev3} Rev 3</span>`);
-            statsEl.innerHTML = badges.join('');
+            statsEl.innerHTML = badgeList
+              .map((b) => {
+                const isActive = syllabusFilter === b.id;
+                return `<span class="pill ${b.cls}" data-syl-filter="${b.id}" 
+        style="cursor:pointer;transition:all .2s;user-select:none;${isActive ? 'outline:2px solid var(--purple);outline-offset:2px;transform:scale(1.08);box-shadow:0 4px 14px rgba(168,85,247,.4)' : ''}">
+        ${b.icon} ${b.label}
+      </span>`;
+              })
+              .join('');
+
+            statsEl.querySelectorAll('[data-syl-filter]').forEach((el) => {
+              el.onclick = () => {
+                const filter = el.dataset.sylFilter;
+                syllabusFilter = syllabusFilter === filter ? null : filter;
+                renderSyllabus();
+              };
+            });
+
+            if (syllabusFilter) {
+              const filterLabel = badgeList.find((b) => b.id === syllabusFilter)?.label || syllabusFilter;
+              const matchCount = allSyl.filter((s) => (s.status || 'not_started') === syllabusFilter).length;
+              statsEl.innerHTML += `<div style="width:100%;font-size:.78rem;color:var(--text-3);margin-top:8px;font-style:italic;display:flex;align-items:center;gap:8px">
+        <span>Showing only <strong style="color:var(--purple)">"${filterLabel}"</strong> topics (${matchCount})</span>
+        <span id="clearSylFilter" style="color:var(--pink);cursor:pointer;text-decoration:underline;font-weight:700">Clear filter ✕</span>
+      </div>`;
+              setTimeout(() => {
+                const clearBtn = document.getElementById('clearSylFilter');
+                if (clearBtn)
+                  clearBtn.onclick = () => {
+                    syllabusFilter = null;
+                    renderSyllabus();
+                  };
+              }, 50);
+            }
           }
         }
+
+        // ⬆️⬆️⬆️ YAHAN TAK NAYI CODE ⬆️⬆️⬆️
 
         tree.innerHTML = allPapers
           .map(([pid, paper]) => {
@@ -8826,7 +8857,12 @@ ${
                     const existing = state.syllabus.find(
                       (x) => x.paper === pid && x.subject === sub.name && x.topic === t,
                     );
+                    // ⬇️⬇️⬇️ NAYI CODE ⬇️⬇️⬇️
                     const st = existing?.status || 'not_started';
+
+                    // ⬇️ YEH 2 LINES ADD KARO ⬇️
+                    if (syllabusFilter && st !== syllabusFilter) return '';
+                    // ⬆️ YEH 2 LINES ADD KARO ⬆️
                     return `
                     <div class="syl-topic">
                       <span class="syl-topic-status ts-${st}" data-syl-toggle="${pid}|${encodeURIComponent(sub.name)}|${encodeURIComponent(t)}">${st.replace(/_/g, ' ')}</span>
@@ -9482,13 +9518,18 @@ ${
               rev2: syl.filter((t) => t.status === 'rev2').length,
               rev3: syl.filter((t) => t.status === 'rev3').length,
             };
+            // ⬇️⬇️⬇️ NAYI CODE — YAHAN SE PASTE KARO ⬇️⬇️⬇️
             const badges = [];
-            if (c.not_started > 0) badges.push(`<span class="pill ts-not_started">⚪ ${c.not_started}</span>`);
-            if (c.learning > 0) badges.push(`<span class="pill ts-learning">🟡 ${c.learning}</span>`);
-            if (c.completed > 0) badges.push(`<span class="pill ts-completed">✅ ${c.completed}</span>`);
-            if (c.rev1 > 0) badges.push(`<span class="pill ts-rev1">🔵 ${c.rev1}R1</span>`);
-            if (c.rev2 > 0) badges.push(`<span class="pill ts-rev2">🔵 ${c.rev2}R2</span>`);
-            if (c.rev3 > 0) badges.push(`<span class="pill ts-rev3">🔵 ${c.rev3}R3</span>`);
+            if (c.not_started > 0)
+              badges.push(`<span class="pill ts-not_started" title="${c.not_started} topics">⚪ Not Started</span>`);
+            if (c.learning > 0)
+              badges.push(`<span class="pill ts-learning" title="${c.learning} topics">🟡 Learning</span>`);
+            if (c.completed > 0)
+              badges.push(`<span class="pill ts-completed" title="${c.completed} topics">✅ Completed</span>`);
+            if (c.rev1 > 0) badges.push(`<span class="pill ts-rev1" title="${c.rev1} topics">🔵 Rev 1</span>`);
+            if (c.rev2 > 0) badges.push(`<span class="pill ts-rev2" title="${c.rev2} topics">🔵 Rev 2</span>`);
+            if (c.rev3 > 0) badges.push(`<span class="pill ts-rev3" title="${c.rev3} topics">🔵 Rev 3</span>`);
+            // ⬆️⬆️⬆️ YAHAN TAK NAYI CODE ⬆️⬆️⬆️
 
             return `<div class="card" style="border-left:4px solid ${getSubjectColor(name)}">
   <div style="font-weight:800;font-size:1rem;margin-bottom:10px">${esc(name)}</div>
@@ -9505,7 +9546,9 @@ ${
       }
 
       /* ═══════════════ REVISION ═══════════════ */
+      let syllabusFilter = null;
       let revFilter = 'due';
+
       function renderRevisions() {
         const now = startOfDay(new Date());
         const all = state.revisions;
