@@ -4,19 +4,20 @@ on:
   schedule:
     # Roz 6:00 UTC = 11:30 AM IST
     - cron: '0 6 * * *'
-  workflow_dispatch:  # Manual run button bhi milega
+  workflow_dispatch: # Manual run button bhi milega
 
 jobs:
   generate-blog:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write   # Repo me push karne ki permission
+      contents: write # Repo me push karne ki permission
 
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: 🟢 Setup Node.js
@@ -41,17 +42,72 @@ jobs:
             sed -i "s|</urlset>|  <url>\n    <loc>$LATEST</loc>\n    <lastmod>$(date +%Y-%m-%d)</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n</urlset>|" sitemap.xml
           fi
 
-      - name: 🚀 Commit and push
+      - name: 🚀 Commit and push to MAIN
+        id: push_main
         run: |
           git config user.name "UPSC Tracker Bot"
           git config user.email "bot@upscstudytracker.co.in"
+
+          # Backup list of new blog files (NOT index.html) for dev sync
           git add blog/ sitemap.xml
+          git diff --staged --name-only -- 'blog/*.html' | grep -v 'blog/index.html' > /tmp/new_blogs.txt || true
+          echo "📋 New blog files detected:"
+          cat /tmp/new_blogs.txt
 
           if git diff --staged --quiet; then
             echo "No changes to commit"
+            echo "changed=false" >> $GITHUB_OUTPUT
           else
             git commit -m "🤖 Auto-publish: Daily blog post $(date +%Y-%m-%d)"
-            git push
+            git push origin main
+            echo "changed=true" >> $GITHUB_OUTPUT
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔄 Sync new blog to DEV branch
+        if: steps.push_main.outputs.changed == 'true'
+        run: |
+          # Skip if no new blog files
+          if [ ! -s /tmp/new_blogs.txt ]; then
+            echo "No new blog files to sync"
+            exit 0
+          fi
+
+          # Backup new blog HTML files (not index.html)
+          mkdir -p /tmp/blog_backup
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              cp "$file" "/tmp/blog_backup/$(basename $file)"
+              echo "✅ Backed up: $file"
+            fi
+          done < /tmp/new_blogs.txt
+
+          # Switch to dev branch
+          git fetch origin dev
+          git checkout -B dev origin/dev
+
+          # Copy only the new blog HTML files (NOT index.html, NOT sitemap)
+          for f in /tmp/blog_backup/*.html; do
+            if [ -f "$f" ]; then
+              cp "$f" "blog/$(basename $f)"
+              echo "📄 Copied to dev: $(basename $f)"
+            fi
+          done
+
+          # Commit and push if there are changes
+          git add blog/
+          if git diff --staged --quiet; then
+            echo "Dev already up to date"
+          else
+            git config user.name "UPSC Tracker Bot"
+            git config user.email "bot@upscstudytracker.co.in"
+            git commit -m "🤖 Auto-sync blog from main $(date +%Y-%m-%d)"
+            git push origin dev
+            echo "✅ Pushed to dev branch"
+          fi
+
+          # Return to main (cleanup)
+          git checkout main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
