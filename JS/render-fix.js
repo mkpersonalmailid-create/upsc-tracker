@@ -22,22 +22,14 @@
       if (now - lastRenderAt < RENDER_THROTTLE) return;
 
       var chipsEl = document.getElementById('categoryChips');
-      var subjEl = document.getElementById('subjectSelector');
-      var topicEl = document.getElementById('topicSelect');
-
       if (!chipsEl) return;
 
+      /* Only re-render if CHIPS are empty — subject empty is a valid state */
       var chipsEmpty = chipsEl.children.length === 0;
-      var subjectEmpty = subjEl && subjEl.children.length === 0;
 
-      if (chipsEmpty || subjectEmpty) {
+      if (chipsEmpty) {
         lastRenderAt = now;
-        console.log(
-          '[render-fix] Re-rendering — chips:',
-          chipsEl.children.length,
-          '| subjects:',
-          subjEl ? subjEl.children.length : 'n/a',
-        );
+        console.log('[render-fix] Re-rendering — chips empty');
 
         try {
           if (typeof renderCategoryChips === 'function') renderCategoryChips();
@@ -61,7 +53,6 @@
       console.warn('[render-fix] error:', e);
     }
   }
-
   /* ═══ Observe #categoryChips — if it goes empty, immediately re-render ═══ */
   function watchChips() {
     var chipsEl = document.getElementById('categoryChips');
