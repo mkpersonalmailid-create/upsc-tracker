@@ -4991,10 +4991,12 @@
               alt="Logo"
               onerror="
                 this.style.display = 'none';
-                this.parentElement.textContent = 'U';
-                this.parentElement.style.color = '#fff';
-                this.parentElement.style.fontWeight = '900';
-                this.parentElement.style.fontSize = '1.3rem';
+                if (this.parentElement) {
+                  this.parentElement.textContent = 'U';
+                  this.parentElement.style.color = '#fff';
+                  this.parentElement.style.fontWeight = '900';
+                  this.parentElement.style.fontSize = '1.3rem';
+                }
               "
             />
           </div>
@@ -7798,6 +7800,16 @@ ${
 
           // FAB wapas dikhao
           $('#fab').classList.remove('hidden');
+          // ✅ YAHAN ADD KARO
+          setTimeout(function () {
+            if (typeof renderAll === 'function') {
+              try {
+                renderAll();
+              } catch (e) {
+                console.warn('[boot] re-render failed:', e);
+              }
+            }
+          }, 600);
         } catch (e) {
           console.error('bootAfterLogin failed:', e);
         } finally {
@@ -12907,7 +12919,29 @@ ${
         // ✅ Restore last viewed page
         try {
           const lastView = localStorage.getItem('upsc_last_view');
-          if (lastView) state.view = lastView;
+          const validViews = [
+            'study',
+            'dashboard',
+            'calendar',
+            'analytics',
+            'insights',
+            'history',
+            'syllabus',
+            'subjects',
+            'goals',
+            'tasks',
+            'planner',
+            'revision',
+            'notes',
+            'tests',
+            'premium',
+            'support',
+            'admin',
+            'settings',
+          ];
+          if (lastView && validViews.indexOf(lastView) !== -1) {
+            state.view = lastView;
+          }
         } catch (e) {}
         updateGreeting(); // ← YEH ADD KARO
         // ═══ Hide FAB on login page ═══
