@@ -1,17 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════
-   RENDER FIX v2 — Bulletproof chips rendering
+   RENDER FIX v3 — Boot-aware bulletproof chips rendering
    ─────────────────────────────────────────────────────────────
-   ✅ MutationObserver on #categoryChips — reacts instantly when empty
-   ✅ Faster interval (500ms instead of 2s)
-   ✅ Multiple retry attempts on boot
-   ✅ Handles view switches
+   ✅ Waits for boot to COMPLETE before any render
+   ✅ Prevents double-render (flicker) during boot
+   ✅ MutationObserver for instant recovery if cleared later
+   ✅ Slow polling fallback
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[render-fix] v2 loaded');
+  console.log('[render-fix] v3 loaded');
 
   var lastRenderAt = 0;
-  var RENDER_THROTTLE = 150; // don't re-render more than once per 150ms
+  var RENDER_THROTTLE = 1000;
 
   function forceRenderStudy() {
     try {
@@ -23,95 +23,107 @@
 
       var chipsEl = document.getElementById('categoryChips');
       if (!chipsEl) return;
+      if (chipsEl.children.length > 0) return; /* already rendered */
 
-      /* Only re-render if CHIPS are empty — subject empty is a valid state */
-      var chipsEmpty = chipsEl.children.length === 0;
+      lastRenderAt = now;
+      console.log('[render-fix] chips empty — rendering');
 
-      if (chipsEmpty) {
-        lastRenderAt = now;
-        console.log('[render-fix] Re-rendering — chips empty');
+      try {
+        if (typeof renderCategoryChips === 'function') renderCategoryChips();
+      } catch (e) {
+        console.warn('[render-fix] rcc err:', e);
+      }
 
-        try {
-          if (typeof renderCategoryChips === 'function') renderCategoryChips();
-        } catch (e) {
-          console.warn('[render-fix] rcc err:', e);
-        }
+      try {
+        if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
+      } catch (e) {
+        console.warn('[render-fix] rss err:', e);
+      }
 
-        try {
-          if (typeof renderSubjectSelector === 'function') renderSubjectSelector();
-        } catch (e) {
-          console.warn('[render-fix] rss err:', e);
-        }
-
-        try {
-          if (typeof renderTopicSelect === 'function') renderTopicSelect();
-        } catch (e) {
-          console.warn('[render-fix] rts err:', e);
-        }
+      try {
+        if (typeof renderTopicSelect === 'function') renderTopicSelect();
+      } catch (e) {
+        console.warn('[render-fix] rts err:', e);
       }
     } catch (e) {
       console.warn('[render-fix] error:', e);
     }
   }
-  /* ═══ Observe #categoryChips — if it goes empty, immediately re-render ═══ */
+
+  /* ═══ Watcher — fires instantly when chips are cleared ═══ */
   function watchChips() {
     var chipsEl = document.getElementById('categoryChips');
-    if (!chipsEl) {
-      setTimeout(watchChips, 200);
-      return;
-    }
-
+    if (!chipsEl) return setTimeout(watchChips, 300);
     if (chipsEl._renderFixWatching) return;
     chipsEl._renderFixWatching = true;
 
     var obs = new MutationObserver(function () {
-      if (chipsEl.children.length === 0) {
-        // Only re-render if we're on study view
-        if (typeof state !== 'undefined' && state && state.view === 'study') {
-          setTimeout(forceRenderStudy, 30);
-        }
+      if (chipsEl.children.length === 0 && state && state.view === 'study') {
+        /* Debounce 250ms — if still empty, render */
+        setTimeout(function () {
+          if (chipsEl.children.length === 0 && state.view === 'study') {
+            forceRenderStudy();
+          }
+        }, 250);
       }
     });
     obs.observe(chipsEl, { childList: true, subtree: false });
     console.log('[render-fix] watching #categoryChips');
   }
 
-  /* ═══ Wait for user login, then render at many delays ═══ */
-  var waitUser = setInterval(function () {
-    if (typeof state !== 'undefined' && state && state.user) {
-      clearInterval(waitUser);
+  /* ═══ Wait for boot to COMPLETE, then start ═══ */
+  function isBootComplete() {
+    var loader = document.getElementById('appLoader');
+    /* Loader present AND not active = boot finished */
+    if (loader && !loader.classList.contains('active')) return true;
+    /* Fallback: 12 sec max wait */
+    if (Date.now() - (window._rfBootStart || 0) > 12000) return true;
+    return false;
+  }
 
-      /* Aggressive initial retries */
-      [30, 80, 150, 300, 600, 1000, 1800, 3000, 5000, 8000].forEach(function (t) {
-        setTimeout(forceRenderStudy, t);
-      });
+  function waitForBoot() {
+    var userReady = typeof state !== 'undefined' && state && state.user;
 
-      /* Fast watcher — every 500ms */
+    if (userReady && isBootComplete()) {
+      console.log('[render-fix] boot complete — starting watcher');
+
+      /* Now safe to check — but boot already rendered chips, so this is a no-op */
+      setTimeout(forceRenderStudy, 500);
+      setTimeout(forceRenderStudy, 2000);
+
+      /* Watch for accidental clears */
+      watchChips();
+
+      /* Slow fallback polling (every 2 sec) */
       setInterval(function () {
         if (state.view === 'study') forceRenderStudy();
+      }, 2000);
+
+      /* Re-watch on view switches to study */
+      var lastView = null;
+      setInterval(function () {
+        if (typeof state === 'undefined' || !state) return;
+        if (state.view !== lastView) {
+          lastView = state.view;
+          if (state.view === 'study') {
+            setTimeout(forceRenderStudy, 400);
+            setTimeout(watchChips, 400);
+          }
+        }
       }, 500);
-
-      /* Watch the chips container */
-      watchChips();
+    } else {
+      setTimeout(waitForBoot, 250);
     }
-  }, 200);
+  }
 
-  /* ═══ Hook into view switches to study ═══ */
-  var lastView = null;
-  setInterval(function () {
-    if (typeof state === 'undefined' || !state) return;
-    if (state.view !== lastView) {
-      lastView = state.view;
-      if (state.view === 'study') {
-        setTimeout(forceRenderStudy, 50);
-        setTimeout(forceRenderStudy, 300);
-        setTimeout(forceRenderStudy, 800);
-        setTimeout(forceRenderStudy, 1500);
-      }
-    }
-  }, 300);
+  /* Track boot start time for fallback */
+  window._rfBootStart = Date.now();
 
-  /* ═══ Also try watching immediately on load ═══ */
-  setTimeout(watchChips, 500);
-  setTimeout(watchChips, 2000);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(waitForBoot, 200);
+    });
+  } else {
+    setTimeout(waitForBoot, 200);
+  }
 })();
