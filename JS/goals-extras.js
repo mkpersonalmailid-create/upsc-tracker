@@ -1,89 +1,369 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Goals Extras v1 (FINAL)
+   UPSC TRACKER — Goals Extras v4 (FINAL)
    ─────────────────────────────────────────────────────────────
-   ✅ Goal completion PERSISTS on refresh (RLS + await fix)
-   ✅ Tasks nav + view HIDDEN (merged into Goals)
-   ✅ Goals auto-increment when you log sessions
-   ✅ Planner blocks SHOW in Calendar (markers)
-   ✅ Goals (with deadline) SHOW in Calendar
+   ✅ NEW: "Is this part of a goal?" dropdown in session modals
+   ✅ NEW: Auto-fill subject/topic from linked goal
+   ✅ NEW: Session → Goal auto-increment (smart matching)
+   ✅ Units: Hours (study time) | Topics (tracked only)
+   ✅ Category/Subject/Topic cascade in goal modal (collapsible)
+   ✅ Analytics strip at top of Goals page
+   ✅ Goal complete → auto-creates study session
+   ✅ Tasks nav hidden
+   ✅ Planner + Goals show in Calendar
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[goals-extras] v1 loaded');
+  console.log('[goals-extras] v4 loaded');
 
-  /* ═══════════════ 1. HIDE TASKS NAV + VIEW ═══════════════ */
-  function hideTasks() {
-    const navTasks = document.querySelector('.nav-item[data-view="tasks"]');
-    if (navTasks) navTasks.style.display = 'none';
-
-    const viewTasks = document.getElementById('view-tasks');
-    if (viewTasks) viewTasks.style.display = 'none';
-
-    // Also hide Tasks badge in sidebar
-    const badge = document.getElementById('tasksBadge');
-    if (badge) badge.style.display = 'none';
-
-    console.log('[goals-extras] tasks hidden');
+  /* ═══════════════ HELPERS ═══════════════ */
+  function escHtml(str) {
+    return String(str || '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
+    );
   }
 
-  /* ═══════════════ 2. FIX GOAL TOGGLE — PERSIST PROPERLY ═══════════════ */
+  function safeUUID() {
+    if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      const v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function todayKey() {
+    const x = new Date();
+    const p = (n) => String(n).padStart(2, '0');
+    return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}`;
+  }
+
+  function addDaysKey(days) {
+    const x = new Date();
+    x.setDate(x.getDate() + days);
+    const p = (n) => String(n).padStart(2, '0');
+    return `${x.getFullYear()}-${p(x.getMonth() + 1)}-${p(x.getDate())}`;
+  }
+
+  function findCategoryForSubject(subj) {
+    if (!subj || typeof SYLLABUS !== 'object') return '';
+    for (const [pid, paper] of Object.entries(SYLLABUS)) {
+      if ((paper.subjects || []).some((s) => s.name === subj)) {
+        return paper.category || pid;
+      }
+    }
+    return '';
+  }
+
+  /* ═══════════════ 1. HIDE TASKS ═══════════════ */
+  function hideTasks() {
+    const nav = document.querySelector('.nav-item[data-view="tasks"]');
+    if (nav) nav.style.display = 'none';
+    const view = document.getElementById('view-tasks');
+    if (view) view.style.display = 'none';
+    const badge = document.getElementById('tasksBadge');
+    if (badge) badge.style.display = 'none';
+  }
+
+  /* ═══════════════ 2. GOAL SESSION HELPERS ═══════════════ */
+  function computeGoalDurationSeconds(goal) {
+    const unit = (goal.unit || '').toLowerCase();
+    const target = Number(goal.target) || 0;
+    if (unit.includes('hour') || unit.includes('hr')) return Math.round(target * 3600);
+    if (unit.includes('minute') || unit.includes('min')) return Math.round(target * 60);
+    return 0;
+  }
+
+  function goalSessionTag(goalId) {
+    return `[GOAL:${goalId}]`;
+  }
+
+  function extractGoalId(notes) {
+    const m = String(notes || '').match(/\[GOAL:([a-f0-9-]{20,})\]/i);
+    return m ? m[1] : null;
+  }
+
+  /* ═══════════════ 3. INCREMENT GOAL FROM SESSION ═══════════════ */
+  async function incrementGoalFromSession(goal, session) {
+    if (!goal || goal.current >= goal.target) return false;
+
+    const unit = (goal.unit || '').toLowerCase();
+    let increment = 0;
+
+    if (unit.includes('hour') || unit.includes('hr')) increment = (session.duration || 0) / 3600;
+    else if (unit.includes('topic')) increment = 1;
+    else return false;
+
+    if (increment <= 0) return false;
+
+    goal.current = Math.min(goal.target, Math.round(((goal.current || 0) + increment) * 100) / 100);
+
+    if (supa && state.user) {
+      try {
+        await supa.from('goals').update({ current_value: goal.current }).eq('id', goal.id).eq('user_id', state.user.id);
+      } catch (e) {
+        console.warn('[goals-extras] goal update failed:', e);
+      }
+    }
+    return true;
+  }
+
+  /* ═══════════════ 4. SESSION → GOAL MATCHING ═══════════════ */
+  async function processSession(session) {
+    if (session._goalProcessed) return;
+    session._goalProcessed = true;
+
+    /* A. Explicit tag (from modal "Link to Goal" dropdown) */
+    const taggedId = extractGoalId(session.notes);
+    if (taggedId) {
+      const goal = state.goals.find((g) => g.id === taggedId);
+      if (goal && goal.current < goal.target) {
+        const ok = await incrementGoalFromSession(goal, session);
+        if (ok && typeof toast === 'function') {
+          toast(`🎯 Goal updated: ${goal.current} / ${goal.target} ${goal.unit || ''}`, 'ok', 2200);
+        }
+        if (typeof renderGoals === 'function') renderGoals();
+        return;
+      }
+    }
+
+    /* B. Auto-match by subject */
+    const matched = [];
+    state.goals.forEach((g) => {
+      if (g.current >= g.target) return;
+      const unit = (g.unit || '').toLowerCase();
+      if (!unit.includes('hour') && !unit.includes('hr')) return;
+      if (g.subject && g.subject === session.subject) matched.push(g);
+    });
+
+    /* C. Global goals (no subject) also count */
+    state.goals.forEach((g) => {
+      if (g.current >= g.target) return;
+      const unit = (g.unit || '').toLowerCase();
+      if (!unit.includes('hour') && !unit.includes('hr')) return;
+      if (!g.subject) matched.push(g);
+    });
+
+    /* Dedupe */
+    const unique = [...new Set(matched)];
+    if (!unique.length) return;
+
+    for (const g of unique) await incrementGoalFromSession(g, session);
+
+    if (typeof toast === 'function') {
+      toast(`🎯 ${unique.length} goal${unique.length > 1 ? 's' : ''} auto-updated`, 'ok', 2000);
+    }
+    if (typeof renderGoals === 'function') renderGoals();
+  }
+
+  /* ═══════════════ 5. SESSION WATCHER ═══════════════ */
+  const processedSessionIds = new Set();
+
+  function startSessionWatcher() {
+    state.sessions.forEach((s) => processedSessionIds.add(s.id));
+
+    setInterval(() => {
+      const newOnes = state.sessions.filter((s) => !processedSessionIds.has(s.id));
+      if (!newOnes.length) return;
+      newOnes.forEach((s) => {
+        processedSessionIds.add(s.id);
+        if (!s._goalGenerated) processSession(s);
+      });
+    }, 900);
+  }
+
+  /* ═══════════════ 6. TOGGLE GOAL COMPLETE ═══════════════ */
+  async function toggleGoalComplete(goal) {
+    const wasDone = goal.current >= goal.target;
+    const tag = goalSessionTag(goal.id);
+    const unit = (goal.unit || '').toLowerCase();
+    const isHourGoal = unit.includes('hour') || unit.includes('hr');
+
+    const linkedSession = state.sessions.find((s) => (s.notes || '').includes(tag));
+
+    if (wasDone) {
+      if (linkedSession) {
+        state.sessions = state.sessions.filter((s) => s.id !== linkedSession.id);
+        processedSessionIds.delete(linkedSession.id);
+        if (supa && state.user) {
+          try {
+            await supa.from('study_sessions').delete().eq('id', linkedSession.id);
+          } catch (e) {}
+        }
+      }
+      goal.current = 0;
+      if (supa && state.user) {
+        try {
+          await supa.from('goals').update({ current_value: 0 }).eq('id', goal.id).eq('user_id', state.user.id);
+        } catch (e) {}
+      }
+      if (typeof toast === 'function') {
+        toast(isHourGoal ? '↺ Goal reset · session removed' : '↺ Goal reset', 'info', 2200);
+      }
+    } else {
+      goal.current = goal.target;
+
+      if (isHourGoal) {
+        const durationSec = computeGoalDurationSeconds(goal);
+        if (durationSec > 0) {
+          const now = Date.now();
+          const sessionId = linkedSession?.id || safeUUID();
+          const session = {
+            id: sessionId,
+            date: todayKey(),
+            ts: now,
+            start_time: now - durationSec * 1000,
+            end_time: now,
+            duration: durationSec,
+            subject: goal.subject || 'General Study',
+            topic: goal.topic || goal.title,
+            study_type: 'New Learning',
+            notes: `${tag} Auto-logged from goal: ${goal.title}`,
+            productivity: 3,
+            energy: 3,
+            category: goal.category || null,
+            paper: goal.subject || 'General Study',
+            _goalGenerated: true,
+          };
+
+          const existIdx = state.sessions.findIndex((s) => s.id === sessionId);
+          if (existIdx >= 0) state.sessions[existIdx] = session;
+          else state.sessions.push(session);
+          processedSessionIds.add(sessionId);
+
+          if (supa && state.user) {
+            try {
+              await supa.from('study_sessions').upsert(
+                {
+                  id: session.id,
+                  user_id: state.user.id,
+                  date: session.date,
+                  start_time: new Date(session.start_time).toISOString(),
+                  end_time: new Date(session.end_time).toISOString(),
+                  duration_seconds: session.duration,
+                  subject: session.subject,
+                  topic: session.topic,
+                  study_type: session.study_type,
+                  notes: session.notes,
+                  paper: session.paper,
+                },
+                { onConflict: 'id' },
+              );
+            } catch (e) {
+              console.warn('[goals-extras] session insert:', e);
+            }
+          }
+
+          if (typeof toast === 'function') {
+            toast(`🎉 Goal complete · ${(durationSec / 3600).toFixed(1)}h added to Study Time`, 'ok', 3500);
+          }
+        }
+      } else {
+        if (typeof toast === 'function') {
+          toast(`🎉 Goal complete (tracked only — no time added)`, 'ok', 3000);
+        }
+      }
+
+      if (supa && state.user) {
+        try {
+          await supa
+            .from('goals')
+            .update({ current_value: goal.current })
+            .eq('id', goal.id)
+            .eq('user_id', state.user.id);
+        } catch (e) {}
+      }
+    }
+
+    if (typeof renderGoals === 'function') renderGoals();
+    if (state.view === 'study' && typeof renderStudy === 'function') renderStudy();
+    if (state.view === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
+    if (state.view === 'history' && typeof renderHistory === 'function') renderHistory();
+    if (state.view === 'calendar' && typeof renderCalendar === 'function') renderCalendar();
+  }
+
+  /* ═══════════════ 7. ANALYTICS STRIP ═══════════════ */
+  function renderGoalsAnalytics() {
+    const view = document.getElementById('view-goals');
+    if (!view) return;
+
+    const old = document.getElementById('goalsAnalytics');
+    if (old) old.remove();
+
+    const today = todayKey();
+    const tomorrow = addDaysKey(1);
+    const goals = state.goals || [];
+    const active = goals.filter((g) => g.current < g.target);
+    const completed = goals.filter((g) => g.current >= g.target);
+    const dueToday = goals.filter(
+      (g) => g.deadline && String(g.deadline).slice(0, 10) === today && g.current < g.target,
+    );
+    const dueTomorrow = goals.filter(
+      (g) => g.deadline && String(g.deadline).slice(0, 10) === tomorrow && g.current < g.target,
+    );
+    const overdue = goals.filter((g) => g.deadline && String(g.deadline).slice(0, 10) < today && g.current < g.target);
+
+    const cards = [
+      { icon: '🎯', label: 'Active Goals', value: active.length, sub: 'in progress', color: 'var(--purple)' },
+      { icon: '✅', label: 'Completed', value: completed.length, sub: 'done', color: 'var(--green)' },
+      { icon: '📅', label: 'Due Today', value: dueToday.length, sub: 'deadline today', color: 'var(--pink)' },
+      {
+        icon: '📆',
+        label: 'Due Tomorrow',
+        value: dueTomorrow.length,
+        sub: 'deadline tomorrow',
+        color: 'var(--orange)',
+      },
+      { icon: '⚠️', label: 'Overdue', value: overdue.length, sub: 'missed deadlines', color: 'var(--red)' },
+    ];
+
+    const strip = document.createElement('div');
+    strip.id = 'goalsAnalytics';
+    strip.style.cssText =
+      'display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px';
+    strip.innerHTML = cards
+      .map(
+        (c) => `
+      <div class="kpi" style="--c:${c.color};--cb:color-mix(in srgb, ${c.color} 15%, transparent);padding:14px 16px">
+        <div class="kpi-top" style="margin-bottom:8px">
+          <div class="kpi-icon" style="width:34px;height:34px;font-size:1rem">${c.icon}</div>
+        </div>
+        <div class="kpi-label">${c.label}</div>
+        <div class="kpi-value" style="font-size:1.4rem">${c.value}</div>
+        <div class="kpi-sub">${c.sub}</div>
+      </div>
+    `,
+      )
+      .join('');
+
+    const firstCard = view.querySelector('.card');
+    if (firstCard) firstCard.insertAdjacentElement('beforebegin', strip);
+    else view.insertAdjacentElement('afterbegin', strip);
+  }
+
+  /* ═══════════════ 8. PATCH renderGoals ═══════════════ */
   function patchRenderGoals() {
     const _orig = window.renderGoals;
-    if (typeof _orig !== 'function') {
-      console.warn('[goals-extras] renderGoals not found');
-      return;
-    }
+    if (typeof _orig !== 'function') return;
 
     window.renderGoals = function () {
       _orig.call(this);
+      renderGoalsAnalytics();
 
       const el = document.getElementById('goalsList');
       if (!el) return;
 
-      // Re-wire toggle buttons with proper async + error handling
-      el.querySelectorAll('[data-goal-done]').forEach((b) => {
-        const newBtn = b.cloneNode(true);
-        b.parentNode.replaceChild(newBtn, b);
-
-        newBtn.onclick = async () => {
+      el.querySelectorAll('[data-goal-done]').forEach((btn) => {
+        const newBtn = btn.cloneNode(true);
+        btn.parentNode.replaceChild(newBtn, btn);
+        newBtn.onclick = async (e) => {
+          e.stopPropagation();
           const g = state.goals.find((x) => x.id === newBtn.dataset.goalDone);
           if (!g) return;
-
-          const wasDone = g.current >= g.target;
-          const oldVal = g.current;
-          const newVal = wasDone ? 0 : g.target;
-
-          // Optimistic UI update
-          g.current = newVal;
           newBtn.disabled = true;
-
-          if (supa && state.user) {
-            try {
-              const { error } = await supa
-                .from('goals')
-                .update({ current_value: newVal })
-                .eq('id', g.id)
-                .eq('user_id', state.user.id);
-
-              if (error) throw error;
-
-              console.log('[goals-extras] goal persisted:', newVal);
-              if (typeof toast === 'function') {
-                toast(wasDone ? '↺ Goal reset' : '🎉 Goal completed!', 'ok', 2200);
-              }
-            } catch (e) {
-              console.error('[goals-extras] goal update failed:', e);
-              g.current = oldVal;
-              if (typeof toast === 'function') {
-                toast('❌ Save failed — ' + (e.message || 'Unknown'), 'err', 4000);
-              }
-            }
-          }
-
-          newBtn.disabled = false;
-          window.renderGoals();
+          await toggleGoalComplete(g);
         };
       });
     };
@@ -91,96 +371,53 @@
     try {
       renderGoals = window.renderGoals;
     } catch (e) {}
-
-    console.log('[goals-extras] patched: renderGoals');
   }
 
-  /* ═══════════════ 3. AUTO-INCREMENT GOALS FROM SESSIONS ═══════════════ */
-  async function autoIncrementGoals(session) {
-    if (!state.goals.length) return;
+  /* ═══════════════ 9. GOAL MODAL — Collapsible link section ═══════════════ */
+  function buildLinkSection(g) {
+    const CATS = [
+      { id: '', label: '— Any Category —' },
+      { id: 'prelims', label: '🎯 GS Prelims' },
+      { id: 'mains-gs1', label: '📘 GS Mains · Paper I' },
+      { id: 'mains-gs2', label: '📗 GS Mains · Paper II' },
+      { id: 'mains-gs3', label: '📙 GS Mains · Paper III' },
+      { id: 'mains-gs4', label: '📕 GS Mains · Paper IV' },
+      { id: 'optional', label: '⭐ Optional' },
+      { id: 'essay', label: '✍️ Essay' },
+      { id: 'csat', label: '🧮 CSAT' },
+    ];
 
-    const durHours = (session.duration || 0) / 3600;
-    if (durHours <= 0) return;
-
-    const updates = [];
-
-    state.goals.forEach((g) => {
-      if (g.status === 'completed') return;
-      if (g.current >= g.target) return;
-
-      const unit = (g.unit || '').toLowerCase();
-      const isHourGoal = unit.includes('hour') || unit.includes('hr');
-      const isSessionGoal = unit.includes('session');
-      const hasSubject = g.subject && g.subject.length > 0;
-      const matchesSubject = hasSubject && g.subject === session.subject;
-
-      // Match rules:
-      //   - Hour goal + no subject → any session counts
-      //   - Hour goal + subject    → only that subject's session counts
-      //   - Session goal           → increment by 1 per session
-      let increment = 0;
-
-      if (isHourGoal) {
-        if (!hasSubject || matchesSubject) increment = durHours;
-      } else if (isSessionGoal) {
-        if (!hasSubject || matchesSubject) increment = 1;
-      } else {
-        // Unknown unit → skip
-        return;
-      }
-
-      if (increment <= 0) return;
-
-      const newCurrent = Math.min((g.current || 0) + increment, g.target);
-      g.current = Math.round(newCurrent * 100) / 100; // 2 decimal
-      updates.push(g);
-    });
-
-    if (updates.length && supa && state.user) {
-      for (const g of updates) {
-        try {
-          await supa.from('goals').update({ current_value: g.current }).eq('id', g.id).eq('user_id', state.user.id);
-        } catch (e) {
-          console.warn('[goals-extras] auto-increment failed:', g.id, e);
-        }
-      }
-
-      if (typeof toast === 'function') {
-        toast(`🎯 ${updates.length} goal${updates.length > 1 ? 's' : ''} updated`, 'ok', 2000);
-      }
-      if (typeof renderGoals === 'function') renderGoals();
-    }
+    return `
+      <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px">
+        <button type="button" id="gmLinkToggle" style="width:100%;padding:12px 16px;text-align:left;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-2);background:transparent;border:none;cursor:pointer;">
+          <span id="gmLinkArrow" style="font-size:.7rem;transition:transform .2s;display:inline-block">▶</span>
+          <span>🔗 Link to specific content</span>
+          <span style="color:var(--text-3);font-weight:500;font-size:.75rem">(optional)</span>
+        </button>
+        <div id="gmLinkBody" style="display:none;padding:0 16px 16px">
+          <div class="field">
+            <label>Category</label>
+            <select id="gmCategory">${CATS.map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}</select>
+          </div>
+          <div class="field">
+            <label>Subject</label>
+            <select id="gmSubject" disabled><option value="">— Select category first —</option></select>
+          </div>
+          <div class="field">
+            <label>Topic (optional)</label>
+            <select id="gmTopic" disabled><option value="">— Select subject first —</option></select>
+          </div>
+          <div style="font-size:.72rem;color:var(--text-3);line-height:1.6;margin-top:8px">
+            Leave empty to count <strong>all study sessions (global)</strong>. Pick a subject to only count that subject.
+          </div>
+        </div>
+      </div>
+    `;
   }
 
-  /* ═══════════════ 4. WATCH SESSIONS — TRIGGER GOAL INCREMENT ═══════════════ */
-  function watchSessions() {
-    let lastCount = state.sessions.length;
-    let lastTotalSec = state.sessions.reduce((a, s) => a + (s.duration || 0), 0);
-
-    setInterval(() => {
-      const newCount = state.sessions.length;
-      const newTotal = state.sessions.reduce((a, s) => a + (s.duration || 0), 0);
-
-      if (newCount > lastCount) {
-        // New sessions added
-        const newSessions = state.sessions.slice(lastCount);
-        newSessions.forEach((s) => autoIncrementGoals(s));
-      }
-
-      lastCount = newCount;
-      lastTotalSec = newTotal;
-    }, 900);
-
-    console.log('[goals-extras] watching sessions');
-  }
-
-  /* ═══════════════ 5. PATCH openGoalModal — Add Subject dropdown ═══════════════ */
   function patchOpenGoalModal() {
     const _orig = window.openGoalModal;
-    if (typeof _orig !== 'function') {
-      console.warn('[goals-extras] openGoalModal not found');
-      return;
-    }
+    if (typeof _orig !== 'function') return;
 
     window.openGoalModal = function (existing) {
       const g = existing || {
@@ -191,18 +428,13 @@
         deadline: '',
         current: 0,
         subject: '',
+        topic: '',
+        category: '',
       };
 
-      // Build subject list
-      const subjects = new Set();
-      state.sessions.forEach((s) => s.subject && subjects.add(s.subject));
-      state.subjects.forEach((s) => s.name && subjects.add(s.name));
-      if (typeof SYLLABUS === 'object' && SYLLABUS) {
-        Object.values(SYLLABUS).forEach((paper) => {
-          (paper.subjects || []).forEach((sub) => sub.name && subjects.add(sub.name));
-        });
+      if (existing && g.subject && !g.category) {
+        g.category = findCategoryForSubject(g.subject) || '';
       }
-      const subjectList = [...subjects].sort();
 
       openModal(
         modalShell({
@@ -210,9 +442,8 @@
           body: `
             <div class="field">
               <label>Title</label>
-              <input type="text" id="gmTitle" value="${escHtml(g.title)}" maxlength="120" placeholder="e.g. Study History daily">
+              <input type="text" id="gmTitle" value="${escHtml(g.title)}" maxlength="120" placeholder="e.g. Study History 2 hours">
             </div>
-            
             <div class="form-grid">
               <div class="field">
                 <label>Type</label>
@@ -223,38 +454,27 @@
               <div class="field">
                 <label>Unit</label>
                 <select id="gmUnit">
-                  <option value="hours" ${g.unit === 'hours' ? 'selected' : ''}>Hours</option>
-                  <option value="sessions" ${g.unit === 'sessions' ? 'selected' : ''}>Sessions</option>
-                  <option value="topics" ${g.unit === 'topics' ? 'selected' : ''}>Topics</option>
+                  <option value="hours" ${g.unit === 'hours' ? 'selected' : ''}>⏱ Hours</option>
+                  <option value="topics" ${g.unit === 'topics' ? 'selected' : ''}>📖 Topics</option>
                 </select>
               </div>
             </div>
-            
             <div class="form-grid">
               <div class="field">
                 <label>Target</label>
-                <input type="number" id="gmTarget" min="1" step="0.5" value="${g.target}">
+                <input type="number" id="gmTarget" min="0.5" step="0.5" value="${g.target}">
               </div>
               <div class="field">
                 <label>Deadline (optional)</label>
                 <input type="date" id="gmDeadline" value="${g.deadline || ''}">
               </div>
             </div>
-            
-            <div class="field">
-              <label>Subject (optional)</label>
-              <select id="gmSubject">
-                <option value="">— Any / All Subjects —</option>
-                ${subjectList
-                  .map(
-                    (s) => `<option value="${escHtml(s)}" ${g.subject === s ? 'selected' : ''}>${escHtml(s)}</option>`,
-                  )
-                  .join('')}
-              </select>
-              <div style="font-size:.72rem;color:var(--text-3);margin-top:6px;line-height:1.5">
-                💡 Subject choose karoge toh jab us subject ko study karoge, ye goal automatically badhega.
-                Khali chhodo toh saare sessions count honge.
-              </div>
+            ${buildLinkSection(g)}
+            <div style="padding:12px 14px;background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.28);border-radius:10px;font-size:.78rem;color:#C4B5FD;line-height:1.65;margin-top:6px">
+              <div style="font-weight:800;color:#E9D5FF;margin-bottom:6px">💡 How it works</div>
+              <div style="display:flex;gap:8px;margin-bottom:4px"><span>⏱</span><div><strong>Hours unit</strong> — Adds those hours to your <strong>Study Time &amp; History</strong> when completed.</div></div>
+              <div style="display:flex;gap:8px;margin-bottom:4px"><span>📖</span><div><strong>Topics unit</strong> — Only tracked inside Goals section. No time is added.</div></div>
+              <div style="display:flex;gap:8px"><span>🔗</span><div><strong>Link</strong> — Optional. Leave empty for <em>global (all sessions)</em>.</div></div>
             </div>
           `,
           actions: `<button class="btn btn-ghost" data-close>Cancel</button>
@@ -262,19 +482,86 @@
         }),
         {
           onMount() {
+            const toggleBtn = document.getElementById('gmLinkToggle');
+            const bodyEl = document.getElementById('gmLinkBody');
+            const arrowEl = document.getElementById('gmLinkArrow');
+
+            if (g.subject || g.topic) {
+              bodyEl.style.display = 'block';
+              arrowEl.style.transform = 'rotate(90deg)';
+            }
+
+            toggleBtn.onclick = () => {
+              const open = bodyEl.style.display !== 'none';
+              bodyEl.style.display = open ? 'none' : 'block';
+              arrowEl.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+            };
+
+            const catSel = document.getElementById('gmCategory');
+            const subjSel = document.getElementById('gmSubject');
+            const topicSel = document.getElementById('gmTopic');
+
+            if (g.category) catSel.value = g.category;
+
+            function populateSubjects(cat, preserveSubj) {
+              if (!cat) {
+                subjSel.innerHTML = '<option value="">— Select category first —</option>';
+                subjSel.disabled = true;
+                return;
+              }
+              const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
+              subjSel.innerHTML =
+                '<option value="">— Any Subject —</option>' +
+                subjects.map((s) => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+              subjSel.disabled = false;
+              if (preserveSubj && subjects.includes(preserveSubj)) subjSel.value = preserveSubj;
+            }
+
+            function populateTopics(cat, subj, preserveTopic) {
+              if (!subj) {
+                topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+                topicSel.disabled = true;
+                return;
+              }
+              const defaultTopics =
+                (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
+              const customTopics = (state.syllabus || [])
+                .filter((s) => s.subject === subj && s.topic)
+                .map((s) => s.topic);
+              const topics = [...new Set([...defaultTopics, ...customTopics])];
+              topicSel.innerHTML =
+                '<option value="">— Any Topic —</option>' +
+                topics.map((t) => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+              topicSel.disabled = false;
+              if (preserveTopic && topics.includes(preserveTopic)) topicSel.value = preserveTopic;
+            }
+
+            if (g.category) populateSubjects(g.category, g.subject);
+            if (g.subject) populateTopics(g.category, g.subject, g.topic);
+
+            catSel.onchange = () => {
+              populateSubjects(catSel.value, '');
+              topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+              topicSel.disabled = true;
+            };
+            subjSel.onchange = () => populateTopics(catSel.value, subjSel.value, '');
+
             document.getElementById('gmSave').onclick = async () => {
               const title = document.getElementById('gmTitle').value.trim();
               if (!title) {
-                toast('Enter title.', 'err');
+                if (typeof toast === 'function') toast('Enter a title.', 'err');
                 return;
               }
+
               const payload = {
                 type: document.getElementById('gmType').value,
                 title,
                 target: parseFloat(document.getElementById('gmTarget').value) || 1,
                 unit: document.getElementById('gmUnit').value,
                 deadline: document.getElementById('gmDeadline').value || null,
-                subject: document.getElementById('gmSubject').value || null,
+                subject: subjSel.value || null,
+                topic: topicSel.value || null,
+                category: catSel.value || null,
                 status: 'active',
               };
 
@@ -283,7 +570,7 @@
                 Object.assign(existing, payload);
                 row = existing;
               } else {
-                row = { id: uuid(), current: 0, ...payload };
+                row = { id: safeUUID(), current: 0, ...payload };
                 state.goals.push(row);
               }
 
@@ -300,23 +587,19 @@
                     deadline: row.deadline,
                     status: row.status,
                   };
-                  // Only include subject if column exists (try-catch)
                   if (row.subject) insertPayload.subject = row.subject;
-
+                  if (row.topic) insertPayload.topic = row.topic;
+                  if (row.category) insertPayload.category = row.category;
                   const { error } = await supa.from('goals').upsert(insertPayload, { onConflict: 'id' });
-
                   if (error) throw error;
-                  toast('✅ Saved!', 'ok');
+                  if (typeof toast === 'function') toast('✅ Saved!', 'ok');
                 } catch (e) {
-                  console.warn('[goals-extras] upsert failed:', e);
-                  toast('⚠️ Cloud save: ' + (e.message || 'Check SQL'), 'warn', 5000);
+                  console.warn('[goals-extras] upsert:', e);
+                  if (typeof toast === 'function') toast('⚠️ Cloud: ' + (e.message || ''), 'warn', 4000);
                 }
-              } else {
-                toast('Saved locally', 'ok');
               }
-
-              closeModal();
-              renderGoals();
+              if (typeof closeModal === 'function') closeModal();
+              if (typeof renderGoals === 'function') renderGoals();
             };
           },
         },
@@ -326,45 +609,151 @@
     try {
       openGoalModal = window.openGoalModal;
     } catch (e) {}
-
-    console.log('[goals-extras] patched: openGoalModal');
   }
 
-  function escHtml(str) {
-    return String(str || '').replace(
-      /[&<>"']/g,
-      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c],
-    );
+  /* ═══════════════ 10. INJECT "LINK TO GOAL" IN SESSION MODALS ═══════════════ */
+  function injectGoalLink(modalBox, isSaveSession) {
+    if (!modalBox || modalBox.querySelector('#sessionGoalLink')) return;
+
+    const activeGoals = (state.goals || []).filter((g) => g.status !== 'completed' && g.current < g.target);
+    if (!activeGoals.length) return;
+
+    const body = modalBox.querySelector('.modal-body');
+    if (!body) return;
+
+    const opts = activeGoals
+      .map((g) => {
+        const remaining = Math.max(0, (g.target || 0) - (g.current || 0));
+        const progress = `${(g.current || 0).toFixed(1)} / ${g.target} ${g.unit || 'h'}`;
+        return `<option value="${g.id}">🎯 ${escHtml(g.title)} — ${progress} (${remaining.toFixed(1)} ${g.unit || 'h'} left)</option>`;
+      })
+      .join('');
+
+    const html = `
+      <div id="sessionGoalLink" style="padding:14px;background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(236,72,153,.06));border:1px solid rgba(251,191,36,.4);border-radius:12px;margin-bottom:14px">
+        <label style="color:#FBBF24;display:flex;align-items:center;gap:8px;font-weight:800;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">
+          <span>🎯</span> Is this part of a goal?
+        </label>
+        <select id="sessionGoalSelect" style="width:100%;background:var(--bg-2);border:1.5px solid var(--border);border-radius:11px;padding:11px 13px;font-size:.86rem;color:var(--text)">
+          <option value="">— No, independent study —</option>
+          ${opts}
+        </select>
+        <div id="sessionGoalHint" style="font-size:.72rem;color:#C4B5FD;margin-top:8px;line-height:1.5;display:none;padding:8px 10px;background:rgba(0,0,0,.22);border-radius:8px"></div>
+      </div>
+    `;
+
+    body.insertAdjacentHTML('afterbegin', html);
+
+    const sel = document.getElementById('sessionGoalSelect');
+    const hint = document.getElementById('sessionGoalHint');
+
+    sel.onchange = () => {
+      const gid = sel.value;
+      if (!gid) {
+        hint.style.display = 'none';
+        return;
+      }
+      const goal = state.goals.find((g) => g.id === gid);
+      if (!goal) return;
+
+      const unit = (goal.unit || '').toLowerCase();
+      const remaining = Math.max(0, goal.target - goal.current);
+
+      hint.style.display = 'block';
+      hint.innerHTML = `
+        ✨ This session will count toward <strong style="color:#E9D5FF">${escHtml(goal.title)}</strong>.<br>
+        ${unit.includes('hour') ? `⏱ <strong>${remaining.toFixed(1)} ${goal.unit}</strong> remaining. Hours will be added automatically.` : `📖 Goal progress will be tracked.`}
+      `;
+
+      /* For Manual Log — auto-fill subject/topic */
+      if (!isSaveSession && goal.subject) {
+        const catSel = document.getElementById('mlCategory');
+        const subjSel = document.getElementById('mlSubject');
+        const topicInput = document.getElementById('mlTopic');
+
+        if (catSel && goal.category) {
+          catSel.value = goal.category;
+          catSel.dispatchEvent(new Event('change'));
+        }
+        setTimeout(() => {
+          if (subjSel && goal.subject) {
+            // Ensure subject exists in dropdown
+            const hasOpt = Array.from(subjSel.options).some((o) => o.value === goal.subject);
+            if (hasOpt) subjSel.value = goal.subject;
+          }
+          if (topicInput && goal.topic) topicInput.value = goal.topic;
+        }, 60);
+      }
+    };
   }
 
-  /* ═══════════════ 6. CALENDAR SYNC — Planner + Goals markers ═══════════════ */
-  function patchCalendarMarkers() {
-    const _orig = window.renderCalendar;
-    if (typeof _orig !== 'function') return false;
+  /* Patch openModal to inject after mount */
+  function patchOpenModal() {
+    const _orig = window.openModal;
+    if (typeof _orig !== 'function') return;
 
-    window.renderCalendar = function () {
-      _orig.call(this);
-      // Post-render, add our custom markers
-      setTimeout(injectPlannerGoalMarkers, 80);
+    window.openModal = function (html, opts) {
+      _orig.call(this, html, opts);
+      setTimeout(() => {
+        const box = document.getElementById('modalBox');
+        if (!box) return;
+        const hasSessType = !!box.querySelector('#sessType');
+        const hasMlType = !!box.querySelector('#mlType');
+        if (!hasSessType && !hasMlType) return;
+        injectGoalLink(box, hasSessType);
+      }, 40);
     };
 
     try {
+      openModal = window.openModal;
+    } catch (e) {}
+  }
+
+  /* ═══════════════ 11. TAG NOTES ON SAVE (capture phase) ═══════════════ */
+  document.addEventListener(
+    'click',
+    (e) => {
+      const btn = e.target && e.target.closest && e.target.closest('#confirmSave, #mlSave');
+      if (!btn) return;
+
+      const sel = document.getElementById('sessionGoalSelect');
+      if (!sel || !sel.value) return;
+
+      const isSess = !!document.getElementById('sessNotes');
+      const isMl = !!document.getElementById('mlNotes');
+      const notesId = isSess ? 'sessNotes' : isMl ? 'mlNotes' : null;
+      if (!notesId) return;
+
+      const notesEl = document.getElementById(notesId);
+      if (!notesEl) return;
+
+      const tag = `[GOAL:${sel.value}]`;
+      if (!notesEl.value.includes(tag)) {
+        notesEl.value = (notesEl.value ? notesEl.value.trim() + '\n' : '') + tag;
+      }
+    },
+    true,
+  );
+
+  /* ═══════════════ 12. CALENDAR SYNC ═══════════════ */
+  function patchCalendarMarkers() {
+    const _orig = window.renderCalendar;
+    if (typeof _orig !== 'function') return;
+    window.renderCalendar = function () {
+      _orig.call(this);
+      setTimeout(injectPlannerGoalMarkers, 80);
+    };
+    try {
       renderCalendar = window.renderCalendar;
     } catch (e) {}
-
-    console.log('[goals-extras] patched: renderCalendar (planner/goal markers)');
-    return true;
   }
 
   function injectPlannerGoalMarkers() {
     const grid = document.getElementById('calGrid');
     if (!grid) return;
-
     grid.querySelectorAll('[data-cal-day]').forEach((dayEl) => {
       const key = dayEl.dataset.calDay;
       if (!key) return;
-
-      // Remove old injected markers
       dayEl.querySelectorAll('.cal-pl-goal-marker').forEach((x) => x.remove());
 
       const plans = (state.plans || []).filter((p) => p.date === key);
@@ -373,33 +762,17 @@
         const d = String(g.deadline).slice(0, 10);
         return d === key && g.current < g.target;
       });
-
       if (!plans.length && !goalsDue.length) return;
 
-      let topPx = 6;
+      let topPx = 26;
       let html = '';
-
       if (plans.length) {
-        html += `<span class="cal-pl-goal-marker" title="${plans.length} planned block(s)" style="
-          position:absolute;top:${topPx}px;right:6px;
-          font-size:.6rem;font-weight:900;
-          background:rgba(20,184,166,.28);color:#5EEAD4;
-          padding:1px 6px;border-radius:20px;
-          pointer-events:none;
-        ">📅 ${plans.length}</span>`;
+        html += `<span class="cal-pl-goal-marker" title="${plans.length} planned block(s)" style="position:absolute;top:${topPx}px;right:6px;font-size:.6rem;font-weight:900;background:rgba(20,184,166,.28);color:#5EEAD4;padding:1px 6px;border-radius:20px;pointer-events:none;">📅 ${plans.length}</span>`;
         topPx += 18;
       }
-
       if (goalsDue.length) {
-        html += `<span class="cal-pl-goal-marker" title="${goalsDue.length} goal(s) due" style="
-          position:absolute;top:${topPx}px;right:6px;
-          font-size:.6rem;font-weight:900;
-          background:rgba(251,191,36,.28);color:#FBBF24;
-          padding:1px 6px;border-radius:20px;
-          pointer-events:none;
-        ">🎯 ${goalsDue.length}</span>`;
+        html += `<span class="cal-pl-goal-marker" title="${goalsDue.length} goal(s) due" style="position:absolute;top:${topPx}px;right:6px;font-size:.6rem;font-weight:900;background:rgba(251,191,36,.28);color:#FBBF24;padding:1px 6px;border-radius:20px;pointer-events:none;">🎯 ${goalsDue.length}</span>`;
       }
-
       if (html) {
         const wrapper = document.createElement('div');
         wrapper.innerHTML = html;
@@ -408,26 +781,16 @@
     });
   }
 
-  /* ═══════════════ 7. EXTEND getGoalsDueOn FOR DAY DETAIL ═══════════════ */
-  // (Calendar-extras already handles goals with deadlines — no patch needed)
-
-  /* ═══════════════ 8. SHOW PLANNER BLOCKS IN DAY DETAIL ═══════════════ */
   function patchOpenDayDetail() {
     const _orig = window.openDayDetail;
     if (typeof _orig !== 'function') return;
-
     window.openDayDetail = function (key) {
-      // Call original first
       _orig.call(this, key);
-
-      // Then augment modal with planner blocks if any
       setTimeout(() => {
         const plans = (state.plans || []).filter((p) => p.date === key);
         if (!plans.length) return;
-
         const modalBody = document.querySelector('#modalBox .modal-body');
         if (!modalBody) return;
-
         const plannerHTML = `
           <div style="padding:12px;background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.3);border-radius:10px;margin-bottom:14px;margin-top:14px">
             <div style="font-size:.72rem;font-weight:800;color:#5EEAD4;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">
@@ -440,28 +803,18 @@
                 <span style="color:${p.completed ? 'var(--emerald)' : 'var(--text-3)'}">${p.completed ? '✓' : '○'}</span>
                 <strong style="flex:1">${escHtml(p.subject)}</strong>
                 <span style="color:var(--text-3);font-size:.75rem">${p.start}–${p.end} · ${p.target_minutes}m</span>
-              </div>
-            `,
+              </div>`,
               )
               .join('')}
-          </div>
-        `;
-
-        // Insert after the top stats grid
+          </div>`;
         const firstDiv = modalBody.querySelector('div');
-        if (firstDiv && firstDiv.nextSibling) {
-          firstDiv.insertAdjacentHTML('afterend', plannerHTML);
-        } else {
-          modalBody.insertAdjacentHTML('afterbegin', plannerHTML);
-        }
+        if (firstDiv && firstDiv.nextSibling) firstDiv.insertAdjacentHTML('afterend', plannerHTML);
+        else modalBody.insertAdjacentHTML('afterbegin', plannerHTML);
       }, 60);
     };
-
     try {
       openDayDetail = window.openDayDetail;
     } catch (e) {}
-
-    console.log('[goals-extras] patched: openDayDetail (planner in day detail)');
   }
 
   /* ═══════════════ INIT ═══════════════ */
@@ -477,14 +830,12 @@
       hideTasks();
       patchRenderGoals();
       patchOpenGoalModal();
-      patchSessionWatch();
-      watchSessions();
+      patchOpenModal();
+      startSessionWatcher();
 
-      // Calendar patch (wait for calendar-extras to load first)
       setTimeout(() => {
         patchCalendarMarkers();
         patchOpenDayDetail();
-        // Trigger a re-render to inject markers
         if (typeof renderCalendar === 'function') renderCalendar();
       }, 500);
 
@@ -497,19 +848,6 @@
       }
       setTimeout(waitThenStart, 50);
     }
-  }
-
-  function patchSessionWatch() {
-    // Extra: hook on renderAll so goals refresh after session save
-    const _orig = window.renderAll;
-    if (typeof _orig !== 'function') return;
-    window.renderAll = function () {
-      _orig.call(this);
-      if (state.view === 'goals' && typeof renderGoals === 'function') renderGoals();
-    };
-    try {
-      renderAll = window.renderAll;
-    } catch (e) {}
   }
 
   waitThenStart();
