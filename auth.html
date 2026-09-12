@@ -731,7 +731,7 @@ async function handleForgotPassword() {
         try {
           // ✅ IMPORTANT: ?type=recovery add kiya taaki app.html detect kar sake
           const { error } = await supa.auth.resetPasswordForEmail(inputEmail, {
-            redirectTo: window.location.origin + APP_URL + '?type=recovery'
+            redirectTo: window.location.origin + APP_URL
           });
           if (error) throw error;
           closeModal();
