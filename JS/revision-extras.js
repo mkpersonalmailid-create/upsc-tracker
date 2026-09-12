@@ -1,19 +1,20 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Revision Extras v5 (FINAL)
+   UPSC TRACKER — Revision Extras v6 (FINAL)
    ─────────────────────────────────────────────────────────────
    ✅ "By Rev Level" view — Revision 1/2/3... → Broad Categories → Topics
    ✅ Dual-source merge (syllabus + revisions history)
    ✅ Dropdown expand/collapse + summary chips
    ✅ Schedule modal: Category → Subject → Topic (like Manual Log)
+   ✅ Custom subject SUPPORTED (shows in Subject dropdown)
+   ✅ Custom topics SUPPORTED (pulled from state.syllabus)
    ✅ Fixed Study Type = Revision
-   ✅ Custom topic hint (add custom subject first)
    ✅ On "✓ Done" → syllabus status auto-updates
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  console.log('[revision-extras] v5 loaded');
+  console.log('[revision-extras] v6 loaded');
 
   /* ═══════════════ CONSTANTS ═══════════════ */
   const BROAD_CATS = [
@@ -27,7 +28,6 @@
 
   const REV_COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#10B981', '#6366F1'];
 
-  /* Category dropdown options — same as Manual Log / Study */
   const CATEGORY_OPTIONS = [
     { id: 'prelims', label: '🎯 GS Prelims' },
     { id: 'mains-gs1', label: '📘 GS Mains · Paper I' },
@@ -372,7 +372,6 @@
         opacity: 0.55;
       }
 
-      /* ═══ Custom topic hint ═══ */
       .rev-custom-hint {
         display: flex;
         gap: 10px;
@@ -392,7 +391,6 @@
       }
       .rev-custom-hint strong { color: #E9D5FF; font-weight: 800; }
 
-      /* ═══ Fixed study-type indicator ═══ */
       .rev-fixed-type {
         display: flex;
         align-items: center;
@@ -665,7 +663,7 @@
 
   /* ═══════════════════════════════════════════════════════════════
      Schedule Revision modal — Category → Subject → Topic
-     (Same flow as Manual Log, but Study Type FIXED = Revision)
+     v6: Custom subjects AND custom topics supported
      ═══════════════════════════════════════════════════════════════ */
   function openEnhancedScheduleRevisionModal() {
     const maxRevs = Math.max(1, parseInt(state.settings.max_revisions, 10) || 3);
@@ -760,6 +758,8 @@
               return;
             }
 
+            /* getSubjectsForCategory is patched by subjects-extras.js
+               to include custom subjects from CAT_MAP */
             const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
 
             if (!subjects.length) {
@@ -776,7 +776,7 @@
             topicSel.disabled = true;
           };
 
-          /* ── Subject change → populate topics ── */
+          /* ── Subject change → populate topics (v6: ALSO from syllabus) ── */
           subjSel.onchange = () => {
             const cat = catSel.value;
             const subj = subjSel.value;
@@ -787,11 +787,22 @@
               return;
             }
 
-            const topics =
+            /* 1. Default topics from SYLLABUS object (via patched helper) */
+            const defaultTopics =
               (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
 
+            /* 2. Custom topics from state.syllabus — for BOTH:
+                  (a) custom subjects added via Subjects page
+                  (b) custom topics added to default subjects */
+            const customTopics = (state.syllabus || [])
+              .filter((s) => s.subject === subj && s.topic)
+              .map((s) => s.topic);
+
+            /* 3. Merge — unique only */
+            const topics = [...new Set([...defaultTopics, ...customTopics])];
+
             if (!topics.length) {
-              topicSel.innerHTML = '<option value="">— No topics available —</option>';
+              topicSel.innerHTML = '<option value="">— No topics yet —</option>';
               topicSel.disabled = true;
             } else {
               topicSel.innerHTML =
@@ -909,10 +920,8 @@
       const revNum = parseInt(r.revision_number, 10) || 1;
       const newStatus = revNum >= maxRevs ? 'completed' : `rev${revNum}`;
 
-      // Try to find existing syllabus entry
       let existing = state.syllabus.find((s) => s.subject === r.subject && s.topic === r.topic);
 
-      // Fallback: subject-only match
       if (!existing) {
         existing = state.syllabus.find((s) => s.subject === r.subject && (!s.topic || s.topic === r.subject));
       }
@@ -925,7 +934,6 @@
           } catch (e) {}
         }
       } else {
-        // Create new syllabus entry
         let paperId = r.paper;
         let cat = r.category;
 
@@ -956,7 +964,6 @@
         }
       }
 
-      // Call original completeRevision (marks r.status='completed' + DB update)
       if (typeof _orig === 'function') {
         try {
           await _orig.call(this, id);
