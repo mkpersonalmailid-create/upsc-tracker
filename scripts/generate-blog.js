@@ -14,20 +14,171 @@ const MODELS = [
   'gemma2-9b-it'
 ];
 
+/* ═══════════════════════════════════════════════════════════
+   TOPICS — 60+ across 8 categories
+   ═══════════════════════════════════════════════════════════ */
 const TOPICS = [
+  // ── Time Management (8) ──
   'Effective Time Management for UPSC Preparation',
-  'How to Analyze UPSC Previous Year Questions',
-  'Best Books for UPSC Prelims 2026',
-  'UPSC Mains Answer Writing Tips for Beginners',
-  'How to Stay Consistent in UPSC Preparation',
-  'Role of Current Affairs in UPSC CSE',
-  'UPSC Optional Subject Selection Guide',
   'How to Reduce Screen Time During UPSC Prep',
+  'Balancing Job and UPSC Preparation',
+  'Daily Study Timetable for UPSC Aspirants',
+  'How to Avoid Burnout During Long UPSC Preparation',
+  'Early Morning Study Routine for UPSC CSE',
+  'How to Stay Consistent in UPSC Preparation',
+  'Weekend Study Strategy for Working Aspirants',
+
+  // ── Subject-wise Strategy (10) ──
+  'How to Prepare Indian Polity for UPSC Prelims',
+  'Best Approach to Study Modern Indian History for UPSC',
+  'How to Master Geography for UPSC CSE',
+  'Economics Preparation Strategy for UPSC Prelims',
+  'Environment and Ecology Preparation for UPSC',
+  'Science and Technology for UPSC Prelims',
+  'How to Prepare International Relations for UPSC Mains',
+  'Indian Society and Social Justice Preparation',
+  'Internal Security Preparation Strategy for UPSC',
+  'Ethics and Integrity Preparation for UPSC Mains',
+
+  // ── Answer Writing (8) ──
+  'UPSC Mains Answer Writing Tips for Beginners',
+  'How to Structure UPSC Mains Answers Effectively',
+  'Common Mistakes in UPSC Mains Answer Writing',
+  'How to Improve Answer Writing Speed for UPSC Mains',
+  'Using Diagrams in UPSC Mains Answers',
+  'Essay Writing Strategy for UPSC',
+  'How to Write Introductions in UPSC Mains',
+  'Role of Examples in UPSC Answer Writing',
+
+  // ── PYQ & Analysis (6) ──
+  'How to Analyze UPSC Previous Year Questions',
+  'Why PYQs Are Essential for UPSC Preparation',
+  'How to Use UPSC PYQs for Revision',
+  'Subject-wise PYQ Analysis for UPSC Prelims',
+  'Common Patterns in UPSC Prelims Questions',
+  'How to Track UPSC PYQ Progress Effectively',
+
+  // ── Books & Resources (6) ──
+  'Best Books for UPSC Prelims 2026',
+  'Best Books for UPSC Mains GS Papers',
+  'Standard Reference Books for UPSC Preparation',
+  'Free Online Resources for UPSC Aspirants',
+  'How to Choose the Right UPSC Coaching',
+  'Newspaper Reading Strategy for UPSC',
+
+  // ── Current Affairs (6) ──
+  'Role of Current Affairs in UPSC CSE',
+  'How to Prepare Current Affairs for UPSC 2026',
+  'Best Sources for UPSC Current Affairs',
+  'How to Make Notes from Current Affairs',
+  'Monthly Current Affairs Compilation Strategy',
+  'Current Affairs Revision Techniques',
+
+  // ── Optional Subject (6) ──
+  'UPSC Optional Subject Selection Guide',
+  'How to Prepare Sociology Optional for UPSC',
+  'Political Science Optional Strategy for UPSC',
+  'History Optional Preparation Guide',
+  'Geography Optional Strategy for UPSC',
+  'How to Score High in Optional Subject',
+
+  // ── Mock Tests & Revision (6) ──
   'Importance of Revision in UPSC Preparation',
-  'Balancing Job and UPSC Preparation'
+  'How to Use Mock Tests for UPSC Prelims',
+  'Full-Length Test Strategy for UPSC',
+  'Spaced Repetition for UPSC Revision',
+  'How to Analyze Mock Test Performance',
+  'Best Time to Start Mock Tests',
+
+  // ── Mental Health & Motivation (6) ──
+  'Handling Failure in UPSC Preparation',
+  'How to Stay Motivated During UPSC Journey',
+  'Mental Health Tips for UPSC Aspirants',
+  'Dealing with Peer Pressure During UPSC Prep',
+  'How to Handle Family Expectations in UPSC',
+  'Building Resilience for Long UPSC Preparation'
 ];
 
-function buildHtmlTemplate({ title, description, content, dateStr, slug }) {
+/* ═══════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════ */
+
+// Convert topic string to slug
+function topicToSlug(topic) {
+  return topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// Get list of used topic slugs from existing blog posts
+function getUsedTopicSlugs() {
+  try {
+    if (!fs.existsSync('blog')) return [];
+    return fs.readdirSync('blog')
+      .filter(f => f.endsWith('.html') && f !== 'index.html')
+      .map(f => f.replace(/-\d{8}\.html$/, '').toLowerCase());
+  } catch (e) {
+    console.warn('⚠️ Could not read blog folder:', e.message);
+    return [];
+  }
+}
+
+// Get recent blog posts for "Read Next" section
+function getRecentBlogPosts(excludeSlug = '', limit = 3) {
+  try {
+    if (!fs.existsSync('blog')) return [];
+    const files = fs.readdirSync('blog')
+      .filter(f => f.endsWith('.html') && f !== 'index.html' && !f.startsWith(excludeSlug))
+      .map(f => ({
+        file: f,
+        mtime: fs.statSync(path.join('blog', f)).mtime
+      }))
+      .sort((a, b) => b.mtime - a.mtime)
+      .slice(0, limit);
+
+    return files.map(({ file }) => {
+      try {
+        const content = fs.readFileSync(path.join('blog', file), 'utf8');
+        const titleMatch = content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+        const title = titleMatch
+          ? titleMatch[1].trim()
+          : file.replace('.html', '').replace(/-/g, ' ');
+        return { slug: file.replace('.html', ''), title };
+      } catch (e) {
+        return { slug: file.replace('.html', ''), title: file.replace('.html', '') };
+      }
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+// Choose best topic (unused preferred)
+function pickTopic() {
+  const usedSlugs = getUsedTopicSlugs();
+  const available = TOPICS.filter(t => !usedSlugs.includes(topicToSlug(t)));
+
+  if (available.length > 0) {
+    console.log(`📊 ${available.length}/${TOPICS.length} topics unused`);
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  console.warn('⚠️ All topics used! Restarting cycle.');
+  return TOPICS[Math.floor(Math.random() * TOPICS.length)];
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HTML TEMPLATE
+   ═══════════════════════════════════════════════════════════ */
+function buildHtmlTemplate({ title, description, content, dateStr, slug, readNext }) {
+  const readNextHtml = (readNext && readNext.length)
+    ? `
+    <div class="read-next">
+      <h3 style="margin:0 0 16px;font-size:1.1rem;color:var(--text)">📚 Read Next</h3>
+      <ul style="list-style:none;margin:0;padding:0">
+        ${readNext.map(p => `<li style="margin-bottom:10px"><a href="/blog/${p.slug}.html">→ ${p.title}</a></li>`).join('')}
+      </ul>
+    </div>`
+    : '';
+
   return `<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
@@ -43,6 +194,11 @@ function buildHtmlTemplate({ title, description, content, dateStr, slug }) {
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://upscstudytracker.co.in/blog/${slug}.html">
 <meta property="og:image" content="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${title}">
+<meta name="twitter:description" content="${description}">
+<meta name="twitter:image" content="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
+<link rel="canonical" href="https://upscstudytracker.co.in/blog/${slug}.html">
 <link rel="icon" href="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -53,11 +209,20 @@ function buildHtmlTemplate({ title, description, content, dateStr, slug }) {
   "@type": "BlogPosting",
   "headline": "${title}",
   "description": "${description}",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png",
+    "width": 1200,
+    "height": 630
+  },
   "author": { "@type": "Organization", "name": "UPSC Study Tracker" },
   "publisher": {
     "@type": "Organization",
     "name": "UPSC Study Tracker",
-    "logo": { "@type": "ImageObject", "url": "https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" }
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png"
+    }
   },
   "datePublished": "${dateStr}",
   "dateModified": "${dateStr}",
@@ -103,6 +268,10 @@ blockquote{background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,15
 .cta-btn{display:inline-block;background:var(--grad-1);color:#fff;padding:14px 32px;border-radius:12px;font-weight:800;font-size:.95rem;box-shadow:0 8px 24px rgba(168,85,247,.4);transition:all .25s;text-decoration:none}
 .cta-btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(236,72,153,.5);color:#fff;text-decoration:none}
 
+.read-next{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;margin:30px 0;position:relative;z-index:1}
+.read-next a{color:var(--text-2);font-weight:600;font-size:.95rem;transition:.2s}
+.read-next a:hover{color:var(--purple);padding-left:4px}
+
 .faq{margin:40px 0}
 .faq-item{background:var(--card);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;overflow:hidden;transition:.25s}
 .faq-item:hover{border-color:var(--border-2)}
@@ -122,6 +291,7 @@ footer a{color:var(--text-2);margin:0 8px}
   .article{padding:30px 0 60px}
   .cta-box{padding:24px 20px}
   .nav-cta{padding:8px 14px;font-size:.78rem}
+  .read-next{padding:18px}
 }
 </style>
 </head>
@@ -153,6 +323,8 @@ footer a{color:var(--text-2);margin:0 8px}
 
     ${content}
 
+    ${readNextHtml}
+
     <div class="cta-box">
       <h3>🎯 Start Tracking Your UPSC Prep Today</h3>
       <p>Free UPSC Study Tracker — timer, syllabus, revisions, PYQs — all in one place.</p>
@@ -182,20 +354,26 @@ document.querySelectorAll('.faq-item').forEach(item => {
 </html>`;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   MAIN
+   ═══════════════════════════════════════════════════════════ */
 async function main() {
   try {
-    const topic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+    const topic = pickTopic();
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     const dateSlug = dateStr.replace(/-/g, '');
-    const slug = topic.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') + '-' + dateSlug;
+    const slug = topicToSlug(topic) + '-' + dateSlug;
     const fileName = `${slug}.html`;
     const filePath = path.join('blog', fileName);
 
     console.log(`📝 Topic: ${topic}`);
     console.log(`📁 Target: ${filePath}`);
 
-    // AI se SIRF article body content maango (no CSS, no head, no body)
+    // Read recent posts for "Read Next" section
+    const readNext = getRecentBlogPosts(slug, 3);
+    console.log(`🔗 Read Next: ${readNext.length} posts found`);
+
     const PROMPT = `Write a comprehensive, 1500-word blog article on the topic: "${topic}".
 
 CRITICAL INSTRUCTIONS:
@@ -306,6 +484,12 @@ RULES:
     content = content.replace(/<!DOCTYPE[^>]*>/gi, '');
     content = content.replace(/<\/?(html|head|body)[^>]*>/gi, '');
 
+    // Auto internal linking — homepage link add karo end me
+    content += `
+<div class="callout">
+  <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
+</div>`;
+
     // Description banao (first paragraph se)
     const descMatch = content.match(/<p[^>]*>([^<]+)<\/p>/i);
     const description = descMatch
@@ -318,12 +502,14 @@ RULES:
       description,
       content,
       dateStr,
-      slug
+      slug,
+      readNext
     });
 
     if (!fs.existsSync('blog')) fs.mkdirSync('blog');
     fs.writeFileSync(filePath, finalHtml, 'utf8');
     console.log(`✅ Blog post created: ${filePath}`);
+    console.log(`📄 Size: ${(finalHtml.length / 1024).toFixed(1)} KB`);
 
   } catch (error) {
     console.error('❌ Error:', error.message);
