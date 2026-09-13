@@ -8096,6 +8096,7 @@ ${
         $('#authScreen').classList.add('hidden');
         // ═══ FULL-SCREEN LOADER SHOW ═══
         showAppLoader('Loading your workspace…');
+        void document.body.offsetHeight; // ← FORCE REFLOW: loader paint ho jaye pehle
         $('#app').classList.remove('hidden');
         $('#fab').classList.add('hidden');
 
