@@ -95,6 +95,7 @@ export async function onRequestPost({ request, env }) {
       subscriptionId = razorpay_subscription_id;
       const currentEnd = sub.current_end ? sub.current_end * 1000 : Date.now() + 30 * 86400000;
       expiryDays = Math.max(1, Math.round((currentEnd - Date.now()) / 86400000));
+      var _subscriptionExpiryISO = new Date(currentEnd).toISOString();
     }
     // ============ ONE-TIME ORDER VERIFY (yearly / monthly_once) ============
     else if (razorpay_order_id) {
@@ -189,8 +190,8 @@ export async function onRequestPost({ request, env }) {
         expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
       }
     } else {
-      // Subscription (monthly_auto) or other — always fresh
-      expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
+      // Subscription (monthly_auto) — use Razorpay's exact current_end (no rounding)
+      expiryISO = _subscriptionExpiryISO || new Date(now.getTime() + expiryDays * 86400000).toISOString();
     }
 
     // ============ Save subscription ============
