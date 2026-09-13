@@ -12601,6 +12601,59 @@ ${
               }, 100);
             }
           });
+          // ═══ Sidebar Close Button (Mobile X) — MISSING FIX ═══
+          const sbCloseBtn = document.getElementById('sidebarClose');
+          if (sbCloseBtn) {
+            sbCloseBtn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const sb = document.getElementById('sidebar');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (sb) sb.classList.remove('open');
+              if (overlay) overlay.classList.remove('active');
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+            };
+          }
+
+          // ═══ Sidebar Overlay Click Closes Sidebar ═══
+          const sbOverlay = document.getElementById('sidebarOverlay');
+          if (sbOverlay) {
+            sbOverlay.onclick = () => {
+              const sb = document.getElementById('sidebar');
+              if (sb) sb.classList.remove('open');
+              sbOverlay.classList.remove('active');
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+            };
+          }
+
+          // ═══ Escape Key Closes Sidebar ═══
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+              const sb = document.getElementById('sidebar');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (sb && sb.classList.contains('open')) {
+                sb.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+              }
+            }
+          });
+
+          // ═══ BULLETPROOF: Event delegation (fallback) ═══
+          document.addEventListener(
+            'click',
+            (e) => {
+              if (e.target.closest('#sidebarClose')) {
+                e.preventDefault();
+                const sb = document.getElementById('sidebar');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (sb) sb.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+              }
+            },
+            true,
+          ); // ← capture phase = highest priority
           $('#sbUser').onclick = () => switchView('settings');
           $('#topAvatar').onclick = () => switchView('settings');
           $('#settingsBtn').onclick = () => switchView('settings');
