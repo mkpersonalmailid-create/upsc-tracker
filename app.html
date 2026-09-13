@@ -7097,9 +7097,15 @@
         }
       }
       function renderPremiumBanner() {
-        const el = $('#premiumBanner');
-        // ═══ Premium page pe banner hide (heading me poori details already hai) ═══
-        if (state.view === 'premium') {
+        const _sub = state.subscription;
+        const _isExpired =
+          _sub &&
+          _sub.expiry_date &&
+          new Date(_sub.expiry_date) < new Date() &&
+          _sub.plan !== 'monthly_auto' &&
+          _sub.plan !== 'monthly';
+        const _isActivePremium = isPremiumUser();
+        if (state.view === 'premium' && (isAdminUser() || (_isActivePremium && !_isExpired))) {
           el.style.display = 'none';
           return;
         }
