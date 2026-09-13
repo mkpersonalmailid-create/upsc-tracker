@@ -1,11 +1,43 @@
+# ═══════════════════════════════════════════════════════════════
+# UPSC Study Tracker — Cloudflare Pages Headers
+# ═══════════════════════════════════════════════════════════════
+# Ye file Cloudflare Pages ko batati hai kaunse files kaise cache
+# karni hain + security headers set karna hai.
+#
+# Rule: Specific paths UPAAR wale rules ko override karte hain.
+# ═══════════════════════════════════════════════════════════════
+
+# ═══════════════════════════════════════════════════════════════
+# SECURITY HEADERS — Applied to ALL routes
+# ═══════════════════════════════════════════════════════════════
 /*
   X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
 
+# ═══════════════════════════════════════════════════════════════
+# HTML FILES — No cache (always fresh)
+# ═══════════════════════════════════════════════════════════════
 /*.html
-  Cache-Control: no-cache, must-revalidate
+  Cache-Control: public, max-age=0, must-revalidate
 
+# Root paths
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ═══════════════════════════════════════════════════════════════
+# BLOG — No cache (daily updates)
+# ═══════════════════════════════════════════════════════════════
+/blog/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/blog/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# ═══════════════════════════════════════════════════════════════
+# SEO FILES — 1 day cache
+# ═══════════════════════════════════════════════════════════════
 /sitemap.xml
   Content-Type: application/xml
   Cache-Control: public, max-age=86400
@@ -14,8 +46,60 @@
   Content-Type: text/plain
   Cache-Control: public, max-age=86400
 
-/api/*
-  Cache-Control: no-store
+/site.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400
 
+# ═══════════════════════════════════════════════════════════════
+# JS & CSS — 1 day cache (rarely change)
+# ═══════════════════════════════════════════════════════════════
+/JS/*
+  Cache-Control: public, max-age=86400
+
+/CSS/*
+  Cache-Control: public, max-age=86400
+
+# ═══════════════════════════════════════════════════════════════
+# IMAGES & ICONS — 1 year cache (immutable)
+# ═══════════════════════════════════════════════════════════════
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable
+
+# ═══════════════════════════════════════════════════════════════
+# FONTS — 1 year cache (immutable)
+# ═══════════════════════════════════════════════════════════════
+/*.woff
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.woff2
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ttf
+  Cache-Control: public, max-age=31536000, immutable
+
+# ═══════════════════════════════════════════════════════════════
+# API — No cache (dynamic data)
+# ═══════════════════════════════════════════════════════════════
+/api/*
+  Cache-Control: no-store, must-revalidate
+
+# ═══════════════════════════════════════════════════════════════
+# ASSETS — 1 year cache
+# ═══════════════════════════════════════════════════════════════
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
