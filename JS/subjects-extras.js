@@ -634,6 +634,8 @@
           if (typeof renderTopicSelect === 'function') renderTopicSelect();
         };
       });
+      // ✅ FIX: Chips render hone pe labels bhi auto-render karo
+      setTimeout(addStudyLabels, 0);
     };
     try {
       renderCategoryChips = window.renderCategoryChips;
