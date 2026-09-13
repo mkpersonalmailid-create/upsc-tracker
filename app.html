@@ -6942,10 +6942,23 @@
             .limit(1)
             .maybeSingle();
           state.subscription = data;
-          if (!data) state.isPremium = false;
-          else if (data.status !== 'active' && data.status !== 'authenticated') state.isPremium = false;
-          else if (data.expiry_date && new Date(data.expiry_date) < new Date()) state.isPremium = false;
-          else state.isPremium = true;
+
+          if (!data) {
+            state.isPremium = false;
+          } else if (data.status !== 'active' && data.status !== 'authenticated') {
+            state.isPremium = false;
+          } else {
+            // Auto-renew plans (monthly_auto / monthly) — Razorpay khud renewal manage karta hai.
+            // Webhook delay ho sakta hai, isliye expiry_date pe bharosa na karo — status 'active' hai toh premium.
+            const isAutoRenew = data.plan === 'monthly_auto' || data.plan === 'monthly';
+            if (isAutoRenew) {
+              state.isPremium = true;
+            } else if (data.expiry_date && new Date(data.expiry_date) < new Date()) {
+              state.isPremium = false;
+            } else {
+              state.isPremium = true;
+            }
+          }
         } catch (e) {
           state.isPremium = false;
           state.subscription = null;
