@@ -634,8 +634,14 @@
           if (typeof renderTopicSelect === 'function') renderTopicSelect();
         };
       });
-      // ✅ FIX: Chips render hone pe labels bhi auto-render karo
-      setTimeout(addStudyLabels, 0);
+      // ✅ FIX: chips render hone ke baad step labels dobara inject karo
+      setTimeout(() => {
+        try {
+          addStudyLabels();
+        } catch (e) {
+          console.warn('[subjects-extras] addStudyLabels error:', e);
+        }
+      }, 0);
     };
     try {
       renderCategoryChips = window.renderCategoryChips;
@@ -1246,6 +1252,13 @@
       patchGetTopicsForMainsSplit();
       migrateLegacyMains();
       pollForUser();
+      // ✅ FIX 2: first-load pe chips already render ho chuke hain (un-patched).
+      // Ab patched version ready hai — turant labels inject karo.
+      setTimeout(() => {
+        try {
+          addStudyLabels();
+        } catch (e) {}
+      }, 150);
       if (supa && supa.auth && supa.auth.onAuthStateChange) {
         supa.auth.onAuthStateChange((event, session) => {
           if (event === 'SIGNED_IN' && session) setTimeout(loadCustomCategories, 1000);
