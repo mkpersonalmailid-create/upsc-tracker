@@ -2426,7 +2426,7 @@
       }
       .cal-grid {
         display: grid;
-        grid-template-columns: repeat(7, 1fr);
+        grid-template-columns: repeat(7, minmax(0, 1fr));
         gap: 6px;
       }
       .cal-dow {
@@ -3170,6 +3170,7 @@
         /* Content padding */
         .content {
           padding: 14px 12px 90px;
+          overflow-x: hidden !important;
         }
 
         /* Cards */
