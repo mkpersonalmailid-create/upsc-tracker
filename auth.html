@@ -751,6 +751,42 @@
           font-size: 0.75rem;
         }
       }
+      /* ═══════════════ MOBILE FIX v2 — auth layout ═══════════════ */
+      /* 1. Tablets/small screens: card ko top se start karo (center-cut fix) */
+      /* 2. Small phones: text wrap allow + tighter padding (right-clip fix) */
+      @media (max-width: 768px) {
+        .auth-screen {
+          align-items: flex-start !important;
+          padding: 60px 14px 40px !important;
+        }
+      }
+      @media (max-width: 420px) {
+        .auth-form-side {
+          padding: 24px 16px !important;
+        }
+        #authMsg {
+          padding: 10px 12px !important;
+        }
+        #authMsg .btn,
+        #authMsg button {
+          white-space: normal !important;
+          word-break: break-word !important;
+          line-height: 1.35 !important;
+          height: auto !important;
+          min-height: 42px !important;
+          padding: 10px 10px !important;
+          font-size: 0.82rem !important;
+        }
+        .auth-link {
+          font-size: 0.78rem !important;
+          padding: 2px 4px !important;
+        }
+        .email-suffix {
+          font-size: 0.82rem !important;
+          padding: 12px 10px 12px 4px !important;
+        }
+      }
+      /* ═══════════════════════════════════════════════════════════ */
     </style>
   </head>
   <body>
