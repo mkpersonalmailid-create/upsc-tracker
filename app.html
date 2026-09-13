@@ -8094,11 +8094,10 @@ ${
         }
         // ═══════════════════════════════════════════════════════════════
         $('#authScreen').classList.add('hidden');
-        $('#app').classList.remove('hidden');
-        $('#fab').classList.add('hidden');
-
         // ═══ FULL-SCREEN LOADER SHOW ═══
         showAppLoader('Loading your workspace…');
+        $('#app').classList.remove('hidden');
+        $('#fab').classList.add('hidden');
 
         try {
           clearLegacyUserCache();
