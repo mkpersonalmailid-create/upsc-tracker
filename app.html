@@ -7097,6 +7097,8 @@
         }
       }
       function renderPremiumBanner() {
+        const el = $('#premiumBanner');
+        if (!el) return;
         const _sub = state.subscription;
         const _isExpired =
           _sub &&
