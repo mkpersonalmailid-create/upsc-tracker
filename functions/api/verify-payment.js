@@ -1,19 +1,24 @@
 // POST /api/verify-payment
 // Handles one-time orders, subscriptions, and renewals
 
-const ONE_TIME_PLANS = { 
+const ONE_TIME_PLANS = {
   yearly: { days: 365, plan: 'yearly' },
-  monthly_once: { days: 30, plan: 'monthly_once' }
+  monthly_once: { days: 30, plan: 'monthly_once' },
 };
 
 function json(o, s = 200) {
-  return new Response(JSON.stringify(o), { status: s,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } });
+  return new Response(JSON.stringify(o), {
+    status: s,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
 }
-function hex(buf) { return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join(''); }
+function hex(buf) {
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
 function timingSafeEqual(a, b) {
   if (a.length !== b.length) return false;
-  let m = 0; for (let i = 0; i < a.length; i++) m |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  let m = 0;
+  for (let i = 0; i < a.length; i++) m |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return m === 0;
 }
 
@@ -23,34 +28,59 @@ export async function onRequestPost({ request, env }) {
     const auth = request.headers.get('Authorization') || '';
     const token = auth.startsWith('Bearer ') ? auth.slice(7) : '';
     if (!token) return json({ error: 'Unauthenticated' }, 401);
-    const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`,
-      { headers: { 'apikey': env.SUPABASE_ANON_KEY, 'Authorization': 'Bearer ' + token } });
+    const userRes = await fetch(`${env.SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: env.SUPABASE_ANON_KEY, Authorization: 'Bearer ' + token },
+    });
     if (!userRes.ok) return json({ error: 'Invalid session' }, 401);
     const user = await userRes.json();
 
     // 2. Body
-    let body; try { body = await request.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature,
-            razorpay_subscription_id, plan_id, is_renewal } = body;
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return json({ error: 'Invalid JSON' }, 400);
+    }
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      razorpay_subscription_id,
+      plan_id,
+      is_renewal,
+    } = body;
 
     if (!razorpay_payment_id || !razorpay_signature) return json({ error: 'Missing payment fields' }, 400);
 
     const enc = new TextEncoder();
-    const key = await crypto.subtle.importKey('raw', enc.encode(env.RAZORPAY_KEY_SECRET),
-      { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const key = await crypto.subtle.importKey(
+      'raw',
+      enc.encode(env.RAZORPAY_KEY_SECRET),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
     const auth64 = btoa(`${env.RAZORPAY_KEY_ID}:${env.RAZORPAY_KEY_SECRET}`);
 
-    let amount, currency, planName, expiryDays, subscriptionId = null;
+    let amount,
+      currency,
+      planName,
+      expiryDays,
+      subscriptionId = null;
 
     // ============ SUBSCRIPTION VERIFY (monthly UPI autopay) ============
     if (razorpay_subscription_id) {
-      const sigBuf = await crypto.subtle.sign('HMAC', key,
-        enc.encode(`${razorpay_payment_id}|${razorpay_subscription_id}`));
+      const sigBuf = await crypto.subtle.sign(
+        'HMAC',
+        key,
+        enc.encode(`${razorpay_payment_id}|${razorpay_subscription_id}`),
+      );
       const expected = hex(sigBuf);
       if (!timingSafeEqual(expected, razorpay_signature)) return json({ error: 'Invalid signature' }, 400);
 
-      const sRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${razorpay_subscription_id}`,
-        { headers: { 'Authorization': 'Basic ' + auth64 } });
+      const sRes = await fetch(`https://api.razorpay.com/v1/subscriptions/${razorpay_subscription_id}`, {
+        headers: { Authorization: 'Basic ' + auth64 },
+      });
       if (!sRes.ok) return json({ error: 'Subscription not found' }, 400);
       const sub = await sRes.json();
 
@@ -61,27 +91,28 @@ export async function onRequestPost({ request, env }) {
 
       amount = sub.quantity * (sub.plan?.item?.amount || 0);
       currency = sub.plan?.item?.currency || 'INR';
-      planName = 'monthly_auto';   // ⬅️ changed from 'monthly'
+      planName = 'monthly_auto'; // ⬅️ changed from 'monthly'
       subscriptionId = razorpay_subscription_id;
       const currentEnd = sub.current_end ? sub.current_end * 1000 : Date.now() + 30 * 86400000;
       expiryDays = Math.max(1, Math.round((currentEnd - Date.now()) / 86400000));
     }
     // ============ ONE-TIME ORDER VERIFY (yearly / monthly_once) ============
     else if (razorpay_order_id) {
-      const sigBuf = await crypto.subtle.sign('HMAC', key,
-        enc.encode(`${razorpay_order_id}|${razorpay_payment_id}`));
+      const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(`${razorpay_order_id}|${razorpay_payment_id}`));
       const expected = hex(sigBuf);
       if (!timingSafeEqual(expected, razorpay_signature)) return json({ error: 'Invalid signature' }, 400);
 
-      const pRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
-        { headers: { 'Authorization': 'Basic ' + auth64 } });
+      const pRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+        headers: { Authorization: 'Basic ' + auth64 },
+      });
       if (!pRes.ok) return json({ error: 'Payment not found' }, 400);
       const payment = await pRes.json();
       if (payment.order_id !== razorpay_order_id) return json({ error: 'Order mismatch' }, 400);
       if (!['captured', 'authorized'].includes(payment.status)) return json({ error: 'Not captured' }, 400);
 
-      const oRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`,
-        { headers: { 'Authorization': 'Basic ' + auth64 } });
+      const oRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`, {
+        headers: { Authorization: 'Basic ' + auth64 },
+      });
       if (!oRes.ok) return json({ error: 'Order not found' }, 400);
       const order = await oRes.json();
 
@@ -104,7 +135,8 @@ export async function onRequestPost({ request, env }) {
     // ============ Duplicate check ============
     const dupeRes = await fetch(
       `${env.SUPABASE_URL}/rest/v1/payments?razorpay_payment_id=eq.${encodeURIComponent(razorpay_payment_id)}&select=id`,
-      { headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY } });
+      { headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY } },
+    );
     if (dupeRes.ok) {
       const dupes = await dupeRes.json();
       if (Array.isArray(dupes) && dupes.length > 0) {
@@ -120,25 +152,28 @@ export async function onRequestPost({ request, env }) {
     let expiryISO;
     let renewalExtended = false;
 
-    const isOneTimePlan = (planName === 'yearly' || planName === 'monthly_once');
+    const isOneTimePlan = planName === 'yearly' || planName === 'monthly_once';
 
     if (isOneTimePlan) {
       // Check existing subscription
       const existingRes = await fetch(
         `${env.SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=expiry_date,status,plan`,
-        { headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY, 'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY } }
+        {
+          headers: { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY },
+        },
       );
-      
+
       if (existingRes.ok) {
         const existing = await existingRes.json();
         const current = Array.isArray(existing) ? existing[0] : null;
-        
-        const isActiveSamePlan = current
-          && current.plan === planName
-          && current.status === 'active'
-          && current.expiry_date
-          && new Date(current.expiry_date) > now;
-        
+
+        const isActiveSamePlan =
+          current &&
+          current.plan === planName &&
+          current.status === 'active' &&
+          current.expiry_date &&
+          new Date(current.expiry_date) > now;
+
         if (isActiveSamePlan) {
           // ✅ EXTEND: Add expiryDays to existing future expiry
           const baseDate = new Date(current.expiry_date);
@@ -160,53 +195,76 @@ export async function onRequestPost({ request, env }) {
 
     // ============ Save subscription ============
     const subPayload = {
-      user_id: user.id, plan: planName, status: 'active',
+      user_id: user.id,
+      plan: planName,
+      status: 'active',
       razorpay_order_id: razorpay_order_id || null,
-      razorpay_payment_id, razorpay_subscription_id: subscriptionId,
-      amount, currency,
-      start_date: now.toISOString(), expiry_date: expiryISO,
+      razorpay_payment_id,
+      razorpay_subscription_id: subscriptionId,
+      amount,
+      currency,
+      start_date: now.toISOString(),
+      expiry_date: expiryISO,
       next_billing_date: subscriptionId ? expiryISO : null,
-      updated_at: now.toISOString()
+      updated_at: now.toISOString(),
     };
     const subRes = await fetch(`${env.SUPABASE_URL}/rest/v1/subscriptions?on_conflict=user_id`, {
       method: 'POST',
-      headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-        'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
         'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(subPayload)
+        Prefer: 'resolution=merge-duplicates,return=representation',
+      },
+      body: JSON.stringify(subPayload),
     });
-    if (!subRes.ok) { console.error(await subRes.text()); return json({ error: 'Failed to save subscription' }, 500); }
+    if (!subRes.ok) {
+      console.error(await subRes.text());
+      return json({ error: 'Failed to save subscription' }, 500);
+    }
 
     // ============ Sync profiles.membership ============
     try {
       const profileSync = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
         method: 'PATCH',
-        headers: { 
-          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+        headers: {
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
           'Content-Type': 'application/json',
-          'Prefer': 'return=minimal'
+          Prefer: 'return=minimal',
         },
-        body: JSON.stringify({ 
-          membership: planName, 
+        body: JSON.stringify({
+          membership: planName,
           email: user.email,
-          updated_at: new Date().toISOString() 
-        })
+          updated_at: new Date().toISOString(),
+        }),
       });
       if (!profileSync.ok) {
         console.warn('profile membership sync failed:', await profileSync.text());
       }
-    } catch(e) { console.warn('profile membership sync error:', e.message); }
+    } catch (e) {
+      console.warn('profile membership sync error:', e.message);
+    }
 
     // ============ Log payment ============
     await fetch(`${env.SUPABASE_URL}/rest/v1/payments`, {
       method: 'POST',
-      headers: { 'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-        'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
-        'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates' },
-      body: JSON.stringify({ user_id: user.id, razorpay_order_id, razorpay_payment_id,
-        amount, currency, status: 'captured', plan: planName })
+      headers: {
+        apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({
+        user_id: user.id,
+        razorpay_order_id: razorpay_order_id || null,
+        razorpay_payment_id,
+        razorpay_subscription_id: subscriptionId || null,
+        amount,
+        currency,
+        status: 'captured',
+        plan: planName,
+      }),
     });
 
     return json({
@@ -214,7 +272,7 @@ export async function onRequestPost({ request, env }) {
       plan: planName,
       expiry: expiryISO,
       amount,
-      renewal_extended: renewalExtended
+      renewal_extended: renewalExtended,
     });
   } catch (e) {
     console.error('verify-payment error:', e);
