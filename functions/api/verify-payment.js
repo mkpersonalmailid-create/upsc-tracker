@@ -235,7 +235,7 @@ export async function onRequestPost({ request, env }) {
           Prefer: 'return=minimal',
         },
         body: JSON.stringify({
-          membership: planName,
+          membership: premium,
           email: user.email,
           updated_at: new Date().toISOString(),
         }),
