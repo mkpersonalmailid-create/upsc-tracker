@@ -7085,6 +7085,12 @@
       }
       function renderPremiumBanner() {
         const el = $('#premiumBanner');
+        // ═══ Premium page pe banner hide (heading me poori details already hai) ═══
+        if (state.view === 'premium') {
+          el.style.display = 'none';
+          return;
+        }
+        el.style.display = '';
         if (!el) return;
 
         // ═══ ADMIN ═══
