@@ -16,7 +16,19 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog Posts (8) -->
+  <!-- Blog Posts (10) -->
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/using-diagrams-in-upsc-mains-answers-20260913.html</loc>
+    <lastmod>2026-09-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/balancing-job-and-upsc-preparation-20260912.html</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://upscstudytracker.co.in/blog/best-approach-to-study-modern-indian-history-for-upsc-20260912.html</loc>
     <lastmod>2026-09-12</lastmod>
@@ -36,13 +48,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://upscstudytracker.co.in/blog/balancing-job-and-upsc-preparation-20260912.html</loc>
-    <lastmod>2026-09-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://upscstudytracker.co.in/blog/how-to-stay-consistent-in-upsc-preparation-20260912.html</loc>
+    <loc>https://upscstudytracker.co.in/blog/how-to-structure-upsc-mains-answers-effectively-20260912.html</loc>
     <lastmod>2026-09-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -60,13 +66,19 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://upscstudytracker.co.in/blog/how-to-stay-consistent-in-upsc-preparation-20260912.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://upscstudytracker.co.in/blog/upsc-mains-answer-writing-tips-for-beginners-20260911.html</loc>
     <lastmod>2026-09-11</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- Legal / Static Pages -->
+  <!-- Static Pages -->
   <url>
     <loc>https://upscstudytracker.co.in/about.html</loc>
     <lastmod>2026-09-11</lastmod>
