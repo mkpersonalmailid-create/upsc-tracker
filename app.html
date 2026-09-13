@@ -8108,6 +8108,14 @@ ${
           updateAdminVisibility();
           updatePremiumNavItems();
           renderAll();
+          // ═══ FIX: subjects-extras.js load hone ke baad study view force re-render ═══
+          setTimeout(() => {
+            if (state.view === 'study') renderStudy();
+          }, 800);
+          setTimeout(() => {
+            if (state.view === 'study') renderStudy();
+          }, 2000);
+
           updateGreeting();
           updateLastSeen();
           setInterval(updateLastSeen, 60000);
