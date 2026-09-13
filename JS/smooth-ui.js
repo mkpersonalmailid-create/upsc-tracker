@@ -491,7 +491,7 @@
       .cdt-panel,
       .fab,
       .fab-menu,
-      .sidebar,
+      
       .toast {
         transform: translateZ(0);
         backface-visibility: hidden;
