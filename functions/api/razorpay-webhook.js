@@ -5,12 +5,12 @@
 function json(o, s = 200) {
   return new Response(JSON.stringify(o), {
     status: s,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
 function hex(buf) {
-  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export async function onRequestPost({ request, env }) {
@@ -26,7 +26,7 @@ export async function onRequestPost({ request, env }) {
       enc.encode(env.RAZORPAY_WEBHOOK_SECRET),
       { name: 'HMAC', hash: 'SHA-256' },
       false,
-      ['sign']
+      ['sign'],
     );
     const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody));
     const expected = hex(sigBuf);
@@ -62,7 +62,7 @@ export async function onRequestPost({ request, env }) {
         updateData = {
           status,
           razorpay_subscription_id: subscriptionId,
-          updated_at: now
+          updated_at: now,
         };
         break;
 
@@ -76,7 +76,7 @@ export async function onRequestPost({ request, env }) {
           next_billing_date: currentEnd,
           razorpay_payment_id: payload.payload?.payment?.entity?.id || null,
           razorpay_subscription_id: subscriptionId,
-          updated_at: now
+          updated_at: now,
         };
         break;
 
@@ -106,13 +106,13 @@ export async function onRequestPost({ request, env }) {
       {
         method: 'PATCH',
         headers: {
-          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
           'Content-Type': 'application/json',
-          'Prefer': 'return=representation'
+          Prefer: 'return=representation',
         },
-        body: JSON.stringify(updateData)
-      }
+        body: JSON.stringify(updateData),
+      },
     );
 
     let patchedRows = [];
@@ -128,18 +128,18 @@ export async function onRequestPost({ request, env }) {
       await fetch(`${env.SUPABASE_URL}/rest/v1/subscriptions`, {
         method: 'POST',
         headers: {
-          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
           'Content-Type': 'application/json',
-          'Prefer': 'resolution=merge-duplicates'
+          Prefer: 'resolution=merge-duplicates',
         },
         body: JSON.stringify({
           user_id: userId,
-          plan: 'monthly',
+          plan: 'monthly_auto',
           razorpay_subscription_id: subscriptionId,
           start_date: now,
-          ...updateData
-        })
+          ...updateData,
+        }),
       });
     }
 
@@ -150,10 +150,10 @@ export async function onRequestPost({ request, env }) {
         await fetch(`${env.SUPABASE_URL}/rest/v1/payments`, {
           method: 'POST',
           headers: {
-            'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-            'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+            apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+            Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
             'Content-Type': 'application/json',
-            'Prefer': 'resolution=ignore-duplicates'
+            Prefer: 'resolution=ignore-duplicates',
           },
           body: JSON.stringify({
             user_id: userId,
@@ -163,8 +163,8 @@ export async function onRequestPost({ request, env }) {
             amount: p.amount,
             currency: p.currency,
             status: p.status,
-            plan: 'monthly'
-          })
+            plan: 'monthly_auto',
+          }),
         });
       }
     }
@@ -174,11 +174,11 @@ export async function onRequestPost({ request, env }) {
       await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
         method: 'PATCH',
         headers: {
-          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
-          'Content-Type': 'application/json'
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ membership: 'premium' })
+        body: JSON.stringify({ membership: 'premium' }),
       });
     }
 
@@ -187,17 +187,16 @@ export async function onRequestPost({ request, env }) {
       await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`, {
         method: 'PATCH',
         headers: {
-          'apikey': env.SUPABASE_SERVICE_ROLE_KEY,
-          'Authorization': 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
-          'Content-Type': 'application/json'
+          apikey: env.SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: 'Bearer ' + env.SUPABASE_SERVICE_ROLE_KEY,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ membership: 'free' })
+        body: JSON.stringify({ membership: 'free' }),
       });
     }
 
     console.log('Webhook processed:', event, 'for sub:', subscriptionId, 'status:', status);
     return json({ ok: true, event, status, subscriptionId });
-
   } catch (e) {
     console.error('webhook error:', e);
     return json({ error: 'Server error', message: e.message }, 500);
