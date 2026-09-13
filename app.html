@@ -12543,77 +12543,41 @@ ${
           $$('.nav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
           $$('.bnav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
           // ═══ Sidebar Toggle + Mobile Close ═══
-          // ═══════════════════════════════════════════════════════════
-          // SIDEBAR CONTROL — Bulletproof (single source of truth)
-          // ═══════════════════════════════════════════════════════════
-
-          // Helper: close sidebar completely
-          function closeSidebar() {
-            const sb = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            if (sb) sb.classList.remove('open');
-            if (overlay) overlay.classList.remove('active');
-            document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-          }
-
-          // ☰ Hamburger — opens/closes sidebar
-          const collapseBtnEl = document.getElementById('collapseBtn');
-          if (collapseBtnEl) {
-            collapseBtnEl.addEventListener('click', () => {
-              const sb = document.getElementById('sidebar');
-              if (window.innerWidth <= 900) {
-                sb.classList.toggle('open');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
-                document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
-                  el.style.display = sb.classList.contains('open') ? 'none' : '';
-                });
-              } else {
-                sb.classList.toggle('collapsed');
-              }
-            });
-          }
-
-          // ✕ Close button (mobile)
-          const sbCloseBtnEl = document.getElementById('sidebarClose');
-          if (sbCloseBtnEl) {
-            sbCloseBtnEl.addEventListener('click', (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              closeSidebar();
-            });
-          }
-
-          // Overlay backdrop click
-          const sbOverlayEl = document.getElementById('sidebarOverlay');
-          if (sbOverlayEl) {
-            sbOverlayEl.addEventListener('click', closeSidebar);
-          }
-
-          // Escape key
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeSidebar();
-          });
-
-          // Auto-close sidebar on nav item click (mobile)
-          document.addEventListener('click', (e) => {
-            if (window.innerWidth <= 900 && e.target.closest('.nav-item')) {
-              setTimeout(closeSidebar, 100);
+          $('#collapseBtn').onclick = () => {
+            const sb = $('#sidebar');
+            if (window.innerWidth <= 900) {
+              sb.classList.toggle('open');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
+                el.style.display = sb.classList.contains('open') ? 'none' : '';
+              });
+            } else {
+              sb.classList.toggle('collapsed');
             }
-          });
+          };
 
-          // ═══ BULLETPROOF FALLBACK — capture phase (highest priority) ═══
-          document.addEventListener(
-            'click',
-            (e) => {
-              if (e.target.closest('#sidebarClose')) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-                closeSidebar();
-              }
-            },
-            true,
-          );
+          const sbCloseBtn = document.getElementById('sidebarClose');
+          if (sbCloseBtn) {
+            sbCloseBtn.addEventListener('click', () => {
+              const sb = document.getElementById('sidebar');
+              const overlay = document.getElementById('sidebarOverlay');
+              if (sb) sb.classList.remove('open');
+              if (overlay) overlay.classList.remove('active');
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+            });
+          }
+
+          const sbOverlay = document.getElementById('sidebarOverlay');
+          if (sbOverlay) {
+            sbOverlay.addEventListener('click', () => {
+              const sb = document.getElementById('sidebar');
+              if (sb) sb.classList.remove('open');
+              sbOverlay.classList.remove('active');
+              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
+            });
+          }
+
           document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
               const sb = document.getElementById('sidebar');
@@ -12637,59 +12601,6 @@ ${
               }, 100);
             }
           });
-          // ═══ Sidebar Close Button (Mobile X) — MISSING FIX ═══
-          const sbCloseBtn = document.getElementById('sidebarClose');
-          if (sbCloseBtn) {
-            sbCloseBtn.onclick = (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              const sb = document.getElementById('sidebar');
-              const overlay = document.getElementById('sidebarOverlay');
-              if (sb) sb.classList.remove('open');
-              if (overlay) overlay.classList.remove('active');
-              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-            };
-          }
-
-          // ═══ Sidebar Overlay Click Closes Sidebar ═══
-          const sbOverlay = document.getElementById('sidebarOverlay');
-          if (sbOverlay) {
-            sbOverlay.onclick = () => {
-              const sb = document.getElementById('sidebar');
-              if (sb) sb.classList.remove('open');
-              sbOverlay.classList.remove('active');
-              document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-            };
-          }
-
-          // ═══ Escape Key Closes Sidebar ═══
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-              const sb = document.getElementById('sidebar');
-              const overlay = document.getElementById('sidebarOverlay');
-              if (sb && sb.classList.contains('open')) {
-                sb.classList.remove('open');
-                if (overlay) overlay.classList.remove('active');
-                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-              }
-            }
-          });
-
-          // ═══ BULLETPROOF: Event delegation (fallback) ═══
-          document.addEventListener(
-            'click',
-            (e) => {
-              if (e.target.closest('#sidebarClose')) {
-                e.preventDefault();
-                const sb = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                if (sb) sb.classList.remove('open');
-                if (overlay) overlay.classList.remove('active');
-                document.querySelectorAll('.fab, .fab-menu').forEach((el) => (el.style.display = ''));
-              }
-            },
-            true,
-          ); // ← capture phase = highest priority
           $('#sbUser').onclick = () => switchView('settings');
           $('#topAvatar').onclick = () => switchView('settings');
           $('#settingsBtn').onclick = () => switchView('settings');
