@@ -1,117 +1,362 @@
-// scripts/update-blog-index.js
+// ═══════════════════════════════════════════════════════════════
+// UPSC Tracker — Blog Index & Sitemap Updater
+// ═══════════════════════════════════════════════════════════════
+// Ye script:
+//   1. blog/ folder scan karta hai (.html files)
+//   2. index-template.html se premium design uthata hai
+//   3. Blog cards generate karke index.html me daalta hai
+//   4. sitemap.xml auto-update karta hai
+//
+// Cron me chalta hai (daily-blog.yml) after generate-blog.js
+// ═══════════════════════════════════════════════════════════════
 
 const fs = require('fs');
 const path = require('path');
 
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const CONFIG = {
+  blogDir: 'blog',
+  indexFile: 'index.html',
+  templateFile: 'index-template.html',
+  sitemapFile: 'sitemap.xml',
+  siteUrl: 'https://upscstudytracker.co.in',
+  defaultDate: '2026-01-01',
+  defaultDescription: 'Read this UPSC preparation article.',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN
+// ═══════════════════════════════════════════════════════════════
 function main() {
-  const blogDir = 'blog';
-  const files = fs.readdirSync(blogDir)
-    .filter(f => f.endsWith('.html') && f !== 'index.html');
+  console.log('🚀 Starting blog index + sitemap update...\n');
 
-  const posts = files.map(file => {
-    const content = fs.readFileSync(path.join(blogDir, file), 'utf8');
-    
-    // Title nikaalo
-    const titleMatch = content.match(/<title>([^<]+)<\/title>/i)
-      || content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    const title = titleMatch ? titleMatch[1].replace(/\s*\|\s*UPSC Tracker.*$/i, '').trim() : file;
-    
-    // Description nikaalo
-    const descMatch = content.match(/<meta name="description" content="([^"]+)"/i);
-    const description = descMatch ? descMatch[1].slice(0, 200) : 'Read this UPSC preparation article.';
-    
-    // Date nikaalo
-    const dateMatch = content.match(/<meta property="article:published_time" content="([^"]+)"/i)
-      || content.match(/(\d{4}-\d{2}-\d{2})/);
-    const date = dateMatch ? dateMatch[1].slice(0, 10) : '2026-01-01';
-    
-    return { file, title, description, date };
-  });
+  // Step 1: Scan blog posts
+  const posts = scanBlogPosts();
+  console.log(`📚 Found ${posts.length} blog posts\n`);
 
-  // Latest first
-  posts.sort((a, b) => b.date.localeCompare(a.date));
+  if (posts.length === 0) {
+    console.log('⚠️  No blog posts found. Exiting.');
+    return;
+  }
 
-  const cardsHtml = posts.map(p => `
-    <article style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:24px;transition:all .25s;">
-      <div style="font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--purple);margin-bottom:10px">📖 UPSC</div>
-      <h2 style="font-size:1.15rem;font-weight:800;margin-bottom:10px;color:var(--text);line-height:1.35">
-        <a href="/blog/${p.file}" style="color:var(--text);text-decoration:none">${p.title}</a>
-      </h2>
-      <p style="font-size:.88rem;color:var(--text-2);line-height:1.6;margin-bottom:16px">${p.description}</p>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--text-3)">
-        <span>📅 ${p.date}</span>
-        <a href="/blog/${p.file}" style="color:var(--purple);font-weight:700;text-decoration:none">Read →</a>
-      </div>
-    </article>`).join('\n');
+  // Step 2: Load template
+  const template = loadTemplate();
 
-  const indexHtml = `<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UPSC Preparation Blog — Study Strategies & Tips | UPSC Tracker</title>
-<meta name="description" content="Free UPSC study strategies, book recommendations, time management tips, and prep guides. Updated daily for serious aspirants.">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#0A0612;--card:#171026;--border:#2A1E42;--text:#FFF;--text-2:#B8A8D9;--text-3:#6E5F8C;--purple:#A855F7;--grad-1:linear-gradient(135deg,#8B5CF6,#EC4899)}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle at 15% 20%,rgba(168,85,247,.12),transparent 45%),radial-gradient(circle at 85% 80%,rgba(236,72,153,.10),transparent 45%)}
-a{color:var(--purple);text-decoration:none}
-.navbar{padding:16px 0;border-bottom:1px solid var(--border);background:rgba(10,6,18,.85);backdrop-filter:blur(20px);position:sticky;top:0;z-index:100}
-.nav-inner{max-width:1100px;margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;align-items:center}
-.logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--text)}
-.logo img{width:36px;height:36px;border-radius:9px}
-.nav-cta{background:var(--grad-1);color:#fff!important;padding:10px 20px;border-radius:10px;font-weight:800;font-size:.85rem}
-.hero{text-align:center;padding:60px 20px 40px;position:relative;z-index:1}
-.hero .tag{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--purple);margin-bottom:14px}
-.hero h1{font-size:clamp(2rem,4vw,3rem);font-weight:900;letter-spacing:-.03em;margin-bottom:16px;background:linear-gradient(135deg,#fff,#C4B5FD);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.hero p{color:var(--text-2);font-size:1.05rem;max-width:600px;margin:0 auto}
-.posts{max-width:1100px;margin:0 auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;position:relative;z-index:1}
-footer{border-top:1px solid var(--border);padding:40px 0;text-align:center;color:var(--text-3);font-size:.85rem;margin-top:60px;background:var(--bg-2);position:relative;z-index:1}
-footer a{color:var(--text-2);margin:0 8px}
-</style>
-</head>
-<body>
-<nav class="navbar">
-  <div class="nav-inner">
-    <a href="/" class="logo">
-      <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="UPSC Tracker">
-      <span>UPSC Study Tracker</span>
-    </a>
-    <a href="/app.html" class="nav-cta">Start Free →</a>
-  </div>
-</nav>
+  // Step 3: Build new index.html
+  const newIndex = buildIndexHtml(template, posts);
 
-<section class="hero">
-  <div class="tag">Blog</div>
-  <h1>UPSC Preparation Blog</h1>
-  <p>Free study strategies, book recommendations, and time management tips for serious aspirants.</p>
-</section>
-
-<section class="posts">
-  ${cardsHtml}
-</section>
-
-<footer>
-  <div>© 2026 UPSC Study Tracker</div>
-  <div style="margin-top:10px">
-    <a href="/">Home</a> · <a href="/app.html">App</a> · <a href="/about.html">About</a> · <a href="/contact.html">Contact</a>
-  </div>
-</footer>
-</body>
-</html>`;
-
-  fs.writeFileSync('blog/index.html', indexHtml, 'utf8');
+  // Step 4: Write index.html
+  fs.writeFileSync(path.join(CONFIG.blogDir, CONFIG.indexFile), newIndex, 'utf8');
   console.log(`✅ Blog index updated with ${posts.length} posts`);
+
+  // Step 5: Update sitemap.xml
+  updateSitemap(posts);
+  console.log(`✅ Sitemap updated with ${posts.length} blog posts`);
+
+  console.log('\n🎉 Done!\n');
 }
 
-main();
+// ═══════════════════════════════════════════════════════════════
+// STEP 1: SCAN BLOG POSTS
+// ═══════════════════════════════════════════════════════════════
+function scanBlogPosts() {
+  const files = fs.readdirSync(CONFIG.blogDir).filter((f) => {
+    // Only .html files
+    if (!f.endsWith('.html')) return false;
+    // Exclude main index
+    if (f === CONFIG.indexFile) return false;
+    // Exclude template and any index-* files
+    if (f.startsWith('index-')) return false;
+    // Everything else is a blog post
+    return true;
+  });
+
+  const posts = files.map((file) => {
+    const filePath = path.join(CONFIG.blogDir, file);
+    const content = fs.readFileSync(filePath, 'utf8');
+
+    return {
+      file,
+      title: extractTitle(content, file),
+      description: extractDescription(content),
+      date: extractDate(content),
+    };
+  });
+
+  // Sort: latest first
+  posts.sort((a, b) => b.date.localeCompare(a.date));
+
+  return posts;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EXTRACTORS
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Extract title from blog post
+ * Priority: <title> tag → <h1> tag → filename
+ */
+function extractTitle(content, fallbackFile) {
+  // Try <title> first
+  let match = content.match(/<title>([^<]+)<\/title>/i);
+  if (match) {
+    return match[1]
+      .replace(/\s*\|\s*UPSC.*$/i, '') // Remove "| UPSC Tracker..." suffix
+      .replace(/\s*[-—]\s*UPSC.*$/i, '') // Remove "- UPSC..." suffix
+      .trim();
+  }
+
+  // Fallback: <h1>
+  match = content.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+  if (match) {
+    return match[1].trim();
+  }
+
+  // Final fallback: filename (without .html)
+  return fallbackFile.replace(/\.html$/, '').replace(/-/g, ' ');
+}
+
+/**
+ * Extract description from <meta name="description">
+ */
+function extractDescription(content) {
+  const match = content.match(/<meta\s+name="description"\s+content="([^"]+)"/i);
+  if (match) {
+    return match[1].slice(0, 200).trim();
+  }
+  return CONFIG.defaultDescription;
+}
+
+/**
+ * Extract publish date
+ * Priority:
+ *   1. JSON-LD "datePublished"
+ *   2. <meta property="article:published_time">
+ *   3. First YYYY-MM-DD match in content
+ *   4. Default date
+ */
+function extractDate(content) {
+  // 1. JSON-LD datePublished (most reliable)
+  let match = content.match(/"datePublished"\s*:\s*"(\d{4}-\d{2}-\d{2})"/i);
+  if (match) return match[1];
+
+  // 2. Meta tag
+  match = content.match(/<meta\s+property="article:published_time"\s+content="([^"]+)"/i);
+  if (match) return match[1].slice(0, 10);
+
+  // 3. Fallback: first YYYY-MM-DD in content
+  match = content.match(/(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+
+  // 4. Default
+  return CONFIG.defaultDate;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 2: LOAD TEMPLATE
+// ═══════════════════════════════════════════════════════════════
+function loadTemplate() {
+  const templatePath = path.join(CONFIG.blogDir, CONFIG.templateFile);
+
+  if (fs.existsSync(templatePath)) {
+    console.log(`📋 Using template: ${CONFIG.templateFile}`);
+    return fs.readFileSync(templatePath, 'utf8');
+  }
+
+  // Fallback: use existing index.html (works but 2nd run pe risky)
+  const indexPath = path.join(CONFIG.blogDir, CONFIG.indexFile);
+  if (fs.existsSync(indexPath)) {
+    console.log(`⚠️  Template not found — using existing ${CONFIG.indexFile} as base`);
+    console.log(`💡 Tip: Run "cp ${indexPath} ${templatePath}" to create template\n`);
+    return fs.readFileSync(indexPath, 'utf8');
+  }
+
+  throw new Error(`Neither ${CONFIG.templateFile} nor ${CONFIG.indexFile} exists!`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 3: BUILD NEW INDEX HTML
+// ═══════════════════════════════════════════════════════════════
+function buildIndexHtml(template, posts) {
+  let html = template;
+
+  // ─── Replace hero stat count ───
+  // Matches: <strong>8</strong> Articles  →  <strong>N</strong> Articles
+  html = html.replace(/<strong>\d+<\/strong>\s*Articles/i, `<strong>${posts.length}</strong> Articles`);
+
+  // ─── Replace posts count badge ───
+  // Matches: <span class="posts-count">8 posts</span>  →  <span class="posts-count">N posts</span>
+  html = html.replace(
+    /<span\s+class="posts-count">\d+\s+posts<\/span>/i,
+    `<span class="posts-count">${posts.length} posts</span>`,
+  );
+
+  // ─── Replace posts grid ───
+  // Matches: <div class="posts-grid">...</div> followed by <!-- CTA Banner -->
+  const cardsHtml = posts.map((post) => buildCardHtml(post)).join('\n');
+
+  html = html.replace(
+    /<div\s+class="posts-grid">[\s\S]*?<\/div>\s*(?=<!--\s*CTA Banner\s*-->)/i,
+    `<div class="posts-grid">\n${cardsHtml}\n        </div>\n\n        `,
+  );
+
+  return html;
+}
+
+/**
+ * Build a single premium post card HTML
+ */
+function buildCardHtml(post) {
+  const prettyDate = formatDate(post.date);
+
+  return `          <a href="/blog/${post.file}" class="post-card">
+            <span class="post-tag">📖 UPSC</span>
+            <h3 class="post-title">${escapeHtml(post.title)}</h3>
+            <p class="post-excerpt">${escapeHtml(post.description)}</p>
+            <div class="post-footer">
+              <span class="post-date">📅 ${prettyDate}</span>
+              <span class="post-read"
+                >Read
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
+                </svg>
+              </span>
+            </div>
+          </a>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STEP 4: UPDATE SITEMAP.XML
+// ═══════════════════════════════════════════════════════════════
+function updateSitemap(posts) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // ─── Main URLs ───
+  const mainUrls = `  <!-- Homepage -->
+  <url>
+    <loc>${CONFIG.siteUrl}/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Blog Homepage -->
+  <url>
+    <loc>${CONFIG.siteUrl}/blog/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+
+  // ─── Blog Post URLs ───
+  const blogUrls = posts
+    .map(
+      (p) => `  <url>
+    <loc>${CONFIG.siteUrl}/blog/${p.file}</loc>
+    <lastmod>${p.date}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>`,
+    )
+    .join('\n');
+
+  // ─── Static / Legal Pages ───
+  const staticPages = `  <!-- Static Pages -->
+  <url>
+    <loc>${CONFIG.siteUrl}/about.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${CONFIG.siteUrl}/contact.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>${CONFIG.siteUrl}/privacy.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>${CONFIG.siteUrl}/terms.html</loc>
+    <lastmod>2026-09-11</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>`;
+
+  // ─── Assemble Sitemap ───
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${mainUrls}
+
+  <!-- Blog Posts (${posts.length}) -->
+${blogUrls}
+
+${staticPages}
+</urlset>
+`;
+
+  fs.writeFileSync(CONFIG.sitemapFile, sitemap, 'utf8');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Format ISO date → "12 Sep 2026"
+ */
+function formatDate(isoDate) {
+  try {
+    const d = new Date(isoDate);
+    if (isNaN(d.getTime())) return isoDate;
+    return d.toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch (e) {
+    return isoDate;
+  }
+}
+
+/**
+ * Escape HTML entities in text
+ */
+function escapeHtml(str) {
+  return String(str || '').replace(
+    /[&<>"']/g,
+    (c) =>
+      ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+      })[c],
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RUN
+// ═══════════════════════════════════════════════════════════════
+try {
+  main();
+} catch (err) {
+  console.error('❌ Script failed:', err.message);
+  process.exit(1);
+}

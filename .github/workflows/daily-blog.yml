@@ -30,17 +30,8 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: node scripts/generate-blog.js
 
-      - name: 📰 Update blog index
+      - name: 📰 Update blog index + sitemap
         run: node scripts/update-blog-index.js
-
-      - name: 📝 Update sitemap.xml
-        run: |
-          LATEST=$(ls -t blog/*.html | grep -v "blog/index.html" | head -1 | sed 's|^|https://upscstudytracker.co.in/|')
-          echo "Latest post: $LATEST"
-
-          if ! grep -q "$LATEST" sitemap.xml; then
-            sed -i "s|</urlset>|  <url>\n    <loc>$LATEST</loc>\n    <lastmod>$(date +%Y-%m-%d)</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.7</priority>\n  </url>\n</urlset>|" sitemap.xml
-          fi
 
       - name: 🚀 Commit and push to MAIN
         id: push_main
@@ -48,9 +39,10 @@ jobs:
           git config user.name "UPSC Tracker Bot"
           git config user.email "bot@upscstudytracker.co.in"
 
-          # Backup list of new blog files (NOT index.html) for dev sync
+          # Backup list of new blog files (NOT index.html, NOT template) for dev sync
           git add blog/ sitemap.xml
-          git diff --staged --name-only -- 'blog/*.html' | grep -v 'blog/index.html' > /tmp/new_blogs.txt || true
+          git diff --staged --name-only -- 'blog/*.html' \
+            | grep -v -E 'blog/(index|index-template)\.html' > /tmp/new_blogs.txt || true
           echo "📋 New blog files detected:"
           cat /tmp/new_blogs.txt
 
@@ -83,11 +75,15 @@ jobs:
             fi
           done < /tmp/new_blogs.txt
 
+          # Also backup regenerated index + sitemap (so dev has updated listing)
+          cp blog/index.html /tmp/blog_backup/index.html 2>/dev/null || true
+          cp sitemap.xml /tmp/blog_backup/sitemap.xml 2>/dev/null || true
+
           # Switch to dev branch
           git fetch origin dev
           git checkout -B dev origin/dev
 
-          # Copy only the new blog HTML files (NOT index.html, NOT sitemap)
+          # Copy new blog HTML files
           for f in /tmp/blog_backup/*.html; do
             if [ -f "$f" ]; then
               cp "$f" "blog/$(basename $f)"
@@ -95,8 +91,14 @@ jobs:
             fi
           done
 
+          # Copy sitemap
+          if [ -f /tmp/blog_backup/sitemap.xml ]; then
+            cp /tmp/blog_backup/sitemap.xml sitemap.xml
+            echo "📄 Copied sitemap.xml to dev"
+          fi
+
           # Commit and push if there are changes
-          git add blog/
+          git add blog/ sitemap.xml
           if git diff --staged --quiet; then
             echo "Dev already up to date"
           else

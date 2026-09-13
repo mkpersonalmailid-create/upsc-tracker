@@ -1,26 +1,108 @@
-# robots.txt for UPSC Study Tracker
+# ═══════════════════════════════════════════════════════════════
+# UPSC Study Tracker — robots.txt
+# https://upscstudytracker.co.in
+# Last updated: 2026-09-13
+# ═══════════════════════════════════════════════════════════════
 
+# ═══════════════════════════════════════════════════════════════
+# DEFAULT: All bots — allow public content
+# ═══════════════════════════════════════════════════════════════
 User-agent: *
 Allow: /
+Allow: /blog/
+Allow: /blog/*.html
 
-# Block admin & sensitive areas
-Disallow: /admin/
+# ─── Private / Login-Required Pages ───
+Disallow: /app.html
+Disallow: /auth.html
 Disallow: /api/
 
-# Sitemap location
-Sitemap: https://upscstudytracker.co.in/sitemap.xml
+# ─── Assets & Code (no SEO value) ───
+Disallow: /JS/
+Disallow: /CSS/
+Disallow: /functions/
+Disallow: /scripts/
+Disallow: /_headers
+Disallow: /_redirects
 
-User-agent: GPTBot
+# ─── Admin / Internal ───
+Disallow: /admin/
+
+# ─── Search & Filter URLs (avoid duplicate content) ───
+Disallow: /*?search=
+Disallow: /*?filter=
+Disallow: /*?sort=
+Disallow: /*?ref=
+Disallow: /*?utm_
+
+# ─── Temp / Draft URLs ───
+Disallow: /*.tmp$
+Disallow: /*.bak$
+Disallow: /*.old$
+
+# ═══════════════════════════════════════════════════════════════
+# SPECIFIC BOTS
+# ═══════════════════════════════════════════════════════════════
+
+# ─── SEO Crawlers — allow but slow down ───
+User-agent: AhrefsBot
+Crawl-delay: 10
 Allow: /
+
+User-agent: SemrushBot
+Crawl-delay: 10
+Allow: /
+
+# ─── Aggressive Spam Bots — block fully ───
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+# ─── AI Training Bots — block (optional) ───
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
 
 User-agent: CCBot
-Allow: /
+Disallow: /
 
-User-agent: Google-Extended
-Allow: /
+User-agent: anthropic-ai
+Disallow: /
 
-User-agent: ClaudeBot
-Allow: /
+User-agent: Claude-Web
+Disallow: /
 
-User-agent: PerplexityBot
+# ─── Google / Bing / Yandex — full allow (priority) ───
+User-agent: Googlebot
 Allow: /
+Disallow: /app.html
+Disallow: /auth.html
+Disallow: /JS/
+Disallow: /CSS/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /app.html
+Disallow: /auth.html
+
+User-agent: YandexBot
+Allow: /
+Disallow: /app.html
+
+# ═══════════════════════════════════════════════════════════════
+# SITEMAP
+# ═══════════════════════════════════════════════════════════════
+Sitemap: https://upscstudytracker.co.in/sitemap.xml
