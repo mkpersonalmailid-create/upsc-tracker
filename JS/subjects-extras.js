@@ -524,6 +524,55 @@
 
     if (typeof attachRipples === 'function') attachRipples();
   }
+
+  /* ═══════════ PATCH 5: renderStudy (Organized Layout) ═══════════ */
+  function patchStudyView() {
+    if (typeof renderStudy !== 'function') {
+      console.warn('[subjects-extras] renderStudy not available yet');
+      return;
+    }
+    const _orig = renderStudy;
+    window.renderStudy = function () {
+      _orig.call(this);
+      setTimeout(addStudyLabels, 0);
+    };
+    try {
+      renderStudy = window.renderStudy;
+    } catch (e) {}
+    console.log('[subjects-extras] patched: renderStudy');
+  }
+
+  function addStudyLabels() {
+    const section = document.querySelector('.what-studying');
+    if (!section) return;
+
+    const catChips = document.getElementById('categoryChips');
+    const subjSel = document.getElementById('subjectSelector');
+    const topicPicker = section.querySelector('.topic-picker');
+
+    // Idempotent — agar already correct hain toh skip
+    const existingLabels = section.querySelectorAll('.step-label');
+    const neededCount = [catChips, subjSel, topicPicker].filter(Boolean).length;
+    if (existingLabels.length === neededCount) return;
+
+    existingLabels.forEach((el) => el.remove());
+
+    const labels = [
+      { el: catChips, num: 1, emoji: '📂', title: 'Category', sub: 'What are you studying?' },
+      { el: subjSel, num: 2, emoji: '📚', title: 'Subject', sub: 'Pick the specific subject' },
+      { el: topicPicker, num: 3, emoji: '📖', title: 'Topic', sub: 'Optional — select a topic' },
+    ];
+
+    labels.forEach(({ el, num, emoji, title, sub }) => {
+      if (!el) return;
+      const div = document.createElement('div');
+      div.className = 'step-label';
+      div.innerHTML = `<span class="step-num">${num}</span> <span class="step-emoji">${emoji}</span> <span class="step-title">${title}</span> <span class="step-sub">${sub}</span>`;
+      el.parentNode.insertBefore(div, el);
+    });
+
+    if (typeof attachRipples === 'function') attachRipples();
+  }
   /* ═══════════ PATCH 6: GS Mains Split into Paper I/II/III/IV ═══════════ */
 
   // ═══ Category chips — split GS Mains ═══
