@@ -11203,6 +11203,7 @@ ${
           list = list.filter(
             (n) => (n.title || '').toLowerCase().includes(q) || (n.content || '').toLowerCase().includes(q),
           );
+        if (state.notePinnedOnly) list = list.filter((n) => n.pinned);
         const grid = $('#notesGrid');
         if (!list.length) {
           grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="em">✎</div><h4>No notes</h4></div>`;
@@ -12528,34 +12529,64 @@ ${
 
       /* ═══════════════ EVENTS ═══════════════ */
       function wireEvents() {
-        try {
-          // Auth
-          $$('.auth-tab').forEach((t) => (t.onclick = () => setAuthMode(t.dataset.authMode)));
-          $('#authForm').onsubmit = handleAuthSubmit;
-          $('#forgotPwBtn').onclick = handleForgotPassword;
-          $('#togglePw').onclick = () => {
-            const p = $('#authPassword');
-            p.type = p.type === 'password' ? 'text' : 'password';
-            $('#togglePw').textContent = p.type === 'password' ? '👁' : '🙈';
-          };
+        // ═══ SAFE WRAPPER — ek block fail ho toh baaki chalta rahe ═══
+        const safe = (label, fn) => {
+          try {
+            fn();
+          } catch (e) {
+            console.warn('[wireEvents:' + label + ']', e);
+          }
+        };
 
-          // Nav
+        // ═══════════════════════════════════════════════
+        // 1. AUTH
+        // ═══════════════════════════════════════════════
+        safe('auth', () => {
+          $$('.auth-tab').forEach((t) => (t.onclick = () => setAuthMode(t.dataset.authMode)));
+          const authForm = $('#authForm');
+          if (authForm) authForm.onsubmit = handleAuthSubmit;
+          const forgotBtn = $('#forgotPwBtn');
+          if (forgotBtn) forgotBtn.onclick = handleForgotPassword;
+          const togglePw = $('#togglePw');
+          if (togglePw) {
+            togglePw.onclick = () => {
+              const p = $('#authPassword');
+              if (!p) return;
+              p.type = p.type === 'password' ? 'text' : 'password';
+              togglePw.textContent = p.type === 'password' ? '👁' : '🙈';
+            };
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 2. NAV
+        // ═══════════════════════════════════════════════
+        safe('nav', () => {
           $$('.nav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
           $$('.bnav-item').forEach((n) => (n.onclick = () => switchView(n.dataset.view)));
-          // ═══ Sidebar Toggle + Mobile Close ═══
-          $('#collapseBtn').onclick = () => {
-            const sb = $('#sidebar');
-            if (window.innerWidth <= 900) {
-              sb.classList.toggle('open');
-              const overlay = document.getElementById('sidebarOverlay');
-              if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
-              document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
-                el.style.display = sb.classList.contains('open') ? 'none' : '';
-              });
-            } else {
-              sb.classList.toggle('collapsed');
-            }
-          };
+        });
+
+        // ═══════════════════════════════════════════════
+        // 3. SIDEBAR + MOBILE CLOSE
+        // ═══════════════════════════════════════════════
+        safe('sidebar', () => {
+          const collapseBtn = $('#collapseBtn');
+          if (collapseBtn) {
+            collapseBtn.onclick = () => {
+              const sb = $('#sidebar');
+              if (!sb) return;
+              if (window.innerWidth <= 900) {
+                sb.classList.toggle('open');
+                const overlay = document.getElementById('sidebarOverlay');
+                if (overlay) overlay.classList.toggle('active', sb.classList.contains('open'));
+                document.querySelectorAll('.fab, .fab-menu').forEach((el) => {
+                  el.style.display = sb.classList.contains('open') ? 'none' : '';
+                });
+              } else {
+                sb.classList.toggle('collapsed');
+              }
+            };
+          }
 
           const sbCloseBtn = document.getElementById('sidebarClose');
           if (sbCloseBtn) {
@@ -12601,64 +12632,121 @@ ${
               }, 100);
             }
           });
-          $('#sbUser').onclick = () => switchView('settings');
-          $('#topAvatar').onclick = () => switchView('settings');
-          $('#settingsBtn').onclick = () => switchView('settings');
-          $('#logoutBtn').onclick = async () => {
-            const ok = await customConfirm({
-              title: 'Sign out?',
-              message: 'You will be logged out. Data safe rahega.',
-              confirmText: 'Sign Out',
-              cancelText: 'Stay',
-              icon: '👋',
-              type: 'danger',
+        });
+
+        // ═══════════════════════════════════════════════
+        // 4. USER MENU
+        // ═══════════════════════════════════════════════
+        safe('userMenu', () => {
+          const sbUser = $('#sbUser');
+          if (sbUser) sbUser.onclick = () => switchView('settings');
+          const topAvatar = $('#topAvatar');
+          if (topAvatar) topAvatar.onclick = () => switchView('settings');
+          const settingsBtn = $('#settingsBtn');
+          if (settingsBtn) settingsBtn.onclick = () => switchView('settings');
+        });
+
+        // ═══════════════════════════════════════════════
+        // 5. LOGOUT (topbar)
+        // ═══════════════════════════════════════════════
+        safe('logout', () => {
+          const logoutBtn = $('#logoutBtn');
+          if (logoutBtn) {
+            logoutBtn.onclick = async () => {
+              const ok = await customConfirm({
+                title: 'Sign out?',
+                message: 'You will be logged out. Data safe rahega.',
+                confirmText: 'Sign Out',
+                cancelText: 'Stay',
+                icon: '👋',
+                type: 'danger',
+              });
+              if (ok) logout();
+            };
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 6. THEME
+        // ═══════════════════════════════════════════════
+        safe('theme', () => {
+          const themeBtn = $('#themeBtn');
+          if (themeBtn) {
+            themeBtn.onclick = () => {
+              const cur = document.documentElement.getAttribute('data-theme');
+              applyTheme(cur === 'dark' ? 'light' : 'dark');
+            };
+          }
+          $$('.theme-opt').forEach((b) => {
+            b.onclick = () => {
+              applyTheme(b.dataset.theme);
+              renderSettings();
+            };
+          });
+        });
+
+        // ═══════════════════════════════════════════════
+        // 7. PLAN BADGE
+        // ═══════════════════════════════════════════════
+        safe('planBadge', () => {
+          const planBadgeBtn = $('#planBadgeBtn');
+          if (planBadgeBtn) {
+            planBadgeBtn.onclick = () => {
+              if (isPremiumUser() || isAdminUser()) switchView('settings');
+              else switchView('premium');
+            };
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 8. TIMER MODES
+        // ═══════════════════════════════════════════════
+        safe('timerModes', () => {
+          const timerModes = $('#timerModes');
+          if (timerModes) {
+            timerModes.addEventListener('click', (e) => {
+              const b = e.target.closest('.mode-chip');
+              if (!b) return;
+              $$('.mode-chip').forEach((x) => x.classList.toggle('active', x === b));
+              const m = b.dataset.mode;
+              const cdField = $('#countdownField');
+              const pomoField = $('#pomodoroField');
+              if (cdField) cdField.classList.toggle('hidden', m !== 'countdown');
+              if (pomoField) pomoField.classList.toggle('hidden', m !== 'pomodoro');
             });
-            if (ok) logout();
-          };
+          }
+          const pomoPreset = $('#pomodoroPreset');
+          if (pomoPreset) {
+            pomoPreset.onchange = (e) => {
+              const custom = $('#customPomodoro');
+              if (custom) custom.style.display = e.target.value === 'custom' ? 'grid' : 'none';
+            };
+          }
+        });
 
-          // Theme
-          $('#themeBtn').onclick = () => {
-            const cur = document.documentElement.getAttribute('data-theme');
-            applyTheme(cur === 'dark' ? 'light' : 'dark');
-          };
-          $$('.theme-opt').forEach(
-            (b) =>
-              (b.onclick = () => {
-                applyTheme(b.dataset.theme);
-                renderSettings();
-              }),
-          );
+        // ═══════════════════════════════════════════════
+        // 9. SUPPORT TABS
+        // ═══════════════════════════════════════════════
+        safe('supportTabs', () => {
+          const supportTabs = $('#supportTabs');
+          if (supportTabs) {
+            supportTabs.addEventListener('click', (e) => {
+              const b = e.target.closest('.chart-tab');
+              if (!b) return;
+              $$('#supportTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              state.supportTab = b.dataset.tab;
+              renderSupportTab();
+            });
+          }
+        });
 
-          // Plan badge
-          $('#planBadgeBtn').onclick = () => {
-            if (isPremiumUser() || isAdminUser()) switchView('settings');
-            else switchView('premium');
-          };
+        // ═══════════════════════════════════════════════
+        // 10. ADMIN
+        // ═══════════════════════════════════════════════
+        safe('admin', () => {
+          const refreshAdminBtn = $('#refreshAdminBtn');
+          if (refreshAdminBtn) refreshAdminBtn.onclick = refreshAdmin;
 
-          // Timer modes
-          $('#timerModes').addEventListener('click', (e) => {
-            const b = e.target.closest('.mode-chip');
-            if (!b) return;
-            $$('.mode-chip').forEach((x) => x.classList.toggle('active', x === b));
-            const m = b.dataset.mode;
-            $('#countdownField').classList.toggle('hidden', m !== 'countdown');
-            $('#pomodoroField').classList.toggle('hidden', m !== 'pomodoro');
-          });
-          $('#pomodoroPreset').onchange = (e) =>
-            ($('#customPomodoro').style.display = e.target.value === 'custom' ? 'grid' : 'none');
-
-          // Support tabs
-          $('#supportTabs').addEventListener('click', (e) => {
-            const b = e.target.closest('.chart-tab');
-            if (!b) return;
-            $$('#supportTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            state.supportTab = b.dataset.tab;
-            renderSupportTab();
-          });
-
-          // Admin
-          $('#refreshAdminBtn').onclick = refreshAdmin;
-          // Revenue chart range tabs
           const revTabs = document.getElementById('revRangeTabs');
           if (revTabs) {
             revTabs.addEventListener('click', (e) => {
@@ -12669,36 +12757,64 @@ ${
               loadRevenueData();
             });
           }
-          $('#adminTicketFilter').onchange = loadAdminTickets;
-          $('#adminFbFilter').onchange = loadAdminFeedback;
-          $('#manageAnnBtn').onclick = openAnnouncementEditor;
-          // Auto-refresh banner when admin publishes
+
+          const adminTicketFilter = $('#adminTicketFilter');
+          if (adminTicketFilter) adminTicketFilter.onchange = loadAdminTickets;
+
+          const adminFbFilter = $('#adminFbFilter');
+          if (adminFbFilter) adminFbFilter.onchange = loadAdminFeedback;
+
+          const manageAnnBtn = $('#manageAnnBtn');
+          if (manageAnnBtn) manageAnnBtn.onclick = openAnnouncementEditor;
+
           window.refreshBanner = loadAnnouncement;
+        });
 
-          // FAB
-          $('#fab').onclick = () => $('#fabMenu').classList.toggle('active');
+        // ═══════════════════════════════════════════════
+        // 11. FAB
+        // ═══════════════════════════════════════════════
+        safe('fab', () => {
+          const fab = $('#fab');
+          if (fab) fab.onclick = () => $('#fabMenu').classList.toggle('active');
+
           document.addEventListener('click', (e) => {
-            if (!e.target.closest('#fab') && !e.target.closest('#fabMenu')) $('#fabMenu').classList.remove('active');
+            if (!e.target.closest('#fab') && !e.target.closest('#fabMenu')) {
+              const fm = $('#fabMenu');
+              if (fm) fm.classList.remove('active');
+            }
           });
-          $$('.fab-item').forEach(
-            (b) =>
-              (b.onclick = () => {
-                $('#fabMenu').classList.remove('active');
-                const a = b.dataset.action;
-                if (a === 'log-session') openManualLogModal();
-                else if (a === 'add-task') openTaskModal();
-                else if (a === 'add-note') openNoteModal();
-                else if (a === 'add-goal') openGoalModal();
-                else if (a === 'help') switchView('support');
-              }),
-          );
 
-          // Search
-          $('#searchTrigger').onclick = openSearch;
-          $('#searchInput').oninput = (e) => runSearch(e.target.value);
-          $('#searchOverlay').onclick = (e) => {
-            if (e.target.id === 'searchOverlay') closeSearch();
-          };
+          $$('.fab-item').forEach((b) => {
+            b.onclick = () => {
+              const fm = $('#fabMenu');
+              if (fm) fm.classList.remove('active');
+              const a = b.dataset.action;
+              if (a === 'log-session') openManualLogModal();
+              else if (a === 'add-task') openTaskModal();
+              else if (a === 'add-note') openNoteModal();
+              else if (a === 'add-goal') openGoalModal();
+              else if (a === 'help') switchView('support');
+            };
+          });
+        });
+
+        // ═══════════════════════════════════════════════
+        // 12. SEARCH
+        // ═══════════════════════════════════════════════
+        safe('search', () => {
+          const searchTrigger = $('#searchTrigger');
+          if (searchTrigger) searchTrigger.onclick = openSearch;
+
+          const searchInput = $('#searchInput');
+          if (searchInput) searchInput.oninput = (e) => runSearch(e.target.value);
+
+          const searchOverlay = $('#searchOverlay');
+          if (searchOverlay) {
+            searchOverlay.onclick = (e) => {
+              if (e.target.id === 'searchOverlay') closeSearch();
+            };
+          }
+
           document.addEventListener('keydown', (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
               e.preventDefault();
@@ -12709,9 +12825,15 @@ ${
               closeModal();
             }
           });
+        });
 
-          // Settings save
-          $('#saveProfileBtn').onclick = async () => {
+        // ═══════════════════════════════════════════════
+        // 13. SAVE PROFILE
+        // ═══════════════════════════════════════════════
+        safe('saveProfile', () => {
+          const saveProfileBtn = $('#saveProfileBtn');
+          if (!saveProfileBtn) return;
+          saveProfileBtn.onclick = async () => {
             state.profile.name = $('#setName').value.trim();
             state.profile.exam = $('#setExam').value.trim();
             state.profile.prep_year = $('#setPrepYear').value.trim();
@@ -12739,7 +12861,15 @@ ${
             updateSidebarUser();
             toast('Profile saved!', 'ok');
           };
-          $('#saveSettingsBtn').onclick = async () => {
+        });
+
+        // ═══════════════════════════════════════════════
+        // 14. SAVE SETTINGS
+        // ═══════════════════════════════════════════════
+        safe('saveSettings', () => {
+          const saveSettingsBtn = $('#saveSettingsBtn');
+          if (!saveSettingsBtn) return;
+          saveSettingsBtn.onclick = async () => {
             state.settings.daily_target = parseFloat($('#setDailyTarget').value) || 8;
             state.settings.weekly_target = parseFloat($('#setWeeklyTarget').value) || 50;
             state.settings.monthly_target = parseFloat($('#setMonthlyTarget').value) || 200;
@@ -12758,15 +12888,20 @@ ${
             renderAll();
             toast('Settings saved!', 'ok');
           };
-          // Set/Change Password (for Google users)
+        });
+
+        // ═══════════════════════════════════════════════
+        // 15. SET PASSWORD (for Google users)
+        // ═══════════════════════════════════════════════
+        safe('setPassword', () => {
           const setPwBtn = document.getElementById('setPasswordBtn');
-          if (setPwBtn) {
-            setPwBtn.onclick = () => {
-              openModal(
-                modalShell({
-                  title: '🔐 Set Password',
-                  subtitle: 'Apna new password set karein',
-                  body: `
+          if (!setPwBtn) return;
+          setPwBtn.onclick = () => {
+            openModal(
+              modalShell({
+                title: '🔐 Set Password',
+                subtitle: 'Apna new password set karein',
+                body: `
           <div class="field"><label>New Password</label>
             <input type="password" id="sp1" placeholder="At least 6 characters"></div>
           <div class="field"><label>Confirm Password</label>
@@ -12774,39 +12909,45 @@ ${
           <p style="font-size:.78rem;color:var(--text-3);margin-top:8px">
             Password set karne ke baad aap Google ya email dono se login kar sakte ho.
           </p>`,
-                  actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                actions: `<button class="btn btn-ghost" data-close>Cancel</button>
           <button class="btn btn-primary" id="saveNewPwBtn">Save Password</button>`,
-                }),
-                {
-                  onMount() {
-                    document.getElementById('saveNewPwBtn').onclick = async () => {
-                      const p1 = document.getElementById('sp1').value;
-                      const p2 = document.getElementById('sp2').value;
-                      if (!p1 || p1.length < 6) {
-                        toast('Password 6+ chars ka hona chahiye', 'err');
-                        return;
-                      }
-                      if (p1 !== p2) {
-                        toast('Passwords match nahi kar rahe', 'err');
-                        return;
-                      }
-                      try {
-                        const { error } = await supa.auth.updateUser({ password: p1 });
-                        if (error) throw error;
-                        closeModal();
-                        confetti();
-                        toast('✅ Password set ho gaya! Ab aap dono tarike se login kar sakte ho', 'ok', 5000);
-                      } catch (e) {
-                        toast('Failed: ' + e.message, 'err');
-                      }
-                    };
-                  },
+              }),
+              {
+                onMount() {
+                  document.getElementById('saveNewPwBtn').onclick = async () => {
+                    const p1 = document.getElementById('sp1').value;
+                    const p2 = document.getElementById('sp2').value;
+                    if (!p1 || p1.length < 6) {
+                      toast('Password 6+ chars ka hona chahiye', 'err');
+                      return;
+                    }
+                    if (p1 !== p2) {
+                      toast('Passwords match nahi kar rahe', 'err');
+                      return;
+                    }
+                    try {
+                      const { error } = await supa.auth.updateUser({ password: p1 });
+                      if (error) throw error;
+                      closeModal();
+                      confetti();
+                      toast('✅ Password set ho gaya! Ab aap dono tarike se login kar sakte ho', 'ok', 5000);
+                    } catch (e) {
+                      toast('Failed: ' + e.message, 'err');
+                    }
+                  };
                 },
-              );
-            };
-          }
+              },
+            );
+          };
+        });
 
-          $('#signOutBtn').onclick = async () => {
+        // ═══════════════════════════════════════════════
+        // 16. SIGN OUT (Settings page)
+        // ═══════════════════════════════════════════════
+        safe('signOut', () => {
+          const signOutBtn = $('#signOutBtn');
+          if (!signOutBtn) return;
+          signOutBtn.onclick = async () => {
             const ok = await customConfirm({
               title: 'Sign out?',
               message: 'You will be logged out of your account. Your data will remain safe.',
@@ -12817,8 +12958,12 @@ ${
             });
             if (ok) logout();
           };
+        });
 
-          // History filters
+        // ═══════════════════════════════════════════════
+        // 17. HISTORY FILTERS
+        // ═══════════════════════════════════════════════
+        safe('historyFilters', () => {
           ['#histSearch', '#histFrom', '#histTo', '#histSort'].forEach((s) => {
             const el = $(s);
             if (el) {
@@ -12826,61 +12971,119 @@ ${
               el.onchange = renderHistory;
             }
           });
-          $('#histClear').onclick = () => {
-            ['#histSearch', '#histFrom', '#histTo'].forEach((s) => ($(s).value = ''));
-            $('#histSort').value = 'newest';
-            renderHistory();
-          };
-          $('#gotoHistoryBtn').onclick = () => switchView('history');
 
-          // Analytics
-          $('#anRangeTabs').addEventListener('click', (e) => {
-            const b = e.target.closest('[data-range]');
-            if (!b) return;
-            $$('#anRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            anRange = b.dataset.range === 'all' ? 'all' : parseInt(b.dataset.range, 10);
-            renderAnalytics();
-          });
-          $('#anChartType').addEventListener('click', (e) => {
-            const b = e.target.closest('[data-type]');
-            if (!b) return;
-            anChartType = b.dataset.type;
-            $$('#anChartType .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            renderAnalytics();
-          });
+          const histClear = $('#histClear');
+          if (histClear) {
+            histClear.onclick = () => {
+              ['#histSearch', '#histFrom', '#histTo'].forEach((s) => {
+                const el = $(s);
+                if (el) el.value = '';
+              });
+              const hs = $('#histSort');
+              if (hs) hs.value = 'newest';
+              renderHistory();
+            };
+          }
 
-          // Calendar
-          $('#calPrev').onclick = () => {
-            calMonth.setMonth(calMonth.getMonth() - 1);
-            renderCalendar();
-          };
-          $('#calNext').onclick = () => {
-            calMonth.setMonth(calMonth.getMonth() + 1);
-            renderCalendar();
-          };
-          $('#calToday').onclick = () => {
-            calMonth = new Date();
-            renderCalendar();
-          };
-          $('#calAddBtn').onclick = openManualLogModal;
+          const gotoHistoryBtn = $('#gotoHistoryBtn');
+          if (gotoHistoryBtn) gotoHistoryBtn.onclick = () => switchView('history');
+        });
 
-          // Dashboard range
-          $('#dashRangeTabs').addEventListener('click', (e) => {
-            const b = e.target.closest('[data-range]');
-            if (!b) return;
-            $$('#dashRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            drawDashChart(parseInt(b.dataset.range, 10));
-          });
+        // ═══════════════════════════════════════════════
+        // 18. ANALYTICS TABS
+        // ═══════════════════════════════════════════════
+        safe('analytics', () => {
+          const anRangeTabs = $('#anRangeTabs');
+          if (anRangeTabs) {
+            anRangeTabs.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-range]');
+              if (!b) return;
+              $$('#anRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              anRange = b.dataset.range === 'all' ? 'all' : parseInt(b.dataset.range, 10);
+              renderAnalytics();
+            });
+          }
 
-          // Syllabus
-          $('#expandAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.add('open'));
-          $('#collapseAllSylBtn').onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.remove('open'));
-          $('#addSyllabusBtn').onclick = () => {
-            // Open add topic modal
-            openModal(
-              modalShell({
-                title: 'Add Custom Topic',
-                body: `
+          const anChartTypeEl = $('#anChartType');
+          if (anChartTypeEl) {
+            anChartTypeEl.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-type]');
+              if (!b) return;
+              anChartType = b.dataset.type;
+              $$('#anChartType .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              renderAnalytics();
+            });
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 19. CALENDAR
+        // ═══════════════════════════════════════════════
+        safe('calendar', () => {
+          const calPrev = $('#calPrev');
+          if (calPrev) {
+            calPrev.onclick = () => {
+              calMonth.setMonth(calMonth.getMonth() - 1);
+              renderCalendar();
+            };
+          }
+
+          const calNext = $('#calNext');
+          if (calNext) {
+            calNext.onclick = () => {
+              calMonth.setMonth(calMonth.getMonth() + 1);
+              renderCalendar();
+            };
+          }
+
+          const calToday = $('#calToday');
+          if (calToday) {
+            calToday.onclick = () => {
+              calMonth = new Date();
+              renderCalendar();
+            };
+          }
+
+          const calAddBtn = $('#calAddBtn');
+          if (calAddBtn) calAddBtn.onclick = openManualLogModal;
+        });
+
+        // ═══════════════════════════════════════════════
+        // 20. DASHBOARD RANGE
+        // ═══════════════════════════════════════════════
+        safe('dashRange', () => {
+          const dashRangeTabs = $('#dashRangeTabs');
+          if (dashRangeTabs) {
+            dashRangeTabs.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-range]');
+              if (!b) return;
+              $$('#dashRangeTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              drawDashChart(parseInt(b.dataset.range, 10));
+            });
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 21. SYLLABUS
+        // ═══════════════════════════════════════════════
+        safe('syllabus', () => {
+          const expandAllSylBtn = $('#expandAllSylBtn');
+          if (expandAllSylBtn) {
+            expandAllSylBtn.onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.add('open'));
+          }
+
+          const collapseAllSylBtn = $('#collapseAllSylBtn');
+          if (collapseAllSylBtn) {
+            collapseAllSylBtn.onclick = () => $$('.syl-cat-head').forEach((h) => h.classList.remove('open'));
+          }
+
+          const addSyllabusBtn = $('#addSyllabusBtn');
+          if (addSyllabusBtn) {
+            addSyllabusBtn.onclick = () => {
+              openModal(
+                modalShell({
+                  title: 'Add Custom Topic',
+                  body: `
         <div class="field"><label>Category</label>
           <select id="atCategory">
             <option value="prelims-gs1">GS Prelims I</option>
@@ -12893,41 +13096,50 @@ ${
           </select></div>
         <div class="field"><label>Subject</label><input id="atSubject" placeholder="e.g. History"></div>
         <div class="field"><label>Topic</label><input id="atTopic" placeholder="e.g. Specific chapter"></div>`,
-                actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                  actions: `<button class="btn btn-ghost" data-close>Cancel</button>
         <button class="btn btn-primary" id="atSave">Add</button>`,
-              }),
-              {
-                onMount() {
-                  $('#atSave').onclick = () => {
-                    const paper = $('#atCategory').value;
-                    const subject = $('#atSubject').value.trim();
-                    const topic = $('#atTopic').value.trim();
-                    if (!subject || !topic) {
-                      toast('Enter subject and topic.', 'err');
-                      return;
-                    }
-                    const t = {
-                      id: uuid(),
-                      paper,
-                      subject,
-                      topic,
-                      status: 'not_started',
-                      category: SYLLABUS[paper]?.category || 'Prelims',
+                }),
+                {
+                  onMount() {
+                    const atSave = $('#atSave');
+                    if (!atSave) return;
+                    atSave.onclick = () => {
+                      const paper = $('#atCategory').value;
+                      const subject = $('#atSubject').value.trim();
+                      const topic = $('#atTopic').value.trim();
+                      if (!subject || !topic) {
+                        toast('Enter subject and topic.', 'err');
+                        return;
+                      }
+                      const t = {
+                        id: uuid(),
+                        paper,
+                        subject,
+                        topic,
+                        status: 'not_started',
+                        category: SYLLABUS[paper]?.category || 'Prelims',
+                      };
+                      state.syllabus.push(t);
+                      saveLocal();
+                      syncSyllabus(t);
+                      closeModal();
+                      renderSyllabus();
+                      toast('Topic added!', 'ok');
                     };
-                    state.syllabus.push(t);
-                    saveLocal();
-                    syncSyllabus(t);
-                    closeModal();
-                    renderSyllabus();
-                    toast('Topic added!', 'ok');
-                  };
+                  },
                 },
-              },
-            );
-          };
+              );
+            };
+          }
+        });
 
-          // Subject add
-          $('#addSubjectBtn').onclick = () => {
+        // ═══════════════════════════════════════════════
+        // 22. ADD SUBJECT
+        // ═══════════════════════════════════════════════
+        safe('addSubject', () => {
+          const addSubjectBtn = $('#addSubjectBtn');
+          if (!addSubjectBtn) return;
+          addSubjectBtn.onclick = () => {
             const name = prompt('Subject name:');
             if (!name) return;
             const s = { id: uuid(), name, color: getSubjectColor(name), archived: false };
@@ -12942,18 +13154,38 @@ ${
             renderSubjects();
             toast('Subject added!', 'ok');
           };
+        });
 
-          // Add buttons
-          $('#addGoalBtn').onclick = () => openGoalModal();
-          $('#addTaskBtn').onclick = openTaskModal;
-          $('#addNoteBtn').onclick = () => openNoteModal();
-          const _pyqBtn = $('#addPyqBtn');
-          if (_pyqBtn) _pyqBtn.onclick = openPyqModal;
-          const _mockBtn = $('#addMockBtn');
-          if (_mockBtn) _mockBtn.onclick = openMockModal;
-          const _caBtn = $('#addCaBtn');
-          if (_caBtn) _caBtn.onclick = openCaModal;
-          $('#addRevisionBtn').onclick = () => {
+        // ═══════════════════════════════════════════════
+        // 23. ADD BUTTONS (Goal, Task, Note, PYQ, Mock, CA)
+        // ═══════════════════════════════════════════════
+        safe('addButtons', () => {
+          const addGoalBtn = $('#addGoalBtn');
+          if (addGoalBtn) addGoalBtn.onclick = () => openGoalModal();
+
+          const addTaskBtn = $('#addTaskBtn');
+          if (addTaskBtn) addTaskBtn.onclick = openTaskModal;
+
+          const addNoteBtn = $('#addNoteBtn');
+          if (addNoteBtn) addNoteBtn.onclick = () => openNoteModal();
+
+          const pyqBtn = $('#addPyqBtn');
+          if (pyqBtn) pyqBtn.onclick = openPyqModal;
+
+          const mockBtn = $('#addMockBtn');
+          if (mockBtn) mockBtn.onclick = openMockModal;
+
+          const caBtn = $('#addCaBtn');
+          if (caBtn) caBtn.onclick = openCaModal;
+        });
+
+        // ═══════════════════════════════════════════════
+        // 24. ADD REVISION
+        // ═══════════════════════════════════════════════
+        safe('addRevision', () => {
+          const addRevisionBtn = $('#addRevisionBtn');
+          if (!addRevisionBtn) return;
+          addRevisionBtn.onclick = () => {
             openModal(
               modalShell({
                 title: 'Schedule Revision',
@@ -12970,7 +13202,9 @@ ${
               }),
               {
                 onMount() {
-                  $('#rvSave').onclick = async () => {
+                  const rvSave = $('#rvSave');
+                  if (!rvSave) return;
+                  rvSave.onclick = async () => {
                     const r = {
                       id: uuid(),
                       subject: $('#rvSubject').value,
@@ -12996,67 +13230,111 @@ ${
               },
             );
           };
-          $('#addPlanBlockBtn').onclick = () => addPlanBlock($('#planDate').value);
-          $('#planDate').onchange = renderPlanner;
+        });
 
-          // Tasks filter
+        // ═══════════════════════════════════════════════
+        // 25. PLANNER
+        // ═══════════════════════════════════════════════
+        safe('planner', () => {
+          const addPlanBlockBtn = $('#addPlanBlockBtn');
+          if (addPlanBlockBtn) addPlanBlockBtn.onclick = () => addPlanBlock($('#planDate').value);
+
+          const planDate = $('#planDate');
+          if (planDate) planDate.onchange = renderPlanner;
+        });
+
+        // ═══════════════════════════════════════════════
+        // 26. TASKS FILTER
+        // ═══════════════════════════════════════════════
+        safe('tasksFilter', () => {
           ['#taskSearch', '#taskPriorityFilter', '#taskStatusFilter'].forEach((s) => {
             const el = $(s);
-            el.oninput = renderTasks;
-            el.onchange = renderTasks;
+            if (el) {
+              el.oninput = renderTasks;
+              el.onchange = renderTasks;
+            }
           });
+        });
 
-          // Notes filter
-          $('#noteSearch').oninput = renderNotes;
-          $('#notePinnedToggle').onclick = () => {
-            notePinnedOnly = !notePinnedOnly;
-            $('#notePinnedToggle').style.background = notePinnedOnly ? 'var(--accent-soft)' : '';
-            renderNotes();
-          };
+        // ═══════════════════════════════════════════════
+        // 27. NOTES FILTER (⚠️ notePinnedOnly FIXED)
+        // ═══════════════════════════════════════════════
+        safe('notesFilter', () => {
+          const noteSearch = $('#noteSearch');
+          if (noteSearch) noteSearch.oninput = renderNotes;
 
-          // CA filter
+          const notePinnedToggle = $('#notePinnedToggle');
+          if (notePinnedToggle) {
+            notePinnedToggle.onclick = () => {
+              state.notePinnedOnly = !state.notePinnedOnly; // ✅ FIXED
+              notePinnedToggle.style.background = state.notePinnedOnly ? 'var(--accent-soft)' : '';
+              renderNotes();
+            };
+          }
+        });
+
+        // ═══════════════════════════════════════════════
+        // 28. CA FILTER
+        // ═══════════════════════════════════════════════
+        safe('caFilter', () => {
           ['#caSearch', '#caStatusFilter'].forEach((s) => {
             const el = $(s);
             if (!el) return;
             el.oninput = renderCurrentAffairs;
             el.onchange = renderCurrentAffairs;
           });
+        });
 
-          // Revision filter
-          $('#revFilterTabs').addEventListener('click', (e) => {
-            const b = e.target.closest('[data-filter]');
-            if (!b) return;
-            revFilter = b.dataset.filter;
-            $$('#revFilterTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
-            renderRevisions();
-          });
+        // ═══════════════════════════════════════════════
+        // 29. REVISION FILTER
+        // ═══════════════════════════════════════════════
+        safe('revisionFilter', () => {
+          const revFilterTabs = $('#revFilterTabs');
+          if (revFilterTabs) {
+            revFilterTabs.addEventListener('click', (e) => {
+              const b = e.target.closest('[data-filter]');
+              if (!b) return;
+              revFilter = b.dataset.filter;
+              $$('#revFilterTabs .chart-tab').forEach((x) => x.classList.toggle('active', x === b));
+              renderRevisions();
+            });
+          }
+        });
 
-          // Export
-          $('#exportJsonBtn').onclick = () => {
-            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-            download(blob, `upsc-${todayKey()}.json`);
-          };
-          $('#exportCsvBtn').onclick = () => {
-            const rows = [['Date', 'Subject', 'Topic', 'Minutes', 'Type']];
-            state.sessions.forEach((s) =>
-              rows.push([s.date, s.subject, s.topic || '', Math.round(s.duration / 60), s.study_type || '']),
-            );
-            const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-            download(new Blob([csv], { type: 'text/csv' }), `sessions-${todayKey()}.csv`);
-          };
-          function download(blob, name) {
+        // ═══════════════════════════════════════════════
+        // 30. EXPORT
+        // ═══════════════════════════════════════════════
+        safe('exports', () => {
+          const download = (blob, name) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = name;
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }
-        } catch (e) {
-          console.warn('[wireEvents] crashed:', e);
-        }
-      }
+          };
 
+          const exportJsonBtn = $('#exportJsonBtn');
+          if (exportJsonBtn) {
+            exportJsonBtn.onclick = () => {
+              const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+              download(blob, `upsc-${todayKey()}.json`);
+            };
+          }
+
+          const exportCsvBtn = $('#exportCsvBtn');
+          if (exportCsvBtn) {
+            exportCsvBtn.onclick = () => {
+              const rows = [['Date', 'Subject', 'Topic', 'Minutes', 'Type']];
+              state.sessions.forEach((s) =>
+                rows.push([s.date, s.subject, s.topic || '', Math.round(s.duration / 60), s.study_type || '']),
+              );
+              const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+              download(new Blob([csv], { type: 'text/csv' }), `sessions-${todayKey()}.csv`);
+            };
+          }
+        });
+      }
       /* ═══════════════ SEARCH ═══════════════ */
       function openSearch() {
         $('#searchOverlay').classList.add('active');

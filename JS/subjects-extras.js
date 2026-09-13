@@ -533,8 +533,18 @@
     }
     const _orig = renderStudy;
     window.renderStudy = function () {
-      _orig.call(this);
-      setTimeout(addStudyLabels, 0);
+      try {
+        _orig.call(this);
+      } catch (e) {
+        console.warn('[subjects-extras] _orig renderStudy error:', e);
+      }
+      setTimeout(() => {
+        try {
+          addStudyLabels();
+        } catch (e) {
+          console.warn('[subjects-extras] addStudyLabels error:', e);
+        }
+      }, 0);
     };
     try {
       renderStudy = window.renderStudy;
