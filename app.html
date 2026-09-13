@@ -7245,7 +7245,8 @@
           let expiringSoon = false;
           if (sub?.expiry_date && !isAdminUser()) {
             daysLeft = Math.ceil((new Date(sub.expiry_date) - new Date()) / 86400000);
-            expiringSoon = daysLeft > 0 && daysLeft <= 30;
+            const _isAuto = sub?.plan === 'monthly_auto' || sub?.plan === 'monthly';
+            expiringSoon = !_isAuto && daysLeft > 0 && daysLeft <= 30;
           }
 
           if (grid) {
@@ -7340,6 +7341,15 @@ ${
               </div>
               <span class="pill s-completed" style="padding:6px 14px">✓ Auto-Renew ON</span>
             </div>
+                      
+          <div style="padding:14px 18px;background:var(--card);border:1px dashed var(--border-2);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px">
+            <div style="flex:1;min-width:200px">
+              <div style="font-weight:700;font-size:.85rem;margin-bottom:2px">💡 Switch to Manual Plan?</div>
+              <div style="font-size:.75rem;color:var(--text-3)">Auto-renew cancel karke Monthly ya Yearly manual plan choose kar sakte ho.</div>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="switchPlanBtn">Switch Plan</button>
+          </div>
+            
           `
               : ''
           }
@@ -7357,6 +7367,42 @@ ${
                 } else {
                   startUpgrade(planId, { isRenewal: true });
                 }
+              };
+            }
+            const switchPlanBtn = document.getElementById('switchPlanBtn');
+            if (switchPlanBtn) {
+              switchPlanBtn.onclick = () => {
+                openModal(
+                  modalShell({
+                    title: '🔄 Switch Plan',
+                    subtitle: 'Auto-renew se manual plan',
+                    body: `
+                      <div style="padding:14px;background:var(--card-2);border-radius:12px;font-size:.85rem;line-height:1.7">
+                        Aapka current <strong>Monthly Auto (UPI Autopay)</strong> chal raha hai. Isko Manual plan me switch karne ke liye:
+                        <ol style="margin-top:10px;padding-left:20px;line-height:1.9">
+                          <li>Razorpay UPI app me jaake auto-renewal cancel karo</li>
+                          <li>Ya humein Support ticket bhejo — hum cancel kar denge</li>
+                          <li>Cancel hone ke baad, yahan se Monthly ya Yearly plan purchase kar sakte ho</li>
+                        </ol>
+                      </div>
+                    `,
+                    actions: `
+                      <button class="btn btn-secondary" data-close>Close</button>
+                      <button class="btn btn-primary" id="contactSupportSwitch">💬 Contact Support</button>
+                    `,
+                  }),
+                  {
+                    onMount() {
+                      const btn = document.getElementById('contactSupportSwitch');
+                      if (btn) {
+                        btn.onclick = () => {
+                          closeModal();
+                          switchView('support');
+                        };
+                      }
+                    },
+                  },
+                );
               };
             }
 
