@@ -7213,7 +7213,7 @@
           const sub = state.subscription;
           const isYearly = !isAdminUser() && sub?.plan === 'yearly';
           const isMonthlyOnce = !isAdminUser() && sub?.plan === 'monthly_once';
-          const isMonthlyAuto = !isAdminUser() && sub?.plan === 'monthly';
+          const isMonthlyAuto = !isAdminUser() && (sub?.plan === 'monthly_auto' || sub?.plan === 'monthly');
 
           if (planHeading) planHeading.textContent = isAdminUser() ? '👑 Admin Access' : '💎 Your Premium Plan';
           if (planSub)
@@ -7286,7 +7286,7 @@
       <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +365 days add karo. Coupon bhi apply kar sakte ho.</div>
     </div>
     <button class="btn btn-premium" id="renewPlanBtn" data-plan="yearly" style="padding:12px 24px">
-      🔄 Renew for ₹500
+      🔄 Renew for ₹${PLANS.yearly.price}
     </button>
   </div>
 `
@@ -7302,31 +7302,17 @@ ${
       <div style="font-size:.8rem;color:var(--text-2)">Apne existing expiry date me +30 days add karo (no autopay).</div>
     </div>
     <button class="btn btn-premium" id="renewPlanBtn" data-plan="monthly_once" style="padding:12px 24px">
-      🔄 Renew for ₹50
+      🔄 Renew for ₹${PLANS.monthly_once.price}
     </button>
   </div>
 `
     : ''
 }
 
-${
-  isMonthlyAuto
-    ? `
-  <div style="padding:18px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-    <div style="flex:1;min-width:200px">
-      <div style="font-weight:800;font-size:.95rem;margin-bottom:3px">⚠️ Auto-Renewal Inactive</div>
-      <div style="font-size:.8rem;color:var(--text-2)">Auto-renewal currently inactive due to technical reasons. Aap Monthly ya Yearly plan choose kar sakte ho.</div>
-    </div>
-    <button class="btn btn-premium" id="switchToManualBtn" style="padding:12px 24px">
-      Switch to Manual
-    </button>
-  </div>
-`
-    : ''
-}
+
           
           ${
-            !isAdminUser() && sub?.plan === 'monthly'
+            isMonthlyAuto
               ? `
             <div style="padding:18px;background:var(--card);border:1px solid var(--border);border-radius:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
               <div style="flex:1;min-width:200px">
