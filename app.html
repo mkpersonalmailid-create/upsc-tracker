@@ -7086,18 +7086,65 @@
       function renderPremiumBanner() {
         const el = $('#premiumBanner');
         if (!el) return;
+
+        // ═══ ADMIN ═══
+        if (isAdminUser()) {
+          el.style.background = '';
+          el.style.borderColor = '';
+          el.innerHTML = `<div style="flex:1;min-width:200px;position:relative">
+      <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">👑 Admin Access</h4>
+      <p style="font-size:.85rem;color:var(--text-2)">Full lifetime access as site administrator.</p>
+    </div>`;
+          return;
+        }
+
+        // ═══ ACTIVE PREMIUM ═══
         if (isPremiumUser()) {
           const sub = state.subscription;
+          el.style.background = '';
+          el.style.borderColor = '';
           el.innerHTML = `<div style="flex:1;min-width:200px;position:relative">
-      <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">${isAdminUser() ? '👑 Admin Access' : '💎 You are on Premium Plan'}</h4>
-      <p style="font-size:.85rem;color:var(--text-2)">${isAdminUser() ? 'Full lifetime access as site administrator.' : `Plan: <strong>${esc(sub?.plan || 'Premium')}</strong> · Valid till ${sub?.expiry_date ? fmtDate(sub.expiry_date.slice(0, 10)) : '—'}`}</p>
+      <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">💎 You are on Premium Plan</h4>
+      <p style="font-size:.85rem;color:var(--text-2)">Plan: <strong>${esc(sub?.plan || 'Premium')}</strong> · Valid till ${sub?.expiry_date ? fmtDate(sub.expiry_date.slice(0, 10)) : '—'}</p>
     </div>`;
-        } else {
-          el.innerHTML = `<div style="flex:1;min-width:200px;position:relative">
-      <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">💎 Unlock Premium</h4>
-      <p style="font-size:.85rem;color:var(--text-2)">Advanced analytics, unlimited exports, priority support. From <strong>₹99/month</strong>.</p>
-    </div>`;
+          return;
         }
+
+        // ═══ EXPIRED (was premium, now expired) ═══
+        const sub = state.subscription;
+        const isExpired = sub && sub.expiry_date && new Date(sub.expiry_date) < new Date();
+        if (isExpired) {
+          el.style.background = 'linear-gradient(135deg, rgba(239,68,68,.12), rgba(249,115,22,.08))';
+          el.style.borderColor = 'rgba(239,68,68,.4)';
+          el.innerHTML = `
+      <div style="font-size:2.2rem;flex-shrink:0">⏰</div>
+      <div style="flex:1;min-width:180px;position:relative">
+        <h4 style="font-size:1rem;font-weight:900;margin-bottom:4px;color:#FCA5A5">Your Premium Plan Has Expired</h4>
+        <p style="font-size:.82rem;color:var(--text-2);line-height:1.5">
+          Plan: <strong>${esc(sub.plan || 'Premium')}</strong> · Expired on <strong>${fmtDate(sub.expiry_date.slice(0, 10))}</strong>
+        </p>
+      </div>
+      <button class="btn btn-premium" id="renewNowBtn" style="padding:12px 24px">🔄 Renew Now</button>
+    `;
+          setTimeout(() => {
+            const btn = document.getElementById('renewNowBtn');
+            if (btn) {
+              btn.onclick = () => {
+                const grid = document.getElementById('plansGrid');
+                if (grid) grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              };
+            }
+          }, 50);
+          return;
+        }
+
+        // ═══ FREE (never subscribed) ═══
+        el.style.background = '';
+        el.style.borderColor = '';
+        el.innerHTML = `<div style="flex:1;min-width:200px;position:relative">
+    <h4 style="font-size:1.05rem;font-weight:900;margin-bottom:4px">💎 Unlock Premium</h4>
+    <p style="font-size:.85rem;color:var(--text-2)">Advanced analytics, unlimited exports, priority support. From <strong>₹99/month</strong>.</p>
+  </div>`;
       }
       function renderSubscriptionInfo() {
         const el = $('#subscriptionInfo');
