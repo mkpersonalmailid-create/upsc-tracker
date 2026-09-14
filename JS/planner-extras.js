@@ -776,6 +776,16 @@
 
   /* ═══════════════ WIRE TOGGLE & DELETE ═══════════════ */
   function wireBlockActions(el) {
+    // ═══ Block card pe click → detail modal ═══
+    el.querySelectorAll('[data-plan-card]').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-plan-toggle]') || e.target.closest('[data-plan-del]')) return;
+        const p = state.plans.find((x) => x.id === card.dataset.planCard);
+        if (!p) return;
+        openPlanDetailModal(p);
+      });
+      card.style.cursor = 'pointer';
+    });
     el.querySelectorAll('[data-plan-toggle]').forEach((b) => {
       b.onclick = async (e) => {
         e.stopPropagation();
@@ -837,6 +847,80 @@
         }
       };
     });
+  }
+  /* ═══════════════ PLAN DETAIL MODAL ═══════════════ */
+  function openPlanDetailModal(p) {
+    const CAT_LABELS = {
+      prelims: '🎯 GS Prelims',
+      'mains-gs1': '📘 GS Mains · Paper I',
+      'mains-gs2': '📗 GS Mains · Paper II',
+      'mains-gs3': '📙 GS Mains · Paper III',
+      'mains-gs4': '📕 GS Mains · Paper IV',
+      optional: '⭐ Optional',
+      essay: '✍️ Essay',
+      csat: '🧮 CSAT',
+    };
+
+    const body = `
+      <div style="padding:16px;background:var(--card-2);border-radius:14px;margin-bottom:14px">
+        <div style="font-weight:800;font-size:1.1rem;margin-bottom:6px">${escHtml(p.subject)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.78rem">
+          <span class="pl-time-chip">🕐 ${fmtTime12(p.start)} – ${fmtTime12(p.end)}</span>
+          <span class="pl-dur-chip">⏱ ${fmtMinutes(p.target_minutes)}</span>
+          <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:700;background:rgba(99,102,241,.14);color:#C7D2FE">📅 ${fmtDateShort(p.date)}</span>
+        </div>
+      </div>
+
+      ${
+        p.category || p.linked_subject || p.linked_topic
+          ? `
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.28);border-radius:12px;margin-bottom:14px">
+          <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:10px">🔗 Linked Content</div>
+          ${p.category ? `<div style="margin-bottom:8px"><span style="color:var(--text-3);font-size:.78rem">Category:</span> <strong style="color:#C4B5FD">${CAT_LABELS[p.category] || p.category}</strong></div>` : ''}
+          ${p.linked_subject ? `<div style="margin-bottom:8px"><span style="color:var(--text-3);font-size:.78rem">Subject:</span> <strong style="color:#C4B5FD">${escHtml(p.linked_subject)}</strong></div>` : ''}
+          ${p.linked_topic ? `<div><span style="color:var(--text-3);font-size:.78rem">Topic:</span> <div style="margin-top:4px;font-size:.85rem;color:var(--text-2);line-height:1.6">${escHtml(p.linked_topic)}</div></div>` : ''}
+        </div>
+      `
+          : ''
+      }
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-secondary" id="planDetailStart" style="flex:1">▶ Start Studying</button>
+        <button class="btn btn-primary" id="planDetailToggle" style="flex:1">${p.completed ? '↺ Mark Incomplete' : '✓ Mark Complete'}</button>
+      </div>
+    `;
+
+    openModal(
+      modalShell({
+        title: '📅 Plan Details',
+        subtitle: fmtRelativeDate(p.date),
+        body,
+        actions: `<button class="btn btn-ghost" data-close>Close</button>`,
+      }),
+      {
+        onMount() {
+          document.getElementById('planDetailToggle').onclick = async () => {
+            p.completed = !p.completed;
+            if (supa && state.user) {
+              try {
+                await supa.from('plans').update({ completed: p.completed }).eq('id', p.id).eq('user_id', state.user.id);
+              } catch (err) {}
+            }
+            closeModal();
+            window.renderPlanner();
+          };
+
+          document.getElementById('planDetailStart').onclick = () => {
+            // Prefill study view
+            if (p.category) state.draft.category = p.category;
+            if (p.linked_subject) state.draft.subject = p.linked_subject;
+            if (p.linked_topic) state.draft.topic = p.linked_topic;
+            closeModal();
+            if (typeof switchView === 'function') switchView('study');
+          };
+        },
+      },
+    );
   }
 
   /* ═══════════════ PATCH renderPlanner ═══════════════ */
