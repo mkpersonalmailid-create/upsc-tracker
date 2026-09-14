@@ -1,15 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Analytics v5 (compact · 2-col grid · expandable)
+   UPSC TRACKER — Analytics v6 (compact · 2-col grid · expandable)
    ─────────────────────────────────────────────────────────────
-   ✅ Compact charts (130px) — 2 charts per row on desktop
+   ✅ Compact charts (130-150px) — 2 charts per row on desktop
    ✅ Expand mode with legends/stats in modal
    ✅ Info buttons with English explanations
    ✅ 4 Tabs: Overview | Progress | Subjects | Tests
-   ✅ Daily + Rolling side-by-side (fixed layout)
+   ✅ Robust draw retry (scheduleDrawCharts)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[analytics-v2] v5 loaded');
+  console.log('[analytics-v2] v6 loaded');
 
   const CAT_LABELS = {
     prelims: '🎯 GS Prelims',
@@ -188,6 +188,7 @@
     timeOfDay: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Time spent in Morning / Afternoon / Evening / Night.</p></div>`,
     productivity: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Self-rated productivity per day (1-5 stars).</p></div>`,
     energy: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Self-rated energy per day (1-5).</p></div>`,
+    sessionsPerDay: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Number of study sessions logged each day.</p><p style="margin-top:10px">Multiple short sessions vs one long session — see your pattern.</p></div>`,
     insights: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Auto-generated from your data.</p></div>`,
     sylStatus: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Status count for every topic. Completed = after max_revisions done.</p></div>`,
     revision: `<div style="font-size:.85rem;line-height:1.7;color:var(--text-2)"><p>Due / Overdue / Upcoming / Completed revisions.</p></div>`,
@@ -454,6 +455,26 @@
   function registerChart(canvasId, title, subtitle, drawFn, legendHtml) {
     CHART_REG[canvasId] = { title, subtitle, draw: drawFn, legendHtml };
   }
+  function scheduleDrawCharts() {
+    const drawAll = () => {
+      Object.keys(CHART_REG).forEach((id) => {
+        const cv = document.getElementById(id);
+        if (!cv || !cv.parentElement) return;
+        const w = cv.parentElement.clientWidth;
+        const h = cv.parentElement.clientHeight;
+        if (w < 20 || h < 20) return;
+        try {
+          CHART_REG[id].draw(cv);
+        } catch (e) {}
+      });
+    };
+    requestAnimationFrame(() => {
+      drawAll();
+      setTimeout(drawAll, 100);
+      setTimeout(drawAll, 300);
+      setTimeout(drawAll, 700);
+    });
+  }
 
   /* ═══════════════ CHART PRIMITIVES ═══════════════ */
   function drawLineWithTarget(canvas, labels, values, target) {
@@ -663,7 +684,7 @@
     const grid = document.createElement('div');
     grid.className = 'anv2-grid';
 
-    /* ── Daily Study Time (paired with Rolling) ── */
+    /* ── Daily Study Time ── */
     grid.appendChild(
       elFrom(`
       <div class="anv2-card">
@@ -888,6 +909,40 @@
       `<span style="color:var(--text-2)">Average: <strong style="color:var(--text)">${energyAvg.toFixed(2)} ★</strong></span>`,
     );
 
+    /* ── Sessions per Day ── */
+    const sessByDay = [];
+    for (let i = 29; i >= 0; i--) {
+      const key = daysAgoKey(i);
+      sessByDay.push(sessions.filter((s) => s.date === key).length);
+    }
+    const totalSessions30 = sessByDay.reduce((a, b) => a + b, 0);
+    const activeDays30 = sessByDay.filter((v) => v > 0).length;
+    const avgSessPerActiveDay = activeDays30 ? (totalSessions30 / activeDays30).toFixed(1) : 0;
+    grid.appendChild(
+      elFrom(
+        chartCard({
+          icon: '📊',
+          title: 'Sessions per Day',
+          subtitle: 'Count of sessions logged',
+          infoKey: 'sessionsPerDay',
+          canvasId: 'anv2SessChart',
+          height: 130,
+        }),
+      ),
+    );
+    registerChart(
+      'anv2SessChart',
+      'Sessions per Day',
+      'Last 30 days',
+      (cv) => {
+        if (typeof drawBarChart === 'function') {
+          drawBarChart(cv, prodLabels, sessByDay, { unit: '', minMax: 5 });
+        }
+      },
+      `<span style="color:var(--text-2)">Total: <strong style="color:var(--text)">${totalSessions30}</strong></span>
+       <span style="color:var(--text-2)">Avg / active day: <strong style="color:var(--text)">${avgSessPerActiveDay}</strong></span>`,
+    );
+
     wrap.appendChild(grid);
 
     /* ── Insights ── */
@@ -900,14 +955,9 @@
     `),
     );
 
+    scheduleDrawCharts();
+
     setTimeout(() => {
-      Object.keys(CHART_REG).forEach((id) => {
-        const cv = document.getElementById(id);
-        if (!cv || !cv.offsetParent) return;
-        try {
-          CHART_REG[id].draw(cv);
-        } catch (e) {}
-      });
       const deepLeg = document.getElementById('anv2DeepLegend');
       if (deepLeg) {
         deepLeg.innerHTML = deepEntries
@@ -947,7 +997,7 @@
               .join('')
           : '<div style="padding:16px;text-align:center;color:var(--text-3);font-size:.78rem">Log more sessions to unlock insights</div>';
       }
-    }, 60);
+    }, 80);
 
     return wrap;
   }
@@ -1145,16 +1195,7 @@
     `),
     );
 
-    setTimeout(() => {
-      Object.keys(CHART_REG).forEach((id) => {
-        const cv = document.getElementById(id);
-        if (!cv || !cv.offsetParent) return;
-        try {
-          CHART_REG[id].draw(cv);
-        } catch (e) {}
-      });
-    }, 60);
-
+    scheduleDrawCharts();
     return wrap;
   }
 
@@ -1325,14 +1366,9 @@
     `),
     );
 
+    scheduleDrawCharts();
+
     setTimeout(() => {
-      Object.keys(CHART_REG).forEach((id) => {
-        const cv = document.getElementById(id);
-        if (!cv || !cv.offsetParent) return;
-        try {
-          CHART_REG[id].draw(cv);
-        } catch (e) {}
-      });
       const leg = document.getElementById('anv2CatLegend');
       if (leg && catEntries.length) {
         leg.innerHTML = catEntries
@@ -1346,7 +1382,7 @@
           )
           .join('');
       }
-    }, 60);
+    }, 80);
 
     return wrap;
   }
@@ -1625,16 +1661,7 @@
     `),
     );
 
-    setTimeout(() => {
-      Object.keys(CHART_REG).forEach((id) => {
-        const cv = document.getElementById(id);
-        if (!cv || !cv.offsetParent) return;
-        try {
-          CHART_REG[id].draw(cv);
-        } catch (e) {}
-      });
-    }, 60);
-
+    scheduleDrawCharts();
     return wrap;
   }
 
@@ -1680,7 +1707,7 @@
       });
       if (typeof attachRipples === 'function') attachRipples();
     };
-    console.log('[analytics-v2] ✅ v5 installed');
+    console.log('[analytics-v2] ✅ v6 installed');
   }
 
   let attempts = 0;
