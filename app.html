@@ -2556,6 +2556,19 @@
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
+      /* ✅ FIX: grid items ko shrink hone do (default min-width:auto blocks it) */
+      .chart-grid-2 > * {
+        min-width: 0;
+      }
+      .chart-card,
+      .chart-wrap {
+        min-width: 0;
+      }
+      .chart-wrap canvas {
+        display: block;
+        width: 100% !important;
+        max-width: 100%;
+      }
       @media (max-width: 900px) {
         .chart-grid-2 {
           grid-template-columns: 1fr;
