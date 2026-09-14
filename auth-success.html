@@ -73,16 +73,17 @@
         line-height: 1.6;
         margin-bottom: 8px;
       }
-      .hint {
-        color: #6e5f8c;
-        font-size: 0.78rem;
-        margin-top: 20px;
-        padding-top: 20px;
-        border-top: 1px solid #2a1e42;
+      .status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #c4b5fd;
+        font-size: 0.82rem;
+        margin-top: 12px;
       }
       .spinner {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-top-color: #a855f7;
         border-radius: 50%;
@@ -96,12 +97,35 @@
           transform: rotate(360deg);
         }
       }
-      .status {
+      .close-btn {
         display: inline-flex;
         align-items: center;
-        color: #c4b5fd;
-        font-size: 0.82rem;
-        margin-top: 12px;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+        transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+      }
+      .close-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 32px rgba(236, 72, 153, 0.5);
+      }
+      .hint {
+        color: #6e5f8c;
+        font-size: 0.78rem;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #2a1e42;
+        line-height: 1.6;
       }
     </style>
   </head>
@@ -109,39 +133,52 @@
     <div class="card">
       <div class="check">✓</div>
       <h1>Login Successful!</h1>
-      <p>Aapki UPSC Tracker app khul rahi hai…</p>
+      <p>Your UPSC Tracker app is opening…</p>
       <div class="status" id="status">
         <span class="spinner"></span>
-        <span id="statusText">App me redirect kar rahe hain…</span>
+        <span id="statusText">Redirecting to app…</span>
       </div>
+
+      <button class="close-btn" id="closeBtn">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+        >
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+        Close This Tab
+      </button>
+
       <div class="hint">
-        App khul gayi? Toh ye browser tab band kar sakte ho.<br />
-        Agar app nahi khuli, toh manually kholo.
+        The app should open automatically.<br />
+        If it doesn't, open it manually from your Dock.
       </div>
     </div>
 
     <script>
       (function () {
-        // Tokens nikaalo URL hash se
         var hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
 
         if (!hash) {
-          document.getElementById('statusText').textContent = 'Tokens nahi mile. Dobara login karo.';
+          document.getElementById('statusText').textContent = 'No tokens found. Please login again.';
           document.querySelector('.spinner').style.display = 'none';
           return;
         }
 
-        // Deep link trigger karo — macOS/Windows app ko kholega
         var deepLink = 'upsc://auth-callback#' + hash;
 
-        // Method 1: window.location (primary)
         try {
           window.location.href = deepLink;
         } catch (e) {
           console.error('Deep link failed:', e);
         }
 
-        // Method 2: Hidden iframe fallback (kuch browsers me better)
         setTimeout(function () {
           try {
             var iframe = document.createElement('iframe');
@@ -154,12 +191,22 @@
           } catch (e) {}
         }, 300);
 
-        // Status update
         setTimeout(function () {
-          document.getElementById('statusText').textContent = 'App khul gayi? Ye tab band kar do.';
+          document.getElementById('statusText').textContent = 'App opened? You can close this tab.';
           document.querySelector('.spinner').style.display = 'none';
           document.querySelector('.status').style.color = '#6ee7b7';
         }, 1500);
+
+        // Close tab button
+        document.getElementById('closeBtn').addEventListener('click', function () {
+          window.close();
+          // Fallback if window.close() blocked (browsers often block it)
+          setTimeout(function () {
+            document.getElementById('statusText').textContent =
+              'Tab could not close automatically. Please close it manually (Cmd+W).';
+            document.querySelector('.status').style.color = '#fbbf24';
+          }, 200);
+        });
       })();
     </script>
   </body>
