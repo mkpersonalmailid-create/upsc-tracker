@@ -1198,7 +1198,7 @@
           const { data, error } = await supa.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: isTauri ? 'upsc://auth-callback' : window.location.origin + APP_URL,
+              redirectTo: isTauri ? window.location.origin + '/auth-success.html' : window.location.origin + APP_URL,
               skipBrowserRedirect: isTauri,
             },
           });

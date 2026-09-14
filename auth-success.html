@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Login Successful · UPSC Tracker</title>
+    <link rel="icon" href="/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background: #0a0612;
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background-image:
+          radial-gradient(circle at 20% 30%, rgba(168, 85, 247, 0.25), transparent 45%),
+          radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.2), transparent 45%);
+      }
+      .card {
+        max-width: 440px;
+        width: 100%;
+        background: #171026;
+        border: 1px solid #2a1e42;
+        border-radius: 24px;
+        padding: 40px 32px;
+        text-align: center;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+      }
+      .check {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 24px;
+        font-size: 2rem;
+        box-shadow: 0 12px 32px rgba(168, 85, 247, 0.5);
+        animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      @keyframes pop {
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #fff, #c4b5fd);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      p {
+        color: #b8a8d9;
+        font-size: 0.92rem;
+        line-height: 1.6;
+        margin-bottom: 8px;
+      }
+      .hint {
+        color: #6e5f8c;
+        font-size: 0.78rem;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #2a1e42;
+      }
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #a855f7;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .status {
+        display: inline-flex;
+        align-items: center;
+        color: #c4b5fd;
+        font-size: 0.82rem;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="check">✓</div>
+      <h1>Login Successful!</h1>
+      <p>Aapki UPSC Tracker app khul rahi hai…</p>
+      <div class="status" id="status">
+        <span class="spinner"></span>
+        <span id="statusText">App me redirect kar rahe hain…</span>
+      </div>
+      <div class="hint">
+        App khul gayi? Toh ye browser tab band kar sakte ho.<br />
+        Agar app nahi khuli, toh manually kholo.
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        // Tokens nikaalo URL hash se
+        var hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
+
+        if (!hash) {
+          document.getElementById('statusText').textContent = 'Tokens nahi mile. Dobara login karo.';
+          document.querySelector('.spinner').style.display = 'none';
+          return;
+        }
+
+        // Deep link trigger karo — macOS/Windows app ko kholega
+        var deepLink = 'upsc://auth-callback#' + hash;
+
+        // Method 1: window.location (primary)
+        try {
+          window.location.href = deepLink;
+        } catch (e) {
+          console.error('Deep link failed:', e);
+        }
+
+        // Method 2: Hidden iframe fallback (kuch browsers me better)
+        setTimeout(function () {
+          try {
+            var iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = deepLink;
+            document.body.appendChild(iframe);
+            setTimeout(function () {
+              document.body.removeChild(iframe);
+            }, 2000);
+          } catch (e) {}
+        }, 300);
+
+        // Status update
+        setTimeout(function () {
+          document.getElementById('statusText').textContent = 'App khul gayi? Ye tab band kar do.';
+          document.querySelector('.spinner').style.display = 'none';
+          document.querySelector('.status').style.color = '#6ee7b7';
+        }, 1500);
+      })();
+    </script>
+  </body>
+</html>
