@@ -458,6 +458,49 @@
         background: rgba(239,68,68,.12);
         color: #FCA5A5;
       }
+              /* ═══ Linked content chips ═══ */
+      .pl-linked-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .pl-cat-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(251, 191, 36, 0.14);
+        color: #FBBF24;
+        white-space: nowrap;
+      }
+      .pl-subj-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(168, 85, 247, 0.14);
+        color: #C4B5FD;
+        white-space: nowrap;
+      }
+      .pl-topic-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 600;
+        background: rgba(20, 184, 166, 0.12);
+        color: #5EEAD4;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       /* ═══ Empty state ═══ */
       .pl-empty {
@@ -523,6 +566,9 @@
           subject: x.subject || 'Study',
           target_minutes: x.target_minutes || 60,
           completed: !!x.completed,
+          category: x.category || null,
+          linked_subject: x.linked_subject || null,
+          linked_topic: x.linked_topic || null,
         }));
       } else {
         state.plans = state.plans || [];
@@ -618,9 +664,32 @@
 
     const overdueChip = isOverdue ? `<span class="pl-overdue-chip">⚠ ${fmtRelativeDate(p.date)}</span>` : '';
 
+    // ✅ Linked content chips
+    const CAT_LABELS = {
+      prelims: '🎯 Prelims',
+      'mains-gs1': '📘 GS-I',
+      'mains-gs2': '📗 GS-II',
+      'mains-gs3': '📙 GS-III',
+      'mains-gs4': '📕 GS-IV',
+      optional: '⭐ Optional',
+      essay: '✍️ Essay',
+      csat: '🧮 CSAT',
+    };
+    let linkedChips = '';
+    if (p.category) {
+      linkedChips += `<span class="pl-cat-chip">${CAT_LABELS[p.category] || p.category}</span>`;
+    }
+    if (p.linked_subject) {
+      linkedChips += `<span class="pl-subj-chip">📚 ${escHtml(p.linked_subject)}</span>`;
+    }
+    if (p.linked_topic) {
+      const shortTopic = p.linked_topic.length > 60 ? p.linked_topic.slice(0, 60) + '…' : p.linked_topic;
+      linkedChips += `<span class="pl-topic-chip" title="${escHtml(p.linked_topic)}">📖 ${escHtml(shortTopic)}</span>`;
+    }
+
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-      <div class="${classes.join(' ')}" style="--bc:${color}">
+      <div class="${classes.join(' ')}" style="--bc:${color}" data-plan-card="${p.id}">
         <button class="pl-block-check" data-plan-toggle="${p.id}" title="${p.completed ? 'Mark incomplete' : 'Mark complete'}">✓</button>
         <div class="pl-block-body">
           <div class="pl-block-title">${escHtml(p.subject)}</div>
@@ -629,12 +698,12 @@
             <span class="pl-dur-chip">⏱ ${fmtMinutes(p.target_minutes)}</span>
             ${overdueChip}
           </div>
+          ${linkedChips ? `<div class="pl-linked-chips">${linkedChips}</div>` : ''}
         </div>
         <button class="pl-block-del" data-plan-del="${p.id}" title="Delete">✕</button>
       </div>`;
     return wrapper.firstElementChild;
   }
-
   /* ═══════════════ QUICK NAV ═══════════════ */
   function buildQuickNav(selectedKey) {
     const today = new Date();
@@ -710,6 +779,16 @@
 
   /* ═══════════════ WIRE TOGGLE & DELETE ═══════════════ */
   function wireBlockActions(el) {
+    // ═══ Block card pe click → detail modal ═══
+    el.querySelectorAll('[data-plan-card]').forEach((card) => {
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('[data-plan-toggle]') || e.target.closest('[data-plan-del]')) return;
+        const p = state.plans.find((x) => x.id === card.dataset.planCard);
+        if (!p) return;
+        openPlanDetailModal(p);
+      });
+      card.style.cursor = 'pointer';
+    });
     el.querySelectorAll('[data-plan-toggle]').forEach((b) => {
       b.onclick = async (e) => {
         e.stopPropagation();
@@ -771,6 +850,80 @@
         }
       };
     });
+  }
+  /* ═══════════════ PLAN DETAIL MODAL ═══════════════ */
+  function openPlanDetailModal(p) {
+    const CAT_LABELS = {
+      prelims: '🎯 GS Prelims',
+      'mains-gs1': '📘 GS Mains · Paper I',
+      'mains-gs2': '📗 GS Mains · Paper II',
+      'mains-gs3': '📙 GS Mains · Paper III',
+      'mains-gs4': '📕 GS Mains · Paper IV',
+      optional: '⭐ Optional',
+      essay: '✍️ Essay',
+      csat: '🧮 CSAT',
+    };
+
+    const body = `
+      <div style="padding:16px;background:var(--card-2);border-radius:14px;margin-bottom:14px">
+        <div style="font-weight:800;font-size:1.1rem;margin-bottom:6px">${escHtml(p.subject)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:.78rem">
+          <span class="pl-time-chip">🕐 ${fmtTime12(p.start)} – ${fmtTime12(p.end)}</span>
+          <span class="pl-dur-chip">⏱ ${fmtMinutes(p.target_minutes)}</span>
+          <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:700;background:rgba(99,102,241,.14);color:#C7D2FE">📅 ${fmtDateShort(p.date)}</span>
+        </div>
+      </div>
+
+      ${
+        p.category || p.linked_subject || p.linked_topic
+          ? `
+        <div style="padding:14px;background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border:1px solid rgba(168,85,247,.28);border-radius:12px;margin-bottom:14px">
+          <div style="font-size:.68rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:10px">🔗 Linked Content</div>
+          ${p.category ? `<div style="margin-bottom:8px"><span style="color:var(--text-3);font-size:.78rem">Category:</span> <strong style="color:#C4B5FD">${CAT_LABELS[p.category] || p.category}</strong></div>` : ''}
+          ${p.linked_subject ? `<div style="margin-bottom:8px"><span style="color:var(--text-3);font-size:.78rem">Subject:</span> <strong style="color:#C4B5FD">${escHtml(p.linked_subject)}</strong></div>` : ''}
+          ${p.linked_topic ? `<div><span style="color:var(--text-3);font-size:.78rem">Topic:</span> <div style="margin-top:4px;font-size:.85rem;color:var(--text-2);line-height:1.6">${escHtml(p.linked_topic)}</div></div>` : ''}
+        </div>
+      `
+          : ''
+      }
+
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button class="btn btn-secondary" id="planDetailStart" style="flex:1">▶ Start Studying</button>
+        <button class="btn btn-primary" id="planDetailToggle" style="flex:1">${p.completed ? '↺ Mark Incomplete' : '✓ Mark Complete'}</button>
+      </div>
+    `;
+
+    openModal(
+      modalShell({
+        title: '📅 Plan Details',
+        subtitle: fmtRelativeDate(p.date),
+        body,
+        actions: `<button class="btn btn-ghost" data-close>Close</button>`,
+      }),
+      {
+        onMount() {
+          document.getElementById('planDetailToggle').onclick = async () => {
+            p.completed = !p.completed;
+            if (supa && state.user) {
+              try {
+                await supa.from('plans').update({ completed: p.completed }).eq('id', p.id).eq('user_id', state.user.id);
+              } catch (err) {}
+            }
+            closeModal();
+            window.renderPlanner();
+          };
+
+          document.getElementById('planDetailStart').onclick = () => {
+            // Prefill study view
+            if (p.category) state.draft.category = p.category;
+            if (p.linked_subject) state.draft.subject = p.linked_subject;
+            if (p.linked_topic) state.draft.topic = p.linked_topic;
+            closeModal();
+            if (typeof switchView === 'function') switchView('study');
+          };
+        },
+      },
+    );
   }
 
   /* ═══════════════ PATCH renderPlanner ═══════════════ */
@@ -904,69 +1057,162 @@
     console.log('[planner-extras] patched: renderPlanner');
   }
 
-  /* ═══════════════ PATCH addPlanBlock ═══════════════ */
+  /* ═══════════════ FULL OVERRIDE: addPlanBlock ═══════════════ */
   function patchAddPlanBlock() {
-    const _orig = window.addPlanBlock;
-    if (typeof _orig !== 'function') return;
-
     window.addPlanBlock = function (dateKeyStr) {
-      _orig.call(this, dateKeyStr);
+      openModal(
+        modalShell({
+          title: 'Add Plan Block',
+          body: `
+            <div class="field"><label>Date</label><input type="date" id="pbDate" value="${dateKeyStr || todayKey()}"></div>
+            <div class="form-grid">
+              <div class="field"><label>Start</label><input type="time" id="pbStart" value="06:00"></div>
+              <div class="field"><label>End</label><input type="time" id="pbEnd" value="08:00"></div>
+            </div>
+            <div class="field"><label>Title</label><input type="text" id="pbSubject" placeholder="e.g. Study History 2 hours"></div>
+            <div class="field"><label>Target (min)</label><input type="number" id="pbTarget" value="120" min="10"></div>
 
-      setTimeout(() => {
-        const saveBtn = document.getElementById('pbSave');
-        if (!saveBtn) return;
+            <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px">
+              <button type="button" id="pbLinkToggle" style="width:100%;padding:12px 16px;text-align:left;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-2);background:transparent;border:none;cursor:pointer;">
+                <span id="pbLinkArrow" style="font-size:.7rem;transition:transform .2s;display:inline-block">▶</span>
+                <span>🔗 Link to specific content</span>
+                <span style="color:var(--text-3);font-weight:500;font-size:.75rem">(optional)</span>
+              </button>
+              <div id="pbLinkBody" style="display:none;padding:0 16px 16px">
+                <div class="field">
+                  <label>Category</label>
+                  <select id="pbCategory">
+                    <option value="">— Any Category —</option>
+                    <option value="prelims">🎯 GS Prelims</option>
+                    <option value="mains-gs1">📘 GS Mains · Paper I</option>
+                    <option value="mains-gs2">📗 GS Mains · Paper II</option>
+                    <option value="mains-gs3">📙 GS Mains · Paper III</option>
+                    <option value="mains-gs4">📕 GS Mains · Paper IV</option>
+                    <option value="optional">⭐ Optional</option>
+                    <option value="essay">✍️ Essay</option>
+                    <option value="csat">🧮 CSAT</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Subject</label>
+                  <select id="pbSubj" disabled><option value="">— Select category first —</option></select>
+                </div>
+                <div class="field">
+                  <label>Topic (optional)</label>
+                  <select id="pbTopic" disabled><option value="">— Select subject first —</option></select>
+                </div>
+              </div>
+            </div>`,
+          actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                    <button class="btn btn-primary" id="pbSave">Add</button>`,
+        }),
+        {
+          onMount() {
+            const toggleBtn = document.getElementById('pbLinkToggle');
+            const bodyEl = document.getElementById('pbLinkBody');
+            const arrowEl = document.getElementById('pbLinkArrow');
+            const catSel = document.getElementById('pbCategory');
+            const subjSel = document.getElementById('pbSubj');
+            const topicSel = document.getElementById('pbTopic');
 
-        const newBtn = saveBtn.cloneNode(true);
-        saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+            toggleBtn.onclick = () => {
+              const open = bodyEl.style.display !== 'none';
+              bodyEl.style.display = open ? 'none' : 'block';
+              arrowEl.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+            };
 
-        newBtn.onclick = async () => {
-          const p = {
-            id: safeUUID(),
-            date: document.getElementById('pbDate').value,
-            start: document.getElementById('pbStart').value,
-            end: document.getElementById('pbEnd').value,
-            subject: document.getElementById('pbSubject').value || 'Study',
-            target_minutes: parseInt(document.getElementById('pbTarget').value, 10) || 60,
-            completed: false,
-          };
-
-          state.plans.push(p);
-
-          if (supa && state.user) {
-            try {
-              const { error } = await supa.from('plans').upsert(
-                {
-                  id: p.id,
-                  user_id: state.user.id,
-                  date: p.date,
-                  start_time: p.start,
-                  end_time: p.end,
-                  subject: p.subject,
-                  target_minutes: p.target_minutes,
-                  completed: p.completed,
-                },
-                { onConflict: 'id' },
-              );
-              if (error) throw error;
-              if (typeof toast === 'function') toast('✅ Block saved!', 'ok');
-            } catch (e) {
-              console.warn('[planner-extras] insert error:', e);
-              if (typeof toast === 'function') toast('⚠️ Cloud save failed', 'warn', 3500);
+            function populateSubjects(cat) {
+              if (!cat) {
+                subjSel.innerHTML = '<option value="">— Select category first —</option>';
+                subjSel.disabled = true;
+                return;
+              }
+              const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
+              subjSel.innerHTML =
+                '<option value="">— Any Subject —</option>' +
+                subjects.map((s) => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+              subjSel.disabled = false;
             }
-          }
 
-          if (typeof closeModal === 'function') closeModal();
-          if (typeof renderPlanner === 'function') renderPlanner();
-        };
-      }, 50);
+            function populateTopics(cat, subj) {
+              if (!subj) {
+                topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+                topicSel.disabled = true;
+                return;
+              }
+              const defaultTopics =
+                (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
+              const customTopics = (state.syllabus || [])
+                .filter((s) => s.subject === subj && s.topic)
+                .map((s) => s.topic);
+              const topics = [...new Set([...defaultTopics, ...customTopics])];
+              topicSel.innerHTML =
+                '<option value="">— Any Topic —</option>' +
+                topics.map((t) => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+              topicSel.disabled = false;
+            }
+
+            catSel.onchange = () => {
+              populateSubjects(catSel.value);
+              topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+              topicSel.disabled = true;
+            };
+            subjSel.onchange = () => populateTopics(catSel.value, subjSel.value);
+
+            document.getElementById('pbSave').onclick = async () => {
+              const p = {
+                id: safeUUID(),
+                date: document.getElementById('pbDate').value,
+                start: document.getElementById('pbStart').value,
+                end: document.getElementById('pbEnd').value,
+                subject: document.getElementById('pbSubject').value.trim() || 'Study',
+                target_minutes: parseInt(document.getElementById('pbTarget').value, 10) || 60,
+                completed: false,
+                category: catSel.value || null,
+                linked_subject: subjSel.value || null,
+                linked_topic: topicSel.value || null,
+              };
+
+              state.plans.push(p);
+
+              if (supa && state.user) {
+                try {
+                  const payload = {
+                    id: p.id,
+                    user_id: state.user.id,
+                    date: p.date,
+                    start_time: p.start,
+                    end_time: p.end,
+                    subject: p.subject,
+                    target_minutes: p.target_minutes,
+                    completed: p.completed,
+                  };
+                  if (p.category) payload.category = p.category;
+                  if (p.linked_subject) payload.linked_subject = p.linked_subject;
+                  if (p.linked_topic) payload.linked_topic = p.linked_topic;
+
+                  const { error } = await supa.from('plans').upsert(payload, { onConflict: 'id' });
+                  if (error) throw error;
+                  if (typeof toast === 'function') toast('✅ Block saved!', 'ok');
+                } catch (e) {
+                  console.warn('[planner-extras] insert error:', e);
+                  if (typeof toast === 'function') toast('⚠️ Cloud save failed', 'warn', 3500);
+                }
+              }
+
+              if (typeof closeModal === 'function') closeModal();
+              if (typeof renderPlanner === 'function') renderPlanner();
+            };
+          },
+        },
+      );
     };
 
     try {
       addPlanBlock = window.addPlanBlock;
     } catch (e) {}
-    console.log('[planner-extras] patched: addPlanBlock');
+    console.log('[planner-extras] patched: addPlanBlock (full override)');
   }
-
   /* ═══════════════ INIT ═══════════════ */
   let attempts = 0;
   function waitThenStart() {

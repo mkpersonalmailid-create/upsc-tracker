@@ -51,13 +51,13 @@
   Cache-Control: public, max-age=86400
 
 # ═══════════════════════════════════════════════════════════════
-# JS & CSS — 1 day cache (rarely change)
+# JS & CSS — No cache (frequently change — bug fixes ke liye)
 # ═══════════════════════════════════════════════════════════════
 /JS/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=0, must-revalidate
 
 /CSS/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=0, must-revalidate
 
 # ═══════════════════════════════════════════════════════════════
 # IMAGES & ICONS — 1 year cache (immutable)

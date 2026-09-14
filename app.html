@@ -2556,6 +2556,19 @@
         grid-template-columns: 1fr 1fr;
         gap: 18px;
       }
+      /* ✅ FIX: grid items ko shrink hone do (default min-width:auto blocks it) */
+      .chart-grid-2 > * {
+        min-width: 0;
+      }
+      .chart-card,
+      .chart-wrap {
+        min-width: 0;
+      }
+      .chart-wrap canvas {
+        display: block;
+        width: 100% !important;
+        max-width: 100%;
+      }
       @media (max-width: 900px) {
         .chart-grid-2 {
           grid-template-columns: 1fr;
@@ -5428,7 +5441,7 @@
             </div>
             <div class="chart-grid-2">
               <div class="chart-card">
-                <div class="chart-header"><h3>📊 Subject Distribution</h3></div>
+                <div class="chart-header"><h3>📊 Category Distribution</h3></div>
                 <div class="chart-wrap chart-wrap-sm"><canvas id="subjChart"></canvas></div>
                 <div
                   id="subjLegend"
@@ -5494,7 +5507,7 @@
             </div>
             <div class="chart-grid-2">
               <div class="chart-card">
-                <div class="chart-header"><h3>Subject Distribution</h3></div>
+                <div class="chart-header"><h3>Category Distribution</h3></div>
                 <div class="chart-wrap chart-wrap-sm"><canvas id="anSubjChart"></canvas></div>
               </div>
               <div class="chart-card">
@@ -8109,6 +8122,8 @@ ${
 
           // ⬇️ loadCloudData() SIRF EK BAAR — duplicate call hata di
           await loadCloudData();
+          // ✅ Legacy 'mains' category ko correct paper me migrate karo
+          migrateLegacyMainsCategories();
 
           // Ab UI update karo (state.isPremium already set hai)
           updateSidebarUser();
@@ -8138,6 +8153,47 @@ ${
           console.error('bootAfterLogin failed:', e);
         } finally {
           hideAppLoader();
+        }
+      }
+      /* ═══════════════ LEGACY MAINS MIGRATION ═══════════════ */
+      function migrateLegacyMainsCategories() {
+        if (!state.sessions || !state.sessions.length) return;
+        if (typeof SYLLABUS === 'undefined') return;
+
+        // Build subject → paper map
+        const SUBJECT_TO_PAPER = {};
+        Object.entries(SYLLABUS).forEach(([pid, paper]) => {
+          (paper.subjects || []).forEach((s) => {
+            SUBJECT_TO_PAPER[s.name] = pid;
+          });
+        });
+
+        const toFix = state.sessions.filter((s) => !s.category || s.category === 'mains');
+        if (!toFix.length) return;
+
+        let fixedCount = 0;
+
+        toFix.forEach((s) => {
+          const correctPaper = SUBJECT_TO_PAPER[s.subject];
+          if (!correctPaper) return;
+          const oldCat = s.category;
+          s.category = correctPaper;
+          s.paper = correctPaper;
+          fixedCount++;
+
+          // Cloud me bhi update karo (background)
+          if (supa && state.user) {
+            supa
+              .from('study_sessions')
+              .update({ category: correctPaper, paper: correctPaper })
+              .eq('id', s.id)
+              .then(() => {})
+              .catch(() => {});
+          }
+        });
+
+        if (fixedCount) {
+          console.log(`[migration] Fixed ${fixedCount} legacy 'mains' session(s)`);
         }
       }
       /* ═══════════════ SET PASSWORD SCREEN (for recovery links) ═══════════════ */
@@ -9308,16 +9364,19 @@ ${
       <div class="field"><label>End</label><input type="time" id="mlEnd" value="11:00"></div>
     </div>
     <div class="field"><label>Duration (minutes)</label><input type="number" id="mlDuration" min="1" value="120"></div>
-    <div class="field"><label>Category</label>
+        <div class="field"><label>Category</label>
       <select id="mlCategory">
-        <option value="prelims">GS Prelims</option>
-        <option value="mains">GS Mains</option>
-        <option value="optional">Optional</option>
-        <option value="essay">Essay</option>
-        <option value="csat">CSAT</option>
+        <option value="prelims">🎯 GS Prelims</option>
+        <option value="mains-gs1">📘 GS Mains · Paper I</option>
+        <option value="mains-gs2">📗 GS Mains · Paper II</option>
+        <option value="mains-gs3">📙 GS Mains · Paper III</option>
+        <option value="mains-gs4">📕 GS Mains · Paper IV</option>==
+        <option value="optional">⭐ Optional</option>
+        <option value="essay">✍️ Essay</option>
+        <option value="csat">🧮 CSAT</option>
       </select></div>
     <div class="field"><label>Subject</label><select id="mlSubject"></select></div>
-    <div class="field"><label>Topic (optional)</label><input type="text" id="mlTopic" placeholder="Topic"></div>
+        <div class="field"><label>Topic (optional)</label><select id="mlTopic"><option value="">— Select a topic (optional) —</option></select></div>
     
     <div class="field"><label>Study Type</label>
       <select id="mlType">
@@ -9341,14 +9400,26 @@ ${
           }),
           {
             onMount() {
-              // Subject dropdown refresh
-              const refresh = () => {
+              // ═══ Subject dropdown refresh ═══
+              const refreshSubjects = () => {
                 const cat = $('#mlCategory').value;
                 const subs = getSubjectsForCategory(cat);
                 $('#mlSubject').innerHTML = subs.map((s) => `<option>${esc(s)}</option>`).join('');
+                refreshTopics();
               };
-              $('#mlCategory').onchange = refresh;
-              refresh();
+              // ═══ Topic dropdown refresh ═══
+              const refreshTopics = () => {
+                const cat = $('#mlCategory').value;
+                const subj = $('#mlSubject').value;
+                const topics =
+                  typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : [];
+                $('#mlTopic').innerHTML =
+                  '<option value="">— Select a topic (optional) —</option>' +
+                  topics.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+              };
+              $('#mlCategory').onchange = refreshSubjects;
+              $('#mlSubject').onchange = refreshTopics;
+              refreshSubjects();
 
               // Auto-calculate duration
               const recalc = () => {
@@ -9663,20 +9734,40 @@ ${
           .join('');
 
         drawDashChart(7);
-        // ✅ FIX: Subject Distribution — element pass + entries banao + legend
-        const _subTotals = subjectTotals();
-        const _subEntries = Object.entries(_subTotals)
+        // ✅ Category Distribution (not subject-wise)
+        const _CAT_LABELS = {
+          prelims: '🎯 GS Prelims',
+          'mains-gs1': '📘 GS Mains · Paper I',
+          'mains-gs2': '📗 GS Mains · Paper II',
+          'mains-gs3': '📙 GS Mains · Paper III',
+          'mains-gs4': '📕 GS Mains · Paper IV',
+          optional: '⭐ Optional',
+          essay: '✍️ Essay',
+          csat: '🧮 CSAT',
+        };
+        const _CAT_COLORS = ['#A855F7', '#EC4899', '#F97316', '#FBBF24', '#14B8A6', '#06B6D4', '#10B981', '#8B5CF6'];
+
+        const _catTotals = {};
+        state.sessions.forEach((s) => {
+          const c = s.category || 'other';
+          _catTotals[c] = (_catTotals[c] || 0) + (s.duration || 0);
+        });
+
+        const _catEntries = Object.entries(_catTotals)
           .filter(([, v]) => v > 0)
           .sort((a, b) => b[1] - a[1])
-          .slice(0, 8)
-          .map(([name, value]) => ({ name, value, color: getSubjectColor(name) }));
+          .map(([name, value], i) => ({
+            name: _CAT_LABELS[name] || name,
+            value,
+            color: _CAT_COLORS[i % _CAT_COLORS.length],
+          }));
 
-        drawDonut($('#subjChart'), _subEntries);
+        drawDonut($('#subjChart'), _catEntries);
 
         const _legend = $('#subjLegend');
         if (_legend) {
-          _legend.innerHTML = _subEntries.length
-            ? _subEntries
+          _legend.innerHTML = _catEntries.length
+            ? _catEntries
                 .map(
                   (e) =>
                     `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:${e.color}"></span>${esc(e.name)} · ${fmtDuration(e.value)}</span>`,
@@ -11303,7 +11394,7 @@ ${
         );
         attachRipples();
       }
-      function addPlanBlock(dateKeyStr) {
+      /*function addPlanBlock(dateKeyStr) {
         openModal(
           modalShell({
             title: 'Add Plan Block',
@@ -11338,7 +11429,7 @@ ${
             },
           },
         );
-      }
+      }*/
 
       /* ═══════════════ NOTES ═══════════════ */
       function renderNotes() {

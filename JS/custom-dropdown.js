@@ -402,7 +402,12 @@
           searchWrap = document.createElement('div');
           searchWrap.className = 'cd-search-wrap';
           searchWrap.innerHTML = `<input type="text" class="cd-search" placeholder="🔍 Search..." autocomplete="off" spellcheck="false">`;
-          panel.appendChild(searchWrap);
+          // ✅ FIX: search box hamesha options ke UPAR rahe
+          if (optionsWrap) {
+            panel.insertBefore(searchWrap, optionsWrap);
+          } else {
+            panel.appendChild(searchWrap);
+          }
           searchInput = searchWrap.querySelector('.cd-search');
 
           searchInput.addEventListener('input', (e) => {
