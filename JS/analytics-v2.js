@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Analytics v3 (PM-grade · mobile-first · transparent)
+   UPSC TRACKER — Analytics v3 (PM-grade · mobile-first · English)
    ─────────────────────────────────────────────────────────────
    ✅ Correct syllabus calc: SYLLABUS + custom subjects + custom topics
-   ✅ Completed = status === 'completed' ONLY (rev cycles in progress)
-   ✅ ⓘ info buttons on every section (calculation explained)
+   ✅ Completed = status === 'completed' ONLY
+   ✅ ⓘ info buttons on every section (English explanations)
    ✅ Mobile-first responsive (no overflow, no cut-off)
    ✅ 4 tabs: Overview | Progress | Subjects | Tests
    ═══════════════════════════════════════════════════════════════ */
@@ -70,7 +70,6 @@
   }
 
   /* ═══════════════ SYLLABUS CALCULATOR (CANONICAL) ═══════════════ */
-  /* Total = SYLLABUS default topics + custom subject topics + custom topics under default subjects */
   function calcSyllabusStats() {
     const tracked = state.syllabus || [];
     const userSubjects = state.subjects || [];
@@ -97,8 +96,6 @@
     const customSubjectNames = new Set(customSubjects.map((s) => s.name));
 
     // 3. Tracked topics from state.syllabus
-    //    - Custom subject topics (any tracked under custom subject)
-    //    - Custom topics under default subjects (tracked but not in defaultTopicKeys)
     let customSubjectTopicCount = 0;
     let customTopicUnderDefaultCount = 0;
     tracked.forEach((t) => {
@@ -112,13 +109,12 @@
 
     const total = defaultTotal + customSubjectTopicCount + customTopicUnderDefaultCount;
 
-    // 4. Tracked statuses (from state.syllabus)
+    // 4. Tracked statuses
     const statusCounts = { not_started: 0, learning: 0, completed: 0, rev1: 0, rev2: 0, rev3: 0 };
     tracked.forEach((t) => {
       const s = t.status || 'not_started';
       if (statusCounts[s] != null) statusCounts[s]++;
     });
-    // Not started = total - (tracked with explicit non-not_started status)
     const explicitlyTouched = tracked.filter((t) => t.status && t.status !== 'not_started').length;
     statusCounts.not_started = Math.max(0, total - explicitlyTouched);
 
@@ -158,26 +154,150 @@
     return `<button class="anv2-info-btn" id="${id}" title="How is this calculated?">ⓘ</button>`;
   }
 
+  /* ═══════════════ INFO CONTENT (ENGLISH) ═══════════════ */
+  const INFO = {
+    today: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p><strong style="color:var(--text)">Today's study time</strong> = total duration of all sessions logged today.</p>
+        <p style="margin-top:10px"><strong style="color:var(--text)">Target</strong> = your daily target from Settings (default 8h).</p>
+        <p style="margin-top:10px"><strong style="color:var(--text)">Percentage</strong> = (Today's time ÷ Target) × 100</p>
+      </div>`,
+    streak: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p><strong style="color:var(--text)">Streak</strong> = consecutive days (including today) with at least 1 minute of study.</p>
+        <p style="margin-top:10px">If you skip a day, the streak resets from the day after. <strong>Best</strong> = your longest streak ever recorded.</p>
+      </div>`,
+    syllabus: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p><strong style="color:var(--text)">Syllabus %</strong> = (Completed topics ÷ Total topics) × 100</p>
+        <p style="margin-top:10px"><strong style="color:var(--text)">Total topics</strong> includes:</p>
+        <ul style="margin:8px 0 0 18px;line-height:1.9">
+          <li>All default UPSC syllabus topics</li>
+          <li>All topics under your custom subjects</li>
+          <li>Custom topics you added under default subjects</li>
+        </ul>
+        <p style="margin-top:10px"><strong style="color:var(--text)">Completed</strong> = only topics whose status is <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:4px">completed</code>.</p>
+        <p style="margin-top:8px">⚠️ Topics in Rev 1/2/3 are <strong>in progress</strong>, not complete — since the revision cycle is still running.</p>
+      </div>`,
+    trend: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p><strong style="color:var(--text)">Last 7 days vs previous 7 days</strong> comparison.</p>
+        <p style="margin-top:10px"><strong style="color:var(--text)">Trend</strong> = ((Last 7 − Prev 7) ÷ Prev 7) × 100</p>
+        <p style="margin-top:10px">If the previous week had 0h, trend can't be calculated (shows —).</p>
+      </div>`,
+    dailyChart: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Total study time per day (in hours).</p>
+        <p style="margin-top:10px"><strong style="color:#FBBF24">Yellow dashed line</strong> = your daily target (from Settings).</p>
+        <p style="margin-top:10px">Line above target = target achieved. Below = pending.</p>
+      </div>`,
+    deepWork: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>All sessions grouped by duration into 4 buckets:</p>
+        <ul style="margin:8px 0 0 18px;line-height:1.9">
+          <li>&lt; 30 min — short (warm-up)</li>
+          <li>30-60 min — medium</li>
+          <li>1-2 hours — deep work ✅</li>
+          <li>2+ hours — marathon 🎯</li>
+        </ul>
+        <p style="margin-top:10px">For UPSC, deep work (90+ min) is best — the syllabus is comprehensive.</p>
+      </div>`,
+    studyType: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Sessions grouped by study type:</p>
+        <ul style="margin:8px 0 0 18px;line-height:1.9">
+          <li><strong>New Learning</strong> — first-time reading</li>
+          <li><strong>Revision</strong> — re-reading (for retention)</li>
+          <li><strong>Test</strong> — mock / practice</li>
+        </ul>
+        <p style="margin-top:10px">Ideal ratio: 40% New, 50% Revision, 10% Test.</p>
+      </div>`,
+    insights: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Auto-generated insights from your recent sessions — patterns, warnings, and recommendations.</p>
+        <p style="margin-top:10px">This is smart analysis that understands your study behavior and suggests improvements.</p>
+      </div>`,
+    sylStatus: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Current status count for every topic:</p>
+        <ul style="margin:8px 0 0 18px;line-height:1.9">
+          <li>⚪ <strong>Not Started</strong> — not touched yet</li>
+          <li>🟡 <strong>Learning</strong> — first reading in progress</li>
+          <li>✅ <strong>Completed</strong> — final (after revision)</li>
+          <li>🔵 <strong>Rev 1/2/3</strong> — revision cycles running</li>
+        </ul>
+        <p style="margin-top:10px">A topic is marked "Completed" when max_revisions (from Settings) are done.</p>
+      </div>`,
+    revision: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <ul style="margin:0 0 0 18px;line-height:1.9">
+          <li><strong>Due Today</strong> — revision scheduled for today</li>
+          <li><strong>Overdue</strong> — due date passed, still pending</li>
+          <li><strong>Upcoming</strong> — future revisions</li>
+          <li><strong>Completed</strong> — done</li>
+        </ul>
+        <p style="margin-top:10px">For UPSC, revision &gt; learning — this metric is critical.</p>
+      </div>`,
+    goals: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Goal progress = (Current value ÷ Target value) × 100</p>
+        <p style="margin-top:10px">When you log a study session linked to a goal, the time auto-adds to that goal.</p>
+      </div>`,
+    countdown: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Days remaining from today until your Prelims and Mains exam dates.</p>
+        <p style="margin-top:10px">Set your dates on the Settings page to activate the countdown and smart planning features.</p>
+      </div>`,
+    categoryDist: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Total time spent in each category (GS Prelims, GS Mains I/II/III/IV, Optional, Essay, CSAT).</p>
+        <p style="margin-top:10px">Use this to check balance — if Optional or Essay is neglected, too much time is going to other subjects.</p>
+      </div>`,
+    subjectCompare: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Total study time, session count, and last studied date for each subject.</p>
+        <p style="margin-top:10px">Top 10 subjects by time. Helps you see which subject you're consistently working on and which is being neglected.</p>
+      </div>`,
+    neglected: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Subjects not touched in 7+ days.</p>
+        <p style="margin-top:10px">For UPSC, breadth matters — ignoring a subject for 2 weeks is costly. This list is a reminder to revisit them.</p>
+      </div>`,
+    testRecords: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>All logged tests (PYQ, Mock, Sectional, Full-Length).</p>
+        <p style="margin-top:10px"><strong>Score %</strong> = (Score ÷ Total marks) × 100</p>
+        <p style="margin-top:8px">Rising trend = improvement. Falling = revisit your strategy.</p>
+      </div>`,
+    testAccuracy: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p><strong>Accuracy</strong> = (Correct ÷ Attempted) × 100 per test.</p>
+        <p style="margin-top:10px">This tracks how precise your answers are — important for UPSC negative marking.</p>
+      </div>`,
+    pyq: `
+      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
+        <p>Previous Year Questions practice data.</p>
+        <p style="margin-top:10px"><strong>Accuracy</strong> = (Correct ÷ Solved) × 100</p>
+        <p style="margin-top:8px">PYQ practice is critical for UPSC — it reveals the question pattern.</p>
+      </div>`,
+  };
+
   /* ═══════════════ CSS ═══════════════ */
   function injectCSS() {
-    if (document.getElementById('anv2CSS')) {
-      const old = document.getElementById('anv2CSS');
-      old.remove();
-    }
+    const old = document.getElementById('anv2CSS');
+    if (old) old.remove();
     const s = document.createElement('style');
     s.id = 'anv2CSS';
     s.textContent = `
       .anv2-wrap { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 100%; overflow-x: hidden; box-sizing: border-box; }
       .anv2-wrap *, .anv2-wrap *::before, .anv2-wrap *::after { box-sizing: border-box; }
 
-      /* ═══ Hero ═══ */
+      /* Hero */
       .anv2-hero {
         background: linear-gradient(135deg, rgba(168,85,247,.14), rgba(236,72,153,.08), rgba(249,115,22,.05));
         border: 1px solid rgba(168,85,247,.28);
-        border-radius: 18px;
-        padding: 16px;
-        position: relative;
-        overflow: hidden;
+        border-radius: 18px; padding: 16px;
+        position: relative; overflow: hidden;
       }
       .anv2-hero::before {
         content: ''; position: absolute; top: -50%; right: -20%;
@@ -188,17 +308,14 @@
       .anv2-hero-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 10px;
-        position: relative; z-index: 1;
+        gap: 10px; position: relative; z-index: 1;
       }
       .anv2-hero-card {
         background: rgba(0,0,0,.28);
         border: 1px solid rgba(255,255,255,.08);
-        border-radius: 12px;
-        padding: 12px;
+        border-radius: 12px; padding: 12px;
         display: flex; flex-direction: column; gap: 3px;
-        min-width: 0;
-        position: relative;
+        min-width: 0; position: relative;
       }
       .anv2-hero-card .lbl {
         font-size: .6rem; font-weight: 800; letter-spacing: .1em;
@@ -212,15 +329,12 @@
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text;
       }
-      .anv2-hero-card .sub {
-        font-size: .68rem; color: var(--text-3);
-        overflow: hidden; text-overflow: ellipsis;
-      }
+      .anv2-hero-card .sub { font-size: .68rem; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; }
       .anv2-hero-card.accent-pink .val { background: linear-gradient(135deg, #f9a8d4, #ec4899); -webkit-background-clip: text; background-clip: text; }
       .anv2-hero-card.accent-orange .val { background: linear-gradient(135deg, #fdba74, #f97316); -webkit-background-clip: text; background-clip: text; }
       .anv2-hero-card.accent-teal .val { background: linear-gradient(135deg, #5eead4, #14b8a6); -webkit-background-clip: text; background-clip: text; }
 
-      /* ═══ Info button ═══ */
+      /* Info button */
       .anv2-info-btn {
         display: inline-flex; align-items: center; justify-content: center;
         width: 20px; height: 20px; border-radius: 50%;
@@ -231,7 +345,7 @@
       }
       .anv2-info-btn:hover { background: rgba(168,85,247,.32); transform: scale(1.1); color: #fff; }
 
-      /* ═══ Tabs ═══ */
+      /* Tabs */
       .anv2-tabs {
         display: flex; gap: 5px;
         background: var(--bg-2); border: 1px solid var(--border);
@@ -255,7 +369,7 @@
         color: #fff; box-shadow: 0 6px 18px rgba(168,85,247,.35);
       }
 
-      /* ═══ Section head ═══ */
+      /* Section head */
       .anv2-sec-head {
         display: flex; align-items: center; gap: 10px;
         margin-bottom: 12px; padding-bottom: 10px;
@@ -268,15 +382,10 @@
         display: flex; align-items: center; justify-content: center;
         font-size: 1rem; flex-shrink: 0;
       }
-      .anv2-sec-title {
-        font-size: .92rem; font-weight: 800;
-        letter-spacing: -.01em; color: var(--text);
-      }
-      .anv2-sec-sub {
-        font-size: .7rem; color: var(--text-3); margin-top: 2px;
-      }
+      .anv2-sec-title { font-size: .92rem; font-weight: 800; letter-spacing: -.01em; color: var(--text); }
+      .anv2-sec-sub { font-size: .7rem; color: var(--text-3); margin-top: 2px; }
 
-      /* ═══ Cards ═══ */
+      /* Cards */
       .anv2-card {
         background: var(--card); border: 1px solid var(--border);
         border-radius: 14px; padding: 14px;
@@ -284,57 +393,36 @@
       }
       .anv2-card + .anv2-card { margin-top: 12px; }
 
-      /* ═══ Empty state ═══ */
+      /* Empty */
       .anv2-empty { text-align: center; padding: 26px 16px; color: var(--text-3); }
       .anv2-empty-icon { font-size: 2rem; margin-bottom: 8px; opacity: .7; }
       .anv2-empty-title { font-size: .9rem; font-weight: 800; color: var(--text-2); margin-bottom: 5px; }
       .anv2-empty-desc { font-size: .78rem; color: var(--text-3); line-height: 1.55; max-width: 320px; margin: 0 auto 12px; }
 
-      /* ═══ Chart wrapper (mobile safe) ═══ */
-      .anv2-chart-wrap {
-        position: relative; width: 100%; height: 200px;
-        min-width: 0; max-width: 100%;
-      }
-      .anv2-chart-wrap canvas {
-        display: block !important;
-        width: 100% !important;
-        max-width: 100% !important;
-      }
+      /* Chart wrap */
+      .anv2-chart-wrap { position: relative; width: 100%; height: 200px; min-width: 0; max-width: 100%; }
+      .anv2-chart-wrap canvas { display: block !important; width: 100% !important; max-width: 100% !important; }
       .anv2-chart-sm { height: 160px; }
 
-      /* ═══ Donut + legend grid (mobile safe) ═══ */
+      /* Split */
       .anv2-split {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 14px;
-        align-items: center;
+        gap: 14px; align-items: center;
       }
-      .anv2-legend {
-        display: flex; flex-direction: column; gap: 7px;
-        font-size: .78rem; min-width: 0;
-      }
-      .anv2-legend-row {
-        display: flex; align-items: center; gap: 8px;
-      }
+      .anv2-legend { display: flex; flex-direction: column; gap: 7px; font-size: .78rem; min-width: 0; }
+      .anv2-legend-row { display: flex; align-items: center; gap: 8px; }
       .anv2-legend-row .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
       .anv2-legend-row .lbl { flex: 1; min-width: 0; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .anv2-legend-row .val { color: var(--text); font-weight: 700; flex-shrink: 0; }
 
-      /* ═══ Table (mobile scroll) ═══ */
-      .anv2-table-scroll {
-        width: 100%; overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-      }
-      .anv2-table {
-        width: 100%; min-width: 380px;
-        border-collapse: collapse; font-size: .78rem;
-      }
+      /* Table */
+      .anv2-table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+      .anv2-table { width: 100%; min-width: 380px; border-collapse: collapse; font-size: .78rem; }
       .anv2-table th {
         text-align: left; font-size: .64rem; font-weight: 800;
         letter-spacing: .06em; text-transform: uppercase; color: var(--text-3);
-        padding: 8px 6px; border-bottom: 1px solid var(--border);
-        white-space: nowrap;
+        padding: 8px 6px; border-bottom: 1px solid var(--border); white-space: nowrap;
       }
       .anv2-table td {
         padding: 10px 6px; border-bottom: 1px solid var(--border);
@@ -346,7 +434,7 @@
         border-radius: 50%; margin-right: 6px; vertical-align: middle;
       }
 
-      /* ═══ Tab content ═══ */
+      /* Tab content */
       .anv2-tab-content { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 100%; }
       .anv2-kpi-grid {
         display: grid;
@@ -356,8 +444,7 @@
       .anv2-mini-kpi {
         background: var(--card-2); border: 1px solid var(--border);
         border-radius: 10px; padding: 10px 12px;
-        position: relative; overflow: hidden;
-        min-width: 0;
+        position: relative; overflow: hidden; min-width: 0;
       }
       .anv2-mini-kpi::before {
         content: ''; position: absolute; left: 0; top: 0; bottom: 0;
@@ -373,7 +460,7 @@
       }
       .anv2-mini-kpi .sub { font-size: .65rem; color: var(--text-3); margin-top: 2px; }
 
-      /* ═══ Goal row ═══ */
+      /* Goal */
       .anv2-goal-row {
         padding: 11px 12px; background: var(--card-2);
         border: 1px solid var(--border); border-radius: 10px;
@@ -381,7 +468,7 @@
       }
       .anv2-goal-row:last-child { margin-bottom: 0; }
 
-      /* ═══ Mobile ═══ */
+      /* Mobile */
       @media (max-width: 640px) {
         .anv2-hero { padding: 14px; border-radius: 16px; }
         .anv2-hero-grid { gap: 8px; }
@@ -405,129 +492,6 @@
     `;
     document.head.appendChild(s);
   }
-
-  /* ═══════════════ INFO CONTENT ═══════════════ */
-  const INFO = {
-    today: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p><strong style="color:var(--text)">Today's study time</strong> = total duration of all sessions logged today.</p>
-        <p style="margin-top:10px"><strong style="color:var(--text)">Target</strong> = your daily target from Settings (default 8h).</p>
-        <p style="margin-top:10px"><strong style="color:var(--text)">Percentage</strong> = (Today's time ÷ Target) × 100</p>
-      </div>`,
-    streak: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p><strong style="color:var(--text)">Streak</strong> = consecutive days (including today) with at least 1 minute of study.</p>
-        <p style="margin-top:10px">Aaj study nahi kiya toh streak kal se toota hua mana jayega. Best = longest streak ever.</p>
-      </div>`,
-    syllabus: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p><strong style="color:var(--text)">Syllabus %</strong> = (Completed topics ÷ Total topics) × 100</p>
-        <p style="margin-top:10px"><strong style="color:var(--text)">Total topics</strong> me shamil hain:</p>
-        <ul style="margin:8px 0 0 18px;line-height:1.9">
-          <li>UPSC standard syllabus ke saare topics</li>
-          <li>Aapke banaye custom subjects ke saare topics</li>
-          <li>Default subjects ke andar add kiye gaye custom topics</li>
-        </ul>
-        <p style="margin-top:10px"><strong style="color:var(--text)">Completed</strong> = sirf wo topics jinka status <code style="background:rgba(255,255,255,.08);padding:2px 6px;border-radius:4px">completed</code> hai.</p>
-        <p style="margin-top:8px">⚠️ Rev 1/2/3 wale topics <strong>in-progress</strong> mane jate hain — complete nahi, kyunki revision cycle chal raha hai.</p>
-      </div>`,
-    trend: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p><strong style="color:var(--text)">Last 7 days vs previous 7 days</strong> ka comparison.</p>
-        <p style="margin-top:10px"><strong style="color:var(--text)">Trend</strong> = ((Last 7 − Prev 7) ÷ Prev 7) × 100</p>
-        <p style="margin-top:10px">Agar previous week me 0h tha → trend calculate nahi hota (— dikhega).</p>
-      </div>`,
-    dailyChart: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Har din ka total study time (hours me).</p>
-        <p style="margin-top:10px"><strong style="color:#FBBF24">Yellow dashed line</strong> = aapka daily target (Settings se).</p>
-        <p style="margin-top:10px">Line target ke upar = target achieved. Neeche = pending.</p>
-      </div>`,
-    deepWork: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Saare sessions ko duration ke hisaab se 4 buckets me baanta:</p>
-        <ul style="margin:8px 0 0 18px;line-height:1.9">
-          <li>&lt; 30 min — chhota (mind warm-up)</li>
-          <li>30-60 min — medium</li>
-          <li>1-2 hours — deep work ✅</li>
-          <li>2+ hours — marathon 🎯</li>
-        </ul>
-        <p style="margin-top:10px">UPSC me deep work (90+ min) best hota hai — kyunki syllabus comprehensive hai.</p>
-      </div>`,
-    studyType: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Sessions ko study type se group kiya:</p>
-        <ul style="margin:8px 0 0 18px;line-height:1.9">
-          <li><strong>New Learning</strong> — pehli baar padha</li>
-          <li><strong>Revision</strong> — dobara padha (retention ke liye)</li>
-          <li><strong>Test</strong> — mock / practice</li>
-        </ul>
-        <p style="margin-top:10px">Ideal ratio: 40% New, 50% Revision, 10% Test.</p>
-      </div>`,
-    insights: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Aapke recent sessions se auto-generated insights — patterns, warnings, aur recommendations.</p>
-        <p style="margin-top:10px">Ye smart analysis hai jo aapke study behavior ko samajh ke tips deta hai.</p>
-      </div>`,
-    sylStatus: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Har topic ka current status count:</p>
-        <ul style="margin:8px 0 0 18px;line-height:1.9">
-          <li>⚪ <strong>Not Started</strong> — abhi tak touch nahi kiya</li>
-          <li>🟡 <strong>Learning</strong> — first reading chal rahi hai</li>
-          <li>✅ <strong>Completed</strong> — final (revision ke baad)</li>
-          <li>🔵 <strong>Rev 1/2/3</strong> — revision cycles chal rahe</li>
-        </ul>
-        <p style="margin-top:10px">Topic "Completed" ho jata hai jab max_revisions (Settings me) complete ho jayein.</p>
-      </div>`,
-    revision: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <ul style="margin:0 0 0 18px;line-height:1.9">
-          <li><strong>Due Today</strong> — aaj revision karna hai</li>
-          <li><strong>Overdue</strong> — due date nikal gayi, abhi pending</li>
-          <li><strong>Upcoming</strong> — future me aane wali</li>
-          <li><strong>Completed</strong> — ho gayi</li>
-        </ul>
-        <p style="margin-top:10px">UPSC me revision &gt; learning — isliye ye metric critical hai.</p>
-      </div>`,
-    goals: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Goal progress = (Current value ÷ Target value) × 100</p>
-        <p style="margin-top:10px">Study session log karte waqt agar goal se link kiya tha, toh us session ka time auto-add hota hai goal me.</p>
-      </div>`,
-    countdown: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Prelims aur Mains exam dates se aaj tak kitne din bache hain.</p>
-        <p style="margin-top:10px">Dates Settings page me set karo — tabhi countdown aur smart planning features active honge.</p>
-      </div>`,
-    categoryDist: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Har category (GS Prelims, GS Mains I/II/III/IV, Optional, Essay, CSAT) me total time spent.</p>
-        <p style="margin-top:10px">Ye balance check karne ke liye hai — agar Optional ya Essay neglected hai toh upar wale subjects pe zyada time ja raha hai.</p>
-      </div>`,
-    subjectCompare: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Har subject ka total study time, sessions count, aur last studied date.</p>
-        <p style="margin-top:10px">Top 10 subjects by time. Ye pehchanne ke liye ki aap consistently kis subject pe kaam kar rahe ho aur konsa neglect ho raha hai.</p>
-      </div>`,
-    neglected: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Wo subjects jinhe 7+ din se touch nahi kiya.</p>
-        <p style="margin-top:10px">UPSC me breadth important hai — ek subject ko 2 hafte ignore karna costly hota hai. Ye list upar wale subjects ko revisit karne ka reminder hai.</p>
-      </div>`,
-    mockTests: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Mock tests ka score trend aur accuracy.</p>
-        <p style="margin-top:10px"><strong>Score %</strong> = (Score ÷ Total marks) × 100</p>
-        <p style="margin-top:8px">Trend rising = improvement. Falling = strategy revisit karo.</p>
-      </div>`,
-    pyq: `
-      <div style="font-size:.85rem;line-height:1.7;color:var(--text-2)">
-        <p>Previous Year Questions practice ka data.</p>
-        <p style="margin-top:10px"><strong>Accuracy</strong> = (Correct ÷ Solved) × 100</p>
-        <p style="margin-top:8px">PYQ practice UPSC ke liye most important — question pattern samajhne ke liye.</p>
-      </div>`,
-  };
 
   /* ═══════════════ SECTION HELPERS ═══════════════ */
   function sectionHead(icon, title, subtitle, infoKey) {
@@ -605,7 +569,6 @@
     const xFor = (i) => p.l + (i / Math.max(1, n - 1)) * cw;
     const yFor = (v) => p.t + ch - (v / max) * ch;
 
-    // area
     ctx.beginPath();
     ctx.moveTo(xFor(0), p.t + ch);
     values.forEach((v, i) => ctx.lineTo(xFor(i), yFor(v)));
@@ -617,7 +580,6 @@
     ctx.fillStyle = g;
     ctx.fill();
 
-    // line
     ctx.beginPath();
     values.forEach((v, i) => (i === 0 ? ctx.moveTo(xFor(i), yFor(v)) : ctx.lineTo(xFor(i), yFor(v))));
     const lg = ctx.createLinearGradient(p.l, 0, w - p.r, 0);
@@ -628,7 +590,6 @@
     ctx.lineJoin = 'round';
     ctx.stroke();
 
-    // x-axis
     ctx.fillStyle = c.text3;
     ctx.font = '10px Inter,sans-serif';
     ctx.textAlign = 'center';
@@ -711,7 +672,6 @@
     const wrap = document.createElement('div');
     wrap.className = 'anv2-tab-content';
 
-    // Daily trend chart
     const labels = [],
       values = [];
     for (let i = 29; i >= 0; i--) {
@@ -730,7 +690,6 @@
     `),
     );
 
-    // Deep work
     const buckets = [0, 0, 0, 0];
     (state.sessions || []).forEach((s) => {
       const min = (s.duration || 0) / 60;
@@ -758,7 +717,6 @@
     `),
     );
 
-    // Study type
     const typeTotals = { 'New Learning': 0, Revision: 0, Test: 0 };
     (state.sessions || []).forEach((s) => {
       if (typeTotals[s.study_type] != null) typeTotals[s.study_type] += s.duration || 0;
@@ -781,7 +739,6 @@
     `),
     );
 
-    // Insights
     wrap.appendChild(
       elFrom(`
       <div class="anv2-card" style="background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border-color:rgba(168,85,247,.28)">
@@ -874,7 +831,6 @@
 
     const stats = calcSyllabusStats();
 
-    // Syllabus status
     const sylCardHtml =
       stats.total === 0
         ? `<div class="anv2-card">${sectionHead('📖', 'Syllabus Status', '', 'sylStatus')}${emptyState('📖', 'No syllabus tracked', 'Open the Syllabus page and mark topics to see progress.', 'Go to Syllabus', 'anv2GoSyllabus')}</div>`
@@ -898,7 +854,6 @@
         </div>`;
     wrap.appendChild(elFrom(sylCardHtml));
 
-    // Revision health
     const revs = state.revisions || [];
     const today = todayKeyLocal();
     const dueToday = revs.filter((r) => r.status === 'pending' && r.due_date === today).length;
@@ -909,7 +864,7 @@
     wrap.appendChild(
       elFrom(`
       <div class="anv2-card">
-        ${sectionHead('🔁', 'Revision Health', 'UPSC me revision > learning', 'revision')}
+        ${sectionHead('🔁', 'Revision Health', 'UPSC rewards consistent revision', 'revision')}
         ${
           revs.length === 0
             ? emptyState(
@@ -930,7 +885,6 @@
     `),
     );
 
-    // Goals
     const goals = state.goals || [];
     const activeGoals = goals.filter((g) => g.current < g.target).length;
     wrap.appendChild(
@@ -966,7 +920,6 @@
     `),
     );
 
-    // Countdown
     const preDate = state.profile?.exam_date_prelims;
     const mainsDate = state.profile?.exam_date_mains;
     const preDays = preDate && typeof daysUntil === 'function' ? daysUntil(preDate) : null;
@@ -1023,7 +976,6 @@
     wrap.className = 'anv2-tab-content';
     const sessions = state.sessions || [];
 
-    // Category distribution
     const catTotals = {};
     sessions.forEach((s) => {
       const c = s.category || 'other';
@@ -1050,7 +1002,6 @@
     `),
     );
 
-    // Subject comparison
     const subjTotals = {};
     sessions.forEach((s) => {
       const n = s.subject || 'Other';
@@ -1093,7 +1044,6 @@
     `),
     );
 
-    // Neglected
     const neglected = Object.entries(subjTotals)
       .filter(([, d]) => {
         const daysSince = d.last ? Math.floor((new Date(todayKeyLocal()) - new Date(d.last)) / 86400000) : 999;
@@ -1156,113 +1106,241 @@
     const wrap = document.createElement('div');
     wrap.className = 'anv2-tab-content';
 
-    // Detect unified test records structure (may be testRecords OR mocks + pyqs)
-    const testRecords = state.testRecords || state.tests || state.mocks || [];
-    const pyqs = state.pyqs || [];
+    const records = state.testRecords || [];
+    const TYPE_LABELS = {
+      pyq: '📖 PYQ',
+      mock: '📋 Mock',
+      sectional: '✂️ Sectional',
+      'full-length': '📜 Full-Length',
+    };
+    const TYPE_COLORS = {
+      pyq: '#14B8A6',
+      mock: '#A855F7',
+      sectional: '#EC4899',
+      'full-length': '#F97316',
+    };
 
-    // ═══ Test records section ═══
-    if (testRecords.length === 0) {
+    if (records.length === 0) {
       wrap.appendChild(
         elFrom(`
         <div class="anv2-card">
-          ${sectionHead('📝', 'Test Records', 'Mock · Sectional · PYQ · Full-Length', 'mockTests')}
+          ${sectionHead('📝', 'Test Records', 'Mock · Sectional · PYQ · Full-Length', 'testRecords')}
           ${emptyState('📝', 'No tests logged', 'Log tests from the Tests page to see score trends and accuracy.', 'Log Test', 'anv2GoTests')}
         </div>
       `),
       );
-    } else {
-      // Group by type if type field exists
-      const byType = {};
-      testRecords.forEach((t) => {
-        const type = t.type || t.test_type || 'mock';
-        if (!byType[type]) byType[type] = [];
-        byType[type].push(t);
-      });
+      return wrap;
+    }
 
-      // Overall stats
-      const scores = testRecords.map((m) => {
-        const total = m.total_marks || m.total || 100;
-        const score = m.score || 0;
-        return total ? (score / total) * 100 : 0;
-      });
-      const avg = scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
-      const best = scores.length ? Math.max(...scores) : 0;
-      const latest = scores.length ? scores[scores.length - 1] : 0;
+    const scorePct = (r) => {
+      const total = r.total_marks || r.total_questions * r.marks_per_question || 1;
+      return total ? ((r.score || 0) / total) * 100 : 0;
+    };
+    const accuracy = (r) => {
+      const attempted = r.attempted || 0;
+      return attempted ? ((r.correct || 0) / attempted) * 100 : 0;
+    };
+
+    const sorted = [...records].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const scores = sorted.map(scorePct);
+    const accuracies = sorted.map(accuracy);
+
+    const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const bestScore = Math.max(...scores);
+    const latestScore = scores[scores.length - 1];
+    const avgAcc = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
+
+    wrap.appendChild(
+      elFrom(`
+      <div class="anv2-card">
+        ${sectionHead('📝', 'Test Records', `${records.length} test${records.length > 1 ? 's' : ''} logged`, 'testRecords')}
+        <div class="anv2-kpi-grid" style="margin-bottom:14px">
+          ${miniKpi('Total Tests', records.length, '', '#A855F7')}
+          ${miniKpi('Avg Score', Math.round(avgScore) + '%', '', '#EC4899')}
+          ${miniKpi('Best Score', Math.round(bestScore) + '%', '', '#FBBF24')}
+          ${miniKpi('Latest', Math.round(latestScore) + '%', '', '#10B981')}
+        </div>
+        <div class="anv2-chart-wrap"><canvas id="anv2TestScoreChart"></canvas></div>
+      </div>
+    `),
+    );
+
+    wrap.appendChild(
+      elFrom(`
+      <div class="anv2-card">
+        ${sectionHead('🎯', 'Accuracy Trend', 'Correct ÷ Attempted × 100 per test', 'testAccuracy')}
+        <div class="anv2-kpi-grid" style="margin-bottom:14px">
+          ${miniKpi('Avg Accuracy', Math.round(avgAcc) + '%', '', '#A855F7')}
+        </div>
+        <div class="anv2-chart-wrap anv2-chart-sm"><canvas id="anv2TestAccChart"></canvas></div>
+      </div>
+    `),
+    );
+
+    const byType = {};
+    records.forEach((r) => {
+      const t = r.test_type || 'mock';
+      if (!byType[t]) byType[t] = [];
+      byType[t].push(r);
+    });
+
+    const typeCards = Object.entries(byType)
+      .map(([type, list]) => {
+        const avg = list.reduce((a, r) => a + scorePct(r), 0) / list.length;
+        const label = TYPE_LABELS[type] || type;
+        return `
+        <div class="anv2-mini-kpi" style="--c:${TYPE_COLORS[type] || '#A855F7'}">
+          <div class="lbl">${escHtml(label)}</div>
+          <div class="val">${list.length}<span style="font-size:.65rem;color:var(--text-3);font-weight:600"> tests</span></div>
+          <div class="sub">${Math.round(avg)}% avg score</div>
+        </div>`;
+      })
+      .join('');
+
+    wrap.appendChild(
+      elFrom(`
+      <div class="anv2-card">
+        ${sectionHead('📊', 'By Test Type', 'Breakdown across categories', '')}
+        <div class="anv2-kpi-grid">${typeCards}</div>
+      </div>
+    `),
+    );
+
+    const bySubject = {};
+    records.forEach((r) => {
+      if (!r.subject) return;
+      if (!bySubject[r.subject]) bySubject[r.subject] = { count: 0, scoreSum: 0, corrSum: 0, attSum: 0 };
+      const s = bySubject[r.subject];
+      s.count++;
+      s.scoreSum += scorePct(r);
+      s.corrSum += r.correct || 0;
+      s.attSum += r.attempted || 0;
+    });
+
+    const subjectRows = Object.entries(bySubject)
+      .map(([name, d]) => ({
+        name,
+        count: d.count,
+        avgScore: d.scoreSum / d.count,
+        acc: d.attSum ? (d.corrSum / d.attSum) * 100 : 0,
+      }))
+      .sort((a, b) => b.avgScore - a.avgScore);
+
+    if (subjectRows.length > 0) {
+      wrap.appendChild(
+        elFrom(`
+        <div class="anv2-card">
+          ${sectionHead('📚', 'Subject Performance', 'Average score & accuracy per subject', '')}
+          <div class="anv2-table-scroll">
+            <table class="anv2-table">
+              <thead>
+                <tr>
+                  <th>Subject</th>
+                  <th>Tests</th>
+                  <th>Avg Score</th>
+                  <th>Accuracy</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${subjectRows
+                  .map(
+                    (s) => `
+                  <tr>
+                    <td>
+                      <span class="subject-dot" style="background:${typeof getSubjectColor === 'function' ? getSubjectColor(s.name) : '#A855F7'}"></span>
+                      ${escHtml(s.name)}
+                    </td>
+                    <td>${s.count}</td>
+                    <td><strong>${Math.round(s.avgScore)}%</strong></td>
+                    <td>${Math.round(s.acc)}%</td>
+                  </tr>`,
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `),
+      );
+    }
+
+    const pyqRecords = records.filter((r) => r.test_type === 'pyq');
+    if (pyqRecords.length > 0) {
+      const totalSolved = pyqRecords.reduce((a, r) => a + (r.attempted || 0), 0);
+      const totalCorrect = pyqRecords.reduce((a, r) => a + (r.correct || 0), 0);
+      const totalWrong = pyqRecords.reduce((a, r) => a + (r.incorrect || 0), 0);
+      const pyqAcc = totalSolved ? (totalCorrect / totalSolved) * 100 : 0;
 
       wrap.appendChild(
         elFrom(`
         <div class="anv2-card">
-          ${sectionHead('📝', 'Test Records', `${testRecords.length} tests logged`, 'mockTests')}
-          <div class="anv2-kpi-grid" style="margin-bottom:12px">
-            ${miniKpi('Tests', testRecords.length, '', '#A855F7')}
-            ${miniKpi('Avg %', Math.round(avg) + '%', '', '#EC4899')}
-            ${miniKpi('Best %', Math.round(best) + '%', '', '#FBBF24')}
-            ${miniKpi('Latest %', Math.round(latest) + '%', '', '#10B981')}
+          ${sectionHead('📖', 'PYQ Coverage', 'Previous year question practice', 'pyq')}
+          <div class="anv2-kpi-grid">
+            ${miniKpi('Questions Solved', totalSolved, '', '#10B981')}
+            ${miniKpi('Correct', totalCorrect, '', '#A855F7')}
+            ${miniKpi('Wrong', totalWrong, '', '#EF4444')}
+            ${miniKpi('Accuracy', Math.round(pyqAcc) + '%', '', '#FBBF24')}
           </div>
-          <div class="anv2-chart-wrap anv2-chart-sm"><canvas id="anv2TestChart"></canvas></div>
         </div>
       `),
       );
+    }
 
-      // Type breakdown
-      const typeCards = Object.entries(byType)
-        .map(([type, list]) => {
-          const tAvg = list.length
-            ? list.reduce((a, m) => a + ((m.score || 0) / (m.total_marks || m.total || 100)) * 100, 0) / list.length
-            : 0;
-          return miniKpi(
-            type.charAt(0).toUpperCase() + type.slice(1),
-            list.length + ' tests',
-            Math.round(tAvg) + '% avg',
-            '#A855F7',
-          );
-        })
-        .join('');
+    const recent = [...records].sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 5);
+    wrap.appendChild(
+      elFrom(`
+      <div class="anv2-card">
+        ${sectionHead('🕐', 'Recent Tests', 'Last 5 tests', '')}
+        <div class="list">
+          ${recent
+            .map((r) => {
+              const pct = scorePct(r);
+              const typeLabel = TYPE_LABELS[r.test_type] || r.test_type || 'Test';
+              return `
+              <div class="row-item" style="cursor:default">
+                <span class="row-dot" style="background:${TYPE_COLORS[r.test_type] || '#A855F7'}"></span>
+                <div class="row-info">
+                  <div class="row-title">${escHtml(r.name || 'Untitled Test')}</div>
+                  <div class="row-meta">${typeLabel} · ${r.date ? fmtDateKey(r.date) : ''}${r.subject ? ' · ' + escHtml(r.subject) : ''}</div>
+                </div>
+                <span class="row-value">${Math.round(pct)}%</span>
+              </div>`;
+            })
+            .join('')}
+        </div>
+      </div>
+    `),
+    );
 
-      if (typeCards) {
-        wrap.appendChild(
-          elFrom(`
-          <div class="anv2-card">
-            ${sectionHead('🎯', 'By Test Type', 'Breakdown by category', '')}
-            <div class="anv2-kpi-grid">${typeCards}</div>
-          </div>
-        `),
-        );
+    setTimeout(() => {
+      const scoreCv = document.getElementById('anv2TestScoreChart');
+      if (scoreCv && sorted.length >= 2 && typeof drawLineChart === 'function') {
+        const labels = sorted.map((r) => (r.date ? fmtDateKey(r.date) : ''));
+        drawLineChart(scoreCv, labels, scores, { unit: '%', minMax: 100 });
+      } else if (scoreCv && sorted.length === 1 && typeof window.setupCanvas === 'function') {
+        const { ctx, w, h } = window.setupCanvas(scoreCv);
+        if (ctx) {
+          ctx.fillStyle = '#6E5F8C';
+          ctx.font = '13px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText('Log 1 more test to see trend', w / 2, h / 2);
+        }
       }
 
-      setTimeout(() => {
-        const cv = document.getElementById('anv2TestChart');
-        if (cv && testRecords.length >= 2 && typeof drawLineChart === 'function') {
-          const sorted = [...testRecords].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-          const labels = sorted.map((m) => (m.date ? fmtDateKey(m.date) : ''));
-          const values = sorted.map((m) => {
-            const total = m.total_marks || m.total || 100;
-            return total ? ((m.score || 0) / total) * 100 : 0;
-          });
-          drawLineChart(cv, labels, values, { unit: '%', minMax: 100 });
+      const accCv = document.getElementById('anv2TestAccChart');
+      if (accCv && sorted.length >= 2 && typeof drawLineChart === 'function') {
+        const labels = sorted.map((r) => (r.date ? fmtDateKey(r.date) : ''));
+        drawLineChart(accCv, labels, accuracies, { unit: '%', minMax: 100 });
+      } else if (accCv && sorted.length === 1 && typeof window.setupCanvas === 'function') {
+        const { ctx, w, h } = window.setupCanvas(accCv);
+        if (ctx) {
+          ctx.fillStyle = '#6E5F8C';
+          ctx.font = '13px Inter';
+          ctx.textAlign = 'center';
+          ctx.fillText('Log 1 more test to see trend', w / 2, h / 2);
         }
-      }, 40);
-    }
-
-    // ═══ PYQ section (only if pyqs array exists separately) ═══
-    if (pyqs.length > 0) {
-      const totalSolved = pyqs.reduce((a, p) => a + (p.solved || 0), 0);
-      const totalCorrect = pyqs.reduce((a, p) => a + (p.correct || 0), 0);
-      const accuracy = totalSolved ? Math.round((totalCorrect / totalSolved) * 100) : 0;
-
-      wrap.appendChild(
-        elFrom(`
-        <div class="anv2-card">
-          ${sectionHead('📖', 'PYQ Coverage', 'Previous year questions', 'pyq')}
-          <div class="anv2-kpi-grid">
-            ${miniKpi('Solved', totalSolved, '', '#10B981')}
-            ${miniKpi('Accuracy', accuracy + '%', '', '#A855F7')}
-            ${miniKpi('Entries', pyqs.length, '', '#EC4899')}
-          </div>
-        </div>
-      `),
-      );
-    }
+      }
+    }, 40);
 
     return wrap;
   }
