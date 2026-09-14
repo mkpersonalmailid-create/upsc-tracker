@@ -904,69 +904,162 @@
     console.log('[planner-extras] patched: renderPlanner');
   }
 
-  /* ═══════════════ PATCH addPlanBlock ═══════════════ */
+  /* ═══════════════ FULL OVERRIDE: addPlanBlock ═══════════════ */
   function patchAddPlanBlock() {
-    const _orig = window.addPlanBlock;
-    if (typeof _orig !== 'function') return;
-
     window.addPlanBlock = function (dateKeyStr) {
-      _orig.call(this, dateKeyStr);
+      openModal(
+        modalShell({
+          title: 'Add Plan Block',
+          body: `
+            <div class="field"><label>Date</label><input type="date" id="pbDate" value="${dateKeyStr || todayKey()}"></div>
+            <div class="form-grid">
+              <div class="field"><label>Start</label><input type="time" id="pbStart" value="06:00"></div>
+              <div class="field"><label>End</label><input type="time" id="pbEnd" value="08:00"></div>
+            </div>
+            <div class="field"><label>Title</label><input type="text" id="pbSubject" placeholder="e.g. Study History 2 hours"></div>
+            <div class="field"><label>Target (min)</label><input type="number" id="pbTarget" value="120" min="10"></div>
 
-      setTimeout(() => {
-        const saveBtn = document.getElementById('pbSave');
-        if (!saveBtn) return;
+            <div style="background:var(--card-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-top:4px">
+              <button type="button" id="pbLinkToggle" style="width:100%;padding:12px 16px;text-align:left;font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-2);background:transparent;border:none;cursor:pointer;">
+                <span id="pbLinkArrow" style="font-size:.7rem;transition:transform .2s;display:inline-block">▶</span>
+                <span>🔗 Link to specific content</span>
+                <span style="color:var(--text-3);font-weight:500;font-size:.75rem">(optional)</span>
+              </button>
+              <div id="pbLinkBody" style="display:none;padding:0 16px 16px">
+                <div class="field">
+                  <label>Category</label>
+                  <select id="pbCategory">
+                    <option value="">— Any Category —</option>
+                    <option value="prelims">🎯 GS Prelims</option>
+                    <option value="mains-gs1">📘 GS Mains · Paper I</option>
+                    <option value="mains-gs2">📗 GS Mains · Paper II</option>
+                    <option value="mains-gs3">📙 GS Mains · Paper III</option>
+                    <option value="mains-gs4">📕 GS Mains · Paper IV</option>
+                    <option value="optional">⭐ Optional</option>
+                    <option value="essay">✍️ Essay</option>
+                    <option value="csat">🧮 CSAT</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Subject</label>
+                  <select id="pbSubj" disabled><option value="">— Select category first —</option></select>
+                </div>
+                <div class="field">
+                  <label>Topic (optional)</label>
+                  <select id="pbTopic" disabled><option value="">— Select subject first —</option></select>
+                </div>
+              </div>
+            </div>`,
+          actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                    <button class="btn btn-primary" id="pbSave">Add</button>`,
+        }),
+        {
+          onMount() {
+            const toggleBtn = document.getElementById('pbLinkToggle');
+            const bodyEl = document.getElementById('pbLinkBody');
+            const arrowEl = document.getElementById('pbLinkArrow');
+            const catSel = document.getElementById('pbCategory');
+            const subjSel = document.getElementById('pbSubj');
+            const topicSel = document.getElementById('pbTopic');
 
-        const newBtn = saveBtn.cloneNode(true);
-        saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+            toggleBtn.onclick = () => {
+              const open = bodyEl.style.display !== 'none';
+              bodyEl.style.display = open ? 'none' : 'block';
+              arrowEl.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+            };
 
-        newBtn.onclick = async () => {
-          const p = {
-            id: safeUUID(),
-            date: document.getElementById('pbDate').value,
-            start: document.getElementById('pbStart').value,
-            end: document.getElementById('pbEnd').value,
-            subject: document.getElementById('pbSubject').value || 'Study',
-            target_minutes: parseInt(document.getElementById('pbTarget').value, 10) || 60,
-            completed: false,
-          };
-
-          state.plans.push(p);
-
-          if (supa && state.user) {
-            try {
-              const { error } = await supa.from('plans').upsert(
-                {
-                  id: p.id,
-                  user_id: state.user.id,
-                  date: p.date,
-                  start_time: p.start,
-                  end_time: p.end,
-                  subject: p.subject,
-                  target_minutes: p.target_minutes,
-                  completed: p.completed,
-                },
-                { onConflict: 'id' },
-              );
-              if (error) throw error;
-              if (typeof toast === 'function') toast('✅ Block saved!', 'ok');
-            } catch (e) {
-              console.warn('[planner-extras] insert error:', e);
-              if (typeof toast === 'function') toast('⚠️ Cloud save failed', 'warn', 3500);
+            function populateSubjects(cat) {
+              if (!cat) {
+                subjSel.innerHTML = '<option value="">— Select category first —</option>';
+                subjSel.disabled = true;
+                return;
+              }
+              const subjects = (typeof getSubjectsForCategory === 'function' ? getSubjectsForCategory(cat) : []) || [];
+              subjSel.innerHTML =
+                '<option value="">— Any Subject —</option>' +
+                subjects.map((s) => `<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+              subjSel.disabled = false;
             }
-          }
 
-          if (typeof closeModal === 'function') closeModal();
-          if (typeof renderPlanner === 'function') renderPlanner();
-        };
-      }, 50);
+            function populateTopics(cat, subj) {
+              if (!subj) {
+                topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+                topicSel.disabled = true;
+                return;
+              }
+              const defaultTopics =
+                (typeof getTopicsForCategorySubject === 'function' ? getTopicsForCategorySubject(cat, subj) : []) || [];
+              const customTopics = (state.syllabus || [])
+                .filter((s) => s.subject === subj && s.topic)
+                .map((s) => s.topic);
+              const topics = [...new Set([...defaultTopics, ...customTopics])];
+              topicSel.innerHTML =
+                '<option value="">— Any Topic —</option>' +
+                topics.map((t) => `<option value="${escHtml(t)}">${escHtml(t)}</option>`).join('');
+              topicSel.disabled = false;
+            }
+
+            catSel.onchange = () => {
+              populateSubjects(catSel.value);
+              topicSel.innerHTML = '<option value="">— Select subject first —</option>';
+              topicSel.disabled = true;
+            };
+            subjSel.onchange = () => populateTopics(catSel.value, subjSel.value);
+
+            document.getElementById('pbSave').onclick = async () => {
+              const p = {
+                id: safeUUID(),
+                date: document.getElementById('pbDate').value,
+                start: document.getElementById('pbStart').value,
+                end: document.getElementById('pbEnd').value,
+                subject: document.getElementById('pbSubject').value.trim() || 'Study',
+                target_minutes: parseInt(document.getElementById('pbTarget').value, 10) || 60,
+                completed: false,
+                category: catSel.value || null,
+                linked_subject: subjSel.value || null,
+                linked_topic: topicSel.value || null,
+              };
+
+              state.plans.push(p);
+
+              if (supa && state.user) {
+                try {
+                  const payload = {
+                    id: p.id,
+                    user_id: state.user.id,
+                    date: p.date,
+                    start_time: p.start,
+                    end_time: p.end,
+                    subject: p.subject,
+                    target_minutes: p.target_minutes,
+                    completed: p.completed,
+                  };
+                  if (p.category) payload.category = p.category;
+                  if (p.linked_subject) payload.linked_subject = p.linked_subject;
+                  if (p.linked_topic) payload.linked_topic = p.linked_topic;
+
+                  const { error } = await supa.from('plans').upsert(payload, { onConflict: 'id' });
+                  if (error) throw error;
+                  if (typeof toast === 'function') toast('✅ Block saved!', 'ok');
+                } catch (e) {
+                  console.warn('[planner-extras] insert error:', e);
+                  if (typeof toast === 'function') toast('⚠️ Cloud save failed', 'warn', 3500);
+                }
+              }
+
+              if (typeof closeModal === 'function') closeModal();
+              if (typeof renderPlanner === 'function') renderPlanner();
+            };
+          },
+        },
+      );
     };
 
     try {
       addPlanBlock = window.addPlanBlock;
     } catch (e) {}
-    console.log('[planner-extras] patched: addPlanBlock');
+    console.log('[planner-extras] patched: addPlanBlock (full override)');
   }
-
   /* ═══════════════ INIT ═══════════════ */
   let attempts = 0;
   function waitThenStart() {
