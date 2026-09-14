@@ -767,19 +767,23 @@
     );
 
     /* ── Deep Work ── */
-    const buckets = [0, 0, 0, 0];
+    const bucketSecs = [0, 0, 0, 0];
+    const bucketCounts = [0, 0, 0, 0];
     sessions.forEach((s) => {
       const min = (s.duration || 0) / 60;
-      if (min < 30) buckets[0]++;
-      else if (min < 60) buckets[1]++;
-      else if (min < 120) buckets[2]++;
-      else buckets[3]++;
+      let idx;
+      if (min < 30) idx = 0;
+      else if (min < 60) idx = 1;
+      else if (min < 120) idx = 2;
+      else idx = 3;
+      bucketSecs[idx] += s.duration || 0;
+      bucketCounts[idx]++;
     });
     const deepEntries = [
-      { name: '< 30 min', value: buckets[0], color: '#EF4444' },
-      { name: '30-60 min', value: buckets[1], color: '#FBBF24' },
-      { name: '1-2 hours', value: buckets[2], color: '#A855F7' },
-      { name: '2+ hours', value: buckets[3], color: '#10B981' },
+      { name: '< 30 min', value: bucketSecs[0], count: bucketCounts[0], color: '#EF4444' },
+      { name: '30-60 min', value: bucketSecs[1], count: bucketCounts[1], color: '#FBBF24' },
+      { name: '1-2 hours', value: bucketSecs[2], count: bucketCounts[2], color: '#A855F7' },
+      { name: '2+ hours', value: bucketSecs[3], count: bucketCounts[3], color: '#10B981' },
     ];
     grid.appendChild(
       elFrom(`
@@ -803,7 +807,7 @@
       deepEntries
         .map(
           (e) =>
-            `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:${e.color}"></span><span style="color:var(--text-2)">${escHtml(e.name)}</span> · <strong style="color:var(--text)">${e.value} sessions</strong></span>`,
+            `<span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:50%;background:${e.color}"></span><span style="color:var(--text-2)">${escHtml(e.name)}</span> · <strong style="color:var(--text)">${shortDur(e.value)}</strong> · ${e.count} sessions</span>`,
         )
         .join(''),
     );
@@ -963,7 +967,7 @@
         deepLeg.innerHTML = deepEntries
           .map(
             (e) =>
-              `<div class="anv2-legend-row"><span class="dot" style="background:${e.color}"></span><span class="lbl">${escHtml(e.name)}</span><span class="val">${e.value}</span></div>`,
+              `<div class="anv2-legend-row"><span class="dot" style="background:${e.color}"></span><span class="lbl">${escHtml(e.name)}</span><span class="val">${shortDur(e.value)}</span></div>`,
           )
           .join('');
       }
