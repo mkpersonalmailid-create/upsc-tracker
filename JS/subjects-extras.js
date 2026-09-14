@@ -1264,6 +1264,20 @@
           if (event === 'SIGNED_IN' && session) setTimeout(loadCustomCategories, 1000);
         });
       }
+      // ✅ FIX: bootAfterLogin ke saath race condition — force re-render
+      // Chahe state.view kuch bhi ho, study view active ho toh dobara render
+      const forceStudyRerender = () => {
+        if (document.querySelector('#view-study.active') && typeof window.renderStudy === 'function') {
+          try {
+            window.renderStudy();
+          } catch (e) {
+            console.warn('[subjects-extras] force rerender error:', e);
+          }
+        }
+      };
+      setTimeout(forceStudyRerender, 400);
+      setTimeout(forceStudyRerender, 1200);
+      setTimeout(forceStudyRerender, 2500);
       console.log('[subjects-extras] ✅ patched all');
     } else {
       attempts++;
