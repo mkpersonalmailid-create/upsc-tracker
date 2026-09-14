@@ -1180,7 +1180,6 @@
         }
       }
 
-      /* ═══════════════ GOOGLE LOGIN ═══════════════ */
       async function signInWithGoogle() {
         if (!supa) {
           toast('Supabase not ready.', 'err');
@@ -1193,14 +1192,27 @@
         btn.innerHTML = '<span class="spinner"></span> Connecting...';
 
         try {
-          const { error } = await supa.auth.signInWithOAuth({
+          // Tauri desktop app? → system browser me kholo (deep link se wapas aayega)
+          const isTauri = !!(window.__TAURI_INTERNALS__ || window.__TAURI__);
+
+          const { data, error } = await supa.auth.signInWithOAuth({
             provider: 'google',
             options: {
-              redirectTo: window.location.origin + APP_URL,
+              redirectTo: isTauri ? 'upsc://auth-callback' : window.location.origin + APP_URL,
+              skipBrowserRedirect: isTauri,
             },
           });
 
           if (error) throw error;
+
+          if (isTauri && data?.url) {
+            // Tauri me URL manually system browser me kholo
+            const { openUrl } = window.__TAURI__.opener;
+            await openUrl(data.url);
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+            toast('Browser me login complete karo, phir app me wapas aa jayega.', 'info', 5000);
+          }
         } catch (error) {
           console.error('Google login error:', error);
           toast('Google login failed: ' + error.message, 'err');
@@ -1208,7 +1220,6 @@
           btn.innerHTML = originalText;
         }
       }
-
       /* ═══════════════ MODAL HELPERS ═══════════════ */
       function openModal(html, opts = {}) {
         const box = $('#modalBox');
@@ -1388,6 +1399,39 @@
             setTimeout(() => (window.location.href = APP_URL), 800);
           }
         });
+
+        // ═══ TAURI DEEP LINK HANDLER ═══
+        const isTauri = !!(window.__TAURI_INTERNALS__ || window.__TAURI__);
+        if (isTauri && window.__TAURI__?.event?.listen) {
+          try {
+            await window.__TAURI__.event.listen('oauth-callback', async (event) => {
+              console.log('Deep link URL:', event.payload);
+              try {
+                const url = new URL(event.payload);
+                const hash = url.hash.startsWith('#') ? url.hash.slice(1) : url.hash;
+                const params = new URLSearchParams(hash);
+                const access_token = params.get('access_token');
+                const refresh_token = params.get('refresh_token');
+
+                if (!access_token || !refresh_token) {
+                  toast('Login tokens missing. Please try again.', 'err');
+                  return;
+                }
+
+                const { error } = await supa.auth.setSession({ access_token, refresh_token });
+                if (error) throw error;
+
+                toast('Signed in! Redirecting…', 'ok', 1500);
+                setTimeout(() => (window.location.href = APP_URL), 800);
+              } catch (e) {
+                console.error('Deep link parse error:', e);
+                toast('Login failed: ' + e.message, 'err');
+              }
+            });
+          } catch (e) {
+            console.error('Failed to register deep link listener:', e);
+          }
+        }
       }
 
       boot();
