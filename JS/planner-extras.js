@@ -566,6 +566,9 @@
           subject: x.subject || 'Study',
           target_minutes: x.target_minutes || 60,
           completed: !!x.completed,
+          category: x.category || null,
+          linked_subject: x.linked_subject || null,
+          linked_topic: x.linked_topic || null,
         }));
       } else {
         state.plans = state.plans || [];
