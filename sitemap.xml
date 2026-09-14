@@ -3,7 +3,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/</loc>
-    <lastmod>2026-09-13</lastmod>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,12 +11,18 @@
   <!-- Blog Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/blog/</loc>
-    <lastmod>2026-09-13</lastmod>
+    <lastmod>2026-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog Posts (11) -->
+  <!-- Blog Posts (12) -->
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/political-science-optional-strategy-for-upsc-20260914.html</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://upscstudytracker.co.in/blog/how-to-track-upsc-pyq-progress-effectively-20260913.html</loc>
     <lastmod>2026-09-13</lastmod>
