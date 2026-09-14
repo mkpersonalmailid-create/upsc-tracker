@@ -458,6 +458,49 @@
         background: rgba(239,68,68,.12);
         color: #FCA5A5;
       }
+              /* ═══ Linked content chips ═══ */
+      .pl-linked-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .pl-cat-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(251, 191, 36, 0.14);
+        color: #FBBF24;
+        white-space: nowrap;
+      }
+      .pl-subj-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 700;
+        background: rgba(168, 85, 247, 0.14);
+        color: #C4B5FD;
+        white-space: nowrap;
+      }
+      .pl-topic-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: .68rem;
+        font-weight: 600;
+        background: rgba(20, 184, 166, 0.12);
+        color: #5EEAD4;
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       /* ═══ Empty state ═══ */
       .pl-empty {
@@ -618,9 +661,32 @@
 
     const overdueChip = isOverdue ? `<span class="pl-overdue-chip">⚠ ${fmtRelativeDate(p.date)}</span>` : '';
 
+    // ✅ Linked content chips
+    const CAT_LABELS = {
+      prelims: '🎯 Prelims',
+      'mains-gs1': '📘 GS-I',
+      'mains-gs2': '📗 GS-II',
+      'mains-gs3': '📙 GS-III',
+      'mains-gs4': '📕 GS-IV',
+      optional: '⭐ Optional',
+      essay: '✍️ Essay',
+      csat: '🧮 CSAT',
+    };
+    let linkedChips = '';
+    if (p.category) {
+      linkedChips += `<span class="pl-cat-chip">${CAT_LABELS[p.category] || p.category}</span>`;
+    }
+    if (p.linked_subject) {
+      linkedChips += `<span class="pl-subj-chip">📚 ${escHtml(p.linked_subject)}</span>`;
+    }
+    if (p.linked_topic) {
+      const shortTopic = p.linked_topic.length > 60 ? p.linked_topic.slice(0, 60) + '…' : p.linked_topic;
+      linkedChips += `<span class="pl-topic-chip" title="${escHtml(p.linked_topic)}">📖 ${escHtml(shortTopic)}</span>`;
+    }
+
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-      <div class="${classes.join(' ')}" style="--bc:${color}">
+      <div class="${classes.join(' ')}" style="--bc:${color}" data-plan-card="${p.id}">
         <button class="pl-block-check" data-plan-toggle="${p.id}" title="${p.completed ? 'Mark incomplete' : 'Mark complete'}">✓</button>
         <div class="pl-block-body">
           <div class="pl-block-title">${escHtml(p.subject)}</div>
@@ -629,12 +695,12 @@
             <span class="pl-dur-chip">⏱ ${fmtMinutes(p.target_minutes)}</span>
             ${overdueChip}
           </div>
+          ${linkedChips ? `<div class="pl-linked-chips">${linkedChips}</div>` : ''}
         </div>
         <button class="pl-block-del" data-plan-del="${p.id}" title="Delete">✕</button>
       </div>`;
     return wrapper.firstElementChild;
   }
-
   /* ═══════════════ QUICK NAV ═══════════════ */
   function buildQuickNav(selectedKey) {
     const today = new Date();
