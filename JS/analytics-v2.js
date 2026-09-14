@@ -5,6 +5,7 @@
    ✅ Expand mode with legends/stats in modal
    ✅ Info buttons with English explanations
    ✅ 4 Tabs: Overview | Progress | Subjects | Tests
+   ✅ Daily + Rolling side-by-side (fixed layout)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -304,7 +305,6 @@
         background: var(--card); border:1px solid var(--border);
         border-radius:12px; padding:12px;
         width:100%; max-width:100%; overflow-x:hidden;
-        display:flex; flex-direction:column;
       }
 
       .anv2-grid {
@@ -323,9 +323,9 @@
       .anv2-empty-title { font-size:.82rem; font-weight:800; color:var(--text-2); margin-bottom:4px; }
       .anv2-empty-desc { font-size:.72rem; color:var(--text-3); line-height:1.5; max-width:280px; margin:0 auto 10px; }
 
-      .anv2-chart-wrap { position:relative; width:100%; height:130px; min-width:0; max-width:100%; flex:1; }
+      .anv2-chart-wrap { position:relative; width:100%; height:130px; min-width:0; max-width:100%; }
       .anv2-chart-wrap canvas { display:block !important; width:100% !important; max-width:100% !important; }
-      .anv2-chart-tall { height:160px; }
+      .anv2-chart-tall { height:150px; }
       .anv2-chart-sm { height:110px; }
 
       .anv2-split {
@@ -647,9 +647,26 @@
     const totalDailyH = values1.reduce((a, b) => a + b, 0);
     const avgDaily = totalDailyH / 30;
     const bestDaily = Math.max(...values1);
-    wrap.appendChild(
+
+    const roll7 = [],
+      rollLabels = [];
+    for (let i = 29; i >= 0; i--) {
+      rollLabels.push(fmtDateKey(daysAgoKey(i)));
+      let s7 = 0;
+      for (let j = 0; j < 7; j++) {
+        s7 += sessions.filter((s) => s.date === daysAgoKey(i + j)).reduce((a, s) => a + (s.duration || 0), 0);
+      }
+      roll7.push(s7 / 7 / 3600);
+    }
+    const avg7 = roll7[roll7.length - 1] || 0;
+
+    const grid = document.createElement('div');
+    grid.className = 'anv2-grid';
+
+    /* ── Daily Study Time (paired with Rolling) ── */
+    grid.appendChild(
       elFrom(`
-      <div class="anv2-card anv2-grid-full">
+      <div class="anv2-card">
         ${sectionHead('📈', 'Daily Study Time', 'Last 30 days · target overlay', 'dailyChart')}
         <div class="anv2-chart-wrap anv2-chart-tall"><canvas id="anv2DailyChart"></canvas></div>
         <div class="anv2-chart-actions">${expandBtn('anv2DailyChart')}</div>
@@ -667,20 +684,7 @@
        <span style="color:var(--text-2)">Target: <strong style="color:#FBBF24">${target}h</strong></span>`,
     );
 
-    const grid = document.createElement('div');
-    grid.className = 'anv2-grid';
-
-    const roll7 = [],
-      rollLabels = [];
-    for (let i = 29; i >= 0; i--) {
-      rollLabels.push(fmtDateKey(daysAgoKey(i)));
-      let s7 = 0;
-      for (let j = 0; j < 7; j++) {
-        s7 += sessions.filter((s) => s.date === daysAgoKey(i + j)).reduce((a, s) => a + (s.duration || 0), 0);
-      }
-      roll7.push(s7 / 7 / 3600);
-    }
-    const avg7 = roll7[roll7.length - 1] || 0;
+    /* ── Rolling Average ── */
     grid.appendChild(
       elFrom(
         chartCard({
@@ -689,7 +693,7 @@
           subtitle: `7-day: ${avg7.toFixed(1)}h`,
           infoKey: 'rollingAvg',
           canvasId: 'anv2RollingChart',
-          height: 130,
+          height: 150,
         }),
       ),
     );
@@ -702,6 +706,7 @@
        <span style="color:var(--text-2)">Target: <strong style="color:#FBBF24">${target}h</strong></span>`,
     );
 
+    /* ── Time of Day ── */
     const todBuckets = [0, 0, 0, 0];
     sessions.forEach((s) => {
       if (!s.start_time) return;
@@ -740,6 +745,7 @@
         .join(''),
     );
 
+    /* ── Deep Work ── */
     const buckets = [0, 0, 0, 0];
     sessions.forEach((s) => {
       const min = (s.duration || 0) / 60;
@@ -781,6 +787,7 @@
         .join(''),
     );
 
+    /* ── Study Type ── */
     const typeTotals = { 'New Learning': 0, Revision: 0, Test: 0 };
     sessions.forEach((s) => {
       if (typeTotals[s.study_type] != null) typeTotals[s.study_type] += s.duration || 0;
@@ -817,6 +824,7 @@
         .join(''),
     );
 
+    /* ── Productivity ── */
     const prodByDay = [],
       prodLabels = [];
     for (let i = 29; i >= 0; i--) {
@@ -849,6 +857,7 @@
       `<span style="color:var(--text-2)">Average: <strong style="color:var(--text)">${prodAvg.toFixed(2)} ★</strong></span>`,
     );
 
+    /* ── Energy ── */
     const energyByDay = [];
     for (let i = 29; i >= 0; i--) {
       const key = daysAgoKey(i);
@@ -881,6 +890,7 @@
 
     wrap.appendChild(grid);
 
+    /* ── Insights ── */
     wrap.appendChild(
       elFrom(`
       <div class="anv2-card anv2-grid-full" style="background:linear-gradient(135deg,rgba(168,85,247,.09),rgba(236,72,153,.05));border-color:rgba(168,85,247,.28)">
