@@ -5,6 +5,7 @@
    ✅ Send Feedback tab — emoji sentiment + idea/improvement
    ✅ My Tickets / My Feedback — dynamic title + content
    ✅ Admin reply visible for both
+   ✅ Tab switch pe list auto-reload
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -122,18 +123,21 @@
       };
     }
 
+    /* ✅ CRITICAL: loadMySupportHistory() call karo after form render */
+    loadMySupportHistory();
+
     if (typeof attachRipples === 'function') attachRipples();
   }
 
-  /* ═══════════════ LOAD MY HISTORY (Tickets OR Feedback) ═══════════════ */
+  /* ═══════════════ LOAD MY HISTORY ═══════════════ */
   async function loadMySupportHistory() {
     const el = document.getElementById('supportHistory');
     if (!el) return;
 
-    /* Update card title dynamically */
-    const cards = document.querySelectorAll('#view-support .card');
-    if (cards.length >= 2) {
-      const titleEl = cards[1].querySelector('.card-title-lg');
+    /* ✅ Update card title dynamically — robust selector */
+    const historyCard = el.closest('.card');
+    if (historyCard) {
+      const titleEl = historyCard.querySelector('.card-title-lg');
       if (titleEl) titleEl.textContent = state.supportTab === 'ticket' ? 'My Tickets' : 'My Feedback';
     }
 
@@ -167,20 +171,20 @@
           .map((t) => {
             const stCls = t.status === 'replied' ? 's-replied' : t.status === 'closed' ? 's-closed' : 's-open';
             return `<div class="ticket-card">
-            <div class="ticket-head">
-              <div>
-                <div class="ticket-title">${escHtml(t.subject || 'No subject')}</div>
-                <div class="ticket-meta">${escHtml(t.category || '')} · ${fmtRelDate((t.created_at || '').slice(0, 10))}</div>
+              <div class="ticket-head">
+                <div>
+                  <div class="ticket-title">${escHtml(t.subject || 'No subject')}</div>
+                  <div class="ticket-meta">${escHtml(t.category || '')} · ${fmtRelDate((t.created_at || '').slice(0, 10))}</div>
+                </div>
+                <span class="pill ${stCls}">${escHtml(t.status || 'open')}</span>
               </div>
-              <span class="pill ${stCls}">${escHtml(t.status || 'open')}</span>
-            </div>
-            <div class="ticket-msg">${escHtml(t.message)}</div>
-            ${
-              t.admin_reply
-                ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(t.admin_reply)}</div>`
-                : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
-            }
-          </div>`;
+              <div class="ticket-msg">${escHtml(t.message)}</div>
+              ${
+                t.admin_reply
+                  ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(t.admin_reply)}</div>`
+                  : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
+              }
+            </div>`;
           })
           .join('');
       } else {
@@ -214,20 +218,20 @@
                   ? 's-closed'
                   : 's-open';
             return `<div class="ticket-card">
-            <div class="ticket-head">
-              <div>
-                <div class="ticket-title">${mood} ${escHtml(cat)}</div>
-                <div class="ticket-meta">${fmtRelDate((f.created_at || '').slice(0, 10))}</div>
+              <div class="ticket-head">
+                <div>
+                  <div class="ticket-title">${mood} ${escHtml(cat)}</div>
+                  <div class="ticket-meta">${fmtRelDate((f.created_at || '').slice(0, 10))}</div>
+                </div>
+                <span class="pill ${stCls}">${escHtml(f.status || 'new')}</span>
               </div>
-              <span class="pill ${stCls}">${escHtml(f.status || 'new')}</span>
-            </div>
-            <div class="ticket-msg">${escHtml(f.message)}</div>
-            ${
-              f.admin_reply
-                ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(f.admin_reply)}</div>`
-                : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
-            }
-          </div>`;
+              <div class="ticket-msg">${escHtml(f.message)}</div>
+              ${
+                f.admin_reply
+                  ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(f.admin_reply)}</div>`
+                  : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
+              }
+            </div>`;
           })
           .join('');
       }
@@ -239,10 +243,12 @@
   /* ═══════════════ MAIN ═══════════════ */
   async function renderSupportV2() {
     renderSupportTabV2();
+    /* loadMySupportHistory ab renderSupportTabV2 ke andar called hai,
+       par safety ke liye ek aur call */
     await loadMySupportHistory();
   }
 
-  /* ═══════════════ INSTALL + WRAP submitFeedback ═══════════════ */
+  /* ═══════════════ INSTALL ═══════════════ */
   function install() {
     window.renderSupport = renderSupportV2;
     window.renderSupportTab = renderSupportTabV2;
@@ -254,7 +260,17 @@
       try {
         await _origSubmitFeedback.call(this);
       } catch (e) {}
-      /* Reload list to show newly submitted feedback */
+      setTimeout(() => {
+        loadMySupportHistory();
+      }, 600);
+    };
+
+    /* Wrap submitSupport to auto-reload ticket list */
+    const _origSubmitSupport = window.submitSupport;
+    window.submitSupport = async function () {
+      try {
+        await _origSubmitSupport.call(this);
+      } catch (e) {}
       setTimeout(() => {
         loadMySupportHistory();
       }, 600);

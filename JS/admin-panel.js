@@ -1779,6 +1779,13 @@
         if (t) openTicketModal(t);
       };
     });
+    /* Wire feedback click */
+    wrap.querySelectorAll('[data-anp-feedback]').forEach((el) => {
+      el.onclick = () => {
+        const f = feedback.find((x) => x.id === el.dataset.anpFeedback);
+        if (f) openFeedbackModal(f);
+      };
+    });
 
     /* ── Feedback ── */
     wrap.appendChild(
@@ -1788,11 +1795,11 @@
         feedback.length === 0
           ? emptyState('📭', 'No feedback yet', 'User feedback will appear here.')
           : `<div style="display:flex;flex-direction:column;gap:8px;max-height:500px;overflow-y:auto">
-            ${feedback
-              .slice(0, 30)
-              .map(
-                (f) => `
-              <div style="padding:12px 14px;background:var(--card-2);border:1px solid var(--border);border-radius:10px">
+                        ${feedback
+                          .slice(0, 30)
+                          .map(
+                            (f) => `
+              <div style="padding:12px 14px;background:var(--card-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" data-anp-feedback="${f.id}" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
                 <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
                   <div>
                     <div style="font-weight:700;font-size:.82rem;color:var(--text)">${escHtml(f.user_name || 'User')}</div>
@@ -1805,8 +1812,8 @@
                 </div>
                 <div style="font-size:.76rem;color:var(--text-2);line-height:1.5">${escHtml(f.message || '')}</div>
               </div>`,
-              )
-              .join('')}
+                          )
+                          .join('')}
           </div>`
       }
     </div>`),
@@ -1862,6 +1869,70 @@
               if (error) throw error;
               closeModal();
               toast('✅ Ticket updated', 'ok');
+              if (window.renderAdmin) window.renderAdmin();
+            } catch (e) {
+              toast('Failed: ' + e.message, 'err');
+            }
+          };
+        },
+      },
+    );
+  }
+
+  /* ═══════════════ FEEDBACK MODAL ═══════════════ */
+  function openFeedbackModal(feedbackItem) {
+    const moodEmoji = { 5: '😍', 4: '😊', 3: '😐', 2: '😞', 1: '😡' };
+    const catLabel = { feature: '💡 Feature Idea', improvement: '✨ Improvement', other: '💭 General' };
+
+    openModal(
+      modalShell({
+        title: '💬 Feedback Details',
+        subtitle:
+          (moodEmoji[feedbackItem.rating] || '💬') +
+          ' ' +
+          (catLabel[feedbackItem.category] || feedbackItem.category || ''),
+        body: `
+        <div style="padding:12px;background:var(--card-2);border-radius:10px;margin-bottom:12px">
+          <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:.72rem;color:var(--text-3);margin-bottom:8px">
+            <span>👤 ${escHtml(feedbackItem.user_name || '—')} (${escHtml(feedbackItem.user_email || '—')})</span>
+            <span>🕐 ${relTime(feedbackItem.created_at)}</span>
+          </div>
+          <div style="font-size:.85rem;color:var(--text);line-height:1.6;white-space:pre-wrap">${escHtml(feedbackItem.message || '')}</div>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="anpFbStatus">
+            <option value="new" ${feedbackItem.status === 'new' ? 'selected' : ''}>New</option>
+            <option value="read" ${feedbackItem.status === 'read' ? 'selected' : ''}>Read</option>
+            <option value="replied" ${feedbackItem.status === 'replied' ? 'selected' : ''}>Replied</option>
+            <option value="planned" ${feedbackItem.status === 'planned' ? 'selected' : ''}>Planned</option>
+            <option value="done" ${feedbackItem.status === 'done' ? 'selected' : ''}>Done</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Admin Reply</label>
+          <textarea id="anpFbReply" rows="4" style="min-height:100px" placeholder="Type your reply to the user…">${escHtml(feedbackItem.admin_reply || '')}</textarea>
+          <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">User will see this reply in their Support page under "My Feedback".</div>
+        </div>
+      `,
+        actions: `<button class="btn btn-ghost" data-close>Cancel</button>
+                <button class="btn btn-primary" id="anpFbSave">Save & Reply</button>`,
+      }),
+      {
+        onMount() {
+          document.getElementById('anpFbSave').onclick = async () => {
+            const status = document.getElementById('anpFbStatus').value;
+            const reply = document.getElementById('anpFbReply').value.trim();
+            try {
+              const update = {
+                status: reply ? 'replied' : status,
+                admin_reply: reply || null,
+                updated_at: new Date().toISOString(),
+              };
+              const { error } = await supa.from('feedback').update(update).eq('id', feedbackItem.id);
+              if (error) throw error;
+              closeModal();
+              toast('✅ Reply saved', 'ok');
               if (window.renderAdmin) window.renderAdmin();
             } catch (e) {
               toast('Failed: ' + e.message, 'err');
