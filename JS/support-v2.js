@@ -291,7 +291,6 @@
       typeof window.renderSupport === 'function' &&
       typeof window.submitSupport === 'function' &&
       typeof window.submitFeedback === 'function' &&
-      typeof window.fmtRelDate === 'function' &&
       typeof window.attachRipples === 'function'
     ) {
       install();
