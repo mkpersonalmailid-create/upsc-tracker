@@ -3,8 +3,8 @@
    ─────────────────────────────────────────────────────────────
    ✅ Support Ticket tab — bug/technical issues with priority
    ✅ Send Feedback tab — emoji sentiment + idea/improvement
-   ✅ "My Tickets" only shows on Ticket tab (hidden on Feedback)
-   ✅ Overrides existing renderSupport() + renderSupportTab()
+   ✅ My Tickets / My Feedback — dynamic title + content
+   ✅ Admin reply visible for both
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -17,13 +17,12 @@
     );
   }
 
-  /* ═══════════════ TAB CONTENT (Ticket + Feedback) ═══════════════ */
+  /* ═══════════════ TAB CONTENT ═══════════════ */
   function renderSupportTabV2() {
     const el = document.getElementById('supportTabContent');
     if (!el) return;
 
     if (state.supportTab === 'ticket') {
-      // ═══ TICKET TAB ═══
       el.innerHTML = `
         <div class="form-grid">
           <div class="field"><label>Category</label>
@@ -60,7 +59,6 @@
         document.getElementById('supCharCount').textContent = document.getElementById('supMessage').value.length;
       };
     } else {
-      // ═══ FEEDBACK TAB ═══
       el.innerHTML = `
         <div class="field">
           <label>How are you feeling about UPSC Tracker?</label>
@@ -103,7 +101,6 @@
         </div>
         <button class="btn btn-primary" id="fbSubmitBtn" style="margin-top:6px">📤 Send Feedback</button>`;
 
-      // Wire mood picker
       const moodBtns = el.querySelectorAll('.fb-mood');
       moodBtns.forEach((btn) => {
         btn.onclick = () => {
@@ -128,30 +125,143 @@
     if (typeof attachRipples === 'function') attachRipples();
   }
 
-  /* ═══════════════ SUPPORT VIEW (Toggle My Tickets) ═══════════════ */
-  async function renderSupportV2() {
-    renderSupportTabV2();
+  /* ═══════════════ LOAD MY HISTORY (Tickets OR Feedback) ═══════════════ */
+  async function loadMySupportHistory() {
+    const el = document.getElementById('supportHistory');
+    if (!el) return;
 
-    // "My Tickets" card = 2nd card in #view-support
+    /* Update card title dynamically */
     const cards = document.querySelectorAll('#view-support .card');
     if (cards.length >= 2) {
-      cards[1].style.display = state.supportTab === 'ticket' ? '' : 'none';
+      const titleEl = cards[1].querySelector('.card-title-lg');
+      if (titleEl) titleEl.textContent = state.supportTab === 'ticket' ? 'My Tickets' : 'My Feedback';
     }
 
-    if (state.supportTab === 'ticket') {
-      if (typeof loadSupportHistory === 'function') {
-        await loadSupportHistory();
+    if (!supa || !state.user) {
+      el.innerHTML = '<div class="empty"><p>Sign in to view.</p></div>';
+      return;
+    }
+
+    el.innerHTML = '<div class="skel" style="height:60px"></div>';
+    const badgeEl = document.getElementById('supCountBadge');
+
+    try {
+      if (state.supportTab === 'ticket') {
+        /* ── MY TICKETS ── */
+        const { data } = await supa
+          .from('support_tickets')
+          .select('*')
+          .eq('user_id', state.user.id)
+          .order('created_at', { ascending: false })
+          .limit(30);
+
+        if (badgeEl) badgeEl.textContent = (data || []).length;
+
+        if (!data || !data.length) {
+          el.innerHTML =
+            '<div class="empty"><div class="em">🆘</div><h4>No tickets yet</h4><p>Raise a ticket for any issue you face.</p></div>';
+          return;
+        }
+
+        el.innerHTML = data
+          .map((t) => {
+            const stCls = t.status === 'replied' ? 's-replied' : t.status === 'closed' ? 's-closed' : 's-open';
+            return `<div class="ticket-card">
+            <div class="ticket-head">
+              <div>
+                <div class="ticket-title">${escHtml(t.subject || 'No subject')}</div>
+                <div class="ticket-meta">${escHtml(t.category || '')} · ${fmtRelDate((t.created_at || '').slice(0, 10))}</div>
+              </div>
+              <span class="pill ${stCls}">${escHtml(t.status || 'open')}</span>
+            </div>
+            <div class="ticket-msg">${escHtml(t.message)}</div>
+            ${
+              t.admin_reply
+                ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(t.admin_reply)}</div>`
+                : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
+            }
+          </div>`;
+          })
+          .join('');
+      } else {
+        /* ── MY FEEDBACK ── */
+        const { data } = await supa
+          .from('feedback')
+          .select('*')
+          .eq('user_id', state.user.id)
+          .order('created_at', { ascending: false })
+          .limit(30);
+
+        if (badgeEl) badgeEl.textContent = (data || []).length;
+
+        if (!data || !data.length) {
+          el.innerHTML =
+            '<div class="empty"><div class="em">💬</div><h4>No feedback sent yet</h4><p>Share your thoughts above.</p></div>';
+          return;
+        }
+
+        const moodEmoji = { 5: '😍', 4: '😊', 3: '😐', 2: '😞', 1: '😡' };
+        const catLabel = { feature: '💡 Feature Idea', improvement: '✨ Improvement', other: '💭 General' };
+
+        el.innerHTML = data
+          .map((f) => {
+            const mood = moodEmoji[f.rating] || '💬';
+            const cat = catLabel[f.category] || f.category || 'Feedback';
+            const stCls =
+              f.status === 'replied' || f.status === 'done'
+                ? 's-replied'
+                : f.status === 'closed'
+                  ? 's-closed'
+                  : 's-open';
+            return `<div class="ticket-card">
+            <div class="ticket-head">
+              <div>
+                <div class="ticket-title">${mood} ${escHtml(cat)}</div>
+                <div class="ticket-meta">${fmtRelDate((f.created_at || '').slice(0, 10))}</div>
+              </div>
+              <span class="pill ${stCls}">${escHtml(f.status || 'new')}</span>
+            </div>
+            <div class="ticket-msg">${escHtml(f.message)}</div>
+            ${
+              f.admin_reply
+                ? `<div class="ticket-reply"><strong>👑 Admin reply:</strong> ${escHtml(f.admin_reply)}</div>`
+                : '<div style="margin-top:10px;font-size:.74rem;color:var(--text-3);font-style:italic">⏳ Waiting for admin reply…</div>'
+            }
+          </div>`;
+          })
+          .join('');
       }
+    } catch (e) {
+      el.innerHTML = `<div class="empty"><p style="color:var(--red)">Failed to load: ${escHtml(e.message)}</p></div>`;
     }
   }
 
-  /* ═══════════════ INSTALL ═══════════════ */
+  /* ═══════════════ MAIN ═══════════════ */
+  async function renderSupportV2() {
+    renderSupportTabV2();
+    await loadMySupportHistory();
+  }
+
+  /* ═══════════════ INSTALL + WRAP submitFeedback ═══════════════ */
   function install() {
     window.renderSupport = renderSupportV2;
     window.renderSupportTab = renderSupportTabV2;
+    window.loadSupportHistory = loadMySupportHistory;
+
+    /* Wrap submitFeedback to auto-reload feedback list */
+    const _origSubmitFeedback = window.submitFeedback;
+    window.submitFeedback = async function () {
+      try {
+        await _origSubmitFeedback.call(this);
+      } catch (e) {}
+      /* Reload list to show newly submitted feedback */
+      setTimeout(() => {
+        loadMySupportHistory();
+      }, 600);
+    };
+
     console.log('[support-v2] ✅ override installed');
 
-    // Re-render if support view is currently active
     try {
       if (document.querySelector('#view-support.active')) {
         window.renderSupport();
@@ -165,6 +275,7 @@
       typeof window.renderSupport === 'function' &&
       typeof window.submitSupport === 'function' &&
       typeof window.submitFeedback === 'function' &&
+      typeof window.fmtRelDate === 'function' &&
       typeof window.attachRipples === 'function'
     ) {
       install();
