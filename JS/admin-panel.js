@@ -403,6 +403,7 @@
   async function renderOverview() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     /* ── Fetch data ── */
     let profiles = [],
@@ -652,6 +653,7 @@
   async function renderUsers() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     /* ── Fetch ── */
     try {
@@ -1036,6 +1038,7 @@
   async function renderEngagement() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     /* ── Fetch ── */
     let profiles = [],
@@ -1197,6 +1200,7 @@
   async function renderRevenue() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     let payments = [],
       subs = [],
@@ -1448,6 +1452,7 @@
   async function renderContent() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     /* ── Fetch announcements + notifications ── */
     let announcements = [],
@@ -1707,6 +1712,7 @@
   async function renderSupport() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
 
     let tickets = [],
       feedback = [];
