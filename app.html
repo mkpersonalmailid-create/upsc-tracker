@@ -8403,6 +8403,18 @@ ${
         $$('.nav-item').forEach((n) => n.classList.toggle('active', n.dataset.view === name));
         $('#sidebar').classList.remove('open');
         $('#content').scrollTop = 0;
+        // ✅ Track view change for admin engagement
+        if (supa && state.user && name !== state.view) {
+          supa
+            .from('user_activity')
+            .insert({
+              user_id: state.user.id,
+              event_type: 'view_change',
+              event_data: { view: name },
+            })
+            .then(() => {})
+            .catch(() => {});
+        }
         renderView(name);
       }
       function renderView(name) {
@@ -13806,5 +13818,7 @@ ${
     <script src="/JS/mobile-banner.js"></script>
     <script src="/JS/analytics-v2.js"></script>
     <script src="/JS/dashboard-v2.js"></script>
+    <script src="/JS/admin-panel.js"></script>
+    <script src="/JS/support-v2.js"></script>
   </body>
 </html>
