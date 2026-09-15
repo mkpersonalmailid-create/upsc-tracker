@@ -1723,6 +1723,7 @@
       ]);
       tickets = r1.data || [];
       feedback = r2.data || [];
+      window.__anpFeedbackCache = feedback; // ✅ global cache for inline onclick
     } catch (e) {
       console.warn('[admin support]', e);
     }
@@ -1799,7 +1800,7 @@
                           .slice(0, 30)
                           .map(
                             (f) => `
-              <div style="padding:12px 14px;background:var(--card-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" data-anp-feedback="${f.id}" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'">
+                            <div style="padding:12px 14px;background:var(--card-2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s" data-anp-feedback="${f.id}" onmouseover="this.style.borderColor='var(--purple)'" onmouseout="this.style.borderColor='var(--border)'" onclick="window.__anpOpenFeedback && window.__anpOpenFeedback('${f.id}')">
                 <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px">
                   <div>
                     <div style="font-weight:700;font-size:.82rem;color:var(--text)">${escHtml(f.user_name || 'User')}</div>
@@ -1942,6 +1943,12 @@
       },
     );
   }
+  /* ═══════════════ GLOBAL OPENER (for inline onclick) ═══════════════ */
+  window.__anpOpenFeedback = function (id) {
+    const cache = window.__anpFeedbackCache || [];
+    const f = cache.find((x) => x.id === id);
+    if (f) openFeedbackModal(f);
+  };
 
   /* ═══════════════ MAIN OVERRIDE ═══════════════ */
   function installAdminPanel() {
