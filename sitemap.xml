@@ -3,7 +3,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,12 +11,18 @@
   <!-- Blog Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/blog/</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog Posts (14) -->
+  <!-- Blog Posts (15) -->
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/best-books-for-upsc-mains-gs-papers-20260917.html</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://upscstudytracker.co.in/blog/role-of-examples-in-upsc-answer-writing-20260916.html</loc>
     <lastmod>2026-09-16</lastmod>
