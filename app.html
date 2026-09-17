@@ -7267,7 +7267,7 @@
           if (planSub)
             planSub.textContent = isAdminUser()
               ? 'Full lifetime access as site administrator.'
-              : 'Aap already premium ho — advanced features sab unlocked hain.';
+              : 'You are on Premium plan.';
 
           // Days left
           let daysLeft = null;
@@ -7303,7 +7303,7 @@
               expiringSoon
                 ? `
               <div style="padding:10px 14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:10px;margin-bottom:16px;font-size:.82rem;color:#FBBF24;font-weight:600">
-                ⚠️ Aapka plan sirf <strong>${daysLeft} din</strong> me expire hoga — renew karlo!
+                ⚠️ Your Plan will be expired in <strong>${daysLeft} din</strong> !
               </div>
             `
                 : ''
