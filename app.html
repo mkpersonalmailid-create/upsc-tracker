@@ -7459,7 +7459,7 @@ ${
               grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(220px, 1fr))';
 
               grid.innerHTML = Object.values(PLANS)
-                .filter((p) => p.id !== 'monthly_auto') // hide disabled plan
+
                 .map((plan) => {
                   const isSelected = plan.id === selected;
                   return `
