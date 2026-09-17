@@ -759,6 +759,14 @@
       if (planF === 'admin') list = list.filter((p) => p.is_admin === true);
       else if (planF === 'premium') list = list.filter((p) => premiumIds.has(p.id) && !p.is_admin);
       else if (planF === 'free') list = list.filter((p) => !premiumIds.has(p.id) && !p.is_admin);
+      else if (planF === 'trial') {
+        list = list.filter((p) => {
+          const s = subMap[p.id];
+          return (
+            s?.plan === 'trial' && s?.status === 'active' && (!s.expiry_date || new Date(s.expiry_date) > new Date())
+          );
+        });
+      }
 
       // Activity filter
       if (actF === '24h') list = list.filter((p) => p.last_seen && now - new Date(p.last_seen).getTime() < 86400000);
@@ -781,11 +789,27 @@
         .map((p) => {
           const isAdmin = p.is_admin === true;
           const isPremium = premiumIds.has(p.id);
-          const planPill = isAdmin
-            ? '<span class="anp-pill admin">👑 Admin</span>'
-            : isPremium
-              ? '<span class="anp-pill premium">💎 Premium</span>'
-              : '<span class="anp-pill free">Free</span>';
+          // ✅ Trial user alag detect karo
+          const userSub = subMap[p.id];
+          const isTrial =
+            userSub?.plan === 'trial' &&
+            userSub?.status === 'active' &&
+            (!userSub.expiry_date || new Date(userSub.expiry_date) > new Date());
+
+          let planPill;
+          if (isAdmin) {
+            planPill = '<span class="anp-pill admin">👑 Admin</span>';
+          } else if (isTrial) {
+            // Trial user — amber color
+            const daysLeft = userSub.expiry_date
+              ? Math.ceil((new Date(userSub.expiry_date) - new Date()) / 86400000)
+              : 0;
+            planPill = `<span class="anp-pill" style="background:rgba(251,191,36,.15);color:#FBBF24">⏳ Trial (${daysLeft}d)</span>`;
+          } else if (isPremium) {
+            planPill = '<span class="anp-pill premium">💎 Premium</span>';
+          } else {
+            planPill = '<span class="anp-pill free">Free</span>';
+          }
           const avatarColor = isAdmin
             ? 'linear-gradient(135deg,#FBBF24,#EC4899)'
             : 'linear-gradient(135deg,#8B5CF6,#EC4899)';
@@ -1508,6 +1532,7 @@
           <option value="premium">Premium users only</option>
           <option value="active7d">Active in last 7 days</option>
           <option value="inactive7d">Inactive 7+ days</option>
+                    <option value="trial">Trial only</option>
         </select>
       </div>
       <div class="field">
