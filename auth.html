@@ -855,7 +855,7 @@
           <form id="authForm" class="auth-form" autocomplete="on">
             <div class="field" id="nameField" style="display: none">
               <label for="authName">Your Name</label>
-              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" />
+              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" required />
             </div>
 
             <div class="field">
@@ -1055,6 +1055,11 @@
         const email = normalizeEmail($('#authEmail').value);
         const password = $('#authPassword').value;
         const name = $('#authName').value.trim();
+        if (authMode === 'signup' && !name) {
+          authMsg('Please enter your name.', 'err');
+          $('#authName').focus();
+          return;
+        }
 
         // Dev preview restriction
         if (isDevPreview) {
@@ -1101,7 +1106,7 @@
             const { data, error } = await supa.auth.signUp({
               email,
               password,
-              options: { data: { full_name: name || email.split('@')[0] } },
+              options: { data: { full_name: name } },
             });
             if (error) throw error;
             if (data.user && !data.session) {
