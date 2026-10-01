@@ -855,7 +855,7 @@
           <form id="authForm" class="auth-form" autocomplete="on">
             <div class="field" id="nameField" style="display: none">
               <label for="authName">Your Name</label>
-              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" required />
+              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" />
             </div>
 
             <div class="field">
@@ -1055,11 +1055,6 @@
         const email = normalizeEmail($('#authEmail').value);
         const password = $('#authPassword').value;
         const name = $('#authName').value.trim();
-        if (authMode === 'signup' && !name) {
-          authMsg('Please enter your name.', 'err');
-          $('#authName').focus();
-          return;
-        }
 
         // Dev preview restriction
         if (isDevPreview) {
@@ -1106,7 +1101,7 @@
             const { data, error } = await supa.auth.signUp({
               email,
               password,
-              options: { data: { full_name: name } },
+              options: { data: { full_name: name || email.split('@')[0] } },
             });
             if (error) throw error;
             if (data.user && !data.session) {
@@ -1128,7 +1123,7 @@
             authMsg(
               `
             ⚠️ <strong>Account not found.</strong><br>
-            No Account Found , Please Create Your Accout.<br><br>
+            No Account Found , Please Create Your Account.<br><br>
             <button type="button" class="btn btn-primary" id="switchToSignupBtn"
               style="text-decoration:none; display:flex; width:100%; justify-content:center; padding:10px;">
               ✨ Create Account with ${esc(emailVal)}
