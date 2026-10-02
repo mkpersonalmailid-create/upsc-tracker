@@ -1101,7 +1101,10 @@
             const { data, error } = await supa.auth.signUp({
               email,
               password,
-              options: { data: { full_name: name || email.split('@')[0] } },
+              options: {
+                data: { full_name: name || email.split('@')[0] },
+                emailRedirectTo: window.location.origin + '/auth.html',
+              },
             });
             if (error) throw error;
             if (data.user && !data.session) {
