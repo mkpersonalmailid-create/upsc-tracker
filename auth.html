@@ -1086,7 +1086,7 @@
 
         const btn = $('#authSubmit');
         btn.disabled = true;
-        const orig = $('#authSubmitText').textContent;
+
         $('#authSubmitText').innerHTML =
           '<span class="spinner"></span>' + (authMode === 'signin' ? ' Signing in…' : ' Creating…');
         authMsg('');
@@ -1105,8 +1105,8 @@
             });
             if (error) throw error;
             if (data.user && !data.session) {
-              authMsg('Account created. Please confirm your email to sign in.', 'ok');
               setAuthMode('signin');
+              authMsg('Account created. Please confirm your email to sign in.', 'ok');
             } else {
               toast('Account created! 🎉', 'ok', 1500);
               setTimeout(() => (window.location.href = APP_URL), 1500);
@@ -1174,10 +1174,9 @@
           } else {
             authMsg(err.message || 'Authentication failed.', 'err');
           }
-        } finally {
-          btn.disabled = false;
-          $('#authSubmitText').textContent = orig;
-        }
+        } // Yeh catch block ke baad, function ke end me add karo
+        btn.disabled = false;
+        $('#authSubmitText').textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
       }
 
       async function signInWithGoogle() {
