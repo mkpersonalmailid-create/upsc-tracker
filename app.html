@@ -12779,9 +12779,11 @@ ${
         $('#setMinSession').value = state.settings.min_session_minutes;
         $('#setPomoWork').value = state.settings.pomodoro_work;
         $('#setMaxRevisions').value = state.settings.max_revisions || 3;
-        $('#setOptionalSubject').innerHTML = OPTIONAL_SUBJECTS.map(
-          (s) => `<option ${state.profile.optional_subject === s ? 'selected' : ''}>${esc(s)}</option>`,
-        ).join('');
+        $('#setOptionalSubject').innerHTML =
+          `<option value="" ${!state.profile.optional_subject ? 'selected' : ''}>— Select Optional Subject —</option>` +
+          OPTIONAL_SUBJECTS.map(
+            (s) => `<option ${state.profile.optional_subject === s ? 'selected' : ''}>${esc(s)}</option>`,
+          ).join('');
         $$('.theme-opt').forEach((b) => {
           b.style.borderColor = b.dataset.theme === state.settings.theme ? 'var(--purple)' : '';
         });
