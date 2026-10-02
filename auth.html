@@ -1010,7 +1010,8 @@
       function setAuthMode(mode) {
         authMode = mode;
         $$('.auth-tab').forEach((t) => t.classList.toggle('active', t.dataset.authMode === mode));
-                $('#mobileField').style.display = mode === 'signup' ? 'flex' : 'none';
+        $('#nameField').style.display = mode === 'signup' ? 'flex' : 'none';
+        $('#mobileField').style.display = mode === 'signup' ? 'flex' : 'none';
         $('#authSubmitText').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
         $('#authHeading').textContent = mode === 'signup' ? 'Create your account' : 'Welcome back';
         $('#authSubheading').textContent =
@@ -1058,11 +1059,18 @@
 
         const email = normalizeEmail($('#authEmail').value);
         const password = $('#authPassword').value;
-        const name = $('#authName').value.trim();        // Signup me name mandatory hai
+        const name = $('#authName').value.trim();
+
+        // Signup me name mandatory hai
         if (authMode === 'signup' && !name) {
           authMsg('Please enter your name.', 'err');
           return;
         }
+
+        // Dev preview restriction
+        if (isDevPreview) {
+          if (!OWNER_EMAILS.includes(email.toLowerCase())) {
+            authMsg(
               `
             ⚠️ <strong>This is a dev preview environment.</strong><br>
             Please use the production site.<br><br>
@@ -1101,7 +1109,7 @@
             toast('Signed in! Redirecting…', 'ok', 1500);
             setTimeout(() => (window.location.href = APP_URL), 1000);
           } else {
-                        const mobile = $('#authMobile').value.trim();
+            const mobile = $('#authMobile').value.trim();
             const { data, error } = await supa.auth.signUp({
               email,
               password,
@@ -1190,11 +1198,10 @@
           } else {
             authMsg(err.message || 'Authentication failed.', 'err');
           }
-        } // Yeh catch block ke baad, function ke end me add karo
+        }
         btn.disabled = false;
         $('#authSubmitText').textContent = authMode === 'signup' ? 'Create Account' : 'Sign In';
       }
-
       async function signInWithGoogle() {
         if (!supa) {
           toast('Supabase not ready.', 'err');
