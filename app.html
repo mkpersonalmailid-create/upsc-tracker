@@ -6029,6 +6029,10 @@
                   </div>
                 </div>
                 <div class="field">
+                  <label>Mobile Number</label>
+                  <input type="tel" id="setMobile" placeholder="e.g. 9876543210" maxlength="15" />
+                </div>
+                <div class="field">
                   <label>Membership</label><input type="text" id="setMembership" readonly style="opacity: 0.65" />
                 </div>
               </div>
@@ -6638,9 +6642,10 @@
           exam_date_prelims: '',
           exam_date_mains: '',
           prep_year: '',
+          phone_number: '',
           membership: 'free',
           is_admin: false,
-          optional_subject: 'Sociology',
+          optional_subject: '',
         },
         settings: {
           daily_target: 8,
@@ -6737,13 +6742,14 @@
           if (prof) {
             state.profile = {
               name: prof.name || signupName,
+              phone_number: prof.phone_number || '',
               exam: prof.exam || 'UPSC Civil Services Examination',
               exam_date_prelims: prof.exam_date_prelims || '',
               exam_date_mains: prof.exam_date_mains || '',
               prep_year: prof.preparation_year || '',
               membership: prof.membership || 'free',
               is_admin: prof.is_admin === true,
-              optional_subject: prof.optional_subject || 'Sociology',
+              optional_subject: prof.optional_subject || '',
             };
           } else {
             // Naya user — metadata se name lo
@@ -6752,9 +6758,10 @@
                 id: uid,
                 name: signupName,
                 email: state.user.email,
+                phone_number: state.user.user_metadata?.phone_number || null, // ⬅️ YE NAYI LINE ADD KARO
                 exam: 'UPSC Civil Services Examination',
                 membership: 'free',
-                optional_subject: 'Sociology',
+                optional_subject: null,
               },
               { onConflict: 'id' },
             );
@@ -8274,7 +8281,7 @@ ${
           <div style="width:70px;height:70px;margin:0 auto 16px;border-radius:20px;background:linear-gradient(135deg,#8B5CF6,#EC4899);display:flex;align-items:center;justify-content:center;font-size:2rem;box-shadow:0 10px 32px rgba(168,85,247,.45)">🔐</div>
           <h1 style="font-size:1.5rem;font-weight:900;letter-spacing:-.02em;margin-bottom:6px;color:var(--text)">Set Your Password</h1>
           <p style="font-size:.86rem;color:var(--text-2);line-height:1.5">
-            Apna new password set karo. Iske baad aap email/password se bhi sign in kar sakte ho.
+            Set your new password. After this, you can also sign in using your email and password.
           </p>
         </div>
 
@@ -12754,6 +12761,7 @@ ${
       function renderSettings() {
         $('#setName').value = state.profile.name || '';
         $('#setEmail').value = state.user?.email || '';
+        $('#setMobile').value = state.profile.phone_number || '';
         $('#setExam').value = state.profile.exam || '';
         $('#setPrepYear').value = state.profile.prep_year || '';
         $('#setPrelimsDate').value = state.profile.exam_date_prelims || '';
@@ -13155,6 +13163,7 @@ ${
           saveProfileBtn.onclick = async () => {
             state.profile.name = $('#setName').value.trim();
             state.profile.exam = $('#setExam').value.trim();
+            state.profile.phone_number = $('#setMobile').value.trim();
             state.profile.prep_year = $('#setPrepYear').value.trim();
             state.profile.exam_date_prelims = $('#setPrelimsDate').value || null;
             state.profile.exam_date_mains = $('#setMainsDate').value || null;
@@ -13166,6 +13175,7 @@ ${
                   .from('profiles')
                   .update({
                     name: state.profile.name,
+                    phone_number: state.profile.phone_number, // ⬅️ YE NAYI LINE ADD KARO
                     exam: state.profile.exam,
                     preparation_year: state.profile.prep_year || null,
                     exam_date_prelims: state.profile.exam_date_prelims,
@@ -13219,14 +13229,14 @@ ${
             openModal(
               modalShell({
                 title: '🔐 Set Password',
-                subtitle: 'Apna new password set karein',
+                subtitle: 'Create your New Password',
                 body: `
           <div class="field"><label>New Password</label>
             <input type="password" id="sp1" placeholder="At least 6 characters"></div>
           <div class="field"><label>Confirm Password</label>
             <input type="password" id="sp2" placeholder="Re-enter password"></div>
           <p style="font-size:.78rem;color:var(--text-3);margin-top:8px">
-            Password set karne ke baad aap Google ya email dono se login kar sakte ho.
+            After setting your password, you can log in using either Google or your email and password.
           </p>`,
                 actions: `<button class="btn btn-ghost" data-close>Cancel</button>
           <button class="btn btn-primary" id="saveNewPwBtn">Save Password</button>`,

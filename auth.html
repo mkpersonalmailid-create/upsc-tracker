@@ -855,7 +855,11 @@
           <form id="authForm" class="auth-form" autocomplete="on">
             <div class="field" id="nameField" style="display: none">
               <label for="authName">Your Name</label>
-              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" />
+              <input type="text" id="authName" placeholder="e.g. Mukund" maxlength="80" autocomplete="name" required />
+            </div>
+            <div class="field" id="mobileField" style="display: none">
+              <label for="authMobile">Mobile Number</label>
+              <input type="tel" id="authMobile" placeholder="e.g. 9876543210" maxlength="15" autocomplete="tel" />
             </div>
 
             <div class="field">
@@ -1006,7 +1010,7 @@
       function setAuthMode(mode) {
         authMode = mode;
         $$('.auth-tab').forEach((t) => t.classList.toggle('active', t.dataset.authMode === mode));
-        $('#nameField').style.display = mode === 'signup' ? 'flex' : 'none';
+                $('#mobileField').style.display = mode === 'signup' ? 'flex' : 'none';
         $('#authSubmitText').textContent = mode === 'signup' ? 'Create Account' : 'Sign In';
         $('#authHeading').textContent = mode === 'signup' ? 'Create your account' : 'Welcome back';
         $('#authSubheading').textContent =
@@ -1054,12 +1058,11 @@
 
         const email = normalizeEmail($('#authEmail').value);
         const password = $('#authPassword').value;
-        const name = $('#authName').value.trim();
-
-        // Dev preview restriction
-        if (isDevPreview) {
-          if (!OWNER_EMAILS.includes(email.toLowerCase())) {
-            authMsg(
+        const name = $('#authName').value.trim();        // Signup me name mandatory hai
+        if (authMode === 'signup' && !name) {
+          authMsg('Please enter your name.', 'err');
+          return;
+        }
               `
             ⚠️ <strong>This is a dev preview environment.</strong><br>
             Please use the production site.<br><br>
@@ -1098,11 +1101,15 @@
             toast('Signed in! Redirecting…', 'ok', 1500);
             setTimeout(() => (window.location.href = APP_URL), 1000);
           } else {
+                        const mobile = $('#authMobile').value.trim();
             const { data, error } = await supa.auth.signUp({
               email,
               password,
               options: {
-                data: { full_name: name || email.split('@')[0] },
+                data: {
+                  full_name: name || email.split('@')[0],
+                  phone_number: mobile || null,
+                },
                 emailRedirectTo: window.location.origin + '/auth.html',
               },
             });
