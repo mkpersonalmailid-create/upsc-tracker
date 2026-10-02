@@ -6740,6 +6740,12 @@
           const signupName = state.user.user_metadata?.full_name || state.user.email?.split('@')[0] || 'Student';
 
           if (prof) {
+            // Auto-sync phone from metadata if missing in profile
+            const metaPhone = state.user.user_metadata?.phone_number;
+            if (metaPhone && !prof.phone_number) {
+              await supa.from('profiles').update({ phone_number: metaPhone }).eq('id', uid);
+              prof.phone_number = metaPhone;
+            }
             state.profile = {
               name: prof.name || signupName,
               phone_number: prof.phone_number || '',
