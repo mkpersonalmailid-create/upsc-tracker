@@ -1106,7 +1106,10 @@
             if (error) throw error;
             if (data.user && !data.session) {
               setAuthMode('signin');
-              authMsg('Account created. Please confirm your email to sign in.', 'ok');
+              authMsg(
+                '🎉 Welcome aboard! Please check your email inbox and click the verification link to activate your account.',
+                'ok',
+              );
             } else {
               toast('Account created! 🎉', 'ok', 1500);
               setTimeout(() => (window.location.href = APP_URL), 1500);
@@ -1148,7 +1151,7 @@
             authMsg(
               `
             ℹ️ <strong>Account already exists.</strong><br>
-            Is email se account pehle se bana hua hai. Please sign in karein.<br><br>
+            Account already exists. Please sign in.<br><br>
             <button type="button" class="btn btn-primary" id="switchToSigninBtn"
               style="display:flex; width:100%; justify-content:center; padding:10px;">
               🔑 Sign In Instead
@@ -1170,7 +1173,10 @@
               }
             }, 50);
           } else if (msg.includes('email not confirmed')) {
-            authMsg('📧 Please confirm your email first. Check your inbox.', 'info');
+            authMsg(
+              '🎉 Welcome aboard! Please check your email inbox and click the verification link to activate your account.',
+              'info',
+            );
           } else {
             authMsg(err.message || 'Authentication failed.', 'err');
           }
