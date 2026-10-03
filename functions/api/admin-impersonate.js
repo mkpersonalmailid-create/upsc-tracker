@@ -73,6 +73,9 @@ export async function onRequestPost(context) {
       body: JSON.stringify({
         type: 'magiclink',
         email: targetEmail,
+        options: {
+          redirect_to: 'https://upscstudytracker.co.in/app',
+        },
       }),
     });
 
