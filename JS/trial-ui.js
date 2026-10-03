@@ -14,6 +14,9 @@
   let tickHandle = null;
 
   function isTrial() {
+    // ✅ Admin ko trial UI nahi dikhana
+    if (state?.profile?.is_admin === true) return false;
+
     return (
       typeof state !== 'undefined' &&
       state?.subscription?.plan === 'trial' &&
