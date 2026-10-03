@@ -942,6 +942,7 @@
         <button class="btn btn-primary" id="anpSendNotif" style="justify-content:flex-start">📢 Send Notification</button>
         ${!isAdmin ? `<button class="btn btn-secondary" id="anpMakeAdmin" style="justify-content:flex-start">👑 Make Admin</button>` : `<button class="btn btn-secondary" id="anpRemoveAdmin" style="justify-content:flex-start">⬇️ Remove Admin</button>`}
         <button class="btn btn-secondary" id="anpResetPw" style="justify-content:flex-start">🔐 Send Password Reset</button>
+                <button class="btn btn-secondary" id="anpLoginAsUser" style="justify-content:flex-start;border-color:rgba(251,191,36,.5);color:#FBBF24">🔓 Login as This User</button>
       </div>
     `;
 
@@ -967,6 +968,91 @@
               toast('Failed: ' + e.message, 'err');
             }
           };
+          // 🔓 Login as User (Impersonate)
+          const loginAsUserBtn = document.getElementById('anpLoginAsUser');
+          if (loginAsUserBtn) {
+            loginAsUserBtn.onclick = async () => {
+              const ok = await customConfirm({
+                title: '🔓 Login as User?',
+                message: `You will log in as ${prof.name || prof.email}. Open the magic link in an INCOGNITO window to avoid logging out of your own account.`,
+                confirmText: 'Generate Link',
+                cancelText: 'Cancel',
+                icon: '🔓',
+                type: 'warning',
+              });
+              if (!ok) return;
+
+              loginAsUserBtn.disabled = true;
+              loginAsUserBtn.innerHTML = '<span class="spinner"></span> Generating...';
+
+              try {
+                const {
+                  data: { session },
+                } = await supa.auth.getSession();
+                if (!session?.access_token) throw new Error('No session');
+
+                const res = await fetch('/api/admin-impersonate', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + session.access_token,
+                  },
+                  body: JSON.stringify({ email: prof.email }),
+                });
+
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Failed');
+
+                // Copy to clipboard
+                try {
+                  await navigator.clipboard.writeText(json.magic_link);
+                  toast('🔗 Link copied to clipboard! Open in incognito.', 'ok', 5000);
+                } catch (e) {
+                  toast('Link generated! Check below.', 'ok');
+                }
+
+                // Show the link in a modal
+                closeModal();
+                openModal(
+                  modalShell({
+                    title: '🔓 Magic Link Ready',
+                    subtitle: `For: ${escHtml(prof.email)}`,
+                    body: `
+                      <div style="padding:14px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.35);border-radius:12px;margin-bottom:14px;font-size:.82rem;line-height:1.6;color:#FBBF24">
+                        ⚠️ <strong>Important:</strong> Open this link in an <strong>Incognito/Private window</strong> to avoid logging out of your own admin account.
+                      </div>
+                      <div class="field">
+                        <label>Magic Link</label>
+                        <textarea readonly rows="5" id="anpMagicLink" style="font-family:var(--mono);font-size:.72rem;min-height:100px;word-break:break-all">${escHtml(json.magic_link)}</textarea>
+                      </div>
+                      <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="btn btn-secondary btn-sm" id="anpCopyLink">📋 Copy Link</button>
+                        <a href="${escHtml(json.magic_link)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" id="anpOpenLink">🔗 Open in New Tab</a>
+                      </div>
+                    `,
+                    actions: '<button class="btn btn-ghost" data-close>Close</button>',
+                  }),
+                  {
+                    onMount() {
+                      const copyBtn = document.getElementById('anpCopyLink');
+                      if (copyBtn) {
+                        copyBtn.onclick = async () => {
+                          const link = document.getElementById('anpMagicLink').value;
+                          await navigator.clipboard.writeText(link);
+                          copyBtn.textContent = '✅ Copied!';
+                          setTimeout(() => (copyBtn.textContent = '📋 Copy Link'), 2000);
+                        };
+                      }
+                    },
+                  },
+                );
+              } catch (e) {
+                toast('Failed: ' + e.message, 'err');
+                loginAsUserBtn.disabled = false;
+                loginAsUserBtn.innerHTML = '🔓 Login as This User';
+              }
+            };
+          }
         },
       },
     );
