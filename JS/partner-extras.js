@@ -219,6 +219,170 @@
     `;
   }
 
+  // ═══════════════ 4.5. DISCOVER USERS ═══════════════
+  async function renderDiscoverSection() {
+    const supa = getSupa();
+    const user = await getCurrentUser();
+    if (!supa || !user) return '';
+
+    try {
+      // Fetch discoverable users (exclude admin, self, existing partners)
+      const { data: allUsers } = await supa
+        .from('profiles')
+        .select('id, name, optional_subject, exam, discoverable, is_admin')
+        .eq('discoverable', true)
+        .eq('is_admin', false)
+        .neq('id', user.id)
+        .limit(50);
+
+      if (!allUsers || !allUsers.length) {
+        return `
+          <div class="card" style="margin-top:18px">
+            <div class="card-header">
+              <div>
+                <span class="card-title-lg">🔍 Discover Users</span>
+                <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+                  Find other aspirants to study with
+                </div>
+              </div>
+            </div>
+            <div class="empty" style="padding:40px 20px">
+              <div class="em">🔍</div>
+              <h4>No users to discover yet</h4>
+              <p>As more users join, they'll appear here.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      // Get existing partner relationships (to filter out)
+      const myId = user.id;
+      const existingIds = new Set();
+      pstate.links.forEach((l) => {
+        if (l.status === 'pending' || l.status === 'accepted') {
+          existingIds.add(l.requester_id === myId ? l.partner_id : l.requester_id);
+        }
+      });
+
+      const discoverable = allUsers.filter((u) => !existingIds.has(u.id));
+
+      if (!discoverable.length) {
+        return `
+          <div class="card" style="margin-top:18px">
+            <div class="card-header">
+              <div>
+                <span class="card-title-lg">🔍 Discover Users</span>
+                <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+                  Find other aspirants to study with
+                </div>
+              </div>
+            </div>
+            <div class="empty" style="padding:40px 20px">
+              <div class="em">✨</div>
+              <h4>You've reached everyone!</h4>
+              <p>No more users to discover right now.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      const usersHtml = discoverable
+        .slice(0, 30)
+        .map((u) => {
+          const initial = (u.name || 'U')[0].toUpperCase();
+          const optional = u.optional_subject ? `Optional: ${esc(u.optional_subject)}` : 'No optional set';
+          return `
+            <div class="row-item" style="cursor:default">
+              <div style="width:40px;height:40px;border-radius:50%;background:var(--grad-1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">
+                ${initial}
+              </div>
+              <div class="row-info">
+                <div class="row-title">${esc(u.name || 'User')}</div>
+                <div class="row-meta">${esc(optional)}</div>
+              </div>
+              <button class="btn btn-primary btn-sm" data-discover-send="${u.id}" data-discover-name="${esc(u.name || 'User')}">
+                + Send Request
+              </button>
+            </div>
+          `;
+        })
+        .join('');
+
+      return `
+        <div class="card" style="margin-top:18px">
+          <div class="card-header">
+            <div>
+              <span class="card-title-lg">🔍 Discover Users</span>
+              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+                Find other aspirants to study with
+              </div>
+            </div>
+            <span class="pill" style="background:rgba(168,85,247,.15);color:#C4B5FD">${discoverable.length} found</span>
+          </div>
+          <div class="list">${usersHtml}</div>
+        </div>
+      `;
+    } catch (e) {
+      console.warn('[Partner] discover error:', e);
+      return '';
+    }
+  }
+  // ═══════════════ 4.6. SEND DISCOVER REQUEST ═══════════════
+  async function sendDiscoverRequest(targetId, targetName, btn) {
+    const supa = getSupa();
+    const user = await getCurrentUser();
+    if (!supa || !user) return;
+
+    if (targetId === user.id) {
+      tmsg('You cannot add yourself as a partner', 'err');
+      return;
+    }
+
+    btn.disabled = true;
+    const origText = btn.textContent;
+    btn.textContent = '⏳ Sending…';
+
+    try {
+      // Check if request already exists
+      const { data: existing } = await supa
+        .from('partner_links')
+        .select('id, status')
+        .or(
+          `and(requester_id.eq.${user.id},partner_id.eq.${targetId}),and(requester_id.eq.${targetId},partner_id.eq.${user.id})`,
+        )
+        .maybeSingle();
+
+      if (existing) {
+        tmsg('A request already exists with this user', 'info');
+        btn.textContent = '✓ Sent';
+        btn.disabled = true;
+        return;
+      }
+
+      // Insert request
+      const { error: insertErr } = await supa.from('partner_links').insert({
+        requester_id: user.id,
+        partner_id: targetId,
+        status: 'pending',
+      });
+      if (insertErr) throw insertErr;
+
+      tmsg(`✅ Request sent to ${targetName}!`, 'ok');
+      btn.textContent = '✓ Sent';
+      btn.disabled = true;
+      btn.classList.remove('btn-primary');
+      btn.classList.add('btn-secondary');
+
+      // Refresh the view after 1 second
+      setTimeout(() => renderPartnerView(), 1000);
+    } catch (e) {
+      console.warn('[Partner] discover send error:', e);
+      tmsg('Failed: ' + (e.message || 'Unknown error'), 'err');
+      btn.textContent = origText;
+      btn.disabled = false;
+    }
+  }
+
   // ═══════════════ 5. RENDER PARTNER VIEW ═══════════════
   async function renderPartnerView() {
     const el = document.getElementById('partnerContent');
@@ -372,6 +536,23 @@
 
     if (accepted.length > 0) {
       await renderComparison(accepted, myId);
+    }
+
+    // ═══ DISCOVER USERS SECTION ═══
+    const discoverHtml = await renderDiscoverSection();
+    if (discoverHtml) {
+      const discoverWrap = document.createElement('div');
+      discoverWrap.innerHTML = discoverHtml;
+      el.appendChild(discoverWrap);
+
+      // Wire send request buttons
+      el.querySelectorAll('[data-discover-send]').forEach((btn) => {
+        btn.onclick = async () => {
+          const targetId = btn.dataset.discoverSend;
+          const targetName = btn.dataset.discoverName;
+          await sendDiscoverRequest(targetId, targetName, btn);
+        };
+      });
     }
   }
 

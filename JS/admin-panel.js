@@ -725,6 +725,7 @@
               <th>Study</th>
               <th>Sessions</th>
               <th>Paid</th>
+                            <th>Public</th>
             </tr>
           </thead>
           <tbody id="anpUsersBody"></tbody>
@@ -832,6 +833,17 @@
           <td><strong style="color:var(--text)">${shortDur(ses.sec)}</strong></td>
           <td>${ses.count}</td>
           <td>${pay.total > 0 ? `<strong style="color:#34D399">₹${(pay.total / 100).toFixed(0)}</strong>` : '<span style="color:var(--text-3)">—</span>'}</td>
+                    <td>
+            <button class="anp-toggle-public" data-user-id="${p.id}" data-public="${p.discoverable !== false}" 
+              style="padding:5px 12px;border-radius:20px;font-size:.65rem;font-weight:800;border:1px solid;
+              ${
+                p.discoverable !== false
+                  ? 'background:rgba(16,185,129,.15);color:#34D399;border-color:rgba(16,185,129,.4)'
+                  : 'background:rgba(239,68,68,.15);color:#F87171;border-color:rgba(239,68,68,.4)'
+              }">
+              ${p.discoverable !== false ? '✓ Public' : '✕ Hidden'}
+            </button>
+          </td>
         </tr>`;
         })
         .join('');
@@ -840,6 +852,50 @@
         tr.onclick = () => {
           const prof = _usersCache.profiles.find((x) => x.id === tr.dataset.anpUser);
           if (prof) openUserDetail(prof, subMap, payMap, sessionMap);
+        };
+      });
+      // ═══ PUBLIC TOGGLE HANDLER ═══
+      tbody.querySelectorAll('.anp-toggle-public').forEach((btn) => {
+        btn.onclick = async (e) => {
+          e.stopPropagation(); // Prevent row click
+          const userId = btn.dataset.userId;
+          const isPublic = btn.dataset.public === 'true';
+
+          const ok = await customConfirm({
+            title: isPublic ? 'Hide from Discover?' : 'Make Public?',
+            message: isPublic
+              ? 'This user will no longer appear in the Discover Users section.'
+              : 'This user will be visible to everyone in the Discover Users section.',
+            confirmText: isPublic ? 'Hide' : 'Make Public',
+            cancelText: 'Cancel',
+            icon: isPublic ? '🚫' : '✅',
+            type: isPublic ? 'warning' : 'info',
+          });
+          if (!ok) return;
+
+          btn.disabled = true;
+          try {
+            const { error } = await supa.from('profiles').update({ discoverable: !isPublic }).eq('id', userId);
+            if (error) throw error;
+
+            // Update local cache
+            const prof = _usersCache.profiles.find((x) => x.id === userId);
+            if (prof) prof.discoverable = !isPublic;
+
+            // Update button appearance
+            const nowPublic = !isPublic;
+            btn.dataset.public = String(nowPublic);
+            btn.textContent = nowPublic ? '✓ Public' : '✕ Hidden';
+            btn.style.background = nowPublic ? 'rgba(16,185,129,.15)' : 'rgba(239,68,68,.15)';
+            btn.style.color = nowPublic ? '#34D399' : '#F87171';
+            btn.style.borderColor = nowPublic ? 'rgba(16,185,129,.4)' : 'rgba(239,68,68,.4)';
+
+            toast(nowPublic ? '✅ User is now public' : '🚫 User hidden from Discover', 'ok');
+          } catch (err) {
+            toast('Failed: ' + err.message, 'err');
+          } finally {
+            btn.disabled = false;
+          }
         };
       });
     }
