@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    UNIVERSAL HASH ROUTING + PREMIUM GRACE PERIOD
+   Free users ke liye disabled — blank screen prevent
    File: JS/hash-router.js
    ═══════════════════════════════════════════════════════ */
 (function () {
@@ -9,17 +10,16 @@
   const DEBUG = true;
   const GRACE_PERIOD_MS = 3000;
 
+  // Premium views jo free users ke liye block hain
+  const PREMIUM_VIEWS = ['analytics', 'partner', 'insights', 'premium'];
+
   function log(...args) {
     if (DEBUG) console.log('%c🔗 [HashRoute]', 'color:#8B5CF6;font-weight:700', ...args);
   }
 
-  // Safety: agar purana hash-route-hide style abhi bhi DOM me hai toh hata do
-  setTimeout(function () {
-    const old = document.getElementById('hash-route-hide');
-    if (old) old.remove();
-  }, 100);
-
-  /* ═══════ PREMIUM GRACE PERIOD ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     PREMIUM GRACE PERIOD — Page load ke 3 sec me modals block
+     ═══════════════════════════════════════════════════════ */
   window.__appLoadTime = Date.now();
 
   function installPremiumGrace() {
@@ -28,7 +28,7 @@
       const wrapped = function (...args) {
         const elapsed = Date.now() - window.__appLoadTime;
         if (elapsed < GRACE_PERIOD_MS) {
-          log('🛑 Blocked premature openUpgradeModal (' + elapsed + 'ms)');
+          log('🛑 Blocked premature openUpgradeModal');
           return;
         }
         return origUpgrade.apply(this, args);
@@ -59,14 +59,55 @@
     setTimeout(installPremiumGrace, t);
   });
 
-  /* ═══════ FORCE RESTORE — Direct DOM ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     STATE HELPERS
+     ═══════════════════════════════════════════════════════ */
+  function getAppState() {
+    try {
+      if (typeof getState === 'function') {
+        const s = getState();
+        if (s) return s;
+      }
+    } catch (e) {}
+    return window.state || window.appState || null;
+  }
+
+  function isUserPremium(state) {
+    if (!state) return null; // Unknown
+    if (state.profile?.is_admin === true) return true;
+    if (state.isPremium === true) return true;
+    if (state.profile?.is_premium === true) return true;
+    if (state.isTrial === true) return true;
+    if (state.trialActive === true) return true;
+    if (state.profile?.is_trial === true) return true;
+
+    const trialEnd = state.trialEndsAt || state.trial_end_date || state.profile?.trial_end_date;
+    if (trialEnd) {
+      try {
+        if (new Date(trialEnd) > new Date()) return true;
+      } catch (e) {}
+    }
+
+    if (state.subscription?.status === 'active' || state.subscription?.status === 'trialing') return true;
+    if (state.profile?.subscription_status === 'active' || state.profile?.subscription_status === 'trialing')
+      return true;
+
+    return false;
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     FORCE RESTORE — Direct DOM manipulation
+     ═══════════════════════════════════════════════════════ */
   function forceRestoreView(viewName) {
     try {
       document.querySelectorAll('.view').forEach(function (v) {
         v.classList.remove('active');
       });
       const viewEl = document.getElementById('view-' + viewName);
-      if (!viewEl) return false;
+      if (!viewEl) {
+        log('❌ View element not found:', 'view-' + viewName);
+        return false;
+      }
       viewEl.classList.add('active');
 
       document.querySelectorAll('.nav-item').forEach(function (n) {
@@ -112,7 +153,9 @@
     }
   }
 
-  /* ═══════ NAV CLICK TRACKING ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     NAV ITEM CLICK TRACKING
+     ═══════════════════════════════════════════════════════ */
   function attachNavListeners() {
     document.querySelectorAll('.nav-item[data-view]').forEach(function (item) {
       if (item.dataset.hashBound === 'true') return;
@@ -130,7 +173,9 @@
     });
   }
 
-  /* ═══════ VIEW RESTORE ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     VIEW RESTORE — Main logic
+     ═══════════════════════════════════════════════════════ */
   function restoreLastView() {
     let targetView = location.hash.replace('#', '');
     if (!targetView) {
@@ -139,7 +184,7 @@
       } catch (e) {}
     }
     if (!targetView || targetView === 'study') {
-      log('No view to restore');
+      log('No view to restore (target:', targetView, ')');
       return;
     }
 
@@ -151,29 +196,49 @@
     const tryRestore = setInterval(function () {
       attempts++;
 
-      let state = null;
-      try {
-        if (typeof getState === 'function') state = getState();
-        if (!state) state = window.state || window.appState;
-      } catch (e) {}
-
+      // ⚡ State load hone ka wait
+      const state = getAppState();
       if (!state || !state.user) {
         if (attempts % 5 === 0) log('⏳ Waiting for user... attempt ' + attempts);
         if (attempts > maxAttempts) clearInterval(tryRestore);
         return;
       }
 
+      // ⚡ Premium info load hone ka wait
       if (state.isPremium === undefined && state.profile === undefined && attempts < 30) {
         if (attempts % 5 === 0) log('⏳ Waiting for premium info... attempt ' + attempts);
         return;
       }
 
+      // ⚡ PREMIUM CHECK: Free user ko premium views me mat bhejo
+      if (PREMIUM_VIEWS.indexOf(targetView) !== -1) {
+        const premium = isUserPremium(state);
+        if (premium === false) {
+          log('🔒 Free user — premium view blocked:', targetView);
+          // Hash clear karo aur Study pe wapas
+          history.replaceState(null, '', '#study');
+          try {
+            localStorage.setItem(STORAGE_KEY, 'study');
+          } catch (e) {}
+
+          // Study view pe switch karo (agar already nahi hai)
+          const studyNav = document.querySelector('.nav-item[data-view="study"]');
+          if (studyNav && !studyNav.classList.contains('active')) {
+            studyNav.click();
+          }
+          clearInterval(tryRestore);
+          return;
+        }
+      }
+
+      // ⚡ Nav item dhundo
       const navItem = document.querySelector('.nav-item[data-view="' + targetView + '"]');
       if (!navItem) {
         if (attempts > maxAttempts) clearInterval(tryRestore);
         return;
       }
 
+      // Already active?
       if (navItem.classList.contains('active')) {
         log('✅ Already active:', targetView);
         clearInterval(tryRestore);
@@ -183,26 +248,60 @@
       log('👆 Clicking nav:', targetView);
       navItem.click();
 
+      // Verify after 500ms
       setTimeout(function () {
         const isActive = navItem.classList.contains('active');
         const viewEl = document.getElementById('view-' + targetView);
         const viewActive = viewEl && viewEl.classList.contains('active');
 
-        if (isActive && viewActive) {
-          log('✅ Restored:', targetView);
+        // Content check — premium block se blank toh nahi hua
+        const content = document.getElementById('content');
+        const contentEmpty = !content || content.innerHTML.trim().length < 50;
+
+        if (isActive && viewActive && !contentEmpty) {
+          log('✅ Restored view:', targetView);
           return;
         }
 
+        if (contentEmpty) {
+          // Premium block ya koi aur issue — Study pe wapas
+          log('⚠️ Content empty — falling back to Study');
+          history.replaceState(null, '', '#study');
+          try {
+            localStorage.setItem(STORAGE_KEY, 'study');
+          } catch (e) {}
+          const studyNav = document.querySelector('.nav-item[data-view="study"]');
+          if (studyNav) studyNav.click();
+          return;
+        }
+
+        // Retry
         log('⚠️ Retry click...');
         navItem.click();
 
         setTimeout(function () {
           const isActive2 = navItem.classList.contains('active');
           const viewActive2 = viewEl && viewEl.classList.contains('active');
-          if (isActive2 && viewActive2) {
+          const content2 = document.getElementById('content');
+          const contentEmpty2 = !content2 || content2.innerHTML.trim().length < 50;
+
+          if (isActive2 && viewActive2 && !contentEmpty2) {
             log('✅ Restored on retry:', targetView);
             return;
           }
+
+          if (contentEmpty2) {
+            log('⚠️ Still empty — falling back to Study');
+            history.replaceState(null, '', '#study');
+            try {
+              localStorage.setItem(STORAGE_KEY, 'study');
+            } catch (e) {}
+            const studyNav = document.querySelector('.nav-item[data-view="study"]');
+            if (studyNav) studyNav.click();
+            return;
+          }
+
+          // Force restore
           log('🚨 Force restoring via DOM:', targetView);
           forceRestoreView(targetView);
         }, 600);
@@ -212,15 +311,26 @@
     }, 250);
   }
 
+  /* ═══════════════════════════════════════════════════════
+     HASH CHANGE (back/forward buttons)
+     ═══════════════════════════════════════════════════════ */
   window.addEventListener('hashchange', function () {
     const view = location.hash.replace('#', '');
     if (!view) return;
     const navItem = document.querySelector('.nav-item[data-view="' + view + '"]');
-    if (navItem) navItem.click();
+    if (navItem) {
+      log('Hash changed → clicking nav:', view);
+      navItem.click();
+    }
   });
 
+  /* ═══════════════════════════════════════════════════════
+     BOOT
+     ═══════════════════════════════════════════════════════ */
   function boot() {
     let attempts = 0;
+    const maxAttempts = 60;
+
     const waitForNav = setInterval(function () {
       attempts++;
       const navItems = document.querySelectorAll('.nav-item[data-view]');
@@ -229,11 +339,15 @@
         log('Nav items ready (' + navItems.length + ')');
         attachNavListeners();
         clearInterval(waitForNav);
-        setTimeout(restoreLastView, 1200);
+
+        setTimeout(restoreLastView, 1500);
         setInterval(attachNavListeners, 2000);
       }
 
-      if (attempts > 60) clearInterval(waitForNav);
+      if (attempts > maxAttempts) {
+        log('⚠️ Nav items never appeared');
+        clearInterval(waitForNav);
+      }
     }, 200);
   }
 
