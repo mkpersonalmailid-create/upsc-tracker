@@ -1,5 +1,6 @@
 /* ═══════════════════════════════════════════════════════
    UNIVERSAL HASH ROUTING + PREMIUM GRACE PERIOD
+   Refresh pe same view me raho + premature modal block
    File: JS/hash-router.js
    ═══════════════════════════════════════════════════════ */
 (function () {
@@ -13,7 +14,44 @@
     if (DEBUG) console.log('%c🔗 [HashRoute]', 'color:#8B5CF6;font-weight:700', ...args);
   }
 
-  /* ═══════ PREMIUM GRACE PERIOD ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     FLASH PREVENTION — Content ko initially hide karo
+     taaki default (Study) view flash na dikhe
+     ═══════════════════════════════════════════════════════ */
+  (function hideContentInitially() {
+    if (document.head) {
+      const style = document.createElement('style');
+      style.id = 'hash-route-hide';
+      style.textContent = '#content { opacity: 0 !important; transition: opacity 0.12s ease-in; }';
+      document.head.appendChild(style);
+    } else {
+      // Agar head abhi ready nahi, toh DOMContentLoaded pe add karo
+      document.addEventListener('DOMContentLoaded', function () {
+        const style = document.createElement('style');
+        style.id = 'hash-route-hide';
+        style.textContent = '#content { opacity: 0 !important; transition: opacity 0.12s ease-in; }';
+        document.head.appendChild(style);
+      });
+    }
+
+    // Safety: 4 second baad khud reveal karo
+    setTimeout(function () {
+      revealContent();
+    }, 4000);
+  })();
+
+  function revealContent() {
+    const el = document.getElementById('hash-route-hide');
+    if (el) {
+      el.remove();
+      log('✅ Content revealed');
+    }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     PREMIUM GRACE PERIOD
+     Page load ke pehle 3 sec me premium modals block karo
+     ═══════════════════════════════════════════════════════ */
   window.__appLoadTime = Date.now();
 
   function installPremiumGrace() {
@@ -55,13 +93,18 @@
     setTimeout(installPremiumGrace, t);
   });
 
-  /* ═══════ FORCE RESTORE — Direct DOM ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     FORCE RESTORE — Direct DOM manipulation
+     Jab nav click handler fail ho jaye (premium check block)
+     ═══════════════════════════════════════════════════════ */
   function forceRestoreView(viewName) {
     try {
+      // 1. Saare views hide karo
       document.querySelectorAll('.view').forEach(function (v) {
         v.classList.remove('active');
       });
 
+      // 2. Target view show karo
       const viewEl = document.getElementById('view-' + viewName);
       if (!viewEl) {
         log('❌ View element not found:', 'view-' + viewName);
@@ -70,16 +113,18 @@
       viewEl.classList.add('active');
       log('✅ View activated via DOM:', viewName);
 
+      // 3. Nav active state update karo
       document.querySelectorAll('.nav-item').forEach(function (n) {
         n.classList.remove('active');
       });
       const nav = document.querySelector('.nav-item[data-view="' + viewName + '"]');
       if (nav) nav.classList.add('active');
 
+      // 4. Content top pe scroll
       const content = document.getElementById('content');
       if (content) content.scrollTop = 0;
 
-      // Lazy loaders
+      // 5. Lazy loaders trigger karo
       const loaders = {
         analytics: ['loadAnalytics', 'loadAnalyticsV2', 'renderAnalytics'],
         insights: ['loadInsights', 'renderInsights'],
@@ -116,7 +161,10 @@
     }
   }
 
-  /* ═══════ NAV CLICK TRACKING ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     NAV ITEM CLICK TRACKING
+     Click pe URL hash + localStorage update
+     ═══════════════════════════════════════════════════════ */
   function attachNavListeners() {
     document.querySelectorAll('.nav-item[data-view]').forEach(function (item) {
       if (item.dataset.hashBound === 'true') return;
@@ -134,7 +182,9 @@
     });
   }
 
-  /* ═══════ VIEW RESTORE ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     VIEW RESTORE — Refresh ke baad same view pe wapas
+     ═══════════════════════════════════════════════════════ */
   function restoreLastView() {
     let targetView = location.hash.replace('#', '');
     if (!targetView) {
@@ -144,6 +194,7 @@
     }
     if (!targetView || targetView === 'study') {
       log('No view to restore (target:', targetView, ')');
+      revealContent();
       return;
     }
 
@@ -155,7 +206,7 @@
     const tryRestore = setInterval(function () {
       attempts++;
 
-      // Wait for state
+      // Step 1: State load hone ka wait
       let state = null;
       try {
         if (typeof getState === 'function') state = getState();
@@ -164,25 +215,33 @@
 
       if (!state || !state.user) {
         if (attempts % 5 === 0) log('⏳ Waiting for user... attempt ' + attempts);
-        if (attempts > maxAttempts) clearInterval(tryRestore);
+        if (attempts > maxAttempts) {
+          revealContent();
+          clearInterval(tryRestore);
+        }
         return;
       }
 
-      // Wait for premium info
+      // Step 2: Premium info bhi wait
       if (state.isPremium === undefined && state.profile === undefined && attempts < 30) {
         if (attempts % 5 === 0) log('⏳ Waiting for premium info... attempt ' + attempts);
         return;
       }
 
-      // Click nav item
+      // Step 3: Nav item dhundo
       const navItem = document.querySelector('.nav-item[data-view="' + targetView + '"]');
       if (!navItem) {
-        if (attempts > maxAttempts) clearInterval(tryRestore);
+        if (attempts > maxAttempts) {
+          revealContent();
+          clearInterval(tryRestore);
+        }
         return;
       }
 
+      // Already active?
       if (navItem.classList.contains('active')) {
         log('✅ Already active:', targetView);
+        revealContent();
         clearInterval(tryRestore);
         return;
       }
@@ -190,7 +249,7 @@
       log('👆 Clicking nav:', targetView);
       navItem.click();
 
-      // Verify after 500ms
+      // Step 4: Verify after 500ms
       setTimeout(function () {
         const isActive = navItem.classList.contains('active');
         const viewEl = document.getElementById('view-' + targetView);
@@ -198,6 +257,7 @@
 
         if (isActive && viewActive) {
           log('✅ Restored view:', targetView);
+          revealContent();
           return;
         }
 
@@ -208,14 +268,17 @@
         setTimeout(function () {
           const isActive2 = navItem.classList.contains('active');
           const viewActive2 = viewEl && viewEl.classList.contains('active');
+
           if (isActive2 && viewActive2) {
             log('✅ Restored on retry:', targetView);
+            revealContent();
             return;
           }
 
-          // FORCE RESTORE
+          // Force restore
           log('🚨 Force restoring via DOM:', targetView);
           forceRestoreView(targetView);
+          revealContent();
         }, 600);
       }, 500);
 
@@ -223,7 +286,9 @@
     }, 250);
   }
 
-  /* ═══════ HASH CHANGE (back/forward) ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     BROWSER BACK/FORWARD BUTTONS
+     ═══════════════════════════════════════════════════════ */
   window.addEventListener('hashchange', function () {
     const view = location.hash.replace('#', '');
     if (!view) return;
@@ -234,9 +299,13 @@
     }
   });
 
-  /* ═══════ BOOT ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     BOOT — Nav items render hone ka wait
+     ═══════════════════════════════════════════════════════ */
   function boot() {
     let attempts = 0;
+    const maxAttempts = 60;
+
     const waitForNav = setInterval(function () {
       attempts++;
       const navItems = document.querySelectorAll('.nav-item[data-view]');
@@ -246,14 +315,24 @@
         attachNavListeners();
         clearInterval(waitForNav);
 
+        // 1.5s baad view restore karo (state load hone ke liye)
         setTimeout(restoreLastView, 1500);
+
+        // Naye nav items ke liye periodic re-scan
         setInterval(attachNavListeners, 2000);
       }
 
-      if (attempts > 60) clearInterval(waitForNav);
+      if (attempts > maxAttempts) {
+        log('⚠️ Nav items never appeared, revealing content');
+        revealContent();
+        clearInterval(waitForNav);
+      }
     }, 200);
   }
 
+  /* ═══════════════════════════════════════════════════════
+     START
+     ═══════════════════════════════════════════════════════ */
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
