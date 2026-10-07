@@ -1640,7 +1640,9 @@ function getState() {
   } else {
     boot();
   }
-
+  // ⚡ Make premium prompt global (for click handlers outside IIFE)
+  window.showPremiumPrompt = showPremiumPrompt;
+  window.openPartnerView = openPartnerView;
   window.__partner = {
     reload: () => renderPartnerView(),
     open: () => openPartnerView(),
