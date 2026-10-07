@@ -659,6 +659,16 @@
     const shareText = `Join me on UPSC Tracker as my study partner! Use this link: ${link}`;
 
     const body = `
+      <div style="padding:12px 14px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:12px;margin-bottom:14px;font-size:.82rem;color:#FBBF24;line-height:1.6;display:flex;gap:10px;align-items:flex-start">
+        <span style="font-size:1.2rem;flex-shrink:0">⚠️</span>
+        <div>
+          <strong>Partner not registered on this platform</strong>
+          <div style="color:var(--text-2);margin-top:4px;font-size:.78rem">
+            Share this link with them. They'll create an account and automatically become your study partner.
+          </div>
+        </div>
+      </div>
+
       <div style="padding:14px;background:var(--card-2);border-radius:12px;margin-bottom:14px">
         <div style="font-size:.72rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Invite Link</div>
         <div style="font-family:var(--mono);font-size:.78rem;word-break:break-all;color:var(--text-2)" id="pShareLink">${esc(link)}</div>
@@ -715,7 +725,6 @@
       },
     );
   }
-
   // ═══════════════ 12. RESPOND TO REQUEST ═══════════════
   async function respondToRequest(linkId, status) {
     const supa = getSupa();
