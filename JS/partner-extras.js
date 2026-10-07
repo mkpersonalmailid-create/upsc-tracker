@@ -86,12 +86,18 @@
       else showPartnerView();
     });
 
-    // Insert before admin nav wrap (ya last)
-    const adminWrap = document.getElementById('adminNavWrap');
-    if (adminWrap && adminWrap.parentNode) {
-      adminWrap.parentNode.insertBefore(btn, adminWrap);
+    // Insert "Study Partner" in the "More" section — before Premium
+    const premiumBtn = nav.querySelector('.nav-item[data-view="premium"]');
+    if (premiumBtn && premiumBtn.parentNode) {
+      premiumBtn.parentNode.insertBefore(btn, premiumBtn);
     } else {
-      nav.appendChild(btn);
+      // Fallback: before admin section
+      const adminWrap = document.getElementById('adminNavWrap');
+      if (adminWrap && adminWrap.parentNode) {
+        adminWrap.parentNode.insertBefore(btn, adminWrap);
+      } else {
+        nav.appendChild(btn);
+      }
     }
     return true;
   }
@@ -919,7 +925,6 @@
   } else {
     setTimeout(init, 1500);
   }
-
   // Expose for debugging
   window.__partner = {
     reload: () => showPartnerView(),
