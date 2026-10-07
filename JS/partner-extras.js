@@ -110,7 +110,7 @@
 
     btn.innerHTML = `
       <span class="nav-icon">${isPremium ? PARTNER_ICON : '🔒'}</span>
-      <span class="nav-label">Study Partner</span>
+      <span class="nav-label">Study With Partner</span>
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
     // ⬇️ YE NAYA LINE ADD KARO — initially hidden
