@@ -80,84 +80,29 @@ function getState() {
 
   // ═══════════════ PREMIUM CHECK ═══════════════
   function isUserPremium() {
-    // ⚡⚡ SABSE PEHLE: Free plan explicit block
     try {
-      const s = getState();
-      if (s && s.profile && s.profile.membership === 'free') {
-        // Kya koi trial active hai?
-        const hasTrialFlag =
-          s.isTrial === true ||
-          s.trialActive === true ||
-          s.profile.is_trial === true ||
-          s.profile.trial_active === true;
-
-        const trialEnd = s.trialEndsAt || s.trial_end_date || s.profile.trial_end_date || s.profile.trialEndsAt;
-
-        const trialActive = trialEnd && new Date(trialEnd) > new Date();
-
-        // Free plan + koi trial nahi = block
-        if (!hasTrialFlag && !trialActive) {
-          console.log('[Partner] Free plan user blocked');
-          return false;
-        }
-      }
+      if (typeof isPremiumUser === 'function') return isPremiumUser();
+      if (typeof window.isPremiumUser === 'function') return window.isPremiumUser();
     } catch (e) {}
-    // Step 1: Global function try karo — par sirf agar TRUE de
-    try {
-      if (typeof isPremiumUser === 'function') {
-        const r = isPremiumUser();
-        if (r === true) return true;
-      }
-      if (typeof window.isPremiumUser === 'function') {
-        const r = window.isPremiumUser();
-        if (r === true) return true;
-      }
-    } catch (e) {}
-
-    // Step 2: State se direct check — ye pakka source of truth hai
     try {
       const s = getState();
       if (!s) return false;
-
-      // Admin
       if (s.profile?.is_admin === true) return true;
-
-      // ⚡ Ye line sabse important hai — tera state isPremium:true hai
       if (s.isPremium === true) return true;
-
-      // Profile premium flags
-      if (s.profile?.is_premium === true) return true;
-      if (s.profile?.premium === true) return true;
-      if (s.profile?.membership === 'premium') return true;
-      if (s.profile?.membership === 'trial') return true;
-
-      // Trial flags
-      if (s.isTrial === true) return true;
-      if (s.trialActive === true) return true;
-      if (s.profile?.is_trial === true) return true;
-      if (s.profile?.trial_active === true) return true;
-
-      // Trial end date — future me hai toh active
-      const trialEnd =
-        s.trialEndsAt ||
-        s.trial_end_date ||
-        s.profile?.trial_end_date ||
-        s.profile?.trialEndsAt ||
-        s.profile?.premium_until ||
-        s.profile?.trial_expiry;
-      if (trialEnd) {
-        try {
-          if (new Date(trialEnd) > new Date()) return true;
-        } catch (e) {}
-      }
-
-      // Subscription
-      if (s.subscription?.status === 'active' || s.subscription?.status === 'trialing') return true;
-      if (s.profile?.subscription_status === 'active' || s.profile?.subscription_status === 'trialing') return true;
     } catch (e) {}
-
     return false;
   }
+
+  function showPremiumPrompt() {
+    try {
+      if (typeof window.openUpgradeModal === 'function') {
+        window.openUpgradeModal('Study Partner');
+        return;
+      }
+    } catch (e) {}
+    tmsg('Study Partner is a Premium feature.', 'info');
+  }
+
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
@@ -1640,9 +1585,7 @@ function getState() {
   } else {
     boot();
   }
-  // ⚡ Make premium prompt global (for click handlers outside IIFE)
-  window.showPremiumPrompt = showPremiumPrompt;
-  window.openPartnerView = openPartnerView;
+
   window.__partner = {
     reload: () => renderPartnerView(),
     open: () => openPartnerView(),
@@ -2014,44 +1957,13 @@ async function checkForNewMessages() {
     const profileMap = {};
     (profiles || []).forEach((p) => (profileMap[p.id] = p));
 
-    // ═══ Check karo ki user kis partner ki chat me hai ═══
-    const isPartnerChatVisible = (partnerId) => {
-      try {
-        // 1. Partner view active hai?
-        const partnerView = document.getElementById('view-partner');
-        if (!partnerView || !partnerView.classList.contains('active')) return false;
-
-        // 2. Us partner ka chat container DOM me hai?
-        const chatContainer = document.getElementById('pChat_' + partnerId);
-        if (!chatContainer) return false;
-
-        // 3. Chat container screen pe visible hai? (viewport me hai)
-        const rect = chatContainer.getBoundingClientRect();
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-        const isInViewport = rect.top < viewportHeight && rect.bottom > 0;
-
-        // 4. Aur kya page ka focus chat pe hai? (tab active hai)
-        const tabActive = !document.hidden;
-
-        return isInViewport && tabActive;
-      } catch (e) {
-        return false;
-      }
-    };
-
-    // ═══ Popup sirf un senders ke liye dikhao jinki chat visible NAHI hai ═══
+    // Show popup for each sender (stacked)
     for (const senderId of senderIds) {
       const messages = bySender[senderId];
       const latestMsg = messages[messages.length - 1];
       const profile = profileMap[senderId] || {};
 
       const displayName = profile.name || 'Partner';
-
-      // Skip popup if user is already viewing this partner's chat
-      if (isPartnerChatVisible(senderId)) {
-        console.log('⏭️ Skipping popup — user is already viewing chat with:', displayName);
-        continue;
-      }
 
       console.log('👤 Sender:', senderId, '→ Name:', displayName, '| Profile data:', profile);
 
