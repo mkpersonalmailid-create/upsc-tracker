@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Complete Module
+   STUDY WITH PARTNER — Final Module (Premium Feature)
    Auto-injects sidebar tab + view. Zero changes to app.html.
    ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -14,6 +14,18 @@
     loading: false,
     cachedUser: null,
   };
+
+  // ═══════════════ SAFE ACCESSORS ═══════════════
+  function getState() {
+    try {
+      if (typeof state !== 'undefined' && state) return state;
+    } catch (e) {}
+    return window.state || null;
+  }
+
+  function getSupa() {
+    return window.supa || null;
+  }
 
   function esc(s) {
     return String(s ?? '').replace(
@@ -43,16 +55,50 @@
 
   async function getCurrentUser() {
     if (pstate.cachedUser) return pstate.cachedUser;
-    if (!window.supa) return null;
+    const supa = getSupa();
+    if (!supa) return null;
     try {
       const {
         data: { user },
-      } = await window.supa.auth.getUser();
+      } = await supa.auth.getUser();
       pstate.cachedUser = user || null;
       return user;
     } catch (e) {
       return null;
     }
+  }
+
+  // ═══════════════ PREMIUM ACCESS CHECK ═══════════════
+  function checkPartnerAccess() {
+    const s = getState();
+
+    // No state at all — block
+    if (!s) return { hasAccess: false, reason: 'no_state' };
+
+    // Admin always has access
+    if (s.profile?.is_admin === true) {
+      return { hasAccess: true, isAdmin: true };
+    }
+
+    // Premium OR Trial (both have isPremium === true)
+    if (s.isPremium === true) {
+      const isTrial = s.subscription?.plan === 'trial';
+      let daysLeft = null;
+      if (isTrial && s.subscription?.expiry_date) {
+        const diff = new Date(s.subscription.expiry_date) - new Date();
+        if (diff > 0) daysLeft = Math.ceil(diff / 86400000);
+      }
+      return { hasAccess: true, isTrial, daysLeft };
+    }
+
+    // No access — check if expired subscription
+    const sub = s.subscription;
+    const isExpired = sub && sub.expiry_date && new Date(sub.expiry_date) < new Date();
+    return {
+      hasAccess: false,
+      reason: isExpired ? 'expired' : 'upgrade_required',
+      expiredOn: isExpired ? sub.expiry_date : null,
+    };
   }
 
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
@@ -111,7 +157,92 @@
     renderPartnerView();
   }
 
-  // ═══════════════ 4. HOW IT WORKS CARD ═══════════════
+  // ═══════════════ 4. UPGRADE MODAL (No Access) ═══════════════
+  function showUpgradeModal(access) {
+    const isExpired = access.reason === 'expired';
+
+    const body = `
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:3.5rem;margin-bottom:12px;animation:float 3s ease-in-out infinite">💎</div>
+        <div style="font-size:1.3rem;font-weight:900;margin-bottom:10px;background:var(--grad-2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+          ${isExpired ? 'Your Trial Has Ended' : 'Premium Feature'}
+        </div>
+        <div style="font-size:.9rem;color:var(--text-2);line-height:1.7;max-width:380px;margin:0 auto 18px">
+          ${
+            isExpired
+              ? `Your 15-day trial expired on <strong>${access.expiredOn ? new Date(access.expiredOn).toLocaleDateString() : 'a few days ago'}</strong>. Upgrade to keep using <strong>Study with Partner</strong> and all other premium features.`
+              : `<strong>Study with Partner</strong> is a premium feature. Upgrade to add partners, compare study hours, streaks, and syllabus progress.`
+          }
+        </div>
+
+        <div style="padding:16px;background:var(--card-2);border-radius:12px;text-align:left;margin-bottom:18px">
+          <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:10px">
+            What you'll unlock:
+          </div>
+          <ul style="font-size:.85rem;color:var(--text-2);line-height:2;padding-left:20px;margin:0">
+            <li>👥 Add and study with a partner</li>
+            <li>📊 Side-by-side comparison dashboard</li>
+            <li>🔥 Streak and study time comparison</li>
+            <li>📖 Syllabus progress tracking together</li>
+            <li>💎 All other premium features</li>
+          </ul>
+        </div>
+
+        <div style="font-size:.82rem;color:var(--text-3);margin-bottom:6px">Starting from</div>
+        <div style="font-size:1.6rem;font-weight:900;margin-bottom:20px">
+          ₹99<span style="font-size:.85rem;color:var(--text-3);font-weight:600"> / month</span>
+        </div>
+      </div>`;
+
+    const actions = `
+      <button class="btn btn-secondary" data-close>Maybe Later</button>
+      <button class="btn btn-premium" id="partnerUpgradeBtn">🚀 Upgrade Now</button>`;
+
+    if (typeof window.openModal === 'function') {
+      window.openModal(
+        window.modalShell({
+          title: '💎 Premium Required',
+          subtitle: 'Unlock Study with Partner',
+          body,
+          actions,
+        }),
+        {
+          onMount() {
+            document.getElementById('partnerUpgradeBtn').onclick = () => {
+              if (typeof window.closeModal === 'function') window.closeModal();
+              if (typeof window.switchView === 'function') window.switchView('premium');
+            };
+          },
+        },
+      );
+    } else {
+      tmsg('Study with Partner is a premium feature. Please upgrade.', 'info');
+    }
+  }
+
+  // ═══════════════ 5. TRIAL BANNER ═══════════════
+  function trialBannerHTML(access) {
+    if (!access.isTrial || !access.daysLeft) return '';
+    const urgent = access.daysLeft <= 3;
+    return `
+      <div style="margin-bottom:18px;padding:14px 18px;border-radius:12px;
+        background:${urgent ? 'linear-gradient(135deg,rgba(239,68,68,.12),rgba(249,115,22,.08))' : 'linear-gradient(135deg,rgba(251,191,36,.12),rgba(249,115,22,.06))'};
+        border:1px solid ${urgent ? 'rgba(239,68,68,.35)' : 'rgba(251,191,36,.35)'};
+        display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="font-size:1.6rem;flex-shrink:0">⏳</div>
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:800;font-size:.9rem;color:${urgent ? '#FCA5A5' : '#FBBF24'}">
+            Trial: ${access.daysLeft} day${access.daysLeft !== 1 ? 's' : ''} left
+          </div>
+          <div style="font-size:.78rem;color:var(--text-2);margin-top:3px;line-height:1.5">
+            You can use Study Partner during your trial. After it ends, you'll need to upgrade.
+          </div>
+        </div>
+        <button class="btn btn-premium btn-sm" id="partnerTrialUpgradeBtn">Upgrade Now</button>
+      </div>`;
+  }
+
+  // ═══════════════ 6. HOW IT WORKS CARD ═══════════════
   function howItWorksCard() {
     return `
       <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.25)">
@@ -125,7 +256,6 @@
         </div>
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px">
-
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--purple)">
             <div style="font-size:1.4rem;margin-bottom:8px">1️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Add Your Partner</div>
@@ -133,7 +263,6 @@
               Enter your friend's email address. We'll check if they're on UPSC Tracker.
             </div>
           </div>
-
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--pink)">
             <div style="font-size:1.4rem;margin-bottom:8px">2️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Invite or Request</div>
@@ -141,7 +270,6 @@
               If they're registered → instant request. If not → you get a shareable invite link for WhatsApp/Telegram.
             </div>
           </div>
-
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--orange)">
             <div style="font-size:1.4rem;margin-bottom:8px">3️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Both Accept</div>
@@ -149,7 +277,6 @@
               Comparison only unlocks when BOTH accept. Your privacy is protected — no data is shared without consent.
             </div>
           </div>
-
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--teal)">
             <div style="font-size:1.4rem;margin-bottom:8px">4️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Compare & Compete</div>
@@ -157,7 +284,6 @@
               See side-by-side stats: study time, streaks, syllabus progress, and motivate each other daily.
             </div>
           </div>
-
         </div>
 
         <div style="margin-top:16px;padding:12px 14px;background:rgba(168,85,247,.08);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6;border-left:3px solid var(--purple)">
@@ -167,10 +293,18 @@
     `;
   }
 
-  // ═══════════════ 5. RENDER PARTNER VIEW ═══════════════
+  // ═══════════════ 7. RENDER PARTNER VIEW ═══════════════
   async function renderPartnerView() {
     const el = document.getElementById('partnerContent');
     if (!el) return;
+
+    // ═══ PREMIUM CHECK ═══
+    const access = checkPartnerAccess();
+    if (!access.hasAccess) {
+      el.innerHTML = `<div class="empty"><div class="em">🔒</div><h4>Premium Feature</h4><p>Loading…</p></div>`;
+      showUpgradeModal(access);
+      return;
+    }
 
     el.innerHTML = `<div class="empty"><div class="em">👥</div><h4>Loading…</h4></div>`;
 
@@ -188,7 +322,9 @@
     const outgoing = pstate.links.filter((l) => l.status === 'pending' && l.requester_id === myId);
     const myInvites = pstate.invites.filter((i) => i.status === 'pending');
 
-    let html = `
+    let html = trialBannerHTML(access);
+
+    html += `
       <div class="card" style="margin-bottom:18px">
         <div class="card-header">
           <div>
@@ -202,7 +338,6 @@
       </div>
     `;
 
-    // ═══ HOW IT WORKS — Show only when no partner yet ═══
     if (accepted.length === 0 && incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
       html += howItWorksCard();
     }
@@ -255,8 +390,10 @@
 
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
     document.getElementById('pAddBtn2')?.addEventListener('click', openAddPartnerModal);
+    document.getElementById('partnerTrialUpgradeBtn')?.addEventListener('click', () => {
+      if (typeof window.switchView === 'function') window.switchView('premium');
+    });
 
-    // Render incoming requests
     if (incoming.length > 0) {
       const listEl = document.getElementById('pIncomingList');
       listEl.innerHTML = '';
@@ -286,7 +423,6 @@
         .forEach((b) => (b.onclick = () => respondToRequest(b.dataset.paReject, 'rejected')));
     }
 
-    // Render outgoing requests
     if (outgoing.length > 0 || myInvites.length > 0) {
       const listEl = document.getElementById('pOutgoingList');
       listEl.innerHTML = '';
@@ -336,9 +472,9 @@
     }
   }
 
-  // ═══════════════ 6. DATA LOADING ═══════════════
+  // ═══════════════ 8. DATA LOADING ═══════════════
   async function loadPartnerData(user) {
-    const supa = window.supa;
+    const supa = getSupa();
     if (!supa) return;
     if (!user) {
       user = await getCurrentUser();
@@ -381,9 +517,10 @@
   }
 
   async function fetchProfile(userId) {
-    if (!window.supa) return null;
+    const supa = getSupa();
+    if (!supa) return null;
     try {
-      const { data } = await window.supa
+      const { data } = await supa
         .from('profiles')
         .select('id, name, email, optional_subject')
         .eq('id', userId)
@@ -394,7 +531,7 @@
     }
   }
 
-  // ═══════════════ 7. ADD PARTNER MODAL ═══════════════
+  // ═══════════════ 9. ADD PARTNER MODAL ═══════════════
   function openAddPartnerModal() {
     const body = `
       <div style="padding:12px 14px;background:var(--card-2);border-radius:12px;margin-bottom:14px;font-size:.82rem;color:var(--text-2);line-height:1.6">
@@ -403,7 +540,6 @@
         <br>• If they're on UPSC Tracker → we'll send them a request.
         <br>• If not → you'll get a shareable invite link for WhatsApp or Telegram.
       </div>
-
       <div class="field">
         <label>Partner's Email</label>
         <input type="email" id="pEmailInput" placeholder="friend@example.com" autocomplete="off" />
@@ -445,9 +581,9 @@
     );
   }
 
-  // ═══════════════ 8. SEND REQUEST ═══════════════
+  // ═══════════════ 10. SEND REQUEST ═══════════════
   async function sendPartnerRequest(email) {
-    const supa = window.supa;
+    const supa = getSupa();
     const user = await getCurrentUser();
     if (!supa || !user) return;
 
@@ -517,7 +653,7 @@
     }
   }
 
-  // ═══════════════ 9. SHARE MODAL ═══════════════
+  // ═══════════════ 11. SHARE MODAL ═══════════════
   function openShareModal(invite) {
     const link = `${APP_URL}/auth.html?invite=${invite.token}`;
     const shareText = `Join me on UPSC Tracker as my study partner! Use this link: ${link}`;
@@ -527,18 +663,15 @@
         <div style="font-size:.72rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Invite Link</div>
         <div style="font-family:var(--mono);font-size:.78rem;word-break:break-all;color:var(--text-2)" id="pShareLink">${esc(link)}</div>
       </div>
-
       <div style="font-size:.78rem;color:var(--text-3);text-align:center;margin-bottom:12px">
         Share this link via any platform:
       </div>
-
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
         <button class="btn btn-secondary" id="pCopyBtn" style="padding:14px">📋 Copy Link</button>
         <button class="btn btn-secondary" id="pWhatsappBtn" style="padding:14px;background:#25D366;color:#fff;border:none">💬 WhatsApp</button>
         <button class="btn btn-secondary" id="pTelegramBtn" style="padding:14px;background:#0088cc;color:#fff;border:none">✈️ Telegram</button>
         <button class="btn btn-secondary" id="pInstagramBtn" style="padding:14px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:none">📷 Instagram</button>
       </div>
-
       <p style="font-size:.72rem;color:var(--text-3);text-align:center;margin-top:14px">
         ⏳ This link is valid for 7 days
       </p>`;
@@ -583,9 +716,9 @@
     );
   }
 
-  // ═══════════════ 10. RESPOND TO REQUEST ═══════════════
+  // ═══════════════ 12. RESPOND TO REQUEST ═══════════════
   async function respondToRequest(linkId, status) {
-    const supa = window.supa;
+    const supa = getSupa();
     if (!supa) return;
     try {
       const updates = { status };
@@ -600,9 +733,10 @@
   }
 
   async function cancelRequest(linkId) {
-    if (!window.supa) return;
+    const supa = getSupa();
+    if (!supa) return;
     try {
-      const { error } = await window.supa.from('partner_links').delete().eq('id', linkId);
+      const { error } = await supa.from('partner_links').delete().eq('id', linkId);
       if (error) throw error;
       tmsg('Request cancelled', 'info');
       renderPartnerView();
@@ -612,9 +746,10 @@
   }
 
   async function cancelInvite(inviteId) {
-    if (!window.supa) return;
+    const supa = getSupa();
+    if (!supa) return;
     try {
-      const { error } = await window.supa.from('partner_invites').update({ status: 'cancelled' }).eq('id', inviteId);
+      const { error } = await supa.from('partner_invites').update({ status: 'cancelled' }).eq('id', inviteId);
       if (error) throw error;
       tmsg('Invite cancelled', 'info');
       renderPartnerView();
@@ -623,7 +758,7 @@
     }
   }
 
-  // ═══════════════ 11. COMPARISON DASHBOARD ═══════════════
+  // ═══════════════ 13. COMPARISON DASHBOARD ═══════════════
   async function renderComparison(acceptedLinks, myId) {
     const wrap = document.getElementById('pComparisonWrap');
     if (!wrap) return;
@@ -669,7 +804,6 @@
         </div>
 
         <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
-
           <div class="kpi" style="--c:var(--purple);--cb:rgba(168,85,247,0.15)">
             <div class="kpi-label">⏱ Today's Study Time</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
@@ -684,7 +818,6 @@
             </div>
             ${myToday > pToday ? '<div style="font-size:.7rem;color:var(--emerald);margin-top:6px">🏆 You are ahead!</div>' : pToday > myToday ? '<div style="font-size:.7rem;color:var(--amber);margin-top:6px">💪 Time to catch up!</div>' : '<div style="font-size:.7rem;color:var(--text-3);margin-top:6px">🤝 It\'s a tie!</div>'}
           </div>
-
           <div class="kpi" style="--c:var(--orange);--cb:rgba(249,115,22,0.15)">
             <div class="kpi-label">📅 30-Day Total</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
@@ -698,7 +831,6 @@
               </div>
             </div>
           </div>
-
           <div class="kpi" style="--c:var(--red);--cb:rgba(239,68,68,0.15)">
             <div class="kpi-label">🔥 Current Streak</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
@@ -712,7 +844,6 @@
               </div>
             </div>
           </div>
-
           <div class="kpi" style="--c:var(--teal);--cb:rgba(20,184,166,0.15)">
             <div class="kpi-label">📖 Syllabus Progress</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
@@ -727,7 +858,6 @@
             </div>
             <div style="font-size:.68rem;color:var(--text-3);margin-top:6px">topics completed</div>
           </div>
-
         </div>
 
         <div style="margin-top:16px;padding:12px 14px;background:var(--card-2);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6">
@@ -740,9 +870,10 @@
   }
 
   async function fetchSessions(userId, sinceDate) {
-    if (!window.supa) return [];
+    const supa = getSupa();
+    if (!supa) return [];
     try {
-      const { data } = await window.supa
+      const { data } = await supa
         .from('study_sessions')
         .select('date, duration_seconds')
         .eq('user_id', userId)
@@ -754,9 +885,10 @@
   }
 
   async function fetchSyllabusCount(userId) {
-    if (!window.supa) return { done: 0, total: 0 };
+    const supa = getSupa();
+    if (!supa) return { done: 0, total: 0 };
     try {
-      const { data } = await window.supa.from('syllabus_topics').select('status').eq('user_id', userId);
+      const { data } = await supa.from('syllabus_topics').select('status').eq('user_id', userId);
       const list = data || [];
       const done = list.filter((s) => s.status === 'completed' || (s.status || '').startsWith('rev')).length;
       return { done, total: list.length };
@@ -793,8 +925,10 @@
       : confirm('Remove partner?');
     if (!ok) return;
 
+    const supa = getSupa();
+    if (!supa) return;
     try {
-      const { error } = await window.supa.from('partner_links').update({ status: 'removed' }).eq('id', linkId);
+      const { error } = await supa.from('partner_links').update({ status: 'removed' }).eq('id', linkId);
       if (error) throw error;
       tmsg('Partner removed', 'info');
       renderPartnerView();
@@ -803,12 +937,12 @@
     }
   }
 
-  // ═══════════════ 12. INVITE TOKEN HANDLER ═══════════════
+  // ═══════════════ 14. INVITE TOKEN HANDLER ═══════════════
   async function handleInviteToken() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('invite');
     if (!token) return;
-    const supa = window.supa;
+    const supa = getSupa();
     const user = await getCurrentUser();
     if (!supa || !user) return;
 
@@ -854,7 +988,7 @@
     }
   }
 
-  // ═══════════════ 13. INIT ═══════════════
+  // ═══════════════ 15. INIT ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -876,7 +1010,7 @@
     const checkUser = setInterval(async () => {
       tries++;
       const user = await getCurrentUser();
-      if (user && window.supa) {
+      if (user && getSupa()) {
         clearInterval(checkUser);
         console.log('[Partner] ✅ User ready, loading data');
         try {
@@ -922,6 +1056,7 @@
     open: () => openPartnerView(),
     state: pstate,
     debug: () => tryInject(),
+    access: () => checkPartnerAccess(),
   };
 
   console.log('[Partner] 📦 Module loaded');
