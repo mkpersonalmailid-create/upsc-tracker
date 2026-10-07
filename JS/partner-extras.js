@@ -1064,7 +1064,7 @@
 
       const since = new Date();
       since.setDate(since.getDate() - 30);
-      const sinceStr = since.toISOString().slice(0, 10);
+      const sinceStr = `${since.getFullYear()}-${String(since.getMonth() + 1).padStart(2, '0')}-${String(since.getDate()).padStart(2, '0')}`;
 
       const [mySessions, partnerSessions] = await Promise.all([
         fetchSessions(myId, sinceStr),
@@ -1073,7 +1073,9 @@
 
       const myTotal = mySessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
       const pTotal = partnerSessions.reduce((a, s) => a + (s.duration_seconds || 0), 0);
-      const today = new Date().toISOString().slice(0, 10);
+      // Local date (IST) instead of UTC
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const myToday = mySessions.filter((s) => s.date === today).reduce((a, s) => a + (s.duration_seconds || 0), 0);
       const pToday = partnerSessions.filter((s) => s.date === today).reduce((a, s) => a + (s.duration_seconds || 0), 0);
       const myStreak = computeStreak(mySessions);
