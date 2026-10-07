@@ -907,6 +907,22 @@
     }
     return false;
   }
+  function updatePartnerTabAppearance() {
+    const btn = document.querySelector('.nav-item[data-view="partner"]');
+    if (!btn) return;
+    const isPremium = isUserPremium();
+    const icon = btn.querySelector('.nav-icon');
+
+    if (isPremium) {
+      btn.classList.remove('premium-locked');
+      btn.classList.add('premium-unlocked');
+      if (icon) icon.textContent = PARTNER_ICON;
+    } else {
+      btn.classList.add('premium-locked');
+      btn.classList.remove('premium-unlocked');
+      if (icon) icon.textContent = '🔒';
+    }
+  }
 
   async function backgroundLoad() {
     let tries = 0;
@@ -915,6 +931,8 @@
       const user = await getCurrentUser();
       if (user && getSupa()) {
         clearInterval(checkUser);
+        // ✅ Tab appearance update — ONE TIME (no loop)
+        updatePartnerTabAppearance();
         try {
           await loadPartnerData(user);
           await handleInviteToken();
