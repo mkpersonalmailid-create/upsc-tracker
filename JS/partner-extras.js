@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Final Module (Premium Feature)
-   Auto-injects sidebar tab + view. Zero changes to app.html.
+   STUDY WITH PARTNER — Final Module (Premium Like Others)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
   const APP_URL = 'https://upscstudytracker.co.in';
+  const PARTNER_ICON = '◉';
 
   const pstate = {
     initialized: false,
@@ -14,18 +14,6 @@
     loading: false,
     cachedUser: null,
   };
-
-  // ═══════════════ SAFE ACCESSORS ═══════════════
-  function getState() {
-    try {
-      if (typeof state !== 'undefined' && state) return state;
-    } catch (e) {}
-    return window.state || null;
-  }
-
-  function getSupa() {
-    return window.supa || null;
-  }
 
   function esc(s) {
     return String(s ?? '').replace(
@@ -53,6 +41,17 @@
     else console.log('[Partner]', msg);
   }
 
+  function getState() {
+    try {
+      if (typeof state !== 'undefined' && state) return state;
+    } catch (e) {}
+    return window.state || null;
+  }
+
+  function getSupa() {
+    return window.supa || null;
+  }
+
   async function getCurrentUser() {
     if (pstate.cachedUser) return pstate.cachedUser;
     const supa = getSupa();
@@ -68,50 +67,83 @@
     }
   }
 
-  // ═══════════════ PREMIUM ACCESS CHECK ═══════════════
-  function checkPartnerAccess() {
-    const s = getState();
+  // ═══════════════ PREMIUM CHECK (Matches other sections) ═══════════════
+  function isUserPremium() {
+    try {
+      if (typeof isPremiumUser === 'function') return isPremiumUser();
+      if (typeof window.isPremiumUser === 'function') return window.isPremiumUser();
+    } catch (e) {}
+    try {
+      const s = getState();
+      if (!s) return false;
+      if (s.profile?.is_admin === true) return true;
+      if (s.isPremium === true) return true;
+    } catch (e) {}
+    return false;
+  }
 
-    // No state at all — block
-    if (!s) return { hasAccess: false, reason: 'no_state' };
-
-    // Admin always has access
-    if (s.profile?.is_admin === true) {
-      return { hasAccess: true, isAdmin: true };
-    }
-
-    // Premium OR Trial (both have isPremium === true)
-    if (s.isPremium === true) {
-      const isTrial = s.subscription?.plan === 'trial';
-      let daysLeft = null;
-      if (isTrial && s.subscription?.expiry_date) {
-        const diff = new Date(s.subscription.expiry_date) - new Date();
-        if (diff > 0) daysLeft = Math.ceil(diff / 86400000);
+  function showPremiumPrompt() {
+    try {
+      if (typeof window.openUpgradeModal === 'function') {
+        window.openUpgradeModal('Study Partner');
+        return;
       }
-      return { hasAccess: true, isTrial, daysLeft };
-    }
+      if (typeof openUpgradeModal === 'function') {
+        openUpgradeModal('Study Partner');
+        return;
+      }
+    } catch (e) {}
+    tmsg('Study Partner is a Premium feature. Please upgrade.', 'info');
+  }
 
-    // No access — check if expired subscription
-    const sub = s.subscription;
-    const isExpired = sub && sub.expiry_date && new Date(sub.expiry_date) < new Date();
-    return {
-      hasAccess: false,
-      reason: isExpired ? 'expired' : 'upgrade_required',
-      expiredOn: isExpired ? sub.expiry_date : null,
-    };
+  // ═══════════════ TAB APPEARANCE SYNC ═══════════════
+  function updatePartnerTabAppearance() {
+    const btn = document.querySelector('.nav-item[data-view="partner"]');
+    if (!btn) return;
+    const isPremium = isUserPremium();
+    const icon = btn.querySelector('.nav-icon');
+    const label = btn.querySelector('.nav-label');
+
+    if (isPremium) {
+      btn.classList.remove('premium-locked');
+      btn.classList.add('premium-unlocked');
+      if (icon) icon.textContent = PARTNER_ICON;
+      // Restore label gradient removed
+      if (label) {
+        label.style.background = '';
+        label.style.webkitTextFillColor = '';
+      }
+    } else {
+      btn.classList.add('premium-locked');
+      btn.classList.remove('premium-unlocked');
+      if (icon) icon.textContent = '🔒';
+    }
   }
 
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
     if (!nav) return false;
-    if (document.querySelector('.nav-item[data-view="partner"]')) return true;
 
+    // Already exists — just update appearance
+    if (document.querySelector('.nav-item[data-view="partner"]')) {
+      updatePartnerTabAppearance();
+      return true;
+    }
+
+    const isPremium = isUserPremium();
     const btn = document.createElement('button');
     btn.className = 'nav-item';
     btn.dataset.view = 'partner';
-    btn.innerHTML = `<span class="nav-icon">👥</span><span class="nav-label">Study Partner</span><span class="nav-badge hidden" id="partnerBadge">0</span>`;
+    if (!isPremium) btn.classList.add('premium-locked');
 
+    btn.innerHTML = `
+      <span class="nav-icon">${isPremium ? PARTNER_ICON : '🔒'}</span>
+      <span class="nav-label">Study Partner</span>
+      <span class="nav-badge hidden" id="partnerBadge">0</span>
+    `;
+
+    // Insert in "More" section, before Premium
     const anchor =
       nav.querySelector('.nav-item[data-view="premium"]') ||
       nav.querySelector('.nav-item[data-view="support"]') ||
@@ -123,7 +155,15 @@
       nav.appendChild(btn);
     }
 
-    btn.addEventListener('click', openPartnerView);
+    // Click handler — same behavior as other premium sections
+    btn.addEventListener('click', () => {
+      if (!isUserPremium()) {
+        showPremiumPrompt();
+        return;
+      }
+      openPartnerView();
+    });
+
     return true;
   }
 
@@ -143,6 +183,12 @@
 
   // ═══════════════ 3. OPEN PARTNER VIEW ═══════════════
   function openPartnerView() {
+    // Double-check premium
+    if (!isUserPremium()) {
+      showPremiumPrompt();
+      return;
+    }
+
     document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
     const view = document.getElementById('view-partner');
     if (view) view.classList.add('active');
@@ -157,92 +203,7 @@
     renderPartnerView();
   }
 
-  // ═══════════════ 4. UPGRADE MODAL (No Access) ═══════════════
-  function showUpgradeModal(access) {
-    const isExpired = access.reason === 'expired';
-
-    const body = `
-      <div style="text-align:center;padding:20px 0">
-        <div style="font-size:3.5rem;margin-bottom:12px;animation:float 3s ease-in-out infinite">💎</div>
-        <div style="font-size:1.3rem;font-weight:900;margin-bottom:10px;background:var(--grad-2);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
-          ${isExpired ? 'Your Trial Has Ended' : 'Premium Feature'}
-        </div>
-        <div style="font-size:.9rem;color:var(--text-2);line-height:1.7;max-width:380px;margin:0 auto 18px">
-          ${
-            isExpired
-              ? `Your 15-day trial expired on <strong>${access.expiredOn ? new Date(access.expiredOn).toLocaleDateString() : 'a few days ago'}</strong>. Upgrade to keep using <strong>Study with Partner</strong> and all other premium features.`
-              : `<strong>Study with Partner</strong> is a premium feature. Upgrade to add partners, compare study hours, streaks, and syllabus progress.`
-          }
-        </div>
-
-        <div style="padding:16px;background:var(--card-2);border-radius:12px;text-align:left;margin-bottom:18px">
-          <div style="font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:10px">
-            What you'll unlock:
-          </div>
-          <ul style="font-size:.85rem;color:var(--text-2);line-height:2;padding-left:20px;margin:0">
-            <li>👥 Add and study with a partner</li>
-            <li>📊 Side-by-side comparison dashboard</li>
-            <li>🔥 Streak and study time comparison</li>
-            <li>📖 Syllabus progress tracking together</li>
-            <li>💎 All other premium features</li>
-          </ul>
-        </div>
-
-        <div style="font-size:.82rem;color:var(--text-3);margin-bottom:6px">Starting from</div>
-        <div style="font-size:1.6rem;font-weight:900;margin-bottom:20px">
-          ₹99<span style="font-size:.85rem;color:var(--text-3);font-weight:600"> / month</span>
-        </div>
-      </div>`;
-
-    const actions = `
-      <button class="btn btn-secondary" data-close>Maybe Later</button>
-      <button class="btn btn-premium" id="partnerUpgradeBtn">🚀 Upgrade Now</button>`;
-
-    if (typeof window.openModal === 'function') {
-      window.openModal(
-        window.modalShell({
-          title: '💎 Premium Required',
-          subtitle: 'Unlock Study with Partner',
-          body,
-          actions,
-        }),
-        {
-          onMount() {
-            document.getElementById('partnerUpgradeBtn').onclick = () => {
-              if (typeof window.closeModal === 'function') window.closeModal();
-              if (typeof window.switchView === 'function') window.switchView('premium');
-            };
-          },
-        },
-      );
-    } else {
-      tmsg('Study with Partner is a premium feature. Please upgrade.', 'info');
-    }
-  }
-
-  // ═══════════════ 5. TRIAL BANNER ═══════════════
-  function trialBannerHTML(access) {
-    if (!access.isTrial || !access.daysLeft) return '';
-    const urgent = access.daysLeft <= 3;
-    return `
-      <div style="margin-bottom:18px;padding:14px 18px;border-radius:12px;
-        background:${urgent ? 'linear-gradient(135deg,rgba(239,68,68,.12),rgba(249,115,22,.08))' : 'linear-gradient(135deg,rgba(251,191,36,.12),rgba(249,115,22,.06))'};
-        border:1px solid ${urgent ? 'rgba(239,68,68,.35)' : 'rgba(251,191,36,.35)'};
-        display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-        <div style="font-size:1.6rem;flex-shrink:0">⏳</div>
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:800;font-size:.9rem;color:${urgent ? '#FCA5A5' : '#FBBF24'}">
-            Trial: ${access.daysLeft} day${access.daysLeft !== 1 ? 's' : ''} left
-          </div>
-          <div style="font-size:.78rem;color:var(--text-2);margin-top:3px;line-height:1.5">
-            You can use Study Partner during your trial. After it ends, you'll need to upgrade.
-          </div>
-        </div>
-        <button class="btn btn-premium btn-sm" id="partnerTrialUpgradeBtn">Upgrade Now</button>
-      </div>`;
-  }
-
-  // ═══════════════ 6. HOW IT WORKS CARD ═══════════════
+  // ═══════════════ 4. HOW IT WORKS CARD ═══════════════
   function howItWorksCard() {
     return `
       <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.25)">
@@ -293,18 +254,10 @@
     `;
   }
 
-  // ═══════════════ 7. RENDER PARTNER VIEW ═══════════════
+  // ═══════════════ 5. RENDER PARTNER VIEW ═══════════════
   async function renderPartnerView() {
     const el = document.getElementById('partnerContent');
     if (!el) return;
-
-    // ═══ PREMIUM CHECK ═══
-    const access = checkPartnerAccess();
-    if (!access.hasAccess) {
-      el.innerHTML = `<div class="empty"><div class="em">🔒</div><h4>Premium Feature</h4><p>Loading…</p></div>`;
-      showUpgradeModal(access);
-      return;
-    }
 
     el.innerHTML = `<div class="empty"><div class="em">👥</div><h4>Loading…</h4></div>`;
 
@@ -322,9 +275,7 @@
     const outgoing = pstate.links.filter((l) => l.status === 'pending' && l.requester_id === myId);
     const myInvites = pstate.invites.filter((i) => i.status === 'pending');
 
-    let html = trialBannerHTML(access);
-
-    html += `
+    let html = `
       <div class="card" style="margin-bottom:18px">
         <div class="card-header">
           <div>
@@ -390,9 +341,6 @@
 
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
     document.getElementById('pAddBtn2')?.addEventListener('click', openAddPartnerModal);
-    document.getElementById('partnerTrialUpgradeBtn')?.addEventListener('click', () => {
-      if (typeof window.switchView === 'function') window.switchView('premium');
-    });
 
     if (incoming.length > 0) {
       const listEl = document.getElementById('pIncomingList');
@@ -472,7 +420,7 @@
     }
   }
 
-  // ═══════════════ 8. DATA LOADING ═══════════════
+  // ═══════════════ 6. DATA LOADING ═══════════════
   async function loadPartnerData(user) {
     const supa = getSupa();
     if (!supa) return;
@@ -531,7 +479,7 @@
     }
   }
 
-  // ═══════════════ 9. ADD PARTNER MODAL ═══════════════
+  // ═══════════════ 7. ADD PARTNER MODAL ═══════════════
   function openAddPartnerModal() {
     const body = `
       <div style="padding:12px 14px;background:var(--card-2);border-radius:12px;margin-bottom:14px;font-size:.82rem;color:var(--text-2);line-height:1.6">
@@ -581,7 +529,7 @@
     );
   }
 
-  // ═══════════════ 10. SEND REQUEST ═══════════════
+  // ═══════════════ 8. SEND REQUEST ═══════════════
   async function sendPartnerRequest(email) {
     const supa = getSupa();
     const user = await getCurrentUser();
@@ -653,7 +601,7 @@
     }
   }
 
-  // ═══════════════ 11. SHARE MODAL ═══════════════
+  // ═══════════════ 9. SHARE MODAL ═══════════════
   function openShareModal(invite) {
     const link = `${APP_URL}/auth.html?invite=${invite.token}`;
     const shareText = `Join me on UPSC Tracker as my study partner! Use this link: ${link}`;
@@ -725,7 +673,8 @@
       },
     );
   }
-  // ═══════════════ 12. RESPOND TO REQUEST ═══════════════
+
+  // ═══════════════ 10. RESPOND / CANCEL ═══════════════
   async function respondToRequest(linkId, status) {
     const supa = getSupa();
     if (!supa) return;
@@ -767,7 +716,7 @@
     }
   }
 
-  // ═══════════════ 13. COMPARISON DASHBOARD ═══════════════
+  // ═══════════════ 11. COMPARISON ═══════════════
   async function renderComparison(acceptedLinks, myId) {
     const wrap = document.getElementById('pComparisonWrap');
     if (!wrap) return;
@@ -946,7 +895,7 @@
     }
   }
 
-  // ═══════════════ 14. INVITE TOKEN HANDLER ═══════════════
+  // ═══════════════ 12. INVITE TOKEN HANDLER ═══════════════
   async function handleInviteToken() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('invite');
@@ -997,7 +946,7 @@
     }
   }
 
-  // ═══════════════ 15. INIT ═══════════════
+  // ═══════════════ 13. INIT ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -1008,7 +957,6 @@
 
     if (tabOk && viewOk) {
       pstate.initialized = true;
-      console.log('[Partner] ✅ UI injected');
       return true;
     }
     return false;
@@ -1021,13 +969,10 @@
       const user = await getCurrentUser();
       if (user && getSupa()) {
         clearInterval(checkUser);
-        console.log('[Partner] ✅ User ready, loading data');
         try {
           await loadPartnerData(user);
           await handleInviteToken();
-        } catch (e) {
-          console.warn('[Partner] data load error:', e);
-        }
+        } catch (e) {}
       } else if (tries > 60) {
         clearInterval(checkUser);
       }
@@ -1039,12 +984,17 @@
       let retries = 0;
       const iv = setInterval(() => {
         retries++;
-        if (tryInject() || retries > 60) {
-          clearInterval(iv);
-        }
+        if (tryInject() || retries > 60) clearInterval(iv);
       }, 200);
     }
     backgroundLoad();
+
+    // Poll appearance every 2 seconds (keeps tab in sync with premium status)
+    setInterval(updatePartnerTabAppearance, 2000);
+    // Also update on initial load
+    setTimeout(updatePartnerTabAppearance, 500);
+    setTimeout(updatePartnerTabAppearance, 1500);
+    setTimeout(updatePartnerTabAppearance, 3000);
   }
 
   if (document.readyState === 'loading') {
@@ -1056,6 +1006,8 @@
   const observer = new MutationObserver(() => {
     if (!document.querySelector('.nav-item[data-view="partner"]')) {
       tryInject();
+    } else {
+      updatePartnerTabAppearance();
     }
   });
   observer.observe(document.body, { childList: true, subtree: true });
@@ -1064,8 +1016,8 @@
     reload: () => renderPartnerView(),
     open: () => openPartnerView(),
     state: pstate,
-    debug: () => tryInject(),
-    access: () => checkPartnerAccess(),
+    isPremium: isUserPremium,
+    sync: updatePartnerTabAppearance,
   };
 
   console.log('[Partner] 📦 Module loaded');
