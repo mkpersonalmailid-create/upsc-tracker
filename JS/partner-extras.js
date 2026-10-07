@@ -80,19 +80,19 @@ function getState() {
 
   // ═══════════════ PREMIUM CHECK ═══════════════
   function isUserPremium() {
-    // External function check — agar mila toh
+    // Step 1: Global function try karo — par sirf agar TRUE de
     try {
       if (typeof isPremiumUser === 'function') {
         const r = isPremiumUser();
-        if (r) return true;
+        if (r === true) return true;
       }
       if (typeof window.isPremiumUser === 'function') {
         const r = window.isPremiumUser();
-        if (r) return true;
+        if (r === true) return true;
       }
     } catch (e) {}
 
-    // State se direct check
+    // Step 2: State se direct check — ye pakka source of truth hai
     try {
       const s = getState();
       if (!s) return false;
@@ -100,19 +100,22 @@ function getState() {
       // Admin
       if (s.profile?.is_admin === true) return true;
 
-      // Premium flags
+      // ⚡ Ye line sabse important hai — tera state isPremium:true hai
       if (s.isPremium === true) return true;
+
+      // Profile premium flags
       if (s.profile?.is_premium === true) return true;
       if (s.profile?.premium === true) return true;
+      if (s.profile?.membership === 'premium') return true;
+      if (s.profile?.membership === 'trial') return true;
 
-      // ⚡ Trial flags — ye zaroori hai
+      // Trial flags
       if (s.isTrial === true) return true;
       if (s.trialActive === true) return true;
       if (s.profile?.is_trial === true) return true;
       if (s.profile?.trial_active === true) return true;
-      if (s.profile?.isTrial === true) return true;
 
-      // ⚡ Trial end date — future me hai toh trial active
+      // Trial end date — future me hai toh active
       const trialEnd =
         s.trialEndsAt ||
         s.trial_end_date ||
@@ -133,17 +136,6 @@ function getState() {
 
     return false;
   }
-
-  function showPremiumPrompt() {
-    try {
-      if (typeof window.openUpgradeModal === 'function') {
-        window.openUpgradeModal('Study Partner');
-        return;
-      }
-    } catch (e) {}
-    tmsg('Study Partner is a Premium feature.', 'info');
-  }
-
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
