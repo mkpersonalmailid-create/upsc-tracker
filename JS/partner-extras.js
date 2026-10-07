@@ -80,16 +80,57 @@ function getState() {
 
   // ═══════════════ PREMIUM CHECK ═══════════════
   function isUserPremium() {
+    // External function check — agar mila toh
     try {
-      if (typeof isPremiumUser === 'function') return isPremiumUser();
-      if (typeof window.isPremiumUser === 'function') return window.isPremiumUser();
+      if (typeof isPremiumUser === 'function') {
+        const r = isPremiumUser();
+        if (r) return true;
+      }
+      if (typeof window.isPremiumUser === 'function') {
+        const r = window.isPremiumUser();
+        if (r) return true;
+      }
     } catch (e) {}
+
+    // State se direct check
     try {
       const s = getState();
       if (!s) return false;
+
+      // Admin
       if (s.profile?.is_admin === true) return true;
+
+      // Premium flags
       if (s.isPremium === true) return true;
+      if (s.profile?.is_premium === true) return true;
+      if (s.profile?.premium === true) return true;
+
+      // ⚡ Trial flags — ye zaroori hai
+      if (s.isTrial === true) return true;
+      if (s.trialActive === true) return true;
+      if (s.profile?.is_trial === true) return true;
+      if (s.profile?.trial_active === true) return true;
+      if (s.profile?.isTrial === true) return true;
+
+      // ⚡ Trial end date — future me hai toh trial active
+      const trialEnd =
+        s.trialEndsAt ||
+        s.trial_end_date ||
+        s.profile?.trial_end_date ||
+        s.profile?.trialEndsAt ||
+        s.profile?.premium_until ||
+        s.profile?.trial_expiry;
+      if (trialEnd) {
+        try {
+          if (new Date(trialEnd) > new Date()) return true;
+        } catch (e) {}
+      }
+
+      // Subscription
+      if (s.subscription?.status === 'active' || s.subscription?.status === 'trialing') return true;
+      if (s.profile?.subscription_status === 'active' || s.profile?.subscription_status === 'trialing') return true;
     } catch (e) {}
+
     return false;
   }
 
