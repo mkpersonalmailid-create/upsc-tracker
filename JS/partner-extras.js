@@ -489,6 +489,7 @@
         .or(
           `and(requester_id.eq.${user.id},partner_id.eq.${targetId}),and(requester_id.eq.${targetId},partner_id.eq.${user.id})`,
         )
+        .in('status', ['pending', 'accepted']) // ⬅️ YE LINE ADD KARO
         .maybeSingle();
 
       if (existing) {
@@ -858,6 +859,7 @@
           .or(
             `and(requester_id.eq.${user.id},partner_id.eq.${found.id}),and(requester_id.eq.${found.id},partner_id.eq.${user.id})`,
           )
+          .in('status', ['pending', 'accepted'])
           .maybeSingle();
 
         if (existing) {
