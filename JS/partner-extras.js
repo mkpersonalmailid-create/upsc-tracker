@@ -1864,18 +1864,46 @@ window.closePartnerPopup = function (partnerId) {
 };
 
 window.openPartnerChat = function (partnerId) {
-  // Close popup
+  console.log('🚀 Opening chat with partner:', partnerId);
+
+  // Step 1: Close the popup
   window.closePartnerPopup(partnerId);
 
-  // Open partner view and switch to that partner's chat
-  if (typeof openPartnerView === 'function') {
-    openPartnerView();
-    // Scroll to that partner's chat
-    setTimeout(() => {
-      const chatEl = document.querySelector(`[data-partner-chat="${partnerId}"]`);
-      if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 500);
+  // Step 2: Open Partner View using exposed API (window.__partner.open)
+  if (window.__partner && typeof window.__partner.open === 'function') {
+    window.__partner.open();
+    console.log('✅ Partner view opened via __partner.open()');
+  } else {
+    console.log('⚠️ __partner.open not available');
+    return;
   }
+
+  // Step 3: Wait for view to render, then scroll to that partner's chat
+  function tryScrollToChat(retriesLeft) {
+    const chatEl = document.getElementById('pChat_' + partnerId);
+    if (chatEl) {
+      chatEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      console.log('✅ Scrolled to chat container');
+
+      // Step 4: Focus on the input field
+      setTimeout(() => {
+        const inputEl = document.getElementById('pChat_' + partnerId + '_input');
+        if (inputEl) {
+          inputEl.focus();
+          console.log('✅ Chat input focused — ready to type!');
+        }
+      }, 400);
+      return;
+    }
+    if (retriesLeft > 0) {
+      console.log('⏳ Chat not ready, retrying... (' + retriesLeft + ' left)');
+      setTimeout(() => tryScrollToChat(retriesLeft - 1), 600);
+    } else {
+      console.log('❌ Chat container not found after retries');
+    }
+  }
+
+  setTimeout(() => tryScrollToChat(5), 800);
 };
 
 // Main polling function - checks for new messages
