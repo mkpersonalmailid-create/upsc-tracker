@@ -117,9 +117,9 @@
     if (!pstate.cachedUser) btn.style.visibility = 'hidden';
 
     const anchor =
-      nav.querySelector('.nav-item[data-view="premium"]') ||
-      nav.querySelector('.nav-item[data-view="support"]') ||
-      nav.querySelector('.nav-item[data-view="settings"]');
+      nav.querySelector('.nav-item[data-view="history"]') ||
+      nav.querySelector('.nav-item[data-view="analytics"]') ||
+      nav.querySelector('.nav-item[data-view="premium"]');
 
     if (anchor && anchor.parentNode) {
       anchor.parentNode.insertBefore(btn, anchor);
