@@ -34,13 +34,12 @@
           log('💾 Saved:', view);
         },
         true,
-      ); // capture phase — BEFORE other handlers
+      );
     });
   }
 
   /* ═══════════════════════════════════════════════════════
      STEP 2: VIEW RESTORE — DIRECT DOM MANIPULATION
-     Koi nav click nahi, koi premium check nahi
      ═══════════════════════════════════════════════════════ */
   function activateView(viewName) {
     log('🎯 Activating view:', viewName);
@@ -73,11 +72,10 @@
     const content = document.getElementById('content');
     if (content) content.scrollTop = 0;
 
-    // 5. Trigger lazy loaders
+    // 5. Trigger lazy loaders (general)
     const loaders = {
       analytics: ['loadAnalytics', 'loadAnalyticsV2', 'renderAnalytics', 'initAnalytics', 'initAnalyticsV2'],
       insights: ['loadInsights', 'renderInsights', 'initInsights'],
-      partner: ['openPartnerView', 'renderPartnerView', 'initPartner'],
       calendar: ['loadCalendar', 'renderCalendar', 'initCalendar'],
       history: ['loadHistory', 'renderHistory', 'initHistory'],
       syllabus: ['loadSyllabus', 'renderSyllabus', 'initSyllabus'],
@@ -104,12 +102,41 @@
       }
     }
 
-    // 6. Partner view special handling
-    if (viewName === 'partner' && window.__partner && typeof window.__partner.open === 'function') {
-      try {
-        window.__partner.open();
-        log('✅ Partner view opened via __partner');
-      } catch (e) {}
+    // 6. Partner view — content render karo
+    if (viewName === 'partner') {
+      // Immediate try
+      setTimeout(function () {
+        if (window.__partner) {
+          if (typeof window.__partner.open === 'function') {
+            try {
+              window.__partner.open();
+              log('✅ Partner view opened');
+            } catch (e) {
+              log('⚠️ Partner open error:', e.message);
+            }
+          }
+          if (typeof window.__partner.reload === 'function') {
+            try {
+              window.__partner.reload();
+              log('✅ Partner content rendered');
+            } catch (e) {
+              log('⚠️ Partner reload error:', e.message);
+            }
+          }
+        } else {
+          log('⚠️ __partner not available yet, will retry');
+        }
+      }, 200);
+
+      // Delayed retry (agar partner module late load ho)
+      setTimeout(function () {
+        if (window.__partner && typeof window.__partner.reload === 'function') {
+          try {
+            window.__partner.reload();
+            log('✅ Partner content rendered (delayed retry)');
+          } catch (e) {}
+        }
+      }, 1200);
     }
 
     log('🎉 View fully activated:', viewName);
@@ -120,7 +147,6 @@
      STEP 3: WAIT FOR STATE + VIEWS, THEN ACTIVATE
      ═══════════════════════════════════════════════════════ */
   function restoreLastView() {
-    // Priority: URL hash > localStorage
     let targetView = location.hash.replace('#', '');
     if (!targetView) {
       try {
@@ -136,23 +162,20 @@
     log('🔄 Will restore:', targetView);
 
     let attempts = 0;
-    const maxAttempts = 80; // 16 seconds max (80 * 200ms)
+    const maxAttempts = 80;
 
     const waitAndRestore = setInterval(function () {
       attempts++;
 
-      // 1. State check
       let state = null;
       try {
         if (typeof getState === 'function') state = getState();
         if (!state) state = window.state || window.appState;
       } catch (e) {}
 
-      // 2. View element check
       const viewEl = document.getElementById('view-' + targetView);
       const navEl = document.querySelector('.nav-item[data-view="' + targetView + '"]');
 
-      // 3. State + view + nav — sab ready hone chahiye
       const stateReady = state && state.user;
       const viewReady = !!viewEl;
       const navReady = !!navEl;
@@ -178,10 +201,8 @@
         return;
       }
 
-      // Sab ready — ab activate karo
       clearInterval(waitAndRestore);
 
-      // Chhota sa delay taaki sab handlers ready ho jayein
       setTimeout(function () {
         const success = activateView(targetView);
         if (success) {
@@ -200,7 +221,6 @@
     const view = location.hash.replace('#', '');
     if (!view || view === 'study') return;
 
-    // Direct activate karo
     setTimeout(function () {
       activateView(view);
     }, 100);
@@ -222,10 +242,7 @@
         attachNavListeners();
         clearInterval(waitForNav);
 
-        // View restore 800ms baad start karo
         setTimeout(restoreLastView, 800);
-
-        // Naye nav items ke liye re-scan
         setInterval(attachNavListeners, 2000);
       }
 
