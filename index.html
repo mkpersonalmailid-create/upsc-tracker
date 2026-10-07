@@ -432,12 +432,15 @@
         font-size: clamp(2.8rem, 7.5vw, 6rem);
         font-weight: 900;
         letter-spacing: -0.045em;
-        line-height: 0.98;
+        line-height: 1.08;
+        padding-bottom: 12px;
         margin-bottom: 26px;
         animation: fadeUp 1s var(--ios-ease) 0.1s both;
+        overflow: visible;
       }
       .hero h1 .line {
         display: block;
+        padding-bottom: 4px;
       }
       .hero h1 .grad {
         background: var(--grad-hero);
@@ -471,6 +474,7 @@
         gap: 14px;
         justify-content: center;
         flex-wrap: wrap;
+        margin-top: 20px;
         animation: fadeUp 1s var(--ios-ease) 0.3s both;
       }
       .btn-hero {
@@ -2108,11 +2112,7 @@
           <span class="line">Track Every Minute.</span>
           <span class="line grad">Crack UPSC Together.</span>
         </h1>
-        <p class="hero-sub">
-          India's most complete <strong>free UPSC study tracker</strong>. Timer, syllabus, spaced-repetition revisions,
-          PYQ analytics, and now <span class="partner-highlight">Study with Partner</span> — match with aspirants who
-          share your optional subject and exam year, and crack UPSC together.
-        </p>
+
         <div class="hero-ctas">
           <a href="/auth.html" class="btn-hero primary" data-ripple><span>▶</span> Start Tracking Free</a>
           <a href="#partner" class="btn-hero partner" data-ripple>🤝 Explore Partner Feature</a>
