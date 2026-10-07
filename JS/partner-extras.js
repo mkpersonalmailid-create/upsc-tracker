@@ -1122,8 +1122,14 @@
       const user = await getCurrentUser();
       if (user && getSupa()) {
         clearInterval(checkUser);
-        // ✅ Tab appearance update — ONE TIME (no loop)
+
+        // ✅ Update tab appearance multiple times to catch state load
         updatePartnerTabAppearance();
+        setTimeout(updatePartnerTabAppearance, 800);
+        setTimeout(updatePartnerTabAppearance, 2000);
+        setTimeout(updatePartnerTabAppearance, 4000);
+        setTimeout(updatePartnerTabAppearance, 7000);
+
         try {
           await loadPartnerData(user);
           await handleInviteToken();
