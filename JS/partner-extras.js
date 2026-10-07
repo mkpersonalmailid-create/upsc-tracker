@@ -123,7 +123,10 @@ function getState() {
       <span class="nav-label">Study With Partner</span>
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
-    if (!pstate.cachedUser) btn.style.visibility = 'hidden';
+    // ⚡ ALWAYS start hidden — state load hone tak dikhayenge nahi
+    btn.style.visibility = 'hidden';
+    btn.style.opacity = '0';
+    btn.style.transition = 'opacity 0.2s ease-in';
 
     const anchor =
       nav.querySelector('.nav-item[data-view="history"]') ||
