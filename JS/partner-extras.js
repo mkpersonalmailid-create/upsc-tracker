@@ -1957,13 +1957,44 @@ async function checkForNewMessages() {
     const profileMap = {};
     (profiles || []).forEach((p) => (profileMap[p.id] = p));
 
-    // Show popup for each sender (stacked)
+    // ═══ Check karo ki user kis partner ki chat me hai ═══
+    const isPartnerChatVisible = (partnerId) => {
+      try {
+        // 1. Partner view active hai?
+        const partnerView = document.getElementById('view-partner');
+        if (!partnerView || !partnerView.classList.contains('active')) return false;
+
+        // 2. Us partner ka chat container DOM me hai?
+        const chatContainer = document.getElementById('pChat_' + partnerId);
+        if (!chatContainer) return false;
+
+        // 3. Chat container screen pe visible hai? (viewport me hai)
+        const rect = chatContainer.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const isInViewport = rect.top < viewportHeight && rect.bottom > 0;
+
+        // 4. Aur kya page ka focus chat pe hai? (tab active hai)
+        const tabActive = !document.hidden;
+
+        return isInViewport && tabActive;
+      } catch (e) {
+        return false;
+      }
+    };
+
+    // ═══ Popup sirf un senders ke liye dikhao jinki chat visible NAHI hai ═══
     for (const senderId of senderIds) {
       const messages = bySender[senderId];
       const latestMsg = messages[messages.length - 1];
       const profile = profileMap[senderId] || {};
 
       const displayName = profile.name || 'Partner';
+
+      // Skip popup if user is already viewing this partner's chat
+      if (isPartnerChatVisible(senderId)) {
+        console.log('⏭️ Skipping popup — user is already viewing chat with:', displayName);
+        continue;
+      }
 
       console.log('👤 Sender:', senderId, '→ Name:', displayName, '| Profile data:', profile);
 
