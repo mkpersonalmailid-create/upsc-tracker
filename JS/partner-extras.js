@@ -1924,7 +1924,7 @@ async function checkForNewMessages() {
 
     // Get sender profiles
     const senderIds = Object.keys(bySender);
-    const { data: profiles } = await window.supa.from('profiles').select('id, name, full_name').in('id', senderIds);
+    const { data: profiles } = await window.supa.from('profiles').select('id, name').in('id', senderIds);
 
     const profileMap = {};
     (profiles || []).forEach((p) => (profileMap[p.id] = p));
@@ -1935,15 +1935,9 @@ async function checkForNewMessages() {
       const latestMsg = messages[messages.length - 1];
       const profile = profileMap[senderId] || {};
 
-      const displayName =
-        profile.name ||
-        profile.full_name ||
-        profile.username ||
-        profile.display_name ||
-        (profile.email ? profile.email.split('@')[0] : null) ||
-        'Partner';
+      const displayName = profile.name || 'Partner';
 
-      console.log('👤 Sender name resolved:', senderId, '→', displayName, 'from profile:', profile);
+      console.log('👤 Sender:', senderId, '→ Name:', displayName, '| Profile data:', profile);
 
       createChatPopup(
         {
