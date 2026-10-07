@@ -483,28 +483,45 @@
     btn.textContent = '⏳ Sending…';
 
     try {
+      // Check ANY entry between both users (any direction, any status)
       const { data: existing } = await supa
         .from('partner_links')
         .select('id, status')
         .or(
           `and(requester_id.eq.${user.id},partner_id.eq.${targetId}),and(requester_id.eq.${targetId},partner_id.eq.${user.id})`,
         )
-        .in('status', ['pending', 'accepted']) // ⬅️ YE LINE ADD KARO
         .maybeSingle();
 
       if (existing) {
-        tmsg('A request already exists with this user', 'info');
-        btn.textContent = '✓ Sent';
-        btn.disabled = true;
-        return;
-      }
+        // ═══ Block if pending or accepted ═══
+        if (existing.status === 'pending' || existing.status === 'accepted') {
+          tmsg('A request already exists with this user', 'info');
+          btn.textContent = '✓ Sent';
+          btn.disabled = true;
+          return;
+        }
 
-      const { error: insertErr } = await supa.from('partner_links').insert({
-        requester_id: user.id,
-        partner_id: targetId,
-        status: 'pending',
-      });
-      if (insertErr) throw insertErr;
+        // ═══ Revive if removed or rejected ═══
+        const { error: updateErr } = await supa
+          .from('partner_links')
+          .update({
+            requester_id: user.id,
+            partner_id: targetId,
+            status: 'pending',
+            accepted_at: null,
+            created_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+        if (updateErr) throw updateErr;
+      } else {
+        // ═══ Insert new ═══
+        const { error: insertErr } = await supa.from('partner_links').insert({
+          requester_id: user.id,
+          partner_id: targetId,
+          status: 'pending',
+        });
+        if (insertErr) throw insertErr;
+      }
 
       tmsg(`✅ Request sent to ${targetName}!`, 'ok');
       btn.textContent = '✓ Sent';
@@ -520,7 +537,6 @@
       btn.disabled = false;
     }
   }
-
   // ═══════════════ 5. RENDER PARTNER VIEW ═══════════════
   async function renderPartnerView() {
     const el = document.getElementById('partnerContent');
@@ -853,35 +869,53 @@
       const { data: found } = await supa.from('profiles').select('id, name, email').ilike('email', email).maybeSingle();
 
       if (found) {
+        // Check ANY entry between both users
         const { data: existing } = await supa
           .from('partner_links')
           .select('id, status')
           .or(
             `and(requester_id.eq.${user.id},partner_id.eq.${found.id}),and(requester_id.eq.${found.id},partner_id.eq.${user.id})`,
           )
-          .in('status', ['pending', 'accepted'])
           .maybeSingle();
 
         if (existing) {
-          tmsg('A request already exists with this user', 'info');
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Send Request';
+          // Block if pending or accepted
+          if (existing.status === 'pending' || existing.status === 'accepted') {
+            tmsg('A request already exists with this user', 'info');
+            if (btn) {
+              btn.disabled = false;
+              btn.textContent = 'Send Request';
+            }
+            return;
           }
-          return;
-        }
 
-        const { error: insertErr } = await supa.from('partner_links').insert({
-          requester_id: user.id,
-          partner_id: found.id,
-          status: 'pending',
-        });
-        if (insertErr) throw insertErr;
+          // Revive if removed or rejected
+          const { error: updateErr } = await supa
+            .from('partner_links')
+            .update({
+              requester_id: user.id,
+              partner_id: found.id,
+              status: 'pending',
+              accepted_at: null,
+              created_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
+          if (updateErr) throw updateErr;
+        } else {
+          // Insert new
+          const { error: insertErr } = await supa.from('partner_links').insert({
+            requester_id: user.id,
+            partner_id: found.id,
+            status: 'pending',
+          });
+          if (insertErr) throw insertErr;
+        }
 
         if (typeof window.closeModal === 'function') window.closeModal();
         tmsg(`✅ Request sent to ${found.name || found.email}!`, 'ok');
         renderPartnerView();
       } else {
+        // User not found → invite link
         const { data: invite, error: invErr } = await supa
           .from('partner_invites')
           .insert({ requester_id: user.id, invitee_email: email, status: 'pending' })
@@ -903,7 +937,6 @@
       }
     }
   }
-
   // ═══════════════ 9. SHARE MODAL ═══════════════
   function openShareModal(invite) {
     const link = `${APP_URL}/auth.html?invite=${invite.token}`;
@@ -1199,7 +1232,7 @@
     }
   }
 
-  // ═══════════════ 12. INVITE TOKEN HANDLER ═══════════════
+  // ═══════════════ 12. INVITE TOKEN ═══════════════
   async function handleInviteToken() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('invite');
@@ -1226,12 +1259,44 @@
         return;
       }
 
-      await supa.from('partner_links').insert({
-        requester_id: invite.requester_id,
-        partner_id: user.id,
-        status: 'accepted',
-        accepted_at: new Date().toISOString(),
-      });
+      // Check ANY entry between both users
+      const { data: existing } = await supa
+        .from('partner_links')
+        .select('id, status')
+        .or(
+          `and(requester_id.eq.${invite.requester_id},partner_id.eq.${user.id}),and(requester_id.eq.${user.id},partner_id.eq.${invite.requester_id})`,
+        )
+        .maybeSingle();
+
+      if (existing) {
+        // Block if already accepted
+        if (existing.status === 'accepted') {
+          tmsg('You are already partners with this user', 'info');
+          window.history.replaceState({}, '', window.location.pathname);
+          return;
+        }
+
+        // Revive/accept existing entry
+        const { error: updateErr } = await supa
+          .from('partner_links')
+          .update({
+            requester_id: invite.requester_id,
+            partner_id: user.id,
+            status: 'accepted',
+            accepted_at: new Date().toISOString(),
+          })
+          .eq('id', existing.id);
+        if (updateErr) throw updateErr;
+      } else {
+        // Insert new accepted entry
+        const { error: insertErr } = await supa.from('partner_links').insert({
+          requester_id: invite.requester_id,
+          partner_id: user.id,
+          status: 'accepted',
+          accepted_at: new Date().toISOString(),
+        });
+        if (insertErr) throw insertErr;
+      }
 
       await supa
         .from('partner_invites')
@@ -1249,7 +1314,6 @@
       console.warn('[Partner] invite error:', e);
     }
   }
-
   // ═══════════════ 12.5. MESSAGES (Chat) ═══════════════
   let chatPollHandle = null;
 
