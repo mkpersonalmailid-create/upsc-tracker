@@ -113,6 +113,8 @@
       <span class="nav-label">Study Partner</span>
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
+    // ⬇️ YE NAYA LINE ADD KARO — initially hidden
+    if (!pstate.cachedUser) btn.style.visibility = 'hidden';
 
     const anchor =
       nav.querySelector('.nav-item[data-view="premium"]') ||
@@ -1101,6 +1103,8 @@
   function updatePartnerTabAppearance() {
     const btn = document.querySelector('.nav-item[data-view="partner"]');
     if (!btn) return;
+    // ✅ Reveal tab once user is loaded
+    if (pstate.cachedUser) btn.style.visibility = '';
 
     const isPremium = isUserPremium();
     const icon = btn.querySelector('.nav-icon');
