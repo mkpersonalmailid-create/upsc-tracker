@@ -1584,3 +1584,385 @@
 
   console.log('[Partner] 📦 Module loaded (safe)');
 })();
+
+/* ============================================
+   PARTNER CHAT POPUP + NOTIFICATION SYSTEM
+   ============================================ */
+
+// Notification sound (Base64 encoded - no external file needed)
+const NOTIFICATION_SOUND =
+  'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT';
+
+let messageStack = []; // Stack of pending chat popups
+let currentPopupPartner = null;
+let lastMessageCheckTime = new Date().toISOString();
+let soundEnabled = true;
+
+// Inject popup container into DOM (once)
+function injectChatPopupContainer() {
+  if (document.getElementById('partner-chat-popup-container')) return;
+
+  const container = document.createElement('div');
+  container.id = 'partner-chat-popup-container';
+  container.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999999;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 10px;
+        pointer-events: none;
+    `;
+  document.body.appendChild(container);
+}
+
+// Play notification sound
+function playNotificationSound() {
+  if (!soundEnabled) return;
+  try {
+    const audio = new Audio(NOTIFICATION_SOUND);
+    audio.volume = 0.5;
+    audio.play().catch((e) => console.log('Sound blocked by browser:', e));
+  } catch (e) {
+    console.log('Sound error:', e);
+  }
+}
+
+// Create a floating popup for a specific partner
+function createChatPopup(partnerInfo, messageData) {
+  injectChatPopupContainer();
+
+  const container = document.getElementById('partner-chat-popup-container');
+  const popupId = `partner-popup-${partnerInfo.id}`;
+
+  // If popup already exists for this partner, just update
+  let existingPopup = document.getElementById(popupId);
+  if (existingPopup) {
+    updatePopupMessage(existingPopup, messageData);
+    return;
+  }
+
+  const popup = document.createElement('div');
+  popup.id = popupId;
+  popup.dataset.partnerId = partnerInfo.id;
+  popup.style.cssText = `
+        width: 320px;
+        background: linear-gradient(135deg, #1a0b2e, #2d1b4e);
+        border: 1px solid rgba(168, 85, 247, 0.4);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.2);
+        overflow: hidden;
+        pointer-events: auto;
+        animation: slideUpPopup 0.3s ease-out;
+        font-family: 'Inter', system-ui, sans-serif;
+    `;
+
+  const avatarLetter = (partnerInfo.name || 'P').charAt(0).toUpperCase();
+  const previewText =
+    messageData.message.length > 50 ? messageData.message.substring(0, 50) + '...' : messageData.message;
+
+  popup.innerHTML = `
+        <style>
+            @keyframes slideUpPopup {
+                from { transform: translateY(100%); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            .partner-popup-header {
+                display: flex;
+                align-items: center;
+                padding: 12px 14px;
+                background: rgba(168, 85, 247, 0.1);
+                border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+                cursor: pointer;
+            }
+            .partner-popup-avatar {
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #8B5CF6, #EC4899);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: 700;
+                font-size: 16px;
+                flex-shrink: 0;
+            }
+            .partner-popup-name {
+                flex: 1;
+                margin-left: 10px;
+                color: #fff;
+                font-weight: 600;
+                font-size: 14px;
+            }
+            .partner-popup-close {
+                background: transparent;
+                border: none;
+                color: #A1A1AA;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0 6px;
+                line-height: 1;
+            }
+            .partner-popup-close:hover { color: #fff; }
+            .partner-popup-body {
+                padding: 12px 14px;
+                cursor: pointer;
+            }
+            .partner-popup-msg {
+                color: #E5E7EB;
+                font-size: 13px;
+                line-height: 1.4;
+                margin: 0;
+                word-wrap: break-word;
+            }
+            .partner-popup-time {
+                color: #71717A;
+                font-size: 11px;
+                margin-top: 4px;
+            }
+            .partner-popup-footer {
+                padding: 8px 14px 12px 14px;
+                display: flex;
+                gap: 8px;
+            }
+            .partner-popup-btn {
+                flex: 1;
+                background: linear-gradient(135deg, #8B5CF6, #EC4899);
+                border: none;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 8px;
+                font-size: 12px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: opacity 0.2s;
+            }
+            .partner-popup-btn:hover { opacity: 0.9; }
+            .partner-popup-btn.secondary {
+                background: rgba(168, 85, 247, 0.15);
+                color: #A855F7;
+            }
+            .partner-popup-badge {
+                position: absolute;
+                top: 8px;
+                right: 40px;
+                background: #EC4899;
+                color: white;
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-weight: 700;
+            }
+        </style>
+        <div class="partner-popup-header">
+            <div class="partner-popup-avatar">${avatarLetter}</div>
+            <div class="partner-popup-name">${partnerInfo.name || 'Partner'}</div>
+            <button class="partner-popup-close" onclick="closePartnerPopup('${partnerInfo.id}')">×</button>
+        </div>
+        <div class="partner-popup-body" onclick="openPartnerChat('${partnerInfo.id}')">
+            <p class="partner-popup-msg">${escapeHtmlForPopup(previewText)}</p>
+            <div class="partner-popup-time">${formatPopupTime(messageData.created_at)}</div>
+        </div>
+        <div class="partner-popup-footer">
+            <button class="partner-popup-btn" onclick="openPartnerChat('${partnerInfo.id}')">Reply</button>
+            <button class="partner-popup-btn secondary" onclick="closePartnerPopup('${partnerInfo.id}')">Dismiss</button>
+        </div>
+    `;
+
+  // Prepend so newest popup appears at bottom (due to column-reverse)
+  container.appendChild(popup);
+
+  // Auto-hide after 8 seconds (but keep in stack if there are more)
+  setTimeout(() => {
+    const p = document.getElementById(popupId);
+    if (p) {
+      p.style.transition = 'opacity 0.3s, transform 0.3s';
+      p.style.opacity = '0';
+      p.style.transform = 'translateY(20px)';
+      setTimeout(() => p.remove(), 300);
+    }
+  }, 8000);
+}
+
+function updatePopupMessage(popup, messageData) {
+  const msgEl = popup.querySelector('.partner-popup-msg');
+  const timeEl = popup.querySelector('.partner-popup-time');
+  if (msgEl) {
+    const previewText =
+      messageData.message.length > 50 ? messageData.message.substring(0, 50) + '...' : messageData.message;
+    msgEl.textContent = previewText;
+  }
+  if (timeEl) timeEl.textContent = formatPopupTime(messageData.created_at);
+}
+
+function escapeHtmlForPopup(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function formatPopupTime(isoString) {
+  const d = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - d;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffMin < 1440) return `${Math.floor(diffMin / 60)}h ago`;
+  return d.toLocaleDateString();
+}
+
+// Global functions
+window.closePartnerPopup = function (partnerId) {
+  const popup = document.getElementById(`partner-popup-${partnerId}`);
+  if (popup) {
+    popup.style.transition = 'opacity 0.2s, transform 0.2s';
+    popup.style.opacity = '0';
+    popup.style.transform = 'translateY(20px)';
+    setTimeout(() => popup.remove(), 200);
+  }
+  messageStack = messageStack.filter((m) => m.partnerId !== partnerId);
+};
+
+window.openPartnerChat = function (partnerId) {
+  // Close popup
+  window.closePartnerPopup(partnerId);
+
+  // Open partner view and switch to that partner's chat
+  if (typeof openPartnerView === 'function') {
+    openPartnerView();
+    // Scroll to that partner's chat
+    setTimeout(() => {
+      const chatEl = document.querySelector(`[data-partner-chat="${partnerId}"]`);
+      if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 500);
+  }
+};
+
+// Main polling function - checks for new messages
+async function checkForNewMessages() {
+  if (!window.supa) return;
+  const state = getState();
+  if (!state || !state.user) return;
+
+  try {
+    const { data, error } = await window.supa
+      .from('partner_messages')
+      .select('id, sender_id, message, created_at')
+      .eq('receiver_id', state.user.id)
+      .gt('created_at', lastMessageCheckTime)
+      .order('created_at', { ascending: true });
+
+    if (error || !data || data.length === 0) return;
+
+    // Update last check time
+    lastMessageCheckTime = new Date().toISOString();
+
+    // Group messages by sender
+    const bySender = {};
+    data.forEach((msg) => {
+      if (!bySender[msg.sender_id]) bySender[msg.sender_id] = [];
+      bySender[msg.sender_id].push(msg);
+    });
+
+    // Play sound once per poll if there are new messages
+    playNotificationSound();
+
+    // ✅ NEW: Browser notification (works even when tab is in background)
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const firstSenderId = Object.keys(bySender)[0];
+      const firstMsg = bySender[firstSenderId][0];
+      try {
+        new Notification('💬 New message from your partner', {
+          body: firstMsg.message.substring(0, 100),
+          icon: '/android-chrome-192x192.png',
+          tag: 'partner-message',
+        });
+      } catch (e) {
+        console.log('Notification error:', e);
+      }
+    }
+
+    // Get sender profiles
+    const senderIds = Object.keys(bySender);
+    const { data: profiles } = await window.supa.from('profiles').select('id, name, full_name').in('id', senderIds);
+
+    const profileMap = {};
+    (profiles || []).forEach((p) => (profileMap[p.id] = p));
+
+    // Show popup for each sender (stacked)
+    for (const senderId of senderIds) {
+      const messages = bySender[senderId];
+      const latestMsg = messages[messages.length - 1];
+      const profile = profileMap[senderId] || {};
+
+      createChatPopup(
+        {
+          id: senderId,
+          name: profile.name || profile.full_name || 'Partner',
+        },
+        latestMsg,
+      );
+    }
+
+    // Also refresh the chat view if partner tab is open
+    if (typeof renderMessages === 'function') {
+      const partnerView = document.getElementById('partner-view');
+      if (partnerView && partnerView.style.display !== 'none') {
+        renderMessages();
+      }
+    }
+  } catch (e) {
+    console.log('Message check error:', e);
+  }
+}
+
+// Start polling when user is logged in
+function startMessagePolling() {
+  injectChatPopupContainer();
+
+  // Set initial check time (so we don't spam old messages)
+  lastMessageCheckTime = new Date().toISOString();
+
+  // Poll every 5 seconds
+  setInterval(checkForNewMessages, 5000);
+
+  // ✅ NEW: Request browser notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+
+  // ✅ NEW: Prime audio context (Chrome autoplay policy)
+  // Jab user pehli baar page pe click kare, tab sound enable ho jayegi
+  document.addEventListener(
+    'click',
+    function primeAudio() {
+      try {
+        const audio = new Audio(NOTIFICATION_SOUND);
+        audio.volume = 0;
+        audio.play().catch(() => {});
+      } catch (e) {}
+      document.removeEventListener('click', primeAudio);
+    },
+    { once: true },
+  );
+
+  console.log('✅ Partner message polling started');
+}
+
+// Auto-start when page loads
+(function initChatPopup() {
+  // Wait for user to be logged in
+  let attempts = 0;
+  const checkInterval = setInterval(() => {
+    attempts++;
+    const state = getState();
+    if (state && state.user && window.supa) {
+      clearInterval(checkInterval);
+      startMessagePolling();
+    }
+    if (attempts > 60) clearInterval(checkInterval); // Stop after 5 min
+  }, 5000);
+})();
