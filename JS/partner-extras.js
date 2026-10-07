@@ -1101,14 +1101,16 @@
   function updatePartnerTabAppearance() {
     const btn = document.querySelector('.nav-item[data-view="partner"]');
     if (!btn) return;
+
     const isPremium = isUserPremium();
     const icon = btn.querySelector('.nav-icon');
+    const isLocked = btn.classList.contains('premium-locked');
 
-    if (isPremium) {
+    if (isPremium && isLocked) {
       btn.classList.remove('premium-locked');
       btn.classList.add('premium-unlocked');
       if (icon) icon.textContent = PARTNER_ICON;
-    } else {
+    } else if (!isPremium && !isLocked) {
       btn.classList.add('premium-locked');
       btn.classList.remove('premium-unlocked');
       if (icon) icon.textContent = '🔒';
@@ -1149,6 +1151,14 @@
       }, 200);
     }
     backgroundLoad();
+
+    // ✅ Poll appearance for first 30 seconds (idempotent = safe)
+    let pollCount = 0;
+    const pollHandle = setInterval(() => {
+      pollCount++;
+      updatePartnerTabAppearance();
+      if (pollCount > 30) clearInterval(pollHandle);
+    }, 1000);
   }
 
   if (document.readyState === 'loading') {
