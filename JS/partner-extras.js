@@ -220,8 +220,6 @@
   }
 
   // ═══════════════ 4.4. PROFILE SETUP FORM ═══════════════
-  const EXAM_YEARS = ['2026', '2027', '2028', '2029', '2030', '2031+'];
-
   async function renderProfileSetupForm() {
     const user = await getCurrentUser();
     if (!user) return '';
@@ -240,24 +238,20 @@
       (s) => `<option value="${esc(s)}" ${currentOptional === s ? 'selected' : ''}>${esc(s)}</option>`,
     ).join('');
 
-    const yearOptions = EXAM_YEARS.map(
-      (y) => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`,
-    ).join('');
-
     return `
       <div class="card" style="margin-top:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.3)">
         <div class="card-header">
           <div>
             <span class="card-title-lg">🎯 Setup Your Partner Profile</span>
             <div style="font-size:.82rem;color:var(--text-3);margin-top:4px">
-              Partner discover karne se pehle ye 2 cheezein set karo (ek hi baar)
+              Set these 2 fields before finding a partner (one-time setup)
             </div>
           </div>
         </div>
 
         <div style="padding:16px;background:var(--card-2);border-radius:12px;margin-bottom:16px;font-size:.82rem;color:var(--text-2);line-height:1.6">
-          💡 <strong style="color:var(--text)">Kyun?</strong>
-          Hum tumhe <strong>same optional subject</strong> aur <strong>same exam year</strong> wale aspirants se match karenge — taaki tumhari preparation sync rahe.
+          💡 <strong style="color:var(--text)">Why?</strong>
+          We'll match you with aspirants who have the <strong>same optional subject</strong> and <strong>same target exam year</strong> — so your preparation stays in sync.
         </div>
 
         <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -270,10 +264,10 @@
           </div>
           <div class="field">
             <label>Target Exam Year</label>
-            <select id="setupYear">
-              <option value="">— Select Year —</option>
-              ${yearOptions}
-            </select>
+            <input type="text" id="setupYear" placeholder="e.g. 2027" maxlength="10" autocomplete="off" value="${esc(currentYear)}" />
+            <div style="font-size:.7rem;color:var(--text-3);margin-top:6px">
+              Example: 2027
+            </div>
           </div>
         </div>
 
@@ -287,15 +281,15 @@
       </div>
     `;
   }
-
+  // ═══════════════ 4.45. WIRE PROFILE SETUP FORM ═══════════════
   // ═══════════════ 4.45. WIRE PROFILE SETUP FORM ═══════════════
   function wireProfileSetupForm() {
     const saveBtn = document.getElementById('setupSaveBtn');
     const optSelect = document.getElementById('setupOptional');
-    const yearSelect = document.getElementById('setupYear');
+    const yearInput = document.getElementById('setupYear');
     const msgEl = document.getElementById('setupMsg');
 
-    if (!saveBtn || !optSelect || !yearSelect) return;
+    if (!saveBtn || !optSelect || !yearInput) return;
 
     function showMsg(text, type) {
       if (!msgEl) return;
@@ -314,14 +308,14 @@
 
     saveBtn.onclick = async () => {
       const optional = optSelect.value;
-      const year = yearSelect.value;
+      const year = (yearInput.value || '').trim();
 
       if (!optional) {
         showMsg('Please select your Optional Subject', 'err');
         return;
       }
       if (!year) {
-        showMsg('Please select your Target Exam Year', 'err');
+        showMsg('Please enter your Target Exam Year', 'err');
         return;
       }
 
@@ -365,8 +359,8 @@
       }
     };
   }
-
   // ═══════════════ 4.5. DISCOVER USERS ═══════════════
+  // ═══════════════ 4.5. DISCOVER USERS (Strict Match) ═══════════════
   // ═══════════════ 4.5. DISCOVER USERS (Strict Match) ═══════════════
   async function renderDiscoverSection() {
     const supa = getSupa();
@@ -374,7 +368,6 @@
     if (!supa || !user) return '';
 
     try {
-      // Get my profile (optional + year)
       const { data: myProfile } = await supa
         .from('profiles')
         .select('optional_subject, preparation_year')
@@ -386,7 +379,6 @@
 
       if (!myOptional || !myYear) return '';
 
-      // ═══ STRICT MATCH: same optional + same year ═══
       const { data: matches } = await supa
         .from('profiles')
         .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
@@ -399,7 +391,6 @@
 
       const filterLabel = `${esc(myOptional)} · ${esc(myYear)}`;
 
-      // Get existing partner relationships (to filter out)
       const myId = user.id;
       const existingIds = new Set();
       pstate.links.forEach((l) => {
@@ -425,8 +416,8 @@
               <div class="em">🔍</div>
               <h4>No matches yet</h4>
               <p style="font-size:.82rem;color:var(--text-3);margin-top:8px">
-                Abhi tak koi user tumhare same optional (<strong>${esc(myOptional)}</strong>) aur same year (<strong>${esc(myYear)}</strong>) ka nahi mila.
-                <br>Baad me check karte raho — jaise-jaise users join karenge, tumhe unka match dikhega.
+                No user found with the same optional (<strong>${esc(myOptional)}</strong>) and same year (<strong>${esc(myYear)}</strong>).
+                <br>Check back later — matches will appear as more users join.
               </p>
             </div>
           </div>
@@ -471,8 +462,7 @@
       console.warn('[Partner] discover error:', e);
       return '';
     }
-  }
-  // ═══════════════ 4.6. SEND DISCOVER REQUEST ═══════════════
+  } // ═══════════════ 4.6. SEND DISCOVER REQUEST ═══════════════
   async function sendDiscoverRequest(targetId, targetName, btn) {
     const supa = getSupa();
     const user = await getCurrentUser();
