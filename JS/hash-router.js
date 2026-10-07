@@ -1,176 +1,238 @@
 /* ═══════════════════════════════════════════════════════
-   UNIVERSAL HASH ROUTING — SIMPLE VERSION
-   No premium check, no blocking — direct view restore
+   UNIVERSAL HASH ROUTING — FINAL VERSION
+   Har user (free, trial, admin, premium) ke liye kaam karega
+   Direct DOM manipulation — no premium check, no nav click
    File: JS/hash-router.js
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'last_active_view';
+  const STORAGE_KEY = 'upsc_last_view';
   const DEBUG = true;
 
   function log(...args) {
     if (DEBUG) console.log('%c🔗 [HashRoute]', 'color:#8B5CF6;font-weight:700', ...args);
   }
 
-  /* ═══════ NAV CLICK TRACKING ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     STEP 1: NAV CLICK SE PEHLE SAVE KARO
+     ═══════════════════════════════════════════════════════ */
   function attachNavListeners() {
     document.querySelectorAll('.nav-item[data-view]').forEach(function (item) {
       if (item.dataset.hashBound === 'true') return;
       item.dataset.hashBound = 'true';
 
-      item.addEventListener('click', function () {
-        const view = item.dataset.view;
-        if (!view) return;
-        history.replaceState(null, '', '#' + view);
-        try {
-          localStorage.setItem(STORAGE_KEY, view);
-        } catch (e) {}
-      });
+      item.addEventListener(
+        'click',
+        function () {
+          const view = item.dataset.view;
+          if (!view) return;
+          history.replaceState(null, '', '#' + view);
+          try {
+            localStorage.setItem(STORAGE_KEY, view);
+          } catch (e) {}
+          log('💾 Saved:', view);
+        },
+        true,
+      ); // capture phase — BEFORE other handlers
     });
   }
 
-  /* ═══════ DIRECT VIEW RESTORE — Bypass all checks ═══════ */
-  function restoreViewDirectly(viewName) {
-    try {
-      log('🎯 Force restoring:', viewName);
+  /* ═══════════════════════════════════════════════════════
+     STEP 2: VIEW RESTORE — DIRECT DOM MANIPULATION
+     Koi nav click nahi, koi premium check nahi
+     ═══════════════════════════════════════════════════════ */
+  function activateView(viewName) {
+    log('🎯 Activating view:', viewName);
 
-      // 1. Saare views hide karo
-      document.querySelectorAll('.view').forEach(function (v) {
-        v.classList.remove('active');
-      });
+    // 1. Saare views hide karo
+    document.querySelectorAll('.view').forEach(function (v) {
+      v.classList.remove('active');
+    });
 
-      // 2. Target view show karo
-      const viewEl = document.getElementById('view-' + viewName);
-      if (viewEl) {
-        viewEl.classList.add('active');
-      } else {
-        log('❌ View element not found:', 'view-' + viewName);
-        return false;
-      }
-
-      // 3. Nav active state update karo
-      document.querySelectorAll('.nav-item').forEach(function (n) {
-        n.classList.remove('active');
-      });
-      const nav = document.querySelector('.nav-item[data-view="' + viewName + '"]');
-      if (nav) nav.classList.add('active');
-
-      // 4. Content top pe scroll
-      const content = document.getElementById('content');
-      if (content) content.scrollTop = 0;
-
-      // 5. Lazy loaders trigger karo
-      const loaders = {
-        analytics: ['loadAnalytics', 'loadAnalyticsV2', 'renderAnalytics'],
-        insights: ['loadInsights', 'renderInsights'],
-        partner: ['openPartnerView', 'renderPartnerView'],
-        calendar: ['loadCalendar', 'renderCalendar'],
-        history: ['loadHistory', 'renderHistory'],
-        syllabus: ['loadSyllabus', 'renderSyllabus'],
-        subjects: ['loadSubjects', 'renderSubjects'],
-        revision: ['loadRevision', 'renderRevision'],
-        goals: ['loadGoals', 'renderGoals'],
-        planner: ['loadPlanner', 'renderPlanner'],
-        notes: ['loadNotes', 'renderNotes'],
-        tests: ['loadTests', 'renderTests'],
-        premium: ['loadPremium', 'renderPremium'],
-        dashboard: ['loadDashboard', 'renderDashboard'],
-      };
-
-      const fns = loaders[viewName] || [];
-      for (let i = 0; i < fns.length; i++) {
-        if (typeof window[fns[i]] === 'function') {
-          try {
-            window[fns[i]]();
-            log('✅ Loader:', fns[i]);
-            break;
-          } catch (e) {}
-        }
-      }
-
-      // 6. Partner view special case
-      if (viewName === 'partner' && window.__partner && window.__partner.open) {
-        try {
-          window.__partner.open();
-          log('✅ Partner view opened');
-        } catch (e) {}
-      }
-
-      log('✅ Restored:', viewName);
-      return true;
-    } catch (e) {
-      log('❌ Error:', e.message);
+    // 2. Target view show karo
+    const viewEl = document.getElementById('view-' + viewName);
+    if (!viewEl) {
+      log('❌ View element not found:', 'view-' + viewName);
       return false;
     }
+    viewEl.classList.add('active');
+    log('✅ View activated in DOM');
+
+    // 3. Nav active state update karo
+    document.querySelectorAll('.nav-item').forEach(function (n) {
+      n.classList.remove('active');
+    });
+    const navEl = document.querySelector('.nav-item[data-view="' + viewName + '"]');
+    if (navEl) {
+      navEl.classList.add('active');
+      log('✅ Nav highlighted');
+    }
+
+    // 4. Scroll to top
+    const content = document.getElementById('content');
+    if (content) content.scrollTop = 0;
+
+    // 5. Trigger lazy loaders
+    const loaders = {
+      analytics: ['loadAnalytics', 'loadAnalyticsV2', 'renderAnalytics', 'initAnalytics', 'initAnalyticsV2'],
+      insights: ['loadInsights', 'renderInsights', 'initInsights'],
+      partner: ['openPartnerView', 'renderPartnerView', 'initPartner'],
+      calendar: ['loadCalendar', 'renderCalendar', 'initCalendar'],
+      history: ['loadHistory', 'renderHistory', 'initHistory'],
+      syllabus: ['loadSyllabus', 'renderSyllabus', 'initSyllabus'],
+      subjects: ['loadSubjects', 'renderSubjects', 'initSubjects'],
+      revision: ['loadRevision', 'renderRevision', 'initRevision'],
+      goals: ['loadGoals', 'renderGoals', 'initGoals'],
+      planner: ['loadPlanner', 'renderPlanner', 'initPlanner'],
+      notes: ['loadNotes', 'renderNotes', 'initNotes'],
+      tests: ['loadTests', 'renderTests', 'initTests'],
+      premium: ['loadPremium', 'renderPremium', 'initPremium'],
+      dashboard: ['loadDashboard', 'renderDashboard', 'initDashboard'],
+    };
+
+    const fns = loaders[viewName] || [];
+    for (let i = 0; i < fns.length; i++) {
+      if (typeof window[fns[i]] === 'function') {
+        try {
+          window[fns[i]]();
+          log('⚡ Loader called:', fns[i]);
+          break;
+        } catch (e) {
+          log('⚠️ Loader error:', fns[i], e.message);
+        }
+      }
+    }
+
+    // 6. Partner view special handling
+    if (viewName === 'partner' && window.__partner && typeof window.__partner.open === 'function') {
+      try {
+        window.__partner.open();
+        log('✅ Partner view opened via __partner');
+      } catch (e) {}
+    }
+
+    log('🎉 View fully activated:', viewName);
+    return true;
   }
 
-  /* ═══════ RESTORE ON LOAD ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     STEP 3: WAIT FOR STATE + VIEWS, THEN ACTIVATE
+     ═══════════════════════════════════════════════════════ */
   function restoreLastView() {
+    // Priority: URL hash > localStorage
     let targetView = location.hash.replace('#', '');
     if (!targetView) {
       try {
         targetView = localStorage.getItem(STORAGE_KEY);
       } catch (e) {}
     }
+
     if (!targetView || targetView === 'study') {
       log('No view to restore');
       return;
     }
 
-    log('Will restore:', targetView);
+    log('🔄 Will restore:', targetView);
 
-    // 1.5 sec wait karo state load hone ke liye, phir DIRECT restore
-    setTimeout(function () {
-      // Pehle nav click try karo (best case)
-      const navItem = document.querySelector('.nav-item[data-view="' + targetView + '"]');
-      if (navItem && !navItem.classList.contains('active')) {
-        log('👆 Trying nav click...');
-        navItem.click();
+    let attempts = 0;
+    const maxAttempts = 80; // 16 seconds max (80 * 200ms)
+
+    const waitAndRestore = setInterval(function () {
+      attempts++;
+
+      // 1. State check
+      let state = null;
+      try {
+        if (typeof getState === 'function') state = getState();
+        if (!state) state = window.state || window.appState;
+      } catch (e) {}
+
+      // 2. View element check
+      const viewEl = document.getElementById('view-' + targetView);
+      const navEl = document.querySelector('.nav-item[data-view="' + targetView + '"]');
+
+      // 3. State + view + nav — sab ready hone chahiye
+      const stateReady = state && state.user;
+      const viewReady = !!viewEl;
+      const navReady = !!navEl;
+
+      if (!stateReady || !viewReady || !navReady) {
+        if (attempts % 5 === 0) {
+          log(
+            '⏳ Waiting... attempt ' +
+              attempts +
+              ' (state:' +
+              !!stateReady +
+              ' view:' +
+              viewReady +
+              ' nav:' +
+              navReady +
+              ')',
+          );
+        }
+        if (attempts > maxAttempts) {
+          log('❌ Timeout — giving up');
+          clearInterval(waitAndRestore);
+        }
+        return;
       }
 
-      // 300ms baad verify — agar active nahi hua toh FORCE
+      // Sab ready — ab activate karo
+      clearInterval(waitAndRestore);
+
+      // Chhota sa delay taaki sab handlers ready ho jayein
       setTimeout(function () {
-        const navActive = navItem && navItem.classList.contains('active');
-        const viewEl = document.getElementById('view-' + targetView);
-        const viewActive = viewEl && viewEl.classList.contains('active');
-
-        if (navActive && viewActive) {
-          log('✅ Nav click worked');
-          return;
+        const success = activateView(targetView);
+        if (success) {
+          log('🎯 SUCCESS: ' + targetView);
+        } else {
+          log('❌ FAILED to activate: ' + targetView);
         }
-
-        // FORCE restore — koi premium check nahi
-        log('🚨 Forcing view directly');
-        restoreViewDirectly(targetView);
       }, 300);
-    }, 1500);
+    }, 200);
   }
 
-  /* ═══════ HASH CHANGE ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     STEP 4: BROWSER BACK/FORWARD
+     ═══════════════════════════════════════════════════════ */
   window.addEventListener('hashchange', function () {
     const view = location.hash.replace('#', '');
-    if (!view) return;
-    const navItem = document.querySelector('.nav-item[data-view="' + view + '"]');
-    if (navItem) navItem.click();
+    if (!view || view === 'study') return;
+
+    // Direct activate karo
+    setTimeout(function () {
+      activateView(view);
+    }, 100);
   });
 
-  /* ═══════ BOOT ═══════ */
+  /* ═══════════════════════════════════════════════════════
+     STEP 5: BOOT
+     ═══════════════════════════════════════════════════════ */
   function boot() {
     let attempts = 0;
+    const maxAttempts = 60;
+
     const waitForNav = setInterval(function () {
       attempts++;
       const navItems = document.querySelectorAll('.nav-item[data-view]');
 
       if (navItems.length >= 3) {
-        log('Nav ready (' + navItems.length + ')');
+        log('📋 Nav items ready (' + navItems.length + ')');
         attachNavListeners();
         clearInterval(waitForNav);
+
+        // View restore 800ms baad start karo
         setTimeout(restoreLastView, 800);
+
+        // Naye nav items ke liye re-scan
         setInterval(attachNavListeners, 2000);
       }
 
-      if (attempts > 60) clearInterval(waitForNav);
+      if (attempts > maxAttempts) {
+        log('❌ Nav never appeared');
+        clearInterval(waitForNav);
+      }
     }, 200);
   }
 
@@ -180,5 +242,5 @@
     boot();
   }
 
-  log('✅ Simple hash router loaded');
+  log('✅ FINAL hash router loaded');
 })();
