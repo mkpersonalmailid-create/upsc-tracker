@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Complete Final Module
+   STUDY WITH PARTNER — Complete Module
    Auto-injects sidebar tab + view. Zero changes to app.html.
    ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -66,7 +66,6 @@
     btn.dataset.view = 'partner';
     btn.innerHTML = `<span class="nav-icon">👥</span><span class="nav-label">Study Partner</span><span class="nav-badge hidden" id="partnerBadge">0</span>`;
 
-    // Insert in "More" section — before Premium
     const anchor =
       nav.querySelector('.nav-item[data-view="premium"]') ||
       nav.querySelector('.nav-item[data-view="support"]') ||
@@ -112,7 +111,63 @@
     renderPartnerView();
   }
 
-  // ═══════════════ 4. RENDER PARTNER VIEW ═══════════════
+  // ═══════════════ 4. HOW IT WORKS CARD ═══════════════
+  function howItWorksCard() {
+    return `
+      <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.25)">
+        <div class="card-header">
+          <div>
+            <span class="card-title-lg">💡 How Study Partner Works</span>
+            <div style="font-size:.82rem;color:var(--text-3);margin-top:4px">
+              Understand the feature in 4 simple steps
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px">
+
+          <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--purple)">
+            <div style="font-size:1.4rem;margin-bottom:8px">1️⃣</div>
+            <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Add Your Partner</div>
+            <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
+              Enter your friend's email address. We'll check if they're on UPSC Tracker.
+            </div>
+          </div>
+
+          <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--pink)">
+            <div style="font-size:1.4rem;margin-bottom:8px">2️⃣</div>
+            <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Invite or Request</div>
+            <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
+              If they're registered → instant request. If not → you get a shareable invite link for WhatsApp/Telegram.
+            </div>
+          </div>
+
+          <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--orange)">
+            <div style="font-size:1.4rem;margin-bottom:8px">3️⃣</div>
+            <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Both Accept</div>
+            <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
+              Comparison only unlocks when BOTH accept. Your privacy is protected — no data is shared without consent.
+            </div>
+          </div>
+
+          <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--teal)">
+            <div style="font-size:1.4rem;margin-bottom:8px">4️⃣</div>
+            <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Compare & Compete</div>
+            <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
+              See side-by-side stats: study time, streaks, syllabus progress, and motivate each other daily.
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:16px;padding:12px 14px;background:rgba(168,85,247,.08);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6;border-left:3px solid var(--purple)">
+          🔒 <strong>Privacy First:</strong> Your notes, personal data, and individual sessions are never shared. Only aggregate stats (study hours, streaks, syllabus %) are visible to your partner.
+        </div>
+      </div>
+    `;
+  }
+
+  // ═══════════════ 5. RENDER PARTNER VIEW ═══════════════
   async function renderPartnerView() {
     const el = document.getElementById('partnerContent');
     if (!el) return;
@@ -139,7 +194,7 @@
           <div>
             <span class="card-title-lg">👥 Study with Partner</span>
             <div style="font-size:.82rem;color:var(--text-3);margin-top:4px">
-              Apne dost ke saath padho, compare karo, aur motivated raho.
+              Study alongside a friend, compare progress, and stay motivated together.
             </div>
           </div>
           ${accepted.length < 1 ? `<button class="btn btn-primary btn-sm" id="pAddBtn">＋ Add Partner</button>` : ''}
@@ -147,10 +202,22 @@
       </div>
     `;
 
+    // ═══ HOW IT WORKS — Show only when no partner yet ═══
+    if (accepted.length === 0 && incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
+      html += howItWorksCard();
+    }
+
     if (incoming.length > 0) {
       html += `
         <div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)">
-          <div class="card-header"><span class="card-title-lg">🔔 Partner Requests (${incoming.length})</span></div>
+          <div class="card-header">
+            <div>
+              <span class="card-title-lg">🔔 Partner Requests (${incoming.length})</span>
+              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+                Someone wants to study with you. Accept to start comparing.
+              </div>
+            </div>
+          </div>
           <div class="list" id="pIncomingList"></div>
         </div>`;
     }
@@ -158,7 +225,14 @@
     if (outgoing.length > 0 || myInvites.length > 0) {
       html += `
         <div class="card" style="margin-bottom:18px">
-          <div class="card-header"><span class="card-title-lg">📤 Sent Requests</span></div>
+          <div class="card-header">
+            <div>
+              <span class="card-title-lg">📤 Sent Requests</span>
+              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+                Waiting for your friend to accept.
+              </div>
+            </div>
+          </div>
           <div class="list" id="pOutgoingList"></div>
         </div>`;
     }
@@ -170,8 +244,8 @@
         <div class="card">
           <div class="empty" style="padding:60px 20px">
             <div class="em">👥</div>
-            <h4>Abhi tak koi partner nahi</h4>
-            <p>Apne dost ko add karo aur saath me padho!</p>
+            <h4>No partner yet</h4>
+            <p>Add a friend and start studying together!</p>
             <button class="btn btn-primary" id="pAddBtn2">＋ Add Your First Partner</button>
           </div>
         </div>`;
@@ -182,7 +256,7 @@
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
     document.getElementById('pAddBtn2')?.addEventListener('click', openAddPartnerModal);
 
-    // Render incoming
+    // Render incoming requests
     if (incoming.length > 0) {
       const listEl = document.getElementById('pIncomingList');
       listEl.innerHTML = '';
@@ -200,7 +274,7 @@
           </div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-success btn-sm" data-pa-accept="${link.id}">✓ Accept</button>
-            <button class="btn btn-secondary btn-sm" data-pa-reject="${link.id}">✕ Reject</button>
+            <button class="btn btn-secondary btn-sm" data-pa-reject="${link.id}">✕ Decline</button>
           </div>`;
         listEl.appendChild(card);
       }
@@ -212,7 +286,7 @@
         .forEach((b) => (b.onclick = () => respondToRequest(b.dataset.paReject, 'rejected')));
     }
 
-    // Render outgoing
+    // Render outgoing requests
     if (outgoing.length > 0 || myInvites.length > 0) {
       const listEl = document.getElementById('pOutgoingList');
       listEl.innerHTML = '';
@@ -236,10 +310,10 @@
           <div style="width:38px;height:38px;border-radius:50%;background:var(--card-2);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">📨</div>
           <div class="row-info">
             <div class="row-title">${esc(inv.invitee_email)}</div>
-            <div class="row-meta">Invite link — expires ${new Date(inv.expires_at).toLocaleDateString()}</div>
+            <div class="row-meta">Invite sent — expires on ${new Date(inv.expires_at).toLocaleDateString()}</div>
           </div>
           <div style="display:flex;gap:6px">
-            <button class="btn btn-primary btn-sm" data-pa-share="${inv.id}">Share</button>
+            <button class="btn btn-primary btn-sm" data-pa-share="${inv.id}">Share Link</button>
             <button class="btn btn-secondary btn-sm" data-pa-cancel-inv="${inv.id}">Cancel</button>
           </div>`;
         listEl.appendChild(card);
@@ -257,13 +331,12 @@
       );
     }
 
-    // Render comparison
     if (accepted.length > 0) {
       await renderComparison(accepted, myId);
     }
   }
 
-  // ═══════════════ 5. DATA LOADING ═══════════════
+  // ═══════════════ 6. DATA LOADING ═══════════════
   async function loadPartnerData(user) {
     const supa = window.supa;
     if (!supa) return;
@@ -321,15 +394,21 @@
     }
   }
 
-  // ═══════════════ 6. ADD PARTNER MODAL ═══════════════
+  // ═══════════════ 7. ADD PARTNER MODAL ═══════════════
   function openAddPartnerModal() {
     const body = `
+      <div style="padding:12px 14px;background:var(--card-2);border-radius:12px;margin-bottom:14px;font-size:.82rem;color:var(--text-2);line-height:1.6">
+        <strong style="color:var(--text)">How it works:</strong>
+        <br>Enter your friend's email below.
+        <br>• If they're on UPSC Tracker → we'll send them a request.
+        <br>• If not → you'll get a shareable invite link for WhatsApp or Telegram.
+      </div>
+
       <div class="field">
         <label>Partner's Email</label>
         <input type="email" id="pEmailInput" placeholder="friend@example.com" autocomplete="off" />
         <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
-          Agar wo app me registered hoga toh direct request jayegi.
-          Warna aapko invite link milega jise WhatsApp/Telegram pe share kar sakte ho.
+          Both of you must accept before any comparison starts.
         </div>
       </div>`;
 
@@ -345,7 +424,7 @@
     window.openModal(
       window.modalShell({
         title: '➕ Add Study Partner',
-        subtitle: 'Email se partner dhundho',
+        subtitle: 'Find your partner by email',
         body,
         actions,
       }),
@@ -356,7 +435,7 @@
           document.getElementById('pSendBtn').onclick = async () => {
             const email = (input.value || '').trim().toLowerCase();
             if (!email || !email.includes('@')) {
-              tmsg('Valid email daalo', 'err');
+              tmsg('Please enter a valid email', 'err');
               return;
             }
             await sendPartnerRequest(email);
@@ -366,7 +445,7 @@
     );
   }
 
-  // ═══════════════ 7. SEND REQUEST ═══════════════
+  // ═══════════════ 8. SEND REQUEST ═══════════════
   async function sendPartnerRequest(email) {
     const supa = window.supa;
     const user = await getCurrentUser();
@@ -374,7 +453,7 @@
 
     const myEmail = (user.email || '').toLowerCase();
     if (email === myEmail) {
-      tmsg('Khud ko partner nahi bana sakte 😅', 'err');
+      tmsg('You cannot add yourself as a partner', 'err');
       return;
     }
 
@@ -397,7 +476,7 @@
           .maybeSingle();
 
         if (existing) {
-          tmsg('Ye request already bhej hui hai ya partner already hai', 'info');
+          tmsg('A request already exists with this user', 'info');
           if (btn) {
             btn.disabled = false;
             btn.textContent = 'Send Request';
@@ -424,7 +503,7 @@
         if (invErr) throw invErr;
 
         if (typeof window.closeModal === 'function') window.closeModal();
-        tmsg('📨 Invite link ready! Share karo', 'ok');
+        tmsg('📨 Invite link ready! Share it with your friend.', 'ok');
         openShareModal(invite);
         renderPartnerView();
       }
@@ -438,36 +517,44 @@
     }
   }
 
-  // ═══════════════ 8. SHARE MODAL ═══════════════
+  // ═══════════════ 9. SHARE MODAL ═══════════════
   function openShareModal(invite) {
     const link = `${APP_URL}/auth.html?invite=${invite.token}`;
-    const shareText = `Bhai, UPSC Tracker pe mera study partner ban na! Ye link use kar: ${link}`;
+    const shareText = `Join me on UPSC Tracker as my study partner! Use this link: ${link}`;
 
     const body = `
       <div style="padding:14px;background:var(--card-2);border-radius:12px;margin-bottom:14px">
         <div style="font-size:.72rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Invite Link</div>
         <div style="font-family:var(--mono);font-size:.78rem;word-break:break-all;color:var(--text-2)" id="pShareLink">${esc(link)}</div>
       </div>
+
+      <div style="font-size:.78rem;color:var(--text-3);text-align:center;margin-bottom:12px">
+        Share this link via any platform:
+      </div>
+
       <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
         <button class="btn btn-secondary" id="pCopyBtn" style="padding:14px">📋 Copy Link</button>
         <button class="btn btn-secondary" id="pWhatsappBtn" style="padding:14px;background:#25D366;color:#fff;border:none">💬 WhatsApp</button>
         <button class="btn btn-secondary" id="pTelegramBtn" style="padding:14px;background:#0088cc;color:#fff;border:none">✈️ Telegram</button>
         <button class="btn btn-secondary" id="pInstagramBtn" style="padding:14px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:none">📷 Instagram</button>
       </div>
-      <p style="font-size:.72rem;color:var(--text-3);text-align:center;margin-top:14px">⏳ Ye link 7 din tak valid hai</p>`;
+
+      <p style="font-size:.72rem;color:var(--text-3);text-align:center;margin-top:14px">
+        ⏳ This link is valid for 7 days
+      </p>`;
 
     const actions = `<button class="btn btn-secondary" data-close>Close</button>`;
 
     if (typeof window.openModal !== 'function') {
       navigator.clipboard?.writeText(link);
-      tmsg('Link copied!', 'ok');
+      tmsg('Link copied to clipboard!', 'ok');
       return;
     }
 
     window.openModal(
       window.modalShell({
         title: '🎉 Invite Ready!',
-        subtitle: 'Share with your friend',
+        subtitle: 'Share with your friend to get started',
         body,
         actions,
       }),
@@ -481,13 +568,13 @@
           };
           document.getElementById('pTelegramBtn').onclick = () => {
             window.open(
-              `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Study partner ban na!')}`,
+              `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('Join me on UPSC Tracker!')}`,
               '_blank',
             );
           };
           document.getElementById('pInstagramBtn').onclick = () => {
             navigator.clipboard.writeText(shareText).then(() => {
-              tmsg('✅ Text copied — Instagram me paste karo!', 'ok');
+              tmsg('✅ Text copied — paste it in Instagram DM!', 'ok');
               setTimeout(() => window.open('https://www.instagram.com/direct/inbox/', '_blank'), 500);
             });
           };
@@ -496,7 +583,7 @@
     );
   }
 
-  // ═══════════════ 9. RESPOND TO REQUEST ═══════════════
+  // ═══════════════ 10. RESPOND TO REQUEST ═══════════════
   async function respondToRequest(linkId, status) {
     const supa = window.supa;
     if (!supa) return;
@@ -505,7 +592,7 @@
       if (status === 'accepted') updates.accepted_at = new Date().toISOString();
       const { error } = await supa.from('partner_links').update(updates).eq('id', linkId);
       if (error) throw error;
-      tmsg(status === 'accepted' ? '✅ Partner added!' : '❌ Request rejected', 'ok');
+      tmsg(status === 'accepted' ? '✅ Partner added!' : 'Request declined', 'ok');
       renderPartnerView();
     } catch (e) {
       tmsg('Failed: ' + e.message, 'err');
@@ -536,7 +623,7 @@
     }
   }
 
-  // ═══════════════ 10. COMPARISON ═══════════════
+  // ═══════════════ 11. COMPARISON DASHBOARD ═══════════════
   async function renderComparison(acceptedLinks, myId) {
     const wrap = document.getElementById('pComparisonWrap');
     if (!wrap) return;
@@ -574,13 +661,17 @@
         <div class="card-header">
           <div>
             <span class="card-title-lg">📊 You vs ${esc(partner.name || 'Partner')}</span>
-            <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">Last 30 days comparison</div>
+            <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+              Last 30 days · Side-by-side comparison
+            </div>
           </div>
           <button class="btn btn-danger btn-sm" data-pa-remove="${link.id}">Remove Partner</button>
         </div>
+
         <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+
           <div class="kpi" style="--c:var(--purple);--cb:rgba(168,85,247,0.15)">
-            <div class="kpi-label">Today's Study Time</div>
+            <div class="kpi-label">⏱ Today's Study Time</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
               <div>
                 <div style="font-size:.65rem;color:var(--text-3);font-weight:800">YOU</div>
@@ -591,10 +682,11 @@
                 <div style="font-size:1.4rem;font-weight:900;color:var(--pink)">${fmtDuration(pToday)}</div>
               </div>
             </div>
-            ${myToday > pToday ? '<div style="font-size:.7rem;color:var(--emerald);margin-top:6px">🏆 You lead!</div>' : pToday > myToday ? '<div style="font-size:.7rem;color:var(--amber);margin-top:6px">💪 Catch up!</div>' : '<div style="font-size:.7rem;color:var(--text-3);margin-top:6px">🤝 Tied!</div>'}
+            ${myToday > pToday ? '<div style="font-size:.7rem;color:var(--emerald);margin-top:6px">🏆 You are ahead!</div>' : pToday > myToday ? '<div style="font-size:.7rem;color:var(--amber);margin-top:6px">💪 Time to catch up!</div>' : '<div style="font-size:.7rem;color:var(--text-3);margin-top:6px">🤝 It\'s a tie!</div>'}
           </div>
+
           <div class="kpi" style="--c:var(--orange);--cb:rgba(249,115,22,0.15)">
-            <div class="kpi-label">30-Day Total</div>
+            <div class="kpi-label">📅 30-Day Total</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
               <div>
                 <div style="font-size:.65rem;color:var(--text-3);font-weight:800">YOU</div>
@@ -606,8 +698,9 @@
               </div>
             </div>
           </div>
+
           <div class="kpi" style="--c:var(--red);--cb:rgba(239,68,68,0.15)">
-            <div class="kpi-label">🔥 Streak</div>
+            <div class="kpi-label">🔥 Current Streak</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
               <div>
                 <div style="font-size:.65rem;color:var(--text-3);font-weight:800">YOU</div>
@@ -619,6 +712,7 @@
               </div>
             </div>
           </div>
+
           <div class="kpi" style="--c:var(--teal);--cb:rgba(20,184,166,0.15)">
             <div class="kpi-label">📖 Syllabus Progress</div>
             <div style="display:flex;justify-content:space-between;align-items:end;margin-top:8px">
@@ -633,9 +727,11 @@
             </div>
             <div style="font-size:.68rem;color:var(--text-3);margin-top:6px">topics completed</div>
           </div>
+
         </div>
+
         <div style="margin-top:16px;padding:12px 14px;background:var(--card-2);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6">
-          💡 <strong>Tip:</strong> Partner ke saath consistent raho — ek dusre ko motivate karo!
+          💡 <strong>Tip:</strong> Stay consistent with your partner — motivate each other daily!
         </div>`;
 
       wrap.appendChild(card);
@@ -688,7 +784,7 @@
     const ok = window.customConfirm
       ? await window.customConfirm({
           title: 'Remove Partner?',
-          message: `${partnerName || 'Partner'} ko remove karoge?`,
+          message: `Are you sure you want to remove ${partnerName || 'this partner'}? Comparison will stop.`,
           confirmText: 'Remove',
           cancelText: 'Cancel',
           icon: '👋',
@@ -707,7 +803,7 @@
     }
   }
 
-  // ═══════════════ 11. INVITE TOKEN HANDLER ═══════════════
+  // ═══════════════ 12. INVITE TOKEN HANDLER ═══════════════
   async function handleInviteToken() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('invite');
@@ -726,11 +822,11 @@
 
       if (!invite) return;
       if (new Date(invite.expires_at) < new Date()) {
-        tmsg('Ye invite link expire ho gaya', 'warn');
+        tmsg('This invite link has expired', 'warn');
         return;
       }
       if (invite.requester_id === user.id) {
-        tmsg('Ye aapka hi invite hai 😅', 'info');
+        tmsg('This is your own invite link', 'info');
         return;
       }
 
@@ -752,13 +848,13 @@
 
       window.history.replaceState({}, '', window.location.pathname);
       const requester = await fetchProfile(invite.requester_id);
-      tmsg(`🎉 ${requester?.name || 'User'} ke saath partner ban gaye!`, 'ok', 5000);
+      tmsg(`🎉 You're now study partners with ${requester?.name || 'your friend'}!`, 'ok', 5000);
     } catch (e) {
       console.warn('[Partner] invite error:', e);
     }
   }
 
-  // ═══════════════ 12. INIT ═══════════════
+  // ═══════════════ 13. INIT ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -808,14 +904,12 @@
     backgroundLoad();
   }
 
-  // ═══════════════ 13. START ═══════════════
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
     boot();
   }
 
-  // Watch for DOM changes
   const observer = new MutationObserver(() => {
     if (!document.querySelector('.nav-item[data-view="partner"]')) {
       tryInject();
@@ -823,7 +917,6 @@
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Expose for debugging
   window.__partner = {
     reload: () => renderPartnerView(),
     open: () => openPartnerView(),
