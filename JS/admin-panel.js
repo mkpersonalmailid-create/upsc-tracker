@@ -1819,6 +1819,197 @@
     );
   }
 
+  /* ═══════════════ TAB: PARTNERS ═══════════════ */
+  async function renderPartners() {
+    const wrap = document.createElement('div');
+    wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
+
+    /* ── Fetch data ── */
+    let links = [],
+      invites = [],
+      profiles = [];
+    try {
+      const [r1, r2, r3] = await Promise.all([
+        supa.from('partner_links').select('*').order('created_at', { ascending: false }),
+        supa.from('partner_invites').select('*').order('created_at', { ascending: false }),
+        supa.from('profiles').select('id, name, email, is_admin'),
+      ]);
+      links = r1.data || [];
+      invites = r2.data || [];
+      profiles = r3.data || [];
+    } catch (e) {
+      console.warn('[admin partners]', e);
+    }
+
+    /* ── Profile map ── */
+    const profMap = {};
+    profiles.forEach((p) => {
+      profMap[p.id] = p;
+    });
+
+    /* ── Stats ── */
+    const accepted = links.filter((l) => l.status === 'accepted');
+    const pending = links.filter((l) => l.status === 'pending');
+    const rejected = links.filter((l) => l.status === 'rejected' || l.status === 'removed');
+    const pendingInvites = invites.filter((i) => i.status === 'pending');
+    const usedInvites = invites.filter((i) => i.status === 'accepted');
+
+    /* ── KPI Row ── */
+    wrap.appendChild(
+      elFrom(`<div class="anp-kpi-grid">
+      ${kpi('Active Pairs', accepted.length, 'both accepted', '#10B981', '')}
+      ${kpi('Pending Requests', pending.length, 'waiting response', '#FBBF24', '')}
+      ${kpi('Invite Links', invites.length, `${pendingInvites.length} pending`, '#A855F7', '')}
+      ${kpi('Removed/Rejected', rejected.length, 'cancelled', '#6E5F8C', '')}
+    </div>`),
+    );
+
+    /* ── Active Partner Pairs Table ── */
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('🤝', 'Active Partner Pairs', `${accepted.length} pairs`, '')}
+      ${
+        accepted.length === 0
+          ? emptyState('📭', 'No active pairs yet', 'When two users accept each other, their pair will appear here.')
+          : `<div class="anp-table-scroll">
+            <table class="anp-table">
+              <thead>
+                <tr>
+                  <th>Requester</th>
+                  <th>Partner</th>
+                  <th>Accepted On</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${accepted
+                  .map((l) => {
+                    const req = profMap[l.requester_id] || {};
+                    const par = profMap[l.partner_id] || {};
+                    const reqColor = req.is_admin
+                      ? 'linear-gradient(135deg,#FBBF24,#EC4899)'
+                      : 'linear-gradient(135deg,#8B5CF6,#EC4899)';
+                    const parColor = par.is_admin
+                      ? 'linear-gradient(135deg,#FBBF24,#EC4899)'
+                      : 'linear-gradient(135deg,#8B5CF6,#EC4899)';
+                    const fmtAcc = l.accepted_at
+                      ? new Date(l.accepted_at).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      : '—';
+                    return `<tr>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:8px;min-width:180px">
+                        <span class="anp-user-avatar" style="background:${reqColor}">${escHtml((req.name || 'U')[0].toUpperCase())}</span>
+                        <div style="min-width:0">
+                          <div style="font-weight:700;color:var(--text);font-size:.78rem">${escHtml(req.name || '—')}</div>
+                          <div style="font-size:.66rem;color:var(--text-3)">${escHtml(req.email || '—')}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:8px;min-width:180px">
+                        <span class="anp-user-avatar" style="background:${parColor}">${escHtml((par.name || 'U')[0].toUpperCase())}</span>
+                        <div style="min-width:0">
+                          <div style="font-weight:700;color:var(--text);font-size:.78rem">${escHtml(par.name || '—')}</div>
+                          <div style="font-size:.66rem;color:var(--text-3)">${escHtml(par.email || '—')}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>${fmtAcc}</td>
+                  </tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`
+      }
+    </div>`),
+    );
+
+    /* ── Pending Requests Table ── */
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('⏳', 'Pending Requests', `${pending.length} waiting`, '')}
+      ${
+        pending.length === 0
+          ? emptyState('✅', 'No pending requests', 'All requests have been responded to.')
+          : `<div class="anp-table-scroll">
+            <table class="anp-table">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>To</th>
+                  <th>Sent</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pending
+                  .map((l) => {
+                    const req = profMap[l.requester_id] || {};
+                    const par = profMap[l.partner_id] || {};
+                    return `<tr>
+                    <td><strong style="color:var(--text)">${escHtml(req.name || '—')}</strong><br><span style="font-size:.66rem;color:var(--text-3)">${escHtml(req.email || '')}</span></td>
+                    <td><strong style="color:var(--text)">${escHtml(par.name || '—')}</strong><br><span style="font-size:.66rem;color:var(--text-3)">${escHtml(par.email || '')}</span></td>
+                    <td>${relTime(l.created_at)}</td>
+                  </tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`
+      }
+    </div>`),
+    );
+
+    /* ── Invite Links Table ── */
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('📨', 'Invite Links', `${invites.length} total`, '')}
+      ${
+        invites.length === 0
+          ? emptyState('📭', 'No invite links', 'When a user invites a non-registered email, it will appear here.')
+          : `<div class="anp-table-scroll">
+            <table class="anp-table">
+              <thead>
+                <tr>
+                  <th>Invited By</th>
+                  <th>Invitee Email</th>
+                  <th>Status</th>
+                  <th>Sent</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invites
+                  .slice(0, 50)
+                  .map((i) => {
+                    const req = profMap[i.requester_id] || {};
+                    const statusPill =
+                      i.status === 'accepted'
+                        ? '<span class="anp-pill premium">✓ Accepted</span>'
+                        : i.status === 'pending'
+                          ? '<span class="anp-pill" style="background:rgba(251,191,36,.15);color:#FBBF24">⏳ Pending</span>'
+                          : '<span class="anp-pill free">Cancelled</span>';
+                    return `<tr>
+                    <td><strong style="color:var(--text)">${escHtml(req.name || '—')}</strong><br><span style="font-size:.66rem;color:var(--text-3)">${escHtml(req.email || '')}</span></td>
+                    <td>${escHtml(i.invitee_email || '—')}</td>
+                    <td>${statusPill}</td>
+                    <td>${relTime(i.created_at)}</td>
+                  </tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`
+      }
+    </div>`),
+    );
+
+    return wrap;
+  }
+
   /* ═══════════════ TAB: SUPPORT ═══════════════ */
   async function renderSupport() {
     const wrap = document.createElement('div');
@@ -2092,6 +2283,7 @@
       const tabs = [
         { id: 'overview', label: 'Overview', icon: '📊' },
         { id: 'users', label: 'Users', icon: '👥' },
+        { id: 'partners', label: 'Partners', icon: '🤝' },
         { id: 'engagement', label: 'Engagement', icon: '📈' },
         { id: 'revenue', label: 'Revenue', icon: '💰' },
         { id: 'content', label: 'Content', icon: '📢' },
@@ -2118,6 +2310,7 @@
           let content;
           if (anP.tab === 'overview') content = await renderOverview();
           else if (anP.tab === 'users') content = await renderUsers();
+          else if (anP.tab === 'partners') content = await renderPartners();
           else if (anP.tab === 'engagement') content = await renderEngagement();
           else if (anP.tab === 'revenue') content = await renderRevenue();
           else if (anP.tab === 'content') content = await renderContent();
