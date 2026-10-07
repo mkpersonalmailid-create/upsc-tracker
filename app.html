@@ -6722,6 +6722,7 @@
           supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
             auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
           });
+          window.supa = supa; // ⬅️ YE LINE ADD KARO
           return true;
         } catch (e) {
           console.error('Supabase init failed', e);
