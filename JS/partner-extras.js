@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Complete Fixed Module
+   STUDY WITH PARTNER — Complete Final Module
    Auto-injects sidebar tab + view. Zero changes to app.html.
    ═══════════════════════════════════════════════════════════════ */
 (function () {
@@ -12,10 +12,8 @@
     links: [],
     invites: [],
     loading: false,
+    cachedUser: null,
   };
-
-  const $p = (s, r = document) => r.querySelector(s);
-  const $$p = (s, r = document) => [...r.querySelectorAll(s)];
 
   function esc(s) {
     return String(s ?? '').replace(
@@ -43,6 +41,20 @@
     else console.log('[Partner]', msg);
   }
 
+  async function getCurrentUser() {
+    if (pstate.cachedUser) return pstate.cachedUser;
+    if (!window.supa) return null;
+    try {
+      const {
+        data: { user },
+      } = await window.supa.auth.getUser();
+      pstate.cachedUser = user || null;
+      return user;
+    } catch (e) {
+      return null;
+    }
+  }
+
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
@@ -54,7 +66,7 @@
     btn.dataset.view = 'partner';
     btn.innerHTML = `<span class="nav-icon">👥</span><span class="nav-label">Study Partner</span><span class="nav-badge hidden" id="partnerBadge">0</span>`;
 
-    // Insert in "More" section — before Premium (or before Help/Support)
+    // Insert in "More" section — before Premium
     const anchor =
       nav.querySelector('.nav-item[data-view="premium"]') ||
       nav.querySelector('.nav-item[data-view="support"]') ||
@@ -66,11 +78,7 @@
       nav.appendChild(btn);
     }
 
-    // Click handler — uses global switchView if available
-    btn.addEventListener('click', () => {
-      openPartnerView();
-    });
-
+    btn.addEventListener('click', openPartnerView);
     return true;
   }
 
@@ -88,21 +96,19 @@
     return true;
   }
 
-  // ═══════════════ 3. OPEN PARTNER VIEW (Bypass switchView) ═══════════════
+  // ═══════════════ 3. OPEN PARTNER VIEW ═══════════════
   function openPartnerView() {
-    // Hide all views
     document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
-    // Show partner view
     const view = document.getElementById('view-partner');
     if (view) view.classList.add('active');
-    // Update nav active state
+
     document.querySelectorAll('.nav-item').forEach((n) => {
       n.classList.toggle('active', n.dataset.view === 'partner');
     });
-    // Scroll to top
+
     const content = document.getElementById('content');
     if (content) content.scrollTop = 0;
-    // Render
+
     renderPartnerView();
   }
 
@@ -113,13 +119,13 @@
 
     el.innerHTML = `<div class="empty"><div class="em">👥</div><h4>Loading…</h4></div>`;
 
-    await loadPartnerData();
-
-    const user = window.state?.user;
+    const user = await getCurrentUser();
     if (!user) {
       el.innerHTML = `<div class="empty"><div class="em">🔒</div><h4>Sign in to continue</h4></div>`;
       return;
     }
+
+    await loadPartnerData(user);
 
     const myId = user.id;
     const accepted = pstate.links.filter((l) => l.status === 'accepted');
@@ -173,7 +179,6 @@
 
     el.innerHTML = html;
 
-    // Wire add buttons
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
     document.getElementById('pAddBtn2')?.addEventListener('click', openAddPartnerModal);
 
@@ -254,15 +259,18 @@
 
     // Render comparison
     if (accepted.length > 0) {
-      await renderComparison(accepted);
+      await renderComparison(accepted, myId);
     }
   }
 
   // ═══════════════ 5. DATA LOADING ═══════════════
-  async function loadPartnerData() {
+  async function loadPartnerData(user) {
     const supa = window.supa;
-    const user = window.state?.user;
-    if (!supa || !user) return;
+    if (!supa) return;
+    if (!user) {
+      user = await getCurrentUser();
+      if (!user) return;
+    }
     pstate.loading = true;
     try {
       const { data: links } = await supa
@@ -279,7 +287,7 @@
         .order('created_at', { ascending: false });
       pstate.invites = invites || [];
 
-      updateBadge();
+      updateBadge(user.id);
     } catch (e) {
       console.warn('[Partner] load error:', e);
     } finally {
@@ -287,12 +295,10 @@
     }
   }
 
-  function updateBadge() {
+  function updateBadge(myId) {
     const badge = document.getElementById('partnerBadge');
     if (!badge) return;
-    const pendingCount = pstate.links.filter(
-      (l) => l.status === 'pending' && l.partner_id === window.state?.user?.id,
-    ).length;
+    const pendingCount = pstate.links.filter((l) => l.status === 'pending' && l.partner_id === myId).length;
     if (pendingCount > 0) {
       badge.textContent = pendingCount;
       badge.classList.remove('hidden');
@@ -363,7 +369,7 @@
   // ═══════════════ 7. SEND REQUEST ═══════════════
   async function sendPartnerRequest(email) {
     const supa = window.supa;
-    const user = window.state?.user;
+    const user = await getCurrentUser();
     if (!supa || !user) return;
 
     const myEmail = (user.email || '').toLowerCase();
@@ -531,11 +537,9 @@
   }
 
   // ═══════════════ 10. COMPARISON ═══════════════
-  async function renderComparison(acceptedLinks) {
+  async function renderComparison(acceptedLinks, myId) {
     const wrap = document.getElementById('pComparisonWrap');
     if (!wrap) return;
-
-    const myId = window.state?.user?.id;
     wrap.innerHTML = '';
 
     for (const link of acceptedLinks) {
@@ -709,7 +713,7 @@
     const token = params.get('invite');
     if (!token) return;
     const supa = window.supa;
-    const user = window.state?.user;
+    const user = await getCurrentUser();
     if (!supa || !user) return;
 
     try {
@@ -754,7 +758,7 @@
     }
   }
 
-  // ═══════════════ 12. INIT (Runs immediately + retries) ═══════════════
+  // ═══════════════ 12. INIT ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -765,23 +769,22 @@
 
     if (tabOk && viewOk) {
       pstate.initialized = true;
-      console.log('[Partner] ✅ UI injected successfully');
+      console.log('[Partner] ✅ UI injected');
       return true;
     }
     return false;
   }
 
-  // ═══════════════ 13. BACKGROUND DATA LOAD ═══════════════
   async function backgroundLoad() {
-    // Wait for user to be ready
     let tries = 0;
     const checkUser = setInterval(async () => {
       tries++;
-      if (window.state?.user && window.supa) {
+      const user = await getCurrentUser();
+      if (user && window.supa) {
         clearInterval(checkUser);
         console.log('[Partner] ✅ User ready, loading data');
         try {
-          await loadPartnerData();
+          await loadPartnerData(user);
           await handleInviteToken();
         } catch (e) {
           console.warn('[Partner] data load error:', e);
@@ -792,32 +795,27 @@
     }, 500);
   }
 
-  // ═══════════════ 14. BOOT ═══════════════
   function boot() {
-    // Try inject immediately
     if (!tryInject()) {
       let retries = 0;
       const iv = setInterval(() => {
         retries++;
         if (tryInject() || retries > 60) {
           clearInterval(iv);
-          if (retries > 60) console.warn('[Partner] ⚠️ Injection timeout');
         }
       }, 200);
     }
-
-    // Start background data load
     backgroundLoad();
   }
 
-  // ═══════════════ 15. START ═══════════════
+  // ═══════════════ 13. START ═══════════════
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', boot);
   } else {
     boot();
   }
 
-  // Watch for DOM changes (in case nav gets re-rendered)
+  // Watch for DOM changes
   const observer = new MutationObserver(() => {
     if (!document.querySelector('.nav-item[data-view="partner"]')) {
       tryInject();
