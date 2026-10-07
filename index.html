@@ -10,35 +10,35 @@
         "operatingSystem": "Web",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
         "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "247" },
-        "description": "Free study tracker for UPSC aspirants with timer, syllabus, revisions and analytics.",
+        "description": "Free study tracker for UPSC aspirants with timer, syllabus, revisions, analytics, and Study with Partner feature.",
         "url": "https://upscstudytracker.co.in"
       }
     </script>
     <meta charset="UTF-8" />
     <meta name="google-site-verification" content="dRmKh83JHxDa0-vNNDk5U1KRGbCriBWA0-3ptIbeDMg" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Free UPSC Study Tracker — Timer, Syllabus & Analytics</title>
+    <title>Free UPSC Study Tracker — Timer, Syllabus, Analytics & Study with Partner</title>
     <meta
       name="description"
-      content="India's most advanced free UPSC study tracker. Timer, syllabus tracker, revisions, PYQ analytics — built for serious aspirants. Start free today."
+      content="India's most advanced free UPSC study tracker. Timer, syllabus tracker, revisions, PYQ analytics, and Study with Partner — track alongside a friend. Start free today."
     />
     <meta
       name="keywords"
-      content="upsc study tracker, upsc preparation app, ias study planner, upsc syllabus tracker, upsc revision app"
+      content="upsc study tracker, upsc preparation app, ias study planner, upsc syllabus tracker, upsc revision app, study with partner, study buddy, upsc accountability partner"
     />
-    <meta property="og:title" content="UPSC Study Tracker — Track Every Minute, Crack UPSC" />
+    <meta property="og:title" content="UPSC Study Tracker — Track Every Minute, Crack UPSC with a Partner" />
     <meta
       property="og:description"
-      content="Free study tracker built for UPSC aspirants. Timer, syllabus, revisions, analytics."
+      content="Free study tracker built for UPSC aspirants. Timer, syllabus, revisions, analytics, and Study with Partner."
     />
     <meta property="og:image" content="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" />
     <meta property="og:url" content="https://upscstudytracker.co.in" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="UPSC Study Tracker — Track Every Minute, Crack UPSC" />
+    <meta name="twitter:title" content="UPSC Study Tracker — Track Every Minute, Crack UPSC with a Partner" />
     <meta
       name="twitter:description"
-      content="Free study tracker for UPSC aspirants. Timer, syllabus, revisions, analytics."
+      content="Free study tracker for UPSC aspirants. Timer, syllabus, revisions, analytics, and Study with Partner."
     />
     <meta name="twitter:image" content="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -1244,6 +1244,259 @@
         font-weight: 700;
       }
 
+      /* ═══ PARTNER SPOTLIGHT ═══ */
+      .partner-spotlight {
+        padding: 140px 0;
+        position: relative;
+        z-index: 1;
+        background: var(--bg-2);
+      }
+      .partner-hero {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 80px;
+        align-items: center;
+      }
+      @media (max-width: 960px) {
+        .partner-hero {
+          grid-template-columns: 1fr;
+          gap: 48px;
+        }
+      }
+      .partner-hero-left {
+        position: relative;
+      }
+      .partner-hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(236, 72, 153, 0.08));
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        color: var(--amber);
+        padding: 8px 18px;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        margin-bottom: 24px;
+        text-transform: uppercase;
+      }
+      .partner-hero h2 {
+        font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+        font-weight: 900;
+        letter-spacing: -0.035em;
+        line-height: 1.08;
+        margin-bottom: 22px;
+      }
+      .partner-hero h2 .grad {
+        background: var(--grad-hero);
+        background-size: 200% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: gradientShift 4s ease infinite;
+      }
+      .partner-hero p.partner-desc {
+        font-size: 1.05rem;
+        color: var(--text-2);
+        line-height: 1.7;
+        margin-bottom: 32px;
+        max-width: 520px;
+      }
+      .partner-features {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin-bottom: 36px;
+      }
+      .partner-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+      }
+      .partner-feature-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, rgba(168, 85, 247, 0.22), rgba(236, 72, 153, 0.12));
+        border: 1px solid rgba(168, 85, 247, 0.28);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+      .partner-feature-text h4 {
+        font-size: 0.98rem;
+        font-weight: 800;
+        margin-bottom: 4px;
+        letter-spacing: -0.01em;
+      }
+      .partner-feature-text p {
+        font-size: 0.88rem;
+        color: var(--text-2);
+        line-height: 1.55;
+        max-width: none;
+        margin: 0;
+      }
+      .partner-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px 32px;
+        border-radius: 14px;
+        background: var(--grad-1);
+        color: #fff;
+        font-weight: 800;
+        font-size: 1rem;
+        box-shadow: 0 12px 36px rgba(168, 85, 247, 0.45);
+        transition: all 0.4s var(--ios-spring);
+        cursor: pointer;
+      }
+      .partner-cta:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 18px 48px rgba(236, 72, 153, 0.55);
+        filter: brightness(1.08);
+      }
+
+      /* Partner visual mockup */
+      .partner-visual {
+        position: relative;
+        aspect-ratio: 1 / 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        perspective: 1000px;
+      }
+      .partner-card-float {
+        background: linear-gradient(180deg, var(--card), var(--card-2));
+        border: 1px solid var(--border-2);
+        border-radius: 20px;
+        padding: 20px;
+        position: absolute;
+        box-shadow:
+          0 40px 80px rgba(0, 0, 0, 0.6),
+          0 0 60px rgba(168, 85, 247, 0.2);
+        transition: all 0.6s var(--ios-ease);
+      }
+      .partner-card-float.card-main {
+        width: 88%;
+        max-width: 380px;
+        z-index: 3;
+        animation: floatSlow 10s ease-in-out infinite;
+      }
+      .partner-card-float.card-main:hover {
+        transform: translateY(-8px) scale(1.02);
+      }
+      .partner-card-title {
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-3);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .partner-user-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: var(--bg-2);
+        border-radius: 12px;
+        margin-bottom: 10px;
+      }
+      .partner-user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 800;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+      }
+      .partner-user-avatar.you {
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      }
+      .partner-user-avatar.partner {
+        background: linear-gradient(135deg, #14b8a6, #06b6d4);
+      }
+      .partner-user-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .partner-user-name {
+        font-size: 0.85rem;
+        font-weight: 800;
+        margin-bottom: 2px;
+      }
+      .partner-user-meta {
+        font-size: 0.7rem;
+        color: var(--text-3);
+      }
+      .partner-vs {
+        text-align: center;
+        font-size: 0.7rem;
+        font-weight: 900;
+        color: var(--amber);
+        letter-spacing: 0.16em;
+        margin: 6px 0 10px;
+      }
+      .partner-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: var(--bg-2);
+        border-radius: 10px;
+        margin-bottom: 6px;
+        font-size: 0.78rem;
+      }
+      .partner-stat-label {
+        color: var(--text-3);
+        font-weight: 700;
+      }
+      .partner-stat-vals {
+        display: flex;
+        gap: 12px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+      }
+      .partner-stat-val-a {
+        color: #c4b5fd;
+      }
+      .partner-stat-val-b {
+        color: #5eead4;
+      }
+      .partner-floating-msg {
+        background: linear-gradient(135deg, #8b5cf6, #ec4899);
+        color: #fff;
+        padding: 10px 16px;
+        border-radius: 14px;
+        border-bottom-right-radius: 4px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        box-shadow: 0 12px 32px rgba(168, 85, 247, 0.5);
+        animation: floatSlow 8s ease-in-out infinite;
+        max-width: 200px;
+      }
+      .partner-floating-msg.b {
+        background: var(--card);
+        color: var(--text);
+        border: 1px solid var(--border-2);
+        border-bottom-right-radius: 14px;
+        border-bottom-left-radius: 4px;
+        animation-delay: -2s;
+        animation-direction: reverse;
+      }
+
       /* ═══ SHARE BAR ═══ */
       .share-bar {
         display: flex;
@@ -2205,7 +2458,8 @@
       .nav-cta,
       .demo-tab,
       .plan-btn,
-      .share-btn {
+      .share-btn,
+      .partner-cta {
         position: relative;
         overflow: hidden;
       }
@@ -2239,6 +2493,7 @@
             <span>UPSC Study Tracker</span>
           </a>
           <div class="nav-links">
+            <a href="#partner">Partner</a>
             <a href="#features">Features</a>
             <a href="#how">How it works</a>
             <a href="#pricing">Pricing</a>
@@ -2255,20 +2510,20 @@
       <div class="wrap">
         <div class="hero-eyebrow">
           <span class="dot"></span>
-          Trusted by 500+ serious UPSC aspirants
+          NEW · Study with Partner · Trusted by 500+ serious aspirants
         </div>
         <h1>
           <span class="line">Track Every Minute.</span>
-          <span class="line grad">Crack UPSC.</span>
+          <span class="line grad">Crack UPSC Together.</span>
         </h1>
         <p class="hero-sub">
           India's most complete <strong>free UPSC study tracker</strong>. Timer, syllabus, spaced-repetition revisions,
-          PYQ analytics, and productivity insights — all in one place.
-          <strong>No Notion templates. No setup. Just start.</strong>
+          PYQ analytics, and now <strong>Study with Partner</strong> — match with aspirants who share your optional and
+          exam year, and crack UPSC together.
         </p>
         <div class="hero-ctas">
           <a href="/auth.html" class="btn-hero primary" data-ripple><span>▶</span> Start Tracking Free</a>
-          <a href="#demo" class="btn-hero secondary" data-ripple>👀 See Live Demo</a>
+          <a href="#partner" class="btn-hero secondary" data-ripple>🤝 See Partner Feature</a>
         </div>
         <!-- ═══ DESKTOP DOWNLOAD ═══ -->
         <div
@@ -2473,7 +2728,7 @@
             >
               <polyline points="20 6 9 17 4 12" />
             </svg>
-            No credit card</span
+            Study with Partner</span
           >
           <span
             ><svg
@@ -2509,10 +2764,116 @@
     <section class="quote-section">
       <div class="wrap">
         <div class="quote-box">
-          <div class="quote-text" id="quoteText">
-            "Success is the sum of small efforts repeated day in and day out."
+          <div class="quote-text" id="quoteText">"Alone we can do so little; together we can do so much."</div>
+          <span class="quote-author" id="quoteAuthor">— Helen Keller</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PARTNER SPOTLIGHT (NEW SECTION) ═══ -->
+    <section class="partner-spotlight" id="partner">
+      <div class="wrap">
+        <div class="partner-hero">
+          <!-- LEFT: Content -->
+          <div class="partner-hero-left reveal">
+            <div class="partner-hero-badge">🤝 New Feature</div>
+            <h2>Study with <span class="grad">Your Partner</span></h2>
+            <p class="partner-desc">
+              UPSC prep is tough alone. Now you can team up with another aspirant who shares your
+              <strong>optional subject</strong> and <strong>target exam year</strong> — compare progress, chat daily,
+              and stay accountable together.
+            </p>
+
+            <div class="partner-features">
+              <div class="partner-feature">
+                <div class="partner-feature-icon">🎯</div>
+                <div class="partner-feature-text">
+                  <h4>Smart Matchmaking</h4>
+                  <p>
+                    We match you with aspirants who have the <strong>same optional</strong> and
+                    <strong>same exam year</strong> — so you're literally on the same track.
+                  </p>
+                </div>
+              </div>
+              <div class="partner-feature">
+                <div class="partner-feature-icon">📊</div>
+                <div class="partner-feature-text">
+                  <h4>Live Comparison</h4>
+                  <p>
+                    See side-by-side stats: study hours, streaks, syllabus progress. Only aggregate data — your notes
+                    and sessions stay private.
+                  </p>
+                </div>
+              </div>
+              <div class="partner-feature">
+                <div class="partner-feature-icon">💬</div>
+                <div class="partner-feature-text">
+                  <h4>In-App Chat</h4>
+                  <p>Message your partner directly. Ask doubts, plan revisions, or just send a motivational nudge.</p>
+                </div>
+              </div>
+              <div class="partner-feature">
+                <div class="partner-feature-icon">🔒</div>
+                <div class="partner-feature-text">
+                  <h4>Privacy First</h4>
+                  <p>
+                    Both sides must accept. You control who sees you. Remove any partner anytime. Nothing is shared
+                    without your permission.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <a href="/auth.html" class="partner-cta" data-ripple> 🤝 Start with a Partner </a>
           </div>
-          <span class="quote-author" id="quoteAuthor">— Robert Collier</span>
+
+          <!-- RIGHT: Visual -->
+          <div class="partner-visual reveal d1">
+            <div class="partner-card-float card-main">
+              <div class="partner-card-title">📊 You vs Partner</div>
+              <div class="partner-user-row">
+                <div class="partner-user-avatar you">Y</div>
+                <div class="partner-user-info">
+                  <div class="partner-user-name">You</div>
+                  <div class="partner-user-meta">Sociology · 2027</div>
+                </div>
+              </div>
+              <div class="partner-vs">— VS —</div>
+              <div class="partner-user-row">
+                <div class="partner-user-avatar partner">P</div>
+                <div class="partner-user-info">
+                  <div class="partner-user-name">Partner</div>
+                  <div class="partner-user-meta">Sociology · 2027</div>
+                </div>
+              </div>
+              <div style="margin-top: 14px">
+                <div class="partner-stat-row">
+                  <span class="partner-stat-label">⏱ Today</span>
+                  <span class="partner-stat-vals">
+                    <span class="partner-stat-val-a">4h 20m</span>
+                    <span class="partner-stat-val-b">3h 10m</span>
+                  </span>
+                </div>
+                <div class="partner-stat-row">
+                  <span class="partner-stat-label">🔥 Streak</span>
+                  <span class="partner-stat-vals">
+                    <span class="partner-stat-val-a">12d</span>
+                    <span class="partner-stat-val-b">9d</span>
+                  </span>
+                </div>
+                <div class="partner-stat-row">
+                  <span class="partner-stat-label">📖 Syllabus</span>
+                  <span class="partner-stat-vals">
+                    <span class="partner-stat-val-a">42%</span>
+                    <span class="partner-stat-val-b">38%</span>
+                  </span>
+                </div>
+              </div>
+              <div style="margin-top: 14px; display: flex; justify-content: flex-end">
+                <div class="partner-floating-msg">Great work today! 💪</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -2524,12 +2885,13 @@
           <span class="section-label">Live Preview</span>
           <h2 class="section-title">See How The App <span class="grad">Actually Works</span></h2>
           <p class="section-desc">
-            Click through each tab to explore every screen — exactly as you'll use it inside the app.
+            Click through each tab to explore every screen — including the new Partner feature.
           </p>
         </div>
 
         <div class="demo-tabs reveal">
           <button class="demo-tab active" data-tab="study" data-ripple>⏱ Study</button>
+          <button class="demo-tab" data-tab="partner" data-ripple>🤝 Partner</button>
           <button class="demo-tab" data-tab="subjects" data-ripple>◎ Subjects</button>
           <button class="demo-tab" data-tab="syllabus" data-ripple>📖 Syllabus</button>
           <button class="demo-tab" data-tab="insights" data-ripple>✨ Insights</button>
@@ -2622,6 +2984,297 @@
                         <div class="mock-donut">
                           <div class="mock-donut-ring"></div>
                           <div class="mock-donut-center">18h</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ═══ PARTNER (NEW DEMO TAB) ═══ -->
+            <div class="demo-panel" data-panel="partner">
+              <div class="mock-app">
+                <div class="mock-sidebar">
+                  <div class="mock-logo">
+                    <div class="mock-logo-icon">U</div>
+                    <div class="mock-logo-text">UPSC Tracker</div>
+                  </div>
+                  <div class="mock-nav-section">Study</div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">⏱</span><span>Study</span></div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">◈</span><span>Dashboard</span></div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">🗓</span><span>Calendar</span></div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">📊</span><span>Analytics</span></div>
+                  <div class="mock-nav-item active">
+                    <span class="mock-nav-icon">◉</span><span>Study With Partner</span>
+                  </div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">📜</span><span>History</span></div>
+                  <div class="mock-nav-section">Preparation</div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">📖</span><span>Syllabus</span></div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">◎</span><span>Subjects</span></div>
+                  <div class="mock-nav-item"><span class="mock-nav-icon">🔁</span><span>Revision</span></div>
+                </div>
+                <div class="mock-main">
+                  <div class="mock-topbar">
+                    <div class="mock-search">🔍 Search...</div>
+                    <div class="mock-topbar-icons">
+                      <div class="mock-icon-btn">🔔</div>
+                      <div class="mock-avatar">M</div>
+                    </div>
+                  </div>
+                  <div class="mock-content">
+                    <div
+                      style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 10px;
+                      "
+                    >
+                      <div>
+                        <div style="font-size: 1rem; font-weight: 800">👥 Study with Partner</div>
+                        <div style="font-size: 0.72rem; color: var(--text-3); margin-top: 4px">
+                          Match with aspirants who share your optional and exam year
+                        </div>
+                      </div>
+                      <div
+                        style="
+                          padding: 8px 18px;
+                          border-radius: 22px;
+                          background: var(--grad-1);
+                          color: #fff;
+                          font-size: 0.75rem;
+                          font-weight: 800;
+                          box-shadow: 0 4px 16px rgba(168, 85, 247, 0.42);
+                        "
+                      >
+                        + Add by Email
+                      </div>
+                    </div>
+
+                    <!-- Discover -->
+                    <div
+                      style="
+                        background: var(--card);
+                        border: 1px solid rgba(168, 85, 247, 0.28);
+                        border-radius: 14px;
+                        padding: 16px;
+                      "
+                    >
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px"
+                      >
+                        <div>
+                          <div style="font-size: 0.9rem; font-weight: 800">🔍 Discover Users</div>
+                          <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 3px">
+                            Match: <strong style="color: var(--purple)">Sociology · 2027</strong> · 2 found
+                          </div>
+                        </div>
+                        <div
+                          style="
+                            padding: 6px 14px;
+                            border-radius: 9px;
+                            background: var(--grad-1);
+                            color: #fff;
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                          "
+                        >
+                          🔄 Find Now
+                        </div>
+                      </div>
+                      <div class="partner-user-row" style="margin-bottom: 8px">
+                        <div class="partner-user-avatar partner">R</div>
+                        <div class="partner-user-info">
+                          <div class="partner-user-name">Rahul Sharma</div>
+                          <div class="partner-user-meta">Sociology · 2027</div>
+                        </div>
+                        <div
+                          style="
+                            padding: 8px 16px;
+                            border-radius: 20px;
+                            background: var(--grad-1);
+                            color: #fff;
+                            font-size: 0.72rem;
+                            font-weight: 800;
+                          "
+                        >
+                          + Send Request
+                        </div>
+                      </div>
+                      <div class="partner-user-row" style="margin-bottom: 0">
+                        <div class="partner-user-avatar partner">P</div>
+                        <div class="partner-user-info">
+                          <div class="partner-user-name">Priya Verma</div>
+                          <div class="partner-user-meta">Sociology · 2027</div>
+                        </div>
+                        <div
+                          style="
+                            padding: 8px 16px;
+                            border-radius: 20px;
+                            background: var(--grad-1);
+                            color: #fff;
+                            font-size: 0.72rem;
+                            font-weight: 800;
+                          "
+                        >
+                          + Send Request
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Comparison -->
+                    <div
+                      style="
+                        background: var(--card);
+                        border: 1px solid rgba(168, 85, 247, 0.28);
+                        border-radius: 14px;
+                        padding: 16px;
+                      "
+                    >
+                      <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px"
+                      >
+                        <div>
+                          <div style="font-size: 0.9rem; font-weight: 800">📊 You vs Rahul Sharma</div>
+                          <div style="font-size: 0.7rem; color: var(--text-3); margin-top: 3px">
+                            Last 30 days · Side-by-side
+                          </div>
+                        </div>
+                        <div
+                          style="
+                            padding: 6px 14px;
+                            border-radius: 9px;
+                            background: rgba(239, 68, 68, 0.12);
+                            color: #f87171;
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            border: 1px solid rgba(239, 68, 68, 0.3);
+                          "
+                        >
+                          Remove
+                        </div>
+                      </div>
+                      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px">
+                        <div
+                          style="
+                            padding: 10px;
+                            background: var(--bg-2);
+                            border-radius: 10px;
+                            border-left: 3px solid #a855f7;
+                          "
+                        >
+                          <div style="font-size: 0.62rem; color: var(--text-3); font-weight: 800">TODAY</div>
+                          <div style="font-size: 0.9rem; font-weight: 900; color: #c4b5fd">4h 20m</div>
+                          <div style="font-size: 0.62rem; color: #5eead4; font-weight: 700">vs 3h 10m</div>
+                        </div>
+                        <div
+                          style="
+                            padding: 10px;
+                            background: var(--bg-2);
+                            border-radius: 10px;
+                            border-left: 3px solid #ec4899;
+                          "
+                        >
+                          <div style="font-size: 0.62rem; color: var(--text-3); font-weight: 800">30-DAY</div>
+                          <div style="font-size: 0.9rem; font-weight: 900; color: #f9a8d4">72h</div>
+                          <div style="font-size: 0.62rem; color: #5eead4; font-weight: 700">vs 58h</div>
+                        </div>
+                        <div
+                          style="
+                            padding: 10px;
+                            background: var(--bg-2);
+                            border-radius: 10px;
+                            border-left: 3px solid #ef4444;
+                          "
+                        >
+                          <div style="font-size: 0.62rem; color: var(--text-3); font-weight: 800">STREAK</div>
+                          <div style="font-size: 0.9rem; font-weight: 900">12d</div>
+                          <div style="font-size: 0.62rem; color: #5eead4; font-weight: 700">vs 9d</div>
+                        </div>
+                        <div
+                          style="
+                            padding: 10px;
+                            background: var(--bg-2);
+                            border-radius: 10px;
+                            border-left: 3px solid #14b8a6;
+                          "
+                        >
+                          <div style="font-size: 0.62rem; color: var(--text-3); font-weight: 800">SYLLABUS</div>
+                          <div style="font-size: 0.9rem; font-weight: 900">42%</div>
+                          <div style="font-size: 0.62rem; color: #5eead4; font-weight: 700">vs 38%</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Chat -->
+                    <div
+                      style="
+                        background: var(--card);
+                        border: 1px solid rgba(168, 85, 247, 0.28);
+                        border-radius: 14px;
+                        padding: 16px;
+                      "
+                    >
+                      <div style="font-size: 0.9rem; font-weight: 800; margin-bottom: 4px">💬 Messages</div>
+                      <div style="font-size: 0.7rem; color: var(--text-3); margin-bottom: 12px">
+                        Chat with Rahul Sharma
+                      </div>
+                      <div
+                        style="max-height: 120px; display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px"
+                      >
+                        <div
+                          style="
+                            align-self: flex-start;
+                            max-width: 70%;
+                            padding: 8px 12px;
+                            background: var(--bg-2);
+                            border-radius: 12px 12px 12px 4px;
+                            font-size: 0.78rem;
+                          "
+                        >
+                          Bro, kal Modern History revise karega? 📚
+                        </div>
+                        <div
+                          style="
+                            align-self: flex-end;
+                            max-width: 70%;
+                            padding: 8px 12px;
+                            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+                            color: #fff;
+                            border-radius: 12px 12px 4px 12px;
+                            font-size: 0.78rem;
+                          "
+                        >
+                          Haan bhai, 6 AM se shuru 💪
+                        </div>
+                      </div>
+                      <div style="display: flex; gap: 8px">
+                        <div
+                          style="
+                            flex: 1;
+                            padding: 10px 14px;
+                            background: var(--bg-2);
+                            border: 1px solid var(--border);
+                            border-radius: 12px;
+                            font-size: 0.78rem;
+                            color: var(--text-3);
+                          "
+                        >
+                          Type your message...
+                        </div>
+                        <div
+                          style="
+                            padding: 10px 18px;
+                            background: var(--grad-1);
+                            color: #fff;
+                            border-radius: 12px;
+                            font-size: 0.78rem;
+                            font-weight: 800;
+                          "
+                        >
+                          Send ➤
                         </div>
                       </div>
                     </div>
@@ -2935,7 +3588,7 @@
           <span class="share-label">Share</span>
           <a
             class="share-btn wa"
-            href="https://wa.me/?text=Check%20out%20this%20free%20UPSC%20study%20tracker%3A%20https%3A%2F%2Fupscstudytracker.co.in"
+            href="https://wa.me/?text=Check%20out%20this%20free%20UPSC%20study%20tracker%20with%20Study%20with%20Partner%3A%20https%3A%2F%2Fupscstudytracker.co.in"
             target="_blank"
             rel="noopener"
             title="WhatsApp"
@@ -2948,7 +3601,7 @@
           </a>
           <a
             class="share-btn tw"
-            href="https://twitter.com/intent/tweet?text=Free%20UPSC%20Study%20Tracker%20%E2%80%94%20Timer%2C%20Syllabus%20%26%20Analytics%20%E2%80%94%20perfect%20for%20aspirants%21&url=https%3A%2F%2Fupscstudytracker.co.in"
+            href="https://twitter.com/intent/tweet?text=Free%20UPSC%20Study%20Tracker%20with%20Study%20with%20Partner%20%E2%80%94%20perfect%20for%20aspirants%21&url=https%3A%2F%2Fupscstudytracker.co.in"
             target="_blank"
             rel="noopener"
             title="X"
@@ -2961,7 +3614,7 @@
           </a>
           <a
             class="share-btn tg"
-            href="https://t.me/share/url?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker%20%E2%80%94%20must%20try%21"
+            href="https://t.me/share/url?url=https%3A%2F%2Fupscstudytracker.co.in&text=Free%20UPSC%20Study%20Tracker%20with%20Study%20with%20Partner%20%E2%80%94%20must%20try%21"
             target="_blank"
             rel="noopener"
             title="Telegram"
@@ -2987,7 +3640,7 @@
           </a>
           <a
             class="share-btn rd"
-            href="https://www.reddit.com/submit?url=https%3A%2F%2Fupscstudytracker.co.in&title=Free%20UPSC%20Study%20Tracker"
+            href="https://www.reddit.com/submit?url=https%3A%2F%2Fupscstudytracker.co.in&title=Free%20UPSC%20Study%20Tracker%20with%20Study%20with%20Partner"
             target="_blank"
             rel="noopener"
             title="Reddit"
@@ -3069,8 +3722,8 @@
           </div>
           <div class="bento-item reveal d1">
             <div class="bento-icon">😩</div>
-            <h3>Too Much Notion Setup</h3>
-            <p>Templates, databases, formulas — you quit in 3 days. Too much effort, no payoff.</p>
+            <h3>Studying Alone is Tough</h3>
+            <p>No accountability partner, no one to compare with. Motivation drops fast.</p>
           </div>
           <div class="bento-item reveal d2">
             <div class="bento-icon">💸</div>
@@ -3087,7 +3740,7 @@
         <div class="section-head reveal">
           <span class="section-label">How It Works</span>
           <h2 class="section-title">Start in <span class="grad">60 Seconds</span></h2>
-          <p class="section-desc">No complex setup. No Notion templates. Just login and start tracking.</p>
+          <p class="section-desc">No complex setup. No Notion templates. Just login, pick a partner, and start.</p>
         </div>
         <div class="how-grid">
           <div class="how-step reveal">
@@ -3097,13 +3750,13 @@
           </div>
           <div class="how-step reveal d1">
             <div class="how-num">2</div>
-            <h3>Pick & start</h3>
-            <p>Choose a subject from the pre-loaded UPSC syllabus, hit the timer, and start studying.</p>
+            <h3>Find your partner</h3>
+            <p>Set your optional + exam year. We'll match you with aspirants on the same track. Or add by email.</p>
           </div>
           <div class="how-step reveal d2">
             <div class="how-num">3</div>
-            <h3>See progress grow</h3>
-            <p>Streaks, analytics, revision reminders — all automatic. Watch yourself improve daily.</p>
+            <h3>Study & compare</h3>
+            <p>Track sessions, compare progress, chat daily. Watch each other improve — together.</p>
           </div>
         </div>
       </div>
@@ -3118,25 +3771,59 @@
           <p class="section-desc">Every feature solves a real problem for aspirants. No fluff, no distraction.</p>
         </div>
         <div class="bento" style="max-width: 1200px; margin: 0 auto">
-          <div class="bento-item large reveal">
+          <div
+            class="bento-item large reveal"
+            style="
+              border-color: rgba(251, 191, 36, 0.35);
+              background: linear-gradient(180deg, rgba(251, 191, 36, 0.06), var(--card-2));
+            "
+          >
+            <div
+              class="bento-icon"
+              style="
+                background: linear-gradient(135deg, rgba(251, 191, 36, 0.35), rgba(236, 72, 153, 0.18));
+                border-color: rgba(251, 191, 36, 0.4);
+              "
+            >
+              🤝
+            </div>
+            <h3>
+              Study with Partner
+              <span
+                style="
+                  background: var(--grad-2);
+                  -webkit-background-clip: text;
+                  -webkit-text-fill-color: transparent;
+                  background-clip: text;
+                  font-size: 0.75rem;
+                  vertical-align: middle;
+                  padding: 3px 10px;
+                  border-radius: 20px;
+                  background-color: rgba(251, 191, 36, 0.15);
+                  font-weight: 900;
+                "
+                >NEW</span
+              >
+            </h3>
+            <p>
+              Match with aspirants who share your optional subject and exam year. Compare study time, streaks, and
+              syllabus progress side-by-side. Chat daily. Stay accountable together.
+            </p>
+          </div>
+          <div class="bento-item large reveal d1">
             <div class="bento-icon">⏱</div>
             <h3>Study Timer</h3>
             <p>Stopwatch, countdown, and Pomodoro modes with pre-loaded UPSC subjects. Just pick and start.</p>
           </div>
-          <div class="bento-item large reveal d1">
+          <div class="bento-item large reveal">
             <div class="bento-icon">📖</div>
             <h3>Complete Syllabus Tracker</h3>
             <p>Complete UPSC syllabus (GS I-IV, Essay, CSAT, Optional) with status per topic — click to update.</p>
           </div>
-          <div class="bento-item reveal">
+          <div class="bento-item reveal d1">
             <div class="bento-icon">🔁</div>
             <h3>Smart Revision</h3>
             <p>Spaced repetition with 1/3/7/14/30/60 day intervals. Auto-schedules.</p>
-          </div>
-          <div class="bento-item reveal d1">
-            <div class="bento-icon">📝</div>
-            <h3>PYQ Tracker</h3>
-            <p>Year-wise, subject-wise PYQs with accuracy auto-calculated.</p>
           </div>
           <div class="bento-item reveal d2">
             <div class="bento-icon">📊</div>
@@ -3162,26 +3849,16 @@
             <p>Log mock tests, track scores, identify weak areas.</p>
           </div>
           <div class="bento-item reveal d1">
-            <div class="bento-icon">📅</div>
-            <h3>Calendar View</h3>
-            <p>Study history with beautiful daily activity heatmap.</p>
-          </div>
-          <div class="bento-item reveal d2">
             <div class="bento-icon">✨</div>
             <h3>AI-Style Insights</h3>
             <p>Personalized suggestions to improve your patterns.</p>
           </div>
-          <div class="bento-item reveal">
-            <div class="bento-icon">📝</div>
-            <h3>Short Notes</h3>
-            <p>Save quick notes with links to Sheets, Keep, Drive, YouTube.</p>
-          </div>
-          <div class="bento-item wide reveal d1">
+          <div class="bento-item wide reveal d2">
             <div class="bento-icon">🔒</div>
             <h3>Private & Secure</h3>
             <p>
-              Your data is encrypted on Supabase with Row Level Security. Only you can access it. Export anytime as JSON
-              or CSV. No ads, no tracking, no selling your data — ever.
+              Your data is encrypted on Supabase with Row Level Security. Only you can access it. Partner comparison
+              shows only aggregate stats. Export anytime as JSON or CSV.
             </p>
           </div>
         </div>
@@ -3202,6 +3879,12 @@
             <div class="col-us">UPSC Tracker</div>
             <div>Notion</div>
             <div>Spreadsheet</div>
+          </div>
+          <div class="compare-row">
+            <div>Study with Partner (with chat)</div>
+            <div class="col-us"><span class="check">✓</span></div>
+            <div class="col-other"><span class="cross">✗</span></div>
+            <div class="col-other"><span class="cross">✗</span></div>
           </div>
           <div class="compare-row">
             <div>Pre-loaded UPSC syllabus</div>
@@ -3225,12 +3908,6 @@
             <div>Zero setup needed</div>
             <div class="col-us"><span class="check">✓</span></div>
             <div class="col-other"><span class="cross">✗</span></div>
-            <div class="col-other"><span class="cross">✗</span></div>
-          </div>
-          <div class="compare-row">
-            <div>Mobile + Desktop sync</div>
-            <div class="col-us"><span class="check">✓</span></div>
-            <div class="col-other"><span class="partial">~</span></div>
             <div class="col-other"><span class="cross">✗</span></div>
           </div>
           <div class="compare-row">
@@ -3281,8 +3958,8 @@
           <div class="testimonial reveal d1">
             <div class="stars">★★★★★</div>
             <p>
-              The revision scheduler is a game changer. I used to forget what to revise. Now it automatically shows up
-              as due.
+              The Study with Partner feature is a game changer. I matched with someone with the same optional and year —
+              we push each other daily. My consistency has never been better.
             </p>
             <div class="author">
               <div class="avatar">P</div>
@@ -3439,6 +4116,19 @@
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
+                <strong style="color: #fbbf24">Study with Partner 🤝</strong>
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 Advanced analytics dashboard
               </li>
               <li>
@@ -3466,19 +4156,6 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 Goals & planner
-              </li>
-              <li>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                Achievements system
               </li>
               <li>
                 <svg
@@ -3553,6 +4230,19 @@
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
+                <strong style="color: #fbbf24">Study with Partner 🤝</strong>
+              </li>
+              <li>
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
                 Cancel anytime
               </li>
               <li>
@@ -3567,19 +4257,6 @@
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
                 No long-term commitment
-              </li>
-              <li>
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="3"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                Same advanced features
               </li>
               <li>
                 <svg
@@ -3623,9 +4300,7 @@
                     <stop offset="100%" stop-color="#A855F7" stop-opacity="0" />
                   </radialGradient>
                 </defs>
-                <!-- Background glow -->
                 <circle cx="200" cy="200" r="180" fill="url(#glow)" />
-                <!-- Big question mark -->
                 <text
                   x="200"
                   y="270"
@@ -3638,14 +4313,12 @@
                 >
                   ?
                 </text>
-                <!-- Small dots -->
                 <circle cx="90" cy="100" r="8" fill="#A855F7" opacity="0.6" />
                 <circle cx="330" cy="120" r="6" fill="#EC4899" opacity="0.7" />
                 <circle cx="70" cy="300" r="10" fill="#F97316" opacity="0.5" />
                 <circle cx="340" cy="320" r="7" fill="#FBBF24" opacity="0.6" />
                 <circle cx="200" cy="50" r="5" fill="#14B8A6" opacity="0.7" />
                 <circle cx="200" cy="380" r="6" fill="#06B6D4" opacity="0.6" />
-                <!-- Floating badges -->
                 <rect x="40" y="180" width="60" height="26" rx="13" fill="url(#g2)" opacity="0.9" />
                 <text
                   x="70"
@@ -3692,54 +4365,55 @@
           </div>
           <!-- RIGHT: FAQ Items -->
           <div class="faq-list">
-            <div class="faq-item reveal">
-              <div class="faq-q">Is the app really free?<span class="faq-q-icon"></span></div>
+            <div class="faq-item reveal open">
+              <div class="faq-q">How does "Study with Partner" work?<span class="faq-q-icon"></span></div>
               <div class="faq-a">
-                Yes. All core features (timer, syllabus, revision, PYQ tracker, notes, current affairs) are free
-                forever. Advanced analytics and premium features have an optional paid plan.
+                You set your optional subject and target exam year (one-time setup). We match you with aspirants who
+                have the <strong>same optional</strong> and <strong>same year</strong>. Send a request — once both
+                accept, you can see their study stats (aggregate only) and chat daily. Your personal notes and session
+                details stay private.
               </div>
             </div>
             <div class="faq-item reveal d1">
-              <div class="faq-q">Where is my data stored? Is it safe?<span class="faq-q-icon"></span></div>
+              <div class="faq-q">Is the app really free?<span class="faq-q-icon"></span></div>
               <div class="faq-a">
-                Your data is stored encrypted on Supabase's secure servers with Row Level Security. Only you can see
-                your data — no one else, including us, can access it.
+                Yes. All core features (timer, syllabus, revision, PYQ tracker, notes, current affairs) are free
+                forever. Advanced features like Study with Partner and analytics have an optional paid plan.
               </div>
             </div>
             <div class="faq-item reveal d2">
+              <div class="faq-q">Where is my data stored? Is it safe?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Your data is stored encrypted on Supabase's secure servers with Row Level Security. Only you can see
+                your data. Partner comparison shows only aggregate stats — never your notes or individual sessions.
+              </div>
+            </div>
+            <div class="faq-item reveal">
               <div class="faq-q">Does it work on mobile?<span class="faq-q-icon"></span></div>
               <div class="faq-a">
                 Absolutely. The website is fully responsive — it works perfectly on phone, tablet, and desktop. You get
                 touch-friendly controls on mobile and it's installable as a PWA.
               </div>
             </div>
-            <div class="faq-item reveal">
+            <div class="faq-item reveal d1">
+              <div class="faq-q">Can I have multiple partners?<span class="faq-q-icon"></span></div>
+              <div class="faq-a">
+                Yes. You can add multiple partners — either through Discover (matched by optional + year) or by adding
+                someone directly via email. Each partner gets their own comparison dashboard and separate chat.
+              </div>
+            </div>
+            <div class="faq-item reveal d2">
               <div class="faq-q">How do I make a payment?<span class="faq-q-icon"></span></div>
               <div class="faq-a">
                 Secure payments through Razorpay. We support UPI, credit/debit cards, and netbanking. All transactions
                 are encrypted and PCI-compliant.
               </div>
             </div>
-            <div class="faq-item reveal d1">
-              <div class="faq-q">How do I cancel if I change my mind?<span class="faq-q-icon"></span></div>
-              <div class="faq-a">
-                No commitment. You can cancel your monthly plan anytime — no charges from the next billing cycle. The
-                yearly plan is a one-time payment with no auto-renewal.
-              </div>
-            </div>
-            <div class="faq-item reveal d2">
+            <div class="faq-item reveal">
               <div class="faq-q">Can my data be deleted?<span class="faq-q-icon"></span></div>
               <div class="faq-a">
                 Yes, absolutely. You can export all your data anytime from Settings as JSON or CSV. Or delete your
                 entire account — all data will be permanently removed within 30 days.
-              </div>
-            </div>
-            <div class="faq-item reveal">
-              <div class="faq-q">Why is this better than Notion?<span class="faq-q-icon"></span></div>
-              <div class="faq-a">
-                With Notion you have to build your own templates, write formulas, and tracking becomes difficult. Here
-                the complete UPSC syllabus is pre-loaded, revisions auto-schedule, and zero setup is needed. Just login
-                and start.
               </div>
             </div>
           </div>
@@ -3751,10 +4425,13 @@
     <section class="cta-section">
       <div class="wrap">
         <div class="cta-box reveal">
-          <h2>Ready to <span class="grad">Crack UPSC?</span></h2>
-          <p>Join 500+ aspirants using data-driven preparation. Free forever core features — no credit card needed.</p>
+          <h2>Ready to <span class="grad">Crack UPSC Together?</span></h2>
+          <p>
+            Join 500+ aspirants using data-driven preparation. Find your study partner today — free forever core
+            features.
+          </p>
           <a href="/auth.html" class="btn-hero primary" data-ripple style="display: inline-flex"
-            >▶ Start Free — No Credit Card</a
+            >🤝 Start Free with a Partner</a
           >
         </div>
       </div>
@@ -3766,7 +4443,9 @@
         <div class="footer-grid">
           <div class="footer-brand">
             <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo" />
-            <p>The all-in-one study tracker for serious UPSC aspirants. Track, analyze, and crack UPSC with data.</p>
+            <p>
+              The all-in-one study tracker for serious UPSC aspirants. Track, analyze, and crack UPSC with a partner.
+            </p>
             <div class="footer-social">
               <a href="https://www.instagram.com/upscstudytracker/" target="_blank" rel="noopener" title="Instagram">
                 <svg viewBox="0 0 24 24">
@@ -3834,6 +4513,7 @@
           <div class="footer-col">
             <h4>Product</h4>
             <a href="/auth.html">App</a>
+            <a href="#partner">Study with Partner</a>
             <a href="#features">Features</a>
             <a href="#pricing">Pricing</a>
             <a href="#faq">FAQ</a>
@@ -3991,6 +4671,7 @@
 
       /* ═══ QUOTES ═══ */
       const QUOTES = [
+        { text: '"Alone we can do so little; together we can do so much."', author: '— Helen Keller' },
         { text: '"Success is the sum of small efforts repeated day in and day out."', author: '— Robert Collier' },
         { text: '"The only way to do great work is to love what you do."', author: '— Steve Jobs' },
         { text: '"An investment in knowledge pays the best interest."', author: '— Benjamin Franklin' },
@@ -4000,7 +4681,6 @@
         },
         { text: '"It always seems impossible until it\'s done."', author: '— Nelson Mandela' },
         { text: '"Consistency is what transforms average into excellence."', author: '— Tony Robbins' },
-        { text: '"The future depends on what you do today."', author: '— Mahatma Gandhi' },
       ];
       let qIdx = 0;
       setInterval(() => {
@@ -4073,7 +4753,7 @@
 
       /* ═══ MAGNETIC ═══ */
       if (window.matchMedia('(min-width: 900px)').matches) {
-        document.querySelectorAll('.btn-hero.primary, .nav-cta').forEach((btn) => {
+        document.querySelectorAll('.btn-hero.primary, .nav-cta, .partner-cta').forEach((btn) => {
           btn.addEventListener('mousemove', (e) => {
             const rect = btn.getBoundingClientRect();
             const x = e.clientX - rect.left - rect.width / 2;
@@ -4087,9 +4767,10 @@
       }
 
       console.log(
-        '%c✅ UPSC Study Tracker — Premium Landing v2',
+        '%c✅ UPSC Study Tracker — Premium Landing v3 · Partner Spotlight',
         'background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;padding:6px 14px;border-radius:6px;font-weight:800;font-size:12px',
       );
+
       /* ═══ PWA INSTALL ═══ */
       let deferredPrompt = null;
       const pwaBtn = document.getElementById('pwaInstallBtn');
@@ -4117,6 +4798,7 @@
         console.log('PWA installed successfully');
         if (pwaBtn) pwaBtn.style.display = 'none';
       });
+
       /* ═══ SERVICE WORKER (PWA) ═══ */
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
