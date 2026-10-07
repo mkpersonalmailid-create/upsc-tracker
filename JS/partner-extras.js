@@ -80,6 +80,28 @@ function getState() {
 
   // ═══════════════ PREMIUM CHECK ═══════════════
   function isUserPremium() {
+    // ⚡⚡ SABSE PEHLE: Free plan explicit block
+    try {
+      const s = getState();
+      if (s && s.profile && s.profile.membership === 'free') {
+        // Kya koi trial active hai?
+        const hasTrialFlag =
+          s.isTrial === true ||
+          s.trialActive === true ||
+          s.profile.is_trial === true ||
+          s.profile.trial_active === true;
+
+        const trialEnd = s.trialEndsAt || s.trial_end_date || s.profile.trial_end_date || s.profile.trialEndsAt;
+
+        const trialActive = trialEnd && new Date(trialEnd) > new Date();
+
+        // Free plan + koi trial nahi = block
+        if (!hasTrialFlag && !trialActive) {
+          console.log('[Partner] Free plan user blocked');
+          return false;
+        }
+      }
+    } catch (e) {}
     // Step 1: Global function try karo — par sirf agar TRUE de
     try {
       if (typeof isPremiumUser === 'function') {
