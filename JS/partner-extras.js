@@ -1,3 +1,14 @@
+/* ============================================
+   HELPER: Safe State Access
+   ============================================ */
+function getState() {
+  try {
+    if (typeof state !== 'undefined' && state) return state;
+  } catch (e) {}
+  if (typeof window.state !== 'undefined' && window.state) return window.state;
+  if (typeof window.appState !== 'undefined' && window.appState) return window.appState;
+  return null;
+}
 /* ═══════════════════════════════════════════════════════════════
    STUDY WITH PARTNER — Complete Safe Module
    ═══════════════════════════════════════════════════════════════ */
