@@ -219,41 +219,185 @@
     `;
   }
 
+  // ═══════════════ 4.4. PROFILE SETUP FORM ═══════════════
+  const EXAM_YEARS = ['2026', '2027', '2028', '2029', '2030', '2031+'];
+
+  async function renderProfileSetupForm() {
+    const user = await getCurrentUser();
+    if (!user) return '';
+
+    const supa = getSupa();
+    const { data: profile } = await supa
+      .from('profiles')
+      .select('optional_subject, preparation_year')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const currentOptional = profile?.optional_subject || '';
+    const currentYear = profile?.preparation_year || '';
+
+    const optionalOptions = OPTIONAL_SUBJECTS.map(
+      (s) => `<option value="${esc(s)}" ${currentOptional === s ? 'selected' : ''}>${esc(s)}</option>`,
+    ).join('');
+
+    const yearOptions = EXAM_YEARS.map(
+      (y) => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`,
+    ).join('');
+
+    return `
+      <div class="card" style="margin-top:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.3)">
+        <div class="card-header">
+          <div>
+            <span class="card-title-lg">🎯 Setup Your Partner Profile</span>
+            <div style="font-size:.82rem;color:var(--text-3);margin-top:4px">
+              Partner discover karne se pehle ye 2 cheezein set karo (ek hi baar)
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:16px;background:var(--card-2);border-radius:12px;margin-bottom:16px;font-size:.82rem;color:var(--text-2);line-height:1.6">
+          💡 <strong style="color:var(--text)">Kyun?</strong>
+          Hum tumhe <strong>same optional subject</strong> aur <strong>same exam year</strong> wale aspirants se match karenge — taaki tumhari preparation sync rahe.
+        </div>
+
+        <div class="form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="field">
+            <label>Optional Subject</label>
+            <select id="setupOptional">
+              <option value="">— Select Optional —</option>
+              ${optionalOptions}
+            </select>
+          </div>
+          <div class="field">
+            <label>Target Exam Year</label>
+            <select id="setupYear">
+              <option value="">— Select Year —</option>
+              ${yearOptions}
+            </select>
+          </div>
+        </div>
+
+        <div id="setupMsg" style="display:none;padding:10px 14px;border-radius:10px;font-size:.82rem;margin-top:14px"></div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:16px">
+          <button class="btn btn-primary" id="setupSaveBtn">
+            Save & Continue →
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  // ═══════════════ 4.45. WIRE PROFILE SETUP FORM ═══════════════
+  function wireProfileSetupForm() {
+    const saveBtn = document.getElementById('setupSaveBtn');
+    const optSelect = document.getElementById('setupOptional');
+    const yearSelect = document.getElementById('setupYear');
+    const msgEl = document.getElementById('setupMsg');
+
+    if (!saveBtn || !optSelect || !yearSelect) return;
+
+    function showMsg(text, type) {
+      if (!msgEl) return;
+      msgEl.style.display = 'block';
+      if (type === 'ok') {
+        msgEl.style.background = 'rgba(16,185,129,.12)';
+        msgEl.style.color = '#6EE7B7';
+        msgEl.style.border = '1px solid rgba(16,185,129,.3)';
+      } else {
+        msgEl.style.background = 'rgba(239,68,68,.12)';
+        msgEl.style.color = '#FCA5A5';
+        msgEl.style.border = '1px solid rgba(239,68,68,.3)';
+      }
+      msgEl.textContent = text;
+    }
+
+    saveBtn.onclick = async () => {
+      const optional = optSelect.value;
+      const year = yearSelect.value;
+
+      if (!optional) {
+        showMsg('Please select your Optional Subject', 'err');
+        return;
+      }
+      if (!year) {
+        showMsg('Please select your Target Exam Year', 'err');
+        return;
+      }
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = '⏳ Saving…';
+
+      try {
+        const supa = getSupa();
+        const user = await getCurrentUser();
+        if (!supa || !user) throw new Error('Session expired');
+
+        const { error } = await supa
+          .from('profiles')
+          .update({
+            optional_subject: optional,
+            preparation_year: year,
+          })
+          .eq('id', user.id);
+
+        if (error) throw error;
+
+        // Update local state if accessible
+        try {
+          const s = getState();
+          if (s && s.profile) {
+            s.profile.optional_subject = optional;
+            s.profile.prep_year = year;
+          }
+        } catch (e) {}
+
+        showMsg('✅ Profile saved! Loading matches…', 'ok');
+
+        setTimeout(() => {
+          renderPartnerView();
+        }, 800);
+      } catch (e) {
+        console.warn('[Partner] setup save error:', e);
+        showMsg('Failed: ' + (e.message || 'Unknown'), 'err');
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Save & Continue →';
+      }
+    };
+  }
+
   // ═══════════════ 4.5. DISCOVER USERS ═══════════════
+  // ═══════════════ 4.5. DISCOVER USERS (Strict Match) ═══════════════
   async function renderDiscoverSection() {
     const supa = getSupa();
     const user = await getCurrentUser();
     if (!supa || !user) return '';
 
     try {
-      // Fetch discoverable users (exclude admin, self, existing partners)
-      const { data: allUsers } = await supa
+      // Get my profile (optional + year)
+      const { data: myProfile } = await supa
         .from('profiles')
-        .select('id, name, optional_subject, exam, discoverable, is_admin')
+        .select('optional_subject, preparation_year')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const myOptional = myProfile?.optional_subject;
+      const myYear = myProfile?.preparation_year;
+
+      if (!myOptional || !myYear) return '';
+
+      // ═══ STRICT MATCH: same optional + same year ═══
+      const { data: matches } = await supa
+        .from('profiles')
+        .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
         .eq('discoverable', true)
         .eq('is_admin', false)
+        .eq('optional_subject', myOptional)
+        .eq('preparation_year', myYear)
         .neq('id', user.id)
         .limit(50);
 
-      if (!allUsers || !allUsers.length) {
-        return `
-          <div class="card" style="margin-top:18px">
-            <div class="card-header">
-              <div>
-                <span class="card-title-lg">🔍 Discover Users</span>
-                <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                  Find other aspirants to study with
-                </div>
-              </div>
-            </div>
-            <div class="empty" style="padding:40px 20px">
-              <div class="em">🔍</div>
-              <h4>No users to discover yet</h4>
-              <p>As more users join, they'll appear here.</p>
-            </div>
-          </div>
-        `;
-      }
+      const filterLabel = `${esc(myOptional)} · ${esc(myYear)}`;
 
       // Get existing partner relationships (to filter out)
       const myId = user.id;
@@ -264,7 +408,7 @@
         }
       });
 
-      const discoverable = allUsers.filter((u) => !existingIds.has(u.id));
+      const discoverable = (matches || []).filter((u) => !existingIds.has(u.id));
 
       if (!discoverable.length) {
         return `
@@ -273,14 +417,17 @@
               <div>
                 <span class="card-title-lg">🔍 Discover Users</span>
                 <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                  Find other aspirants to study with
+                  Match: <strong>${filterLabel}</strong>
                 </div>
               </div>
             </div>
             <div class="empty" style="padding:40px 20px">
-              <div class="em">✨</div>
-              <h4>You've reached everyone!</h4>
-              <p>No more users to discover right now.</p>
+              <div class="em">🔍</div>
+              <h4>No matches yet</h4>
+              <p style="font-size:.82rem;color:var(--text-3);margin-top:8px">
+                Abhi tak koi user tumhare same optional (<strong>${esc(myOptional)}</strong>) aur same year (<strong>${esc(myYear)}</strong>) ka nahi mila.
+                <br>Baad me check karte raho — jaise-jaise users join karenge, tumhe unka match dikhega.
+              </p>
             </div>
           </div>
         `;
@@ -290,7 +437,6 @@
         .slice(0, 30)
         .map((u) => {
           const initial = (u.name || 'U')[0].toUpperCase();
-          const optional = u.optional_subject ? `Optional: ${esc(u.optional_subject)}` : 'No optional set';
           return `
             <div class="row-item" style="cursor:default">
               <div style="width:40px;height:40px;border-radius:50%;background:var(--grad-1);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0">
@@ -298,7 +444,7 @@
               </div>
               <div class="row-info">
                 <div class="row-title">${esc(u.name || 'User')}</div>
-                <div class="row-meta">${esc(optional)}</div>
+                <div class="row-meta">${esc(u.optional_subject || '')} · ${esc(u.preparation_year || '')}</div>
               </div>
               <button class="btn btn-primary btn-sm" data-discover-send="${u.id}" data-discover-name="${esc(u.name || 'User')}">
                 + Send Request
@@ -314,10 +460,9 @@
             <div>
               <span class="card-title-lg">🔍 Discover Users</span>
               <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                Find other aspirants to study with
+                Match: <strong>${filterLabel}</strong> · ${discoverable.length} found
               </div>
             </div>
-            <span class="pill" style="background:rgba(168,85,247,.15);color:#C4B5FD">${discoverable.length} found</span>
           </div>
           <div class="list">${usersHtml}</div>
         </div>
@@ -395,6 +540,23 @@
       el.innerHTML = `<div class="empty"><div class="em">🔒</div><h4>Sign in to continue</h4></div>`;
       return;
     }
+
+    // ═══ CHECK PROFILE SETUP ═══
+    const supa = getSupa();
+    const { data: myProfile } = await supa
+      .from('profiles')
+      .select('optional_subject, preparation_year')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const needsSetup = !myProfile?.optional_subject || !myProfile?.preparation_year;
+
+    if (needsSetup) {
+      el.innerHTML = await renderProfileSetupForm();
+      wireProfileSetupForm();
+      return;
+    }
+    // ══════════════════════════
 
     await loadPartnerData(user);
 
