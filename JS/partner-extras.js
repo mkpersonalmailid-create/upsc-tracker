@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Safe Module (No Loop)
+   STUDY WITH PARTNER — Complete Safe Module
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -92,12 +92,11 @@
     tmsg('Study Partner is a Premium feature.', 'info');
   }
 
-  // ═══════════════ 1. INJECT SIDEBAR TAB (Once) ═══════════════
+  // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
     if (!nav) return false;
 
-    // Already exists
     if (document.querySelector('.nav-item[data-view="partner"]')) {
       return true;
     }
@@ -113,7 +112,6 @@
       <span class="nav-label">Study With Partner</span>
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
-    // ⬇️ YE NAYA LINE ADD KARO — initially hidden
     if (!pstate.cachedUser) btn.style.visibility = 'hidden';
 
     const anchor =
@@ -281,7 +279,7 @@
       </div>
     `;
   }
-  // ═══════════════ 4.45. WIRE PROFILE SETUP FORM ═══════════════
+
   // ═══════════════ 4.45. WIRE PROFILE SETUP FORM ═══════════════
   function wireProfileSetupForm() {
     const saveBtn = document.getElementById('setupSaveBtn');
@@ -337,7 +335,6 @@
 
         if (error) throw error;
 
-        // Update local state if accessible
         try {
           const s = getState();
           if (s && s.profile) {
@@ -359,8 +356,7 @@
       }
     };
   }
-  // ═══════════════ 4.5. DISCOVER USERS ═══════════════
-  // ═══════════════ 4.5. DISCOVER USERS (Strict Match) ═══════════════
+
   // ═══════════════ 4.5. DISCOVER USERS (Strict Match) ═══════════════
   async function renderDiscoverSection() {
     const supa = getSupa();
@@ -383,7 +379,6 @@
         .from('profiles')
         .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
         .eq('discoverable', true)
-
         .eq('optional_subject', myOptional)
         .eq('preparation_year', myYear)
         .neq('id', user.id)
@@ -401,22 +396,25 @@
 
       const discoverable = (matches || []).filter((u) => !existingIds.has(u.id));
 
+      // ═══ NO MATCHES ═══
       if (!discoverable.length) {
         return `
-          <div class="card" style="margin-top:18px">
-            <div class="card-header">
-              <div>
+          <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(236,72,153,.02));border:1px solid rgba(168,85,247,.25)">
+            <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+              <div style="flex:1;min-width:200px">
                 <span class="card-title-lg">🔍 Discover Users</span>
                 <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                  Match: <strong>${filterLabel}</strong>
+                  Match: <strong style="color:var(--purple)">${filterLabel}</strong>
                 </div>
               </div>
-                                  <button class="btn btn-secondary btn-sm" id="discoverRefreshBtn" onclick="renderPartnerView()">🔄 Find Now</button>
+              <button class="btn btn-primary btn-sm" id="discoverRefreshBtn">
+                🔄 Find Now
+              </button>
             </div>
             <div class="empty" style="padding:40px 20px">
               <div class="em">🔍</div>
               <h4>No matches yet</h4>
-              <p style="font-size:.82rem;color:var(--text-3);margin-top:8px">
+              <p style="font-size:.82rem;color:var(--text-3);margin-top:8px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6">
                 No user found with the same optional (<strong>${esc(myOptional)}</strong>) and same year (<strong>${esc(myYear)}</strong>).
                 <br>Check back later — matches will appear as more users join.
               </p>
@@ -425,6 +423,7 @@
         `;
       }
 
+      // ═══ USERS FOUND ═══
       const usersHtml = discoverable
         .slice(0, 30)
         .map((u) => {
@@ -447,16 +446,17 @@
         .join('');
 
       return `
-        <div class="card" style="margin-top:18px">
-          <div class="card-header">
-                      <div class="card-header">
-            <div>
+        <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(236,72,153,.02));border:1px solid rgba(168,85,247,.25)">
+          <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+            <div style="flex:1;min-width:200px">
               <span class="card-title-lg">🔍 Discover Users</span>
               <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                Match: <strong>${filterLabel}</strong> · ${discoverable.length} found
+                Match: <strong style="color:var(--purple)">${filterLabel}</strong> · ${discoverable.length} found
               </div>
             </div>
-            <button class="btn btn-secondary btn-sm" id="discoverRefreshBtn">🔄 Find Now</button>
+            <button class="btn btn-primary btn-sm" id="discoverRefreshBtn">
+              🔄 Find Now
+            </button>
           </div>
           <div class="list">${usersHtml}</div>
         </div>
@@ -465,7 +465,9 @@
       console.warn('[Partner] discover error:', e);
       return '';
     }
-  } // ═══════════════ 4.6. SEND DISCOVER REQUEST ═══════════════
+  }
+
+  // ═══════════════ 4.6. SEND DISCOVER REQUEST ═══════════════
   async function sendDiscoverRequest(targetId, targetName, btn) {
     const supa = getSupa();
     const user = await getCurrentUser();
@@ -481,7 +483,6 @@
     btn.textContent = '⏳ Sending…';
 
     try {
-      // Check if request already exists
       const { data: existing } = await supa
         .from('partner_links')
         .select('id, status')
@@ -497,7 +498,6 @@
         return;
       }
 
-      // Insert request
       const { error: insertErr } = await supa.from('partner_links').insert({
         requester_id: user.id,
         partner_id: targetId,
@@ -511,7 +511,6 @@
       btn.classList.remove('btn-primary');
       btn.classList.add('btn-secondary');
 
-      // Refresh the view after 1 second
       setTimeout(() => renderPartnerView(), 1000);
     } catch (e) {
       console.warn('[Partner] discover send error:', e);
@@ -549,7 +548,6 @@
       wireProfileSetupForm();
       return;
     }
-    // ══════════════════════════
 
     await loadPartnerData(user);
 
@@ -559,6 +557,7 @@
     const outgoing = pstate.links.filter((l) => l.status === 'pending' && l.requester_id === myId);
     const myInvites = pstate.invites.filter((i) => i.status === 'pending');
 
+    // ═══ MAIN HEADER CARD ═══
     let html = `
       <div class="card" style="margin-bottom:18px">
         <div class="card-header">
@@ -568,15 +567,23 @@
               Study alongside a friend, compare progress, and stay motivated together.
             </div>
           </div>
-          ${accepted.length < 1 ? `<button class="btn btn-primary btn-sm" id="pAddBtn">＋ Add Partner</button>` : ''}
+          ${accepted.length < 1 ? `<button class="btn btn-primary btn-sm" id="pAddBtn">＋ Add by Email</button>` : ''}
         </div>
       </div>
     `;
 
+    // ═══ DISCOVER USERS — SABSE UPAR ═══
+    const discoverHtml = await renderDiscoverSection();
+    if (discoverHtml) {
+      html += discoverHtml;
+    }
+
+    // ═══ HOW IT WORKS (only when no partner/requests) ═══
     if (accepted.length === 0 && incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
       html += howItWorksCard();
     }
 
+    // ═══ INCOMING REQUESTS ═══
     if (incoming.length > 0) {
       html += `
         <div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)">
@@ -587,6 +594,7 @@
         </div>`;
     }
 
+    // ═══ OUTGOING REQUESTS ═══
     if (outgoing.length > 0 || myInvites.length > 0) {
       html += `
         <div class="card" style="margin-bottom:18px">
@@ -597,6 +605,7 @@
         </div>`;
     }
 
+    // ═══ COMPARISON WRAP ═══
     if (accepted.length > 0) {
       html += `<div id="pComparisonWrap"></div>`;
     } else if (incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
@@ -605,17 +614,36 @@
           <div class="empty" style="padding:60px 20px">
             <div class="em">👥</div>
             <h4>No partner yet</h4>
-            <p>Add a friend and start studying together!</p>
-            <button class="btn btn-primary" id="pAddBtn2">＋ Add Your First Partner</button>
+            <p>Send a request from Discover Users above, or add by email.</p>
           </div>
         </div>`;
     }
 
     el.innerHTML = html;
 
+    // ═══ WIRE: ADD BUTTONS ═══
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
-    document.getElementById('pAddBtn2')?.addEventListener('click', openAddPartnerModal);
 
+    // ═══ WIRE: DISCOVER REFRESH BUTTON ═══
+    const refreshBtn = el.querySelector('#discoverRefreshBtn');
+    if (refreshBtn) {
+      refreshBtn.onclick = () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '⏳ Searching…';
+        renderPartnerView();
+      };
+    }
+
+    // ═══ WIRE: SEND REQUEST FROM DISCOVER ═══
+    el.querySelectorAll('[data-discover-send]').forEach((btn) => {
+      btn.onclick = async () => {
+        const targetId = btn.dataset.discoverSend;
+        const targetName = btn.dataset.discoverName;
+        await sendDiscoverRequest(targetId, targetName, btn);
+      };
+    });
+
+    // ═══ RENDER INCOMING ═══
     if (incoming.length > 0) {
       const listEl = document.getElementById('pIncomingList');
       listEl.innerHTML = '';
@@ -645,6 +673,7 @@
         .forEach((b) => (b.onclick = () => respondToRequest(b.dataset.paReject, 'rejected')));
     }
 
+    // ═══ RENDER OUTGOING ═══
     if (outgoing.length > 0 || myInvites.length > 0) {
       const listEl = document.getElementById('pOutgoingList');
       listEl.innerHTML = '';
@@ -689,34 +718,9 @@
       );
     }
 
+    // ═══ RENDER COMPARISON + CHAT ═══
     if (accepted.length > 0) {
       await renderComparison(accepted, myId);
-    }
-
-    // ═══ DISCOVER USERS SECTION ═══
-    const discoverHtml = await renderDiscoverSection();
-    if (discoverHtml) {
-      const discoverWrap = document.createElement('div');
-      discoverWrap.innerHTML = discoverHtml;
-      el.appendChild(discoverWrap);
-      // Wire Find Now button
-      const refreshBtn = discoverWrap.querySelector('#discoverRefreshBtn');
-      if (refreshBtn) {
-        refreshBtn.onclick = () => {
-          refreshBtn.disabled = true;
-          refreshBtn.textContent = '⏳ Searching…';
-          renderPartnerView();
-        };
-      }
-
-      // Wire send request buttons
-      el.querySelectorAll('[data-discover-send]').forEach((btn) => {
-        btn.onclick = async () => {
-          const targetId = btn.dataset.discoverSend;
-          const targetName = btn.dataset.discoverName;
-          await sendDiscoverRequest(targetId, targetName, btn);
-        };
-      });
     }
   }
 
@@ -826,7 +830,7 @@
     );
   }
 
-  // ═══════════════ 8. SEND REQUEST ═══════════════
+  // ═══════════════ 8. SEND REQUEST (BY EMAIL) ═══════════════
   async function sendPartnerRequest(email) {
     const supa = getSupa();
     const user = await getCurrentUser();
@@ -1117,7 +1121,7 @@
 
       wrap.appendChild(card);
       card.querySelector('[data-pa-remove]')?.addEventListener('click', () => removePartner(link.id, partner.name));
-      // Add chat below comparison
+
       const chatContainer = document.createElement('div');
       chatContainer.id = 'pChat_' + partnerId;
       wrap.appendChild(chatContainer);
@@ -1252,7 +1256,6 @@
     let container = document.getElementById(containerId);
     if (!container) return;
 
-    // Clear any existing polling
     if (chatPollHandle) {
       clearInterval(chatPollHandle);
       chatPollHandle = null;
@@ -1263,7 +1266,6 @@
     const supa = getSupa();
     if (!supa) return;
 
-    // ── Render chat UI once ──
     container.innerHTML = `
       <div class="card" style="margin-top:18px">
         <div class="card-header">
@@ -1301,7 +1303,6 @@
     const inputEl = document.getElementById(containerId + '_input');
     const sendBtn = document.getElementById(containerId + '_send');
 
-    // ── Fetch & render messages ──
     async function loadMessages() {
       try {
         const { data: msgs } = await supa
@@ -1352,12 +1353,10 @@
           })
           .join('');
 
-        // Auto-scroll if was at bottom
         if (wasAtBottom) {
           listEl.scrollTop = listEl.scrollHeight;
         }
 
-        // Mark as read (background)
         const unreadIds = list.filter((m) => m.receiver_id === user.id && !m.read_at).map((m) => m.id);
         if (unreadIds.length) {
           supa
@@ -1372,7 +1371,6 @@
       }
     }
 
-    // ── Send message ──
     async function sendMessage() {
       const text = (inputEl.value || '').trim();
       if (!text) return;
@@ -1398,7 +1396,6 @@
 
     sendBtn.onclick = sendMessage;
 
-    // Enter to send, Shift+Enter for new line
     inputEl.onkeydown = (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -1406,20 +1403,16 @@
       }
     };
 
-    // Auto-grow textarea
     inputEl.oninput = () => {
       inputEl.style.height = '44px';
       inputEl.style.height = Math.min(120, inputEl.scrollHeight) + 'px';
     };
 
-    // Initial load
     await loadMessages();
 
-    // Poll every 5 seconds for new messages (light)
     chatPollHandle = setInterval(() => {
       const el = document.getElementById(containerId + '_list');
       if (!el) {
-        // Chat is closed/removed
         if (chatPollHandle) {
           clearInterval(chatPollHandle);
           chatPollHandle = null;
@@ -1430,7 +1423,7 @@
     }, 5000);
   }
 
-  // ═══════════════ 13. INIT (SAFE — No Observer, No Polling) ═══════════════
+  // ═══════════════ 13. INIT ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -1445,10 +1438,10 @@
     }
     return false;
   }
+
   function updatePartnerTabAppearance() {
     const btn = document.querySelector('.nav-item[data-view="partner"]');
     if (!btn) return;
-    // ✅ Reveal tab once user is loaded
     if (pstate.cachedUser) btn.style.visibility = '';
 
     const isPremium = isUserPremium();
@@ -1474,7 +1467,6 @@
       if (user && getSupa()) {
         clearInterval(checkUser);
 
-        // ✅ Update tab appearance multiple times to catch state load
         updatePartnerTabAppearance();
         setTimeout(updatePartnerTabAppearance, 800);
         setTimeout(updatePartnerTabAppearance, 2000);
@@ -1501,7 +1493,6 @@
     }
     backgroundLoad();
 
-    // ✅ Poll appearance for first 30 seconds (idempotent = safe)
     let pollCount = 0;
     const pollHandle = setInterval(() => {
       pollCount++;
@@ -1515,9 +1506,6 @@
   } else {
     boot();
   }
-
-  // ❌ NO MutationObserver
-  // ❌ NO setInterval for appearance
 
   window.__partner = {
     reload: () => renderPartnerView(),
