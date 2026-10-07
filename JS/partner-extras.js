@@ -411,6 +411,7 @@
                   Match: <strong>${filterLabel}</strong>
                 </div>
               </div>
+                                  <button class="btn btn-secondary btn-sm" id="discoverRefreshBtn" onclick="renderPartnerView()">🔄 Find Now</button>
             </div>
             <div class="empty" style="padding:40px 20px">
               <div class="em">🔍</div>
@@ -448,12 +449,14 @@
       return `
         <div class="card" style="margin-top:18px">
           <div class="card-header">
+                      <div class="card-header">
             <div>
               <span class="card-title-lg">🔍 Discover Users</span>
               <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
                 Match: <strong>${filterLabel}</strong> · ${discoverable.length} found
               </div>
             </div>
+            <button class="btn btn-secondary btn-sm" id="discoverRefreshBtn">🔄 Find Now</button>
           </div>
           <div class="list">${usersHtml}</div>
         </div>
@@ -696,6 +699,15 @@
       const discoverWrap = document.createElement('div');
       discoverWrap.innerHTML = discoverHtml;
       el.appendChild(discoverWrap);
+      // Wire Find Now button
+      const refreshBtn = discoverWrap.querySelector('#discoverRefreshBtn');
+      if (refreshBtn) {
+        refreshBtn.onclick = () => {
+          refreshBtn.disabled = true;
+          refreshBtn.textContent = '⏳ Searching…';
+          renderPartnerView();
+        };
+      }
 
       // Wire send request buttons
       el.querySelectorAll('[data-discover-send]').forEach((btn) => {
