@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   STUDY WITH PARTNER — Final Module (Premium Like Others)
+   STUDY WITH PARTNER — Safe Module (No Loop)
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
@@ -67,7 +67,7 @@
     }
   }
 
-  // ═══════════════ PREMIUM CHECK (Matches other sections) ═══════════════
+  // ═══════════════ PREMIUM CHECK ═══════════════
   function isUserPremium() {
     try {
       if (typeof isPremiumUser === 'function') return isPremiumUser();
@@ -88,46 +88,17 @@
         window.openUpgradeModal('Study Partner');
         return;
       }
-      if (typeof openUpgradeModal === 'function') {
-        openUpgradeModal('Study Partner');
-        return;
-      }
     } catch (e) {}
-    tmsg('Study Partner is a Premium feature. Please upgrade.', 'info');
+    tmsg('Study Partner is a Premium feature.', 'info');
   }
 
-  // ═══════════════ TAB APPEARANCE SYNC ═══════════════
-  function updatePartnerTabAppearance() {
-    const btn = document.querySelector('.nav-item[data-view="partner"]');
-    if (!btn) return;
-    const isPremium = isUserPremium();
-    const icon = btn.querySelector('.nav-icon');
-    const label = btn.querySelector('.nav-label');
-
-    if (isPremium) {
-      btn.classList.remove('premium-locked');
-      btn.classList.add('premium-unlocked');
-      if (icon) icon.textContent = PARTNER_ICON;
-      // Restore label gradient removed
-      if (label) {
-        label.style.background = '';
-        label.style.webkitTextFillColor = '';
-      }
-    } else {
-      btn.classList.add('premium-locked');
-      btn.classList.remove('premium-unlocked');
-      if (icon) icon.textContent = '🔒';
-    }
-  }
-
-  // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
+  // ═══════════════ 1. INJECT SIDEBAR TAB (Once) ═══════════════
   function injectSidebarTab() {
     const nav = document.querySelector('.nav');
     if (!nav) return false;
 
-    // Already exists — just update appearance
+    // Already exists
     if (document.querySelector('.nav-item[data-view="partner"]')) {
-      updatePartnerTabAppearance();
       return true;
     }
 
@@ -143,7 +114,6 @@
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
 
-    // Insert in "More" section, before Premium
     const anchor =
       nav.querySelector('.nav-item[data-view="premium"]') ||
       nav.querySelector('.nav-item[data-view="support"]') ||
@@ -155,7 +125,6 @@
       nav.appendChild(btn);
     }
 
-    // Click handler — same behavior as other premium sections
     btn.addEventListener('click', () => {
       if (!isUserPremium()) {
         showPremiumPrompt();
@@ -183,7 +152,6 @@
 
   // ═══════════════ 3. OPEN PARTNER VIEW ═══════════════
   function openPartnerView() {
-    // Double-check premium
     if (!isUserPremium()) {
       showPremiumPrompt();
       return;
@@ -203,7 +171,7 @@
     renderPartnerView();
   }
 
-  // ═══════════════ 4. HOW IT WORKS CARD ═══════════════
+  // ═══════════════ 4. HOW IT WORKS ═══════════════
   function howItWorksCard() {
     return `
       <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(236,72,153,.04));border:1px solid rgba(168,85,247,.25)">
@@ -215,7 +183,6 @@
             </div>
           </div>
         </div>
-
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:8px">
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--purple)">
             <div style="font-size:1.4rem;margin-bottom:8px">1️⃣</div>
@@ -228,27 +195,23 @@
             <div style="font-size:1.4rem;margin-bottom:8px">2️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Invite or Request</div>
             <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
-              If they're registered → instant request. If not → you get a shareable invite link for WhatsApp/Telegram.
+              If they're registered → instant request. If not → you get a shareable invite link.
             </div>
           </div>
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--orange)">
             <div style="font-size:1.4rem;margin-bottom:8px">3️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Both Accept</div>
             <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
-              Comparison only unlocks when BOTH accept. Your privacy is protected — no data is shared without consent.
+              Comparison only unlocks when BOTH accept. Your privacy is protected.
             </div>
           </div>
           <div style="padding:16px;background:var(--card-2);border-radius:12px;border-left:3px solid var(--teal)">
             <div style="font-size:1.4rem;margin-bottom:8px">4️⃣</div>
             <div style="font-weight:800;font-size:.9rem;margin-bottom:6px">Compare & Compete</div>
             <div style="font-size:.8rem;color:var(--text-2);line-height:1.6">
-              See side-by-side stats: study time, streaks, syllabus progress, and motivate each other daily.
+              See side-by-side stats and motivate each other daily.
             </div>
           </div>
-        </div>
-
-        <div style="margin-top:16px;padding:12px 14px;background:rgba(168,85,247,.08);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6;border-left:3px solid var(--purple)">
-          🔒 <strong>Privacy First:</strong> Your notes, personal data, and individual sessions are never shared. Only aggregate stats (study hours, streaks, syllabus %) are visible to your partner.
         </div>
       </div>
     `;
@@ -297,12 +260,7 @@
       html += `
         <div class="card" style="margin-bottom:18px;border-left:4px solid var(--amber)">
           <div class="card-header">
-            <div>
-              <span class="card-title-lg">🔔 Partner Requests (${incoming.length})</span>
-              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                Someone wants to study with you. Accept to start comparing.
-              </div>
-            </div>
+            <div><span class="card-title-lg">🔔 Partner Requests (${incoming.length})</span></div>
           </div>
           <div class="list" id="pIncomingList"></div>
         </div>`;
@@ -312,12 +270,7 @@
       html += `
         <div class="card" style="margin-bottom:18px">
           <div class="card-header">
-            <div>
-              <span class="card-title-lg">📤 Sent Requests</span>
-              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                Waiting for your friend to accept.
-              </div>
-            </div>
+            <div><span class="card-title-lg">📤 Sent Requests</span></div>
           </div>
           <div class="list" id="pOutgoingList"></div>
         </div>`;
@@ -486,14 +439,11 @@
         <strong style="color:var(--text)">How it works:</strong>
         <br>Enter your friend's email below.
         <br>• If they're on UPSC Tracker → we'll send them a request.
-        <br>• If not → you'll get a shareable invite link for WhatsApp or Telegram.
+        <br>• If not → you'll get a shareable invite link.
       </div>
       <div class="field">
         <label>Partner's Email</label>
         <input type="email" id="pEmailInput" placeholder="friend@example.com" autocomplete="off" />
-        <div style="font-size:.72rem;color:var(--text-3);margin-top:6px">
-          Both of you must accept before any comparison starts.
-        </div>
       </div>`;
 
     const actions = `
@@ -587,7 +537,7 @@
         if (invErr) throw invErr;
 
         if (typeof window.closeModal === 'function') window.closeModal();
-        tmsg('📨 Invite link ready! Share it with your friend.', 'ok');
+        tmsg('📨 Invite link ready!', 'ok');
         openShareModal(invite);
         renderPartnerView();
       }
@@ -616,7 +566,6 @@
           </div>
         </div>
       </div>
-
       <div style="padding:14px;background:var(--card-2);border-radius:12px;margin-bottom:14px">
         <div style="font-size:.72rem;color:var(--text-3);font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Invite Link</div>
         <div style="font-family:var(--mono);font-size:.78rem;word-break:break-all;color:var(--text-2)" id="pShareLink">${esc(link)}</div>
@@ -760,7 +709,6 @@
           </div>
           <button class="btn btn-danger btn-sm" data-pa-remove="${link.id}">Remove Partner</button>
         </div>
-
         <div class="kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
           <div class="kpi" style="--c:var(--purple);--cb:rgba(168,85,247,0.15)">
             <div class="kpi-label">⏱ Today's Study Time</div>
@@ -814,10 +762,8 @@
                 <div style="font-size:1.4rem;font-weight:900">${pSyl.done}</div>
               </div>
             </div>
-            <div style="font-size:.68rem;color:var(--text-3);margin-top:6px">topics completed</div>
           </div>
         </div>
-
         <div style="margin-top:16px;padding:12px 14px;background:var(--card-2);border-radius:10px;font-size:.8rem;color:var(--text-2);line-height:1.6">
           💡 <strong>Tip:</strong> Stay consistent with your partner — motivate each other daily!
         </div>`;
@@ -874,7 +820,7 @@
     const ok = window.customConfirm
       ? await window.customConfirm({
           title: 'Remove Partner?',
-          message: `Are you sure you want to remove ${partnerName || 'this partner'}? Comparison will stop.`,
+          message: `Are you sure you want to remove ${partnerName || 'this partner'}?`,
           confirmText: 'Remove',
           cancelText: 'Cancel',
           icon: '👋',
@@ -946,7 +892,7 @@
     }
   }
 
-  // ═══════════════ 13. INIT ═══════════════
+  // ═══════════════ 13. INIT (SAFE — No Observer, No Polling) ═══════════════
   function tryInject() {
     const nav = document.querySelector('.nav');
     const content = document.getElementById('content');
@@ -988,13 +934,6 @@
       }, 200);
     }
     backgroundLoad();
-
-    // Poll appearance every 2 seconds (keeps tab in sync with premium status)
-    setInterval(updatePartnerTabAppearance, 2000);
-    // Also update on initial load
-    setTimeout(updatePartnerTabAppearance, 500);
-    setTimeout(updatePartnerTabAppearance, 1500);
-    setTimeout(updatePartnerTabAppearance, 3000);
   }
 
   if (document.readyState === 'loading') {
@@ -1003,22 +942,15 @@
     boot();
   }
 
-  const observer = new MutationObserver(() => {
-    if (!document.querySelector('.nav-item[data-view="partner"]')) {
-      tryInject();
-    } else {
-      updatePartnerTabAppearance();
-    }
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // ❌ NO MutationObserver
+  // ❌ NO setInterval for appearance
 
   window.__partner = {
     reload: () => renderPartnerView(),
     open: () => openPartnerView(),
     state: pstate,
     isPremium: isUserPremium,
-    sync: updatePartnerTabAppearance,
   };
 
-  console.log('[Partner] 📦 Module loaded');
+  console.log('[Partner] 📦 Module loaded (safe)');
 })();
