@@ -568,7 +568,7 @@
               Study alongside a friend, compare progress, and stay motivated together.
             </div>
           </div>
-          ${accepted.length < 1 ? `<button class="btn btn-primary btn-sm" id="pAddBtn">＋ Add by Email</button>` : ''}
+          <button class="btn btn-primary btn-sm" id="pAddBtn">＋ Add by Email</button>
         </div>
       </div>
     `;
@@ -609,7 +609,7 @@
     // ═══ COMPARISON WRAP ═══
     if (accepted.length > 0) {
       html += `<div id="pComparisonWrap"></div>`;
-    } else if (incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
+    } else if (accepted.length === 0 && incoming.length === 0 && outgoing.length === 0 && myInvites.length === 0) {
       html += `
         <div class="card">
           <div class="empty" style="padding:60px 20px">
