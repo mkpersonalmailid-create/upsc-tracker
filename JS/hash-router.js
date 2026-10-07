@@ -13,9 +13,7 @@
     if (DEBUG) console.log('%c🔗 [HashRoute]', 'color:#8B5CF6;font-weight:700', ...args);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     GLOBAL PREMIUM GRACE PERIOD
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════ PREMIUM GRACE PERIOD ═══════ */
   window.__appLoadTime = Date.now();
 
   function installPremiumGrace() {
@@ -53,14 +51,72 @@
   }
 
   installPremiumGrace();
-  setTimeout(installPremiumGrace, 100);
-  setTimeout(installPremiumGrace, 500);
-  setTimeout(installPremiumGrace, 1000);
-  setTimeout(installPremiumGrace, 2000);
+  [100, 500, 1000, 2000].forEach(function (t) {
+    setTimeout(installPremiumGrace, t);
+  });
 
-  /* ═══════════════════════════════════════════════════════
-     NAV ITEM CLICK TRACKING
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════ FORCE RESTORE — Direct DOM ═══════ */
+  function forceRestoreView(viewName) {
+    try {
+      document.querySelectorAll('.view').forEach(function (v) {
+        v.classList.remove('active');
+      });
+
+      const viewEl = document.getElementById('view-' + viewName);
+      if (!viewEl) {
+        log('❌ View element not found:', 'view-' + viewName);
+        return false;
+      }
+      viewEl.classList.add('active');
+      log('✅ View activated via DOM:', viewName);
+
+      document.querySelectorAll('.nav-item').forEach(function (n) {
+        n.classList.remove('active');
+      });
+      const nav = document.querySelector('.nav-item[data-view="' + viewName + '"]');
+      if (nav) nav.classList.add('active');
+
+      const content = document.getElementById('content');
+      if (content) content.scrollTop = 0;
+
+      // Lazy loaders
+      const loaders = {
+        analytics: ['loadAnalytics', 'loadAnalyticsV2', 'renderAnalytics'],
+        insights: ['loadInsights', 'renderInsights'],
+        partner: ['openPartnerView', 'renderPartnerView'],
+        calendar: ['loadCalendar', 'renderCalendar'],
+        history: ['loadHistory', 'renderHistory'],
+        syllabus: ['loadSyllabus', 'renderSyllabus'],
+        subjects: ['loadSubjects', 'renderSubjects'],
+        revision: ['loadRevision', 'renderRevision'],
+        goals: ['loadGoals', 'renderGoals'],
+        planner: ['loadPlanner', 'renderPlanner'],
+        notes: ['loadNotes', 'renderNotes'],
+        tests: ['loadTests', 'renderTests'],
+        premium: ['loadPremium', 'renderPremium'],
+        dashboard: ['loadDashboard', 'renderDashboard'],
+      };
+
+      const fns = loaders[viewName] || [];
+      for (let i = 0; i < fns.length; i++) {
+        if (typeof window[fns[i]] === 'function') {
+          try {
+            window[fns[i]]();
+            log('✅ Triggered loader:', fns[i]);
+            break;
+          } catch (e) {
+            log('⚠️ Loader error:', fns[i], e.message);
+          }
+        }
+      }
+      return true;
+    } catch (e) {
+      log('❌ Force restore error:', e.message);
+      return false;
+    }
+  }
+
+  /* ═══════ NAV CLICK TRACKING ═══════ */
   function attachNavListeners() {
     document.querySelectorAll('.nav-item[data-view]').forEach(function (item) {
       if (item.dataset.hashBound === 'true') return;
@@ -78,9 +134,7 @@
     });
   }
 
-  /* ═══════════════════════════════════════════════════════
-     VIEW RESTORE — Refresh ke baad same view pe wapas
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════ VIEW RESTORE ═══════ */
   function restoreLastView() {
     let targetView = location.hash.replace('#', '');
     if (!targetView) {
@@ -96,12 +150,12 @@
     log('Trying to restore:', targetView);
 
     let attempts = 0;
-    const maxAttempts = 50;
+    const maxAttempts = 60;
 
     const tryRestore = setInterval(function () {
       attempts++;
 
-      // Step 1: State wait
+      // Wait for state
       let state = null;
       try {
         if (typeof getState === 'function') state = getState();
@@ -114,78 +168,62 @@
         return;
       }
 
-      // Step 2: Premium info wait
-      if (state.isPremium === undefined && state.profile === undefined && attempts < 25) {
+      // Wait for premium info
+      if (state.isPremium === undefined && state.profile === undefined && attempts < 30) {
         if (attempts % 5 === 0) log('⏳ Waiting for premium info... attempt ' + attempts);
         return;
       }
 
-      // Step 3: Nav item dhundo aur click karo
+      // Click nav item
       const navItem = document.querySelector('.nav-item[data-view="' + targetView + '"]');
-      if (navItem) {
-        // Pehle se active hai?
-        if (navItem.classList.contains('active')) {
-          log('✅ View already active:', targetView);
-          clearInterval(tryRestore);
-          return;
-        }
+      if (!navItem) {
+        if (attempts > maxAttempts) clearInterval(tryRestore);
+        return;
+      }
 
-        log('👆 Clicking nav item:', targetView);
-        navItem.click();
-
-        // 400ms baad verify
-        setTimeout(function () {
-          const stillNotActive = !navItem.classList.contains('active');
-          const viewEl = document.getElementById('view-' + targetView);
-          const viewNotActive = viewEl && !viewEl.classList.contains('active');
-
-          if (stillNotActive || viewNotActive) {
-            log("⚠️ View didn't switch, retrying click:", targetView);
-            navItem.click();
-
-            // Ek aur retry
-            setTimeout(function () {
-              log('🔄 Second retry for:', targetView);
-              navItem.click();
-              setTimeout(function () {
-                if (navItem.classList.contains('active')) {
-                  log('✅ Restored view successfully:', targetView);
-                } else {
-                  log('❌ Failed to restore view:', targetView);
-                }
-              }, 400);
-            }, 500);
-          } else {
-            log('✅ Restored view successfully:', targetView);
-          }
-        }, 400);
-
+      if (navItem.classList.contains('active')) {
+        log('✅ Already active:', targetView);
         clearInterval(tryRestore);
         return;
       }
 
-      // Step 4: Fallback
-      if (typeof window.switchView === 'function') {
-        try {
-          window.switchView(targetView);
-          log('✅ Switched via switchView:', targetView);
-          clearInterval(tryRestore);
-          return;
-        } catch (e) {
-          log('switchView error:', e.message);
-        }
-      }
+      log('👆 Clicking nav:', targetView);
+      navItem.click();
 
-      if (attempts > maxAttempts) {
-        log('⚠️ Could not restore view:', targetView);
-        clearInterval(tryRestore);
-      }
-    }, 200);
+      // Verify after 500ms
+      setTimeout(function () {
+        const isActive = navItem.classList.contains('active');
+        const viewEl = document.getElementById('view-' + targetView);
+        const viewActive = viewEl && viewEl.classList.contains('active');
+
+        if (isActive && viewActive) {
+          log('✅ Restored view:', targetView);
+          return;
+        }
+
+        // Retry once
+        log('⚠️ First click failed, retrying...');
+        navItem.click();
+
+        setTimeout(function () {
+          const isActive2 = navItem.classList.contains('active');
+          const viewActive2 = viewEl && viewEl.classList.contains('active');
+          if (isActive2 && viewActive2) {
+            log('✅ Restored on retry:', targetView);
+            return;
+          }
+
+          // FORCE RESTORE
+          log('🚨 Force restoring via DOM:', targetView);
+          forceRestoreView(targetView);
+        }, 600);
+      }, 500);
+
+      clearInterval(tryRestore);
+    }, 250);
   }
 
-  /* ═══════════════════════════════════════════════════════
-     BROWSER BACK/FORWARD BUTTONS
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════ HASH CHANGE (back/forward) ═══════ */
   window.addEventListener('hashchange', function () {
     const view = location.hash.replace('#', '');
     if (!view) return;
@@ -196,30 +234,23 @@
     }
   });
 
-  /* ═══════════════════════════════════════════════════════
-     BOOT
-     ═══════════════════════════════════════════════════════ */
+  /* ═══════ BOOT ═══════ */
   function boot() {
     let attempts = 0;
-    const maxAttempts = 60;
-
     const waitForNav = setInterval(function () {
       attempts++;
       const navItems = document.querySelectorAll('.nav-item[data-view]');
 
       if (navItems.length >= 3) {
-        log('Nav items detected (' + navItems.length + '), attaching listeners');
+        log('Nav items ready (' + navItems.length + ')');
         attachNavListeners();
         clearInterval(waitForNav);
 
-        setTimeout(restoreLastView, 500);
+        setTimeout(restoreLastView, 1500);
         setInterval(attachNavListeners, 2000);
       }
 
-      if (attempts > maxAttempts) {
-        log('⚠️ Nav items never appeared, giving up');
-        clearInterval(waitForNav);
-      }
+      if (attempts > 60) clearInterval(waitForNav);
     }, 200);
   }
 
