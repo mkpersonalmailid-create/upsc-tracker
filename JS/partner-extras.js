@@ -383,7 +383,7 @@
         .from('profiles')
         .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
         .eq('discoverable', true)
-        .eq('is_admin', false)
+
         .eq('optional_subject', myOptional)
         .eq('preparation_year', myYear)
         .neq('id', user.id)
