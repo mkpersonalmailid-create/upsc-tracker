@@ -770,6 +770,11 @@
 
       wrap.appendChild(card);
       card.querySelector('[data-pa-remove]')?.addEventListener('click', () => removePartner(link.id, partner.name));
+      // Add chat below comparison
+      const chatContainer = document.createElement('div');
+      chatContainer.id = 'pChat_' + partnerId;
+      wrap.appendChild(chatContainer);
+      renderMessages(partnerId, partner.name);
     }
   }
 
@@ -890,6 +895,192 @@
     } catch (e) {
       console.warn('[Partner] invite error:', e);
     }
+  }
+
+  // ═══════════════ 12.5. MESSAGES (Chat) ═══════════════
+  let chatPollHandle = null;
+
+  async function renderMessages(partnerId, partnerName) {
+    const containerId = 'pChat_' + partnerId;
+    let container = document.getElementById(containerId);
+    if (!container) return;
+
+    // Clear any existing polling
+    if (chatPollHandle) {
+      clearInterval(chatPollHandle);
+      chatPollHandle = null;
+    }
+
+    const user = await getCurrentUser();
+    if (!user) return;
+    const supa = getSupa();
+    if (!supa) return;
+
+    // ── Render chat UI once ──
+    container.innerHTML = `
+      <div class="card" style="margin-top:18px">
+        <div class="card-header">
+          <div>
+            <span class="card-title-lg">💬 Messages</span>
+            <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
+              Chat with ${esc(partnerName || 'Partner')}
+            </div>
+          </div>
+        </div>
+
+        <div id="${containerId}_list" style="
+          max-height: 360px; overflow-y: auto; padding: 12px;
+          background: var(--bg-2); border: 1px solid var(--border);
+          border-radius: 12px; display: flex; flex-direction: column; gap: 8px;
+          min-height: 180px;
+        ">
+          <div style="text-align:center;color:var(--text-3);font-size:.82rem;padding:20px">Loading messages…</div>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:flex-end">
+          <textarea id="${containerId}_input" rows="1" maxlength="1000"
+            placeholder="Type your message…"
+            style="flex:1;background:var(--bg-2);border:1.5px solid var(--border);
+                   border-radius:12px;padding:11px 14px;font-size:.88rem;color:var(--text);
+                   resize:none;min-height:44px;max-height:120px;font-family:inherit;outline:none"></textarea>
+          <button class="btn btn-primary" id="${containerId}_send" style="padding:11px 20px;height:44px">
+            Send ➤
+          </button>
+        </div>
+      </div>
+    `;
+
+    const listEl = document.getElementById(containerId + '_list');
+    const inputEl = document.getElementById(containerId + '_input');
+    const sendBtn = document.getElementById(containerId + '_send');
+
+    // ── Fetch & render messages ──
+    async function loadMessages() {
+      try {
+        const { data: msgs } = await supa
+          .from('partner_messages')
+          .select('*')
+          .or(
+            `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`,
+          )
+          .order('created_at', { ascending: true })
+          .limit(200);
+
+        const list = msgs || [];
+
+        if (!list.length) {
+          listEl.innerHTML = `<div style="text-align:center;color:var(--text-3);font-size:.82rem;padding:20px">No messages yet. Say hi! 👋</div>`;
+          return;
+        }
+
+        const wasAtBottom = listEl.scrollHeight - listEl.scrollTop - listEl.clientHeight < 60;
+
+        listEl.innerHTML = list
+          .map((m) => {
+            const mine = m.sender_id === user.id;
+            const time = new Date(m.created_at).toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            });
+            const date = new Date(m.created_at).toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'short',
+            });
+            return `
+              <div style="display:flex;flex-direction:column;align-items:${mine ? 'flex-end' : 'flex-start'};gap:2px">
+                <div style="
+                  max-width:75%; padding:9px 13px; border-radius:14px;
+                  font-size:.85rem; line-height:1.5; word-wrap:break-word; white-space:pre-wrap;
+                  ${
+                    mine
+                      ? 'background:linear-gradient(135deg,#8B5CF6,#EC4899);color:#fff;border-bottom-right-radius:4px'
+                      : 'background:var(--card);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px'
+                  }
+                ">${esc(m.message)}</div>
+                <div style="font-size:.62rem;color:var(--text-3);padding:0 6px">
+                  ${date} · ${time}${mine ? ' · ✓' : ''}
+                </div>
+              </div>
+            `;
+          })
+          .join('');
+
+        // Auto-scroll if was at bottom
+        if (wasAtBottom) {
+          listEl.scrollTop = listEl.scrollHeight;
+        }
+
+        // Mark as read (background)
+        const unreadIds = list.filter((m) => m.receiver_id === user.id && !m.read_at).map((m) => m.id);
+        if (unreadIds.length) {
+          supa
+            .from('partner_messages')
+            .update({ read_at: new Date().toISOString() })
+            .in('id', unreadIds)
+            .then(() => {})
+            .catch(() => {});
+        }
+      } catch (e) {
+        console.warn('[Partner] load messages error:', e);
+      }
+    }
+
+    // ── Send message ──
+    async function sendMessage() {
+      const text = (inputEl.value || '').trim();
+      if (!text) return;
+
+      sendBtn.disabled = true;
+      try {
+        const { error } = await supa.from('partner_messages').insert({
+          sender_id: user.id,
+          receiver_id: partnerId,
+          message: text,
+        });
+        if (error) throw error;
+        inputEl.value = '';
+        inputEl.style.height = '44px';
+        await loadMessages();
+        listEl.scrollTop = listEl.scrollHeight;
+      } catch (e) {
+        tmsg('Failed to send: ' + (e.message || 'Unknown'), 'err');
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.onclick = sendMessage;
+
+    // Enter to send, Shift+Enter for new line
+    inputEl.onkeydown = (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    };
+
+    // Auto-grow textarea
+    inputEl.oninput = () => {
+      inputEl.style.height = '44px';
+      inputEl.style.height = Math.min(120, inputEl.scrollHeight) + 'px';
+    };
+
+    // Initial load
+    await loadMessages();
+
+    // Poll every 5 seconds for new messages (light)
+    chatPollHandle = setInterval(() => {
+      const el = document.getElementById(containerId + '_list');
+      if (!el) {
+        // Chat is closed/removed
+        if (chatPollHandle) {
+          clearInterval(chatPollHandle);
+          chatPollHandle = null;
+        }
+        return;
+      }
+      loadMessages();
+    }, 5000);
   }
 
   // ═══════════════ 13. INIT (SAFE — No Observer, No Polling) ═══════════════
