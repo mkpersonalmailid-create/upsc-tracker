@@ -47,6 +47,20 @@
     const tryRestore = setInterval(function () {
       attempts++;
 
+      // ⚡ Wait karo jab tak state load na ho jaye
+      let state = null;
+      try {
+        if (typeof getState === 'function') state = getState();
+        if (!state) state = window.state || window.appState;
+      } catch (e) {}
+
+      if (!state || !state.user) {
+        log('⏳ Waiting for state... attempt ' + attempts);
+        if (attempts > 50) clearInterval(tryRestore);
+        return;
+      }
+
+      // State ready — ab click karo
       const navItem = document.querySelector('.nav-item[data-view="' + targetView + '"]');
       if (navItem) {
         navItem.click();
@@ -64,11 +78,11 @@
         } catch (e) {}
       }
 
-      if (attempts > 30) {
+      if (attempts > 50) {
         log('⚠️ Could not restore:', targetView);
         clearInterval(tryRestore);
       }
-    }, 100);
+    }, 200);
   }
 
   // 3. Browser back/forward buttons ke liye
