@@ -43,7 +43,6 @@
     { id: 'interview', label: 'Interview prep', emoji: '🎯' },
   ];
 
-  // ─── State ───
   let currentStep = 1;
   let formData = {
     optional: '',
@@ -52,14 +51,14 @@
     stage: 'beginner',
   };
 
-  // ─── Check if user needs onboarding ───
+  /* ═══════════════════════════════════════════════════════
+     CHECK IF USER NEEDS ONBOARDING
+     ═══════════════════════════════════════════════════════ */
   async function needsOnboarding() {
-    // localStorage check — agar already dekha hai, skip
     try {
       if (localStorage.getItem(ONBOARDED_KEY) === 'true') return false;
     } catch (e) {}
 
-    // Supabase check — agar profile complete hai, skip
     try {
       const supa = window.supa;
       if (!supa) return false;
@@ -71,11 +70,19 @@
 
       const { data: profile } = await supa
         .from('profiles')
-        .select('optional_subject, preparation_year, onboarding_completed')
+        .select('optional_subject, preparation_year, onboarding_completed, is_admin')
         .eq('id', user.id)
         .maybeSingle();
 
-      // Agar profile already setup hai, toh skip
+      // Admin skip
+      if (profile?.is_admin === true) {
+        try {
+          localStorage.setItem(ONBOARDED_KEY, 'true');
+        } catch (e) {}
+        return false;
+      }
+
+      // Already setup
       if (profile?.optional_subject && profile?.preparation_year) {
         try {
           localStorage.setItem(ONBOARDED_KEY, 'true');
@@ -83,7 +90,6 @@
         return false;
       }
 
-      // Agar user pehle onboard ho chuka hai
       if (profile?.onboarding_completed === true) {
         try {
           localStorage.setItem(ONBOARDED_KEY, 'true');
@@ -97,9 +103,10 @@
     }
   }
 
-  // ─── Inject Wizard ───
+  /* ═══════════════════════════════════════════════════════
+     INJECT WIZARD
+     ═══════════════════════════════════════════════════════ */
   function injectWizard() {
-    // Agar already exists, skip
     if (document.getElementById('onboarding-wizard')) return;
 
     const wizard = document.createElement('div');
@@ -121,10 +128,7 @@
 
     wizard.innerHTML = `
       <style>
-        @keyframes fadeInOnboard {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
+        @keyframes fadeInOnboard { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUpOnboard {
           from { transform: translateY(30px); opacity: 0; }
           to { transform: translateY(0); opacity: 1; }
@@ -139,6 +143,10 @@
           overflow-y: auto;
           box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7), 0 0 100px rgba(168, 85, 247, 0.2);
           animation: slideUpOnboard 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+        }
+        #onboarding-wizard .wizard-card::-webkit-scrollbar { width: 6px; }
+        #onboarding-wizard .wizard-card::-webkit-scrollbar-thumb {
+          background: rgba(168, 85, 247, 0.4); border-radius: 10px;
         }
         #onboarding-wizard .wiz-hero {
           padding: 40px 32px 24px;
@@ -174,9 +182,7 @@
           line-height: 1.5;
           margin: 0;
         }
-        #onboarding-wizard .wiz-body {
-          padding: 28px 32px;
-        }
+        #onboarding-wizard .wiz-body { padding: 28px 32px; }
         #onboarding-wizard .wiz-label {
           display: block;
           color: #A99BC7;
@@ -186,8 +192,7 @@
           letter-spacing: 0.8px;
           margin-bottom: 8px;
         }
-        #onboarding-wizard .wiz-input,
-        #onboarding-wizard .wiz-select {
+        #onboarding-wizard .wiz-input {
           width: 100%;
           padding: 14px 16px;
           background: #0f0818;
@@ -200,31 +205,51 @@
           transition: all 0.2s;
           box-sizing: border-box;
         }
-        #onboarding-wizard .wiz-input:focus,
-        #onboarding-wizard .wiz-select:focus {
+        #onboarding-wizard .wiz-input:focus {
           border-color: #A855F7;
           box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
         }
-                  #onboarding-wizard .wiz-select option {
-          background: #1c1630;
-          color: #ffffff;
-          padding: 12px;
-          font-size: 15px;
-          font-family: 'Inter', system-ui, sans-serif;
-        }
-        #onboarding-wizard .wiz-select option:checked,
-        #onboarding-wizard .wiz-select option:hover {
-          background: linear-gradient(135deg, #8B5CF6, #EC4899);
-          color: #ffffff;
-        }
-        #onboarding-wizard .wiz-field {
-          margin-bottom: 18px;
-        }
-        #onboarding-wizard .wiz-grid {
+        #onboarding-wizard .wiz-field { margin-bottom: 18px; }
+        #onboarding-wizard .wiz-optionals {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-          margin-bottom: 18px;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          max-height: 240px;
+          overflow-y: auto;
+          padding: 4px;
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        #onboarding-wizard .wiz-optionals::-webkit-scrollbar { width: 6px; }
+        #onboarding-wizard .wiz-optionals::-webkit-scrollbar-thumb {
+          background: rgba(168, 85, 247, 0.4);
+          border-radius: 10px;
+        }
+        #onboarding-wizard .wiz-optional-btn {
+          padding: 11px 8px;
+          background: #0f0818;
+          border: 1.5px solid rgba(255, 255, 255, 0.08);
+          border-radius: 10px;
+          color: #A99BC7;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+          font-family: inherit;
+          text-align: center;
+          line-height: 1.3;
+        }
+        #onboarding-wizard .wiz-optional-btn:hover {
+          border-color: rgba(168, 85, 247, 0.5);
+          color: #fff;
+          transform: translateY(-1px);
+        }
+        #onboarding-wizard .wiz-optional-btn.active {
+          background: linear-gradient(135deg, #8B5CF6, #EC4899);
+          border-color: transparent;
+          color: #fff;
+          box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4);
         }
         #onboarding-wizard .wiz-hours {
           display: grid;
@@ -294,11 +319,7 @@
           align-items: center;
           gap: 12px;
         }
-        #onboarding-wizard .wiz-progress {
-          display: flex;
-          gap: 6px;
-          margin-bottom: 0;
-        }
+        #onboarding-wizard .wiz-progress { display: flex; gap: 6px; }
         #onboarding-wizard .wiz-dot {
           width: 26px;
           height: 4px;
@@ -331,19 +352,6 @@
           opacity: 0.5;
           cursor: not-allowed;
         }
-        #onboarding-wizard .wiz-btn-skip {
-          padding: 10px;
-          background: transparent;
-          border: none;
-          color: #71717A;
-          font-size: 13px;
-          font-weight: 600;
-          cursor: pointer;
-          font-family: inherit;
-        }
-        #onboarding-wizard .wiz-btn-skip:hover {
-          color: #A99BC7;
-        }
         #onboarding-wizard .wiz-success-icon {
           width: 80px;
           height: 80px;
@@ -361,7 +369,7 @@
           #onboarding-wizard .wiz-hero { padding: 32px 22px 20px; }
           #onboarding-wizard .wiz-footer { padding: 16px 22px 22px; }
           #onboarding-wizard .wiz-title { font-size: 22px; }
-          #onboarding-wizard .wiz-grid { grid-template-columns: 1fr; }
+          #onboarding-wizard .wiz-optionals { grid-template-columns: repeat(2, 1fr); }
           #onboarding-wizard .wiz-hours { grid-template-columns: repeat(3, 1fr); }
           #onboarding-wizard .wiz-stages { grid-template-columns: 1fr; }
         }
@@ -373,7 +381,9 @@
     renderStep();
   }
 
-  // ─── Render Current Step ───
+  /* ═══════════════════════════════════════════════════════
+     RENDER CURRENT STEP
+     ═══════════════════════════════════════════════════════ */
   function renderStep() {
     const card = document.getElementById('wizCard');
     if (!card) return;
@@ -383,7 +393,7 @@
     else if (currentStep === 3) renderStep3(card);
   }
 
-  // ══════════ STEP 1: Optional + Year ══════════
+  /* ══════════ STEP 1: Optional + Year ══════════ */
   function renderStep1(card) {
     card.innerHTML = `
       <div class="wiz-hero">
@@ -394,12 +404,17 @@
       <div class="wiz-body">
         <div class="wiz-field">
           <label class="wiz-label">Optional Subject</label>
-          <select class="wiz-select" id="wizOptional">
-            <option value="">— Select your optional —</option>
-            ${OPTIONAL_SUBJECTS.map((s) => `<option value="${s}">${s}</option>`).join('')}
-          </select>
+          <div class="wiz-optionals" id="wizOptionalGrid">
+            ${OPTIONAL_SUBJECTS.map(
+              (s) => `
+              <button type="button" class="wiz-optional-btn" data-value="${s}">
+                ${s}
+              </button>
+            `,
+            ).join('')}
+          </div>
         </div>
-        <div class="wiz-field">
+        <div class="wiz-field" style="margin-top: 20px;">
           <label class="wiz-label">Target Exam Year</label>
           <input type="text" class="wiz-input" id="wizYear" placeholder="e.g. 2027" maxlength="10" autocomplete="off" />
         </div>
@@ -414,26 +429,42 @@
       </div>
     `;
 
-    const optional = document.getElementById('wizOptional');
     const year = document.getElementById('wizYear');
     const next = document.getElementById('wizNext1');
 
-    function check() {
-      next.disabled = !optional.value || !year.value.trim();
+    // Pre-select if already chosen
+    if (formData.optional) {
+      document.querySelectorAll('.wiz-optional-btn').forEach((btn) => {
+        if (btn.dataset.value === formData.optional) btn.classList.add('active');
+      });
     }
-    optional.onchange = check;
+    if (formData.year) year.value = formData.year;
+
+    function check() {
+      next.disabled = !formData.optional || !year.value.trim();
+    }
+
+    document.querySelectorAll('.wiz-optional-btn').forEach((btn) => {
+      btn.onclick = () => {
+        document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        formData.optional = btn.dataset.value;
+        check();
+      };
+    });
+
     year.oninput = check;
-    setTimeout(() => optional.focus(), 300);
+    setTimeout(() => year.focus(), 300);
+    check();
 
     next.onclick = () => {
-      formData.optional = optional.value;
       formData.year = year.value.trim();
       currentStep = 2;
       renderStep();
     };
   }
 
-  // ══════════ STEP 2: Hours + Stage ══════════
+  /* ══════════ STEP 2: Hours + Stage ══════════ */
   function renderStep2(card) {
     const hourOptions = ['2', '4', '6', '8', '10+'];
 
@@ -450,7 +481,7 @@
             ${hourOptions.map((h) => `<button class="wiz-hour-btn" data-hours="${h}">${h}h</button>`).join('')}
           </div>
         </div>
-        <div class="wiz-field">
+        <div class="wiz-field" style="margin-top: 20px;">
           <label class="wiz-label">Where are you in your prep?</label>
           <div class="wiz-stages" id="wizStages">
             ${STAGES.map(
@@ -474,7 +505,6 @@
       </div>
     `;
 
-    // Pre-select
     document.querySelectorAll('.wiz-hour-btn').forEach((btn) => {
       if (btn.dataset.hours === formData.hours) btn.classList.add('active');
       btn.onclick = () => {
@@ -499,7 +529,7 @@
     };
   }
 
-  // ══════════ STEP 3: Confirm + Start ══════════
+  /* ══════════ STEP 3: Confirm + Start ══════════ */
   function renderStep3(card) {
     const stageLabel = STAGES.find((s) => s.id === formData.stage)?.label || 'Beginner';
 
@@ -545,7 +575,9 @@
     document.getElementById('wizFinish').onclick = finishOnboarding;
   }
 
-  // ─── Finish Onboarding ───
+  /* ═══════════════════════════════════════════════════════
+     FINISH ONBOARDING
+     ═══════════════════════════════════════════════════════ */
   async function finishOnboarding() {
     const finishBtn = document.getElementById('wizFinish');
     if (finishBtn) {
@@ -561,23 +593,21 @@
         } = await supa.auth.getUser();
 
         if (user) {
-          // Update profile with onboarding data
-          const updateData = {
-            optional_subject: formData.optional,
-            preparation_year: formData.year,
-          };
+          // Primary update
+          const { error } = await supa
+            .from('profiles')
+            .update({
+              optional_subject: formData.optional,
+              preparation_year: formData.year,
+              daily_target_hours: formData.hours,
+              prep_stage: formData.stage,
+              onboarding_completed: true,
+            })
+            .eq('id', user.id);
 
-          // Try to add extra fields if they exist
-          try {
-            updateData.daily_target_hours = formData.hours;
-            updateData.prep_stage = formData.stage;
-            updateData.onboarding_completed = true;
-          } catch (e) {}
-
-          const { error } = await supa.from('profiles').update(updateData).eq('id', user.id);
-
+          // Fallback if some columns don't exist
           if (error) {
-            // Agar extra fields error de, toh sirf basics update karo
+            log('Full update failed, trying minimal:', error.message);
             await supa
               .from('profiles')
               .update({
@@ -588,32 +618,30 @@
           }
 
           // Update local state
-          const s = getState ? getState() : null;
-          if (s && s.profile) {
-            s.profile.optional_subject = formData.optional;
-            s.profile.preparation_year = formData.year;
-          }
+          try {
+            const s = typeof getState === 'function' ? getState() : null;
+            if (s && s.profile) {
+              s.profile.optional_subject = formData.optional;
+              s.profile.preparation_year = formData.year;
+            }
+          } catch (e) {}
         }
       }
 
-      // Mark as onboarded
       try {
         localStorage.setItem(ONBOARDED_KEY, 'true');
       } catch (e) {}
 
       log('✅ Onboarding complete:', formData);
 
-      // Close wizard
       closeWizard();
 
-      // Show welcome toast
       setTimeout(() => {
         if (typeof window.toast === 'function') {
           window.toast('🎉 Welcome to UPSC Tracker! Start your first session.', 'ok');
         }
       }, 500);
 
-      // Scroll to timer / start session area
       setTimeout(() => {
         const timer = document.querySelector('.timer-card, #timerSection, [data-timer]');
         if (timer) timer.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -624,7 +652,9 @@
     }
   }
 
-  // ─── Close Wizard ───
+  /* ═══════════════════════════════════════════════════════
+     CLOSE WIZARD
+     ═══════════════════════════════════════════════════════ */
   function closeWizard() {
     const wizard = document.getElementById('onboarding-wizard');
     if (wizard) {
@@ -634,9 +664,10 @@
     }
   }
 
-  // ─── Init ───
+  /* ═══════════════════════════════════════════════════════
+     INIT
+     ═══════════════════════════════════════════════════════ */
   async function init() {
-    // Wait for user to be logged in
     let attempts = 0;
     const check = setInterval(async () => {
       attempts++;
@@ -652,7 +683,6 @@
             const needs = await needsOnboarding();
             if (needs) {
               log('Showing onboarding wizard');
-              // Thoda delay — page load ho jaye
               setTimeout(injectWizard, 1200);
             } else {
               log('User already onboarded, skipping');
@@ -666,14 +696,12 @@
     }, 500);
   }
 
-  // Start
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
 
-  // Expose for testing
   window.__onboarding = {
     reset: () => {
       try {
