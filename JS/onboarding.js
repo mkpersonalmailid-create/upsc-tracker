@@ -12,29 +12,8 @@
     if (DEBUG) console.log('%c🎉 [Onboarding]', 'color:#10B981;font-weight:700', ...args);
   }
 
-  const OPTIONAL_SUBJECTS = [
-    'Anthropology',
-    'Commerce & Accountancy',
-    'Economics',
-    'Geography',
-    'History',
-    'Law',
-    'Management',
-    'Mathematics',
-    'Philosophy',
-    'Physics',
-    'Political Science',
-    'Psychology',
-    'Public Administration',
-    'Sociology',
-    'Statistics',
-    'Zoology',
-    'Botany',
-    'Chemistry',
-    'Medical Science',
-    'Literature',
-    'Not decided yet',
-  ];
+  // ⚡ Use global OPTIONAL_SUBJECTS from app.html (same as Settings)
+  const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [];
 
   const STAGES = [
     { id: 'beginner', label: 'Just started', emoji: '🌱' },
