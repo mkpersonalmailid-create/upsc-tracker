@@ -205,6 +205,18 @@
           border-color: #A855F7;
           box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.15);
         }
+                  #onboarding-wizard .wiz-select option {
+          background: #1c1630;
+          color: #ffffff;
+          padding: 12px;
+          font-size: 15px;
+          font-family: 'Inter', system-ui, sans-serif;
+        }
+        #onboarding-wizard .wiz-select option:checked,
+        #onboarding-wizard .wiz-select option:hover {
+          background: linear-gradient(135deg, #8B5CF6, #EC4899);
+          color: #ffffff;
+        }
         #onboarding-wizard .wiz-field {
           margin-bottom: 18px;
         }
