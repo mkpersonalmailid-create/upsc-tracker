@@ -12,9 +12,6 @@
     if (DEBUG) console.log('%c🎉 [Onboarding]', 'color:#10B981;font-weight:700', ...args);
   }
 
-  // ⚡ Use global OPTIONAL_SUBJECTS from app.html (same as Settings)
-  const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [];
-
   const STAGES = [
     { id: 'beginner', label: 'Just started', emoji: '🌱' },
     { id: 'intermediate', label: 'In middle of prep', emoji: '🌿' },
@@ -374,6 +371,60 @@
 
   /* ══════════ STEP 1: Optional + Year ══════════ */
   function renderStep1(card) {
+    // ⚡ Use global OPTIONAL_SUBJECTS from app.html (same as Settings page)
+    const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [
+      'Agriculture',
+      'Animal Husbandry and Veterinary Science',
+      'Anthropology',
+      'Botany',
+      'Chemistry',
+      'Civil Engineering',
+      'Commerce and Accountancy',
+      'Economics',
+      'Electrical Engineering',
+      'Geography',
+      'Geology',
+      'History',
+      'Law',
+      'Management',
+      'Mathematics',
+      'Mechanical Engineering',
+      'Medical Science',
+      'Philosophy',
+      'Physics',
+      'Political Science and International Relations',
+      'Psychology',
+      'Public Administration',
+      'Sociology',
+      'Statistics',
+      'Zoology',
+      'Literature - Assamese',
+      'Literature - Bengali',
+      'Literature - Bodo',
+      'Literature - Dogri',
+      'Literature - Gujarati',
+      'Literature - Hindi',
+      'Literature - Kannada',
+      'Literature - Kashmiri',
+      'Literature - Konkani',
+      'Literature - Maithili',
+      'Literature - Malayalam',
+      'Literature - Manipuri',
+      'Literature - Marathi',
+      'Literature - Nepali',
+      'Literature - Odia',
+      'Literature - Punjabi',
+      'Literature - Sanskrit',
+      'Literature - Santhali',
+      'Literature - Sindhi',
+      'Literature - Tamil',
+      'Literature - Telugu',
+      'Literature - Urdu',
+      'Literature - English',
+    ];
+
+    log('Optional subjects available:', OPTIONAL_SUBJECTS.length);
+
     card.innerHTML = `
       <div class="wiz-hero">
         <div class="wiz-badge">Step 1 of 3</div>
@@ -572,28 +623,31 @@
         } = await supa.auth.getUser();
 
         if (user) {
-          // Primary update
+          // Primary update (with all fields)
           const { error } = await supa
             .from('profiles')
             .update({
               optional_subject: formData.optional,
               preparation_year: formData.year,
-              daily_target_hours: formData.hours,
-              prep_stage: formData.stage,
-              onboarding_completed: true,
             })
             .eq('id', user.id);
 
-          // Fallback if some columns don't exist
           if (error) {
-            log('Full update failed, trying minimal:', error.message);
+            log('Profile update error:', error.message);
+          }
+
+          // Try to save extra fields (best-effort, ignore errors if columns don't exist)
+          try {
             await supa
               .from('profiles')
               .update({
-                optional_subject: formData.optional,
-                preparation_year: formData.year,
+                daily_target_hours: formData.hours,
+                prep_stage: formData.stage,
+                onboarding_completed: true,
               })
               .eq('id', user.id);
+          } catch (e) {
+            log('Extra fields not saved (columns may not exist):', e.message);
           }
 
           // Update local state
