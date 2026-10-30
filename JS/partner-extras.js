@@ -119,8 +119,9 @@ function getState() {
     if (!isPremium) btn.classList.add('premium-locked');
 
     btn.innerHTML = `
-      <span class="nav-icon">${isPremium ? PARTNER_ICON : '🔒'}</span>
+            <span class="nav-icon">${isPremium ? PARTNER_ICON : '🔒'}</span>
       <span class="nav-label">Study With Partner</span>
+      <span class="new-badge" style="background:#ef4444; color:#fff; font-size:9px; font-weight:bold; padding:2px 6px; border-radius:4px; margin-left:auto; margin-right:4px; line-height:1.2;">NEW</span>
       <span class="nav-badge hidden" id="partnerBadge">0</span>
     `;
     if (!pstate.cachedUser) btn.style.visibility = 'hidden';
