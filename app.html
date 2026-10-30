@@ -13914,5 +13914,15 @@ ${
     <script src="/JS/trial-ui.js"></script>
     <script src="JS/partner-extras.js?v=5"></script>
     <script src="JS/onboarding.js?v=1"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/service-worker.js')
+            .then((reg) => console.log('✅ PWA Ready!'))
+            .catch((err) => console.log('❌ SW Error:', err));
+        });
+      }
+    </script>
   </body>
 </html>

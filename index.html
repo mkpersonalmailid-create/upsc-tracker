@@ -4811,5 +4811,15 @@
     </script>
 
     <script src="/JS/smooth-ui.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker
+            .register('/service-worker.js')
+            .then((reg) => console.log('✅ PWA Ready!'))
+            .catch((err) => console.log('❌ SW Error:', err));
+        });
+      }
+    </script>
   </body>
 </html>

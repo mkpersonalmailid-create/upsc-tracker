@@ -1,14 +1,21 @@
 {
-  "name": "UPSC Study Tracker",
+  "name": "UPSC Tracker",
   "short_name": "UPSC Tracker",
-  "icons": [
-    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png" }
-  ],
-  "theme_color": "#0a0612",
-  "background_color": "#0a0612",
+  "description": "Track sessions, master syllabus, analyse progress.",
+  "start_url": "/app.html",
   "display": "standalone",
-  "start_url": "/",
-  "scope": "/",
-  "orientation": "portrait"
+  "background_color": "#0a0612",
+  "theme_color": "#0a0612",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
