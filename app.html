@@ -3003,7 +3003,7 @@
         }
 
         /* Hide less important icons on small screens */
-        .top-icon-btn#notifBtn,
+
         .top-icon-btn#feedbackBtn {
           display: none;
         }
@@ -8199,6 +8199,13 @@ ${
         $('#authScreen').classList.add('hidden');
         // ═══ FULL-SCREEN LOADER SHOW ═══
         showAppLoader('Loading your workspace…');
+        // ═══ APP INSTALL DETECTION ═══
+        const isAppInstalled =
+          window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (isAppInstalled) {
+          supa.from('profiles').update({ app_installed: true }).eq('id', session.user.id).then();
+        }
+        // ═════════════════════════════
         void document.body.offsetHeight; // ← FORCE REFLOW: loader paint ho jaye pehle
         $('#app').classList.remove('hidden');
         $('#fab').classList.add('hidden');

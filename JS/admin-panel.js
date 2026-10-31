@@ -737,6 +737,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
               <th>Sessions</th>
               <th>Paid</th>
                             <th>Public</th>
+                                          <th>App</th>
             </tr>
           </thead>
           <tbody id="anpUsersBody"></tbody>
@@ -793,7 +794,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
       else if (actF === 'never') list = list.filter((p) => !p.last_seen);
 
       if (!list.length) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text-3)">No users match filters</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text-3)">No users match filters</td></tr>`;
         return;
       }
 
@@ -855,6 +856,27 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
               ${p.discoverable !== false ? '✓ Public' : '✕ Hidden'}
             </button>
           </td>
+                    <td>
+            <button class="anp-toggle-public" data-user-id="${p.id}" data-public="${p.discoverable !== false}" 
+              style="padding:5px 12px;border-radius:20px;font-size:.65rem;font-weight:800;border:1px solid;
+              ${
+                p.discoverable !== false
+                  ? 'background:rgba(16,185,129,.15);color:#34D399;border-color:rgba(16,185,129,.4)'
+                  : 'background:rgba(239,68,68,.15);color:#F87171;border-color:rgba(239,68,68,.4)'
+              }">
+              ${p.discoverable !== false ? '✓ Public' : '✕ Hidden'}
+            </button>
+          </td>
+          
+          <!-- 👇 YE NAYA CODE YAHAN ADD KARO 👇 -->
+          <td>
+            ${
+              p.app_installed
+                ? '<span class="anp-pill active" style="background:rgba(16,185,129,.15);color:#34D399;font-size:0.65rem;padding:4px 8px;border-radius:12px;font-weight:bold;">📱 Installed</span>'
+                : '<span class="anp-pill free" style="font-size:0.65rem;padding:4px 8px;border-radius:12px;">🌐 Web Only</span>'
+            }
+          </td>
+          <!-- 👆 YAHAN TAK 👆 -->
         </tr>`;
         })
         .join('');
