@@ -8209,13 +8209,21 @@ ${
         $('#authScreen').classList.add('hidden');
         // ═══ FULL-SCREEN LOADER SHOW ═══
         showAppLoader('Loading your workspace…');
-        // ═══ APP INSTALL DETECTION ═══
-        const isAppInstalled =
-          window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-        if (isAppInstalled) {
-          supa.from('profiles').update({ app_installed: true }).eq('id', session.user.id).then();
-        }
-        // ═════════════════════════════
+        // ═══ SMART APP INSTALL DETECTION ═══
+        setTimeout(() => {
+          const isStandalone =
+            window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+          let finalInstallStatus = isStandalone;
+
+          // Agar browser bol raha hai ki "Install" ho sakta hai, matlab wo installed nahi hai
+          if (window.canInstallPWA && !isStandalone) {
+            finalInstallStatus = false;
+          }
+
+          supa.from('profiles').update({ app_installed: finalInstallStatus }).eq('id', session.user.id).then();
+        }, 1500); // 1.5 second wait taaki browser apna status bata sake
+        // ═══════════════════════════════════
         void document.body.offsetHeight; // ← FORCE REFLOW: loader paint ho jaye pehle
         $('#app').classList.remove('hidden');
         $('#fab').classList.add('hidden');

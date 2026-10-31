@@ -1,5 +1,14 @@
 (function () {
   'use strict';
+  // 👇 YE LINES SABSE UPAR ADD KARO 👇
+  window.deferredPrompt = null;
+  window.canInstallPWA = false;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    window.deferredPrompt = e;
+    window.canInstallPWA = true;
+  });
+  // 👆 YAHAN TAK 👆
 
   function injectCSS() {
     if (document.getElementById('mobileBannerCSS')) return;
@@ -62,7 +71,7 @@
             <span class="install-app-icon">📱</span>
             <div class="install-app-text">
               <strong>Install UPSC Tracker App</strong>
-              <span>Fast, offline access & daily updates.</span>
+              <span>Fast access & daily updates.</span>
             </div>
           </div>
           <button class="install-app-btn" id="installPwaBtn">Install</button>
