@@ -14033,6 +14033,36 @@ ${
           }
           return outputArray;
         }
+        // ═══ AUTO-SUBSCRIBE FUNCTION (Agar permission granted hai par DB me data nahi hai) ═══
+        async function autoSubscribeIfGranted() {
+          if (Notification.permission === 'granted') {
+            try {
+              const registration = await navigator.serviceWorker.ready;
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+              });
+              const {
+                data: { user },
+              } = await supa.auth.getUser();
+              if (user) {
+                await supa.from('push_subscriptions').delete().eq('user_id', user.id);
+                await supa.from('push_subscriptions').insert({
+                  user_id: user.id,
+                  subscription: subscription.toJSON(),
+                  device_type: getDeviceType(),
+                });
+                console.log('✅ Auto-subscribed and saved to DB');
+              }
+            } catch (e) {
+              console.warn('Auto-subscribe failed:', e);
+            }
+          }
+        }
+
+        // App load hote hi 3 second baad isko chalao
+        setTimeout(autoSubscribeIfGranted, 3000);
+        // ══════════════════════════════════════════════════════════════════════════════════
         // 1. Sundar Notification Banner
         if ('Notification' in window && Notification.permission !== 'granted') {
           const banner = document.createElement('div');
