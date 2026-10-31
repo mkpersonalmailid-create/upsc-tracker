@@ -1,4 +1,5 @@
-const CACHE_NAME = 'upsc-tracker-v1';
+// Version ko v2 kar diya hai taaki browser force update kare
+const CACHE_NAME = 'upsc-tracker-v2';
 const PRECACHE_URLS = ['/', '/index.html', '/auth.html', '/app.html'];
 
 self.addEventListener('install', (event) => {
@@ -24,9 +25,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
 });
 
-// ⬇️ YAHAN SE NAYA CODE ADD HUA HAI ⬇️
-
-// Notification receive karne ke liye
+// ⬇️ Notification receive karne ka code (Sirf ek baar) ⬇️
 self.addEventListener('push', function (event) {
   console.log('[Service Worker] Push Received.');
 
@@ -48,10 +47,15 @@ self.addEventListener('push', function (event) {
     data: { url: data.url || '/' },
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration
+      .showNotification(title, options)
+      .then(() => console.log('✅ Notification shown successfully'))
+      .catch((err) => console.error('❌ Notification error:', err)),
+  );
 });
 
-// Notification par click hone par app kholne ke liye
+// ⬇️ Notification click hone par app kholne ka code ⬇️
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   event.waitUntil(clients.openWindow(event.notification.data.url));
