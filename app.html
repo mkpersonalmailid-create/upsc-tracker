@@ -4257,7 +4257,7 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        opacity: 0;
+        opacity: 1;
         transition: opacity 0.4s ease;
       }
       .app-loader-logo img.loaded {
@@ -5062,15 +5062,11 @@
           <div class="app-loader-ripple"></div>
           <div class="app-loader-ripple"></div>
           <div class="app-loader-logo" id="appLoaderLogo">
-            <span class="loader-letter">U</span>
             <img
-              src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png"
+              src="apple-touch-icon.png"
               alt="UPSC Tracker Logo"
               id="appLoaderImg"
-              onerror="
-                this.style.display = 'none';
-                document.querySelector('.loader-letter').style.display = 'flex';
-              "
+              style="width: 100%; height: 100%; object-fit: cover"
             />
           </div>
         </div>
