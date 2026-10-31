@@ -70,7 +70,7 @@
           <div class="install-app-content">
             <span class="install-app-icon">📱</span>
             <div class="install-app-text">
-              <strong>Install UPSC Tracker App</strong>
+              <strong>Install UPSC Tracker App in Phone and Laptop </strong>
               <span>Fast access & daily updates.</span>
             </div>
           </div>
@@ -89,9 +89,7 @@
             window.deferredPrompt = null;
           } else {
             // Agar Chrome ne prompt block kiya hai (kabhi kabhi hota hai)
-            alert(
-              "Install karne ke liye apne browser ke 3 dots (⋮) mein jaayein aur 'Install App' / 'Add to Home Screen' select karein.",
-            );
+            alert("To install, go to the 3 dots (⋮) in your browser and select 'Install App' / 'Add to Home Screen'.");
           }
         };
       }
