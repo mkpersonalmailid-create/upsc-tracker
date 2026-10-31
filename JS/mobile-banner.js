@@ -1,15 +1,22 @@
 /* ═══════════════════════════════════════════════════════════════
-   SMART INSTALL & EXPERIENCE BANNER
+   SMART INSTALL & EXPERIENCE BANNER (Modified)
    ---------------------------------------------------------------
-   1. Install nahi hai -> Saare devices par Install banner.
-   2. Install ho gaya -> Sirf Mobile par Experience banner.
+   - Not Installed -> Install banner on ALL devices
+   - Installed -> Experience banner ONLY on mobile
    ═══════════════════════════════════════════════════════════════ */
 
 (function () {
   'use strict';
 
-  // 1. Check karo ki app pehle se install hai ya nahi (Standalone mode)
+  // 1. Check standalone mode
   const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+  // 2. Capture Chrome's install prompt immediately (Ekdum top par)
+  window.deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // Chrome ka default popup rokne ke liye
+    window.deferredPrompt = e;
+  });
 
   function injectCSS() {
     if (document.getElementById('mobileBannerCSS')) return;
@@ -28,6 +35,8 @@
         border: 1px solid rgba(168, 85, 247, 0.35);
         border-radius: 14px;
         animation: fadeIn 0.4s;
+        position: relative;
+        z-index: 50;
       }
       .install-app-content { display: flex; align-items: center; gap: 12px; }
       .install-app-icon { font-size: 1.8rem; flex-shrink: 0; animation: float 3s ease-in-out infinite; }
@@ -49,7 +58,7 @@
       }
       .install-app-btn:hover { transform: scale(1.05); }
 
-      /* ═══ EXPERIENCE BANNER CSS (Sirf Mobile Ke Liye) ═══ */
+      /* ═══ EXPERIENCE BANNER CSS (Sirf Mobile) ═══ */
       .mobile-tip-banner { display: none; }
       @media (max-width: 700px) {
         .mobile-tip-banner {
@@ -72,26 +81,19 @@
     document.head.appendChild(style);
   }
 
-  let deferredPrompt;
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
   function injectBanner() {
-    const studyView = document.getElementById('view-study');
-    if (!studyView) return false;
-    const hero = studyView.querySelector('.hero');
-    if (!hero) return false;
+    // ✅ FIX: Study tab ke bajaye main 'content' area me daalo (Jo har tab pe dikhta hai)
+    const mainContent = document.getElementById('content');
+    if (!mainContent) return false;
 
-    // Purane banners hatao (agar hain toh)
+    // Purane banner hatao agar koi hain
     const oldInstall = document.getElementById('installAppBanner');
     if (oldInstall) oldInstall.remove();
     const oldExp = document.getElementById('mobileTipBanner');
     if (oldExp) oldExp.remove();
 
     if (!isInstalled) {
-      // ═══ 1. AGAR INSTALL NAHI HAI -> INSTALL BANNER DIKHAO ═══
+      // ═══ 1. NOT INSTALLED -> INSTALL BANNER ═══
       const banner = document.createElement('div');
       banner.className = 'install-app-banner';
       banner.id = 'installAppBanner';
@@ -105,23 +107,23 @@
         </div>
         <button class="install-app-btn" id="installPwaBtn">Install</button>
       `;
-      studyView.insertBefore(banner, hero);
 
-      // Install Button Click Logic
+      // Content area ke sabse upar lagao
+      mainContent.insertBefore(banner, mainContent.firstChild);
+
+      // Button Click Logic
       document.getElementById('installPwaBtn').onclick = async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
+        if (window.deferredPrompt) {
+          window.deferredPrompt.prompt();
+          const { outcome } = await window.deferredPrompt.userChoice;
           if (outcome === 'accepted') banner.remove();
-          deferredPrompt = null;
+          window.deferredPrompt = null;
         } else {
-          alert(
-            "Install karne ke liye apne browser ke menu (⋮) mein jaayein aur 'Add to Home Screen' / 'Install App' select karein.",
-          );
+          alert("Install karne ke liye apne browser ke menu (⋮) mein jaayein aur 'Add to Home Screen' select karein.");
         }
       };
     } else {
-      // ═══ 2. AGAR INSTALL HAI -> SIRF EXPERIENCE BANNER DIKHAO ═══
+      // ═══ 2. INSTALLED -> EXPERIENCE BANNER (Sirf mobile me CSS se dikhega) ═══
       const banner = document.createElement('div');
       banner.className = 'mobile-tip-banner';
       banner.id = 'mobileTipBanner';
@@ -132,8 +134,7 @@
           <span>Access all features and detailed analytics easily on a bigger screen.</span>
         </div>
       `;
-      // Note: Ye banner CSS ki wajah se sirf mobile par hi dikhega. Desktop par automatic chhup jayega.
-      studyView.insertBefore(banner, hero);
+      mainContent.insertBefore(banner, mainContent.firstChild);
     }
     return true;
   }
@@ -144,25 +145,38 @@
     console.log('[banner] ✅ loaded');
   }
 
+  // Initial boot
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(boot, 1000));
   } else {
     setTimeout(boot, 1000);
   }
 
-  // View change hone par dobara check karo
+  // 🚀 THE MAGIC FIX: App jab bhi view change karegi, banner wapas inject ho jayega
   let retries = 0;
   const interval = setInterval(() => {
     retries++;
     if (injectBanner() || retries > 30) clearInterval(interval);
   }, 500);
 
-  // Jab user install kar le, toh turant banner change karo
+  // App re-render hone par bhi track karo
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const observer = new MutationObserver(() => {
+        const content = document.getElementById('content');
+        if (content && !document.getElementById('installAppBanner') && !document.getElementById('mobileTipBanner')) {
+          injectBanner();
+        }
+      });
+      const targetNode = document.getElementById('content');
+      if (targetNode) observer.observe(targetNode, { childList: true });
+    }, 2000);
+  });
+
+  // Install event handle karo
   window.addEventListener('appinstalled', () => {
     const installBanner = document.getElementById('installAppBanner');
-    if (installBanner) {
-      installBanner.remove();
-      injectBanner(); // Ye experience banner inject kar dega (mobile par dikhega)
-    }
+    if (installBanner) installBanner.remove();
+    injectBanner(); // Experience banner inject karega
   });
 })();
