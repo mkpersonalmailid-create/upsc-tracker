@@ -13965,6 +13965,10 @@ ${
               } = await supa.auth.getUser();
 
               if (user) {
+                // 1. Pehle se agar koi purani entry hai toh delete karo
+                await supa.from('push_subscriptions').delete().eq('user_id', user.id);
+
+                // 2. Ab naya subscription save karo
                 const { error } = await supa.from('push_subscriptions').insert({
                   user_id: user.id,
                   subscription: subscription.toJSON(),
