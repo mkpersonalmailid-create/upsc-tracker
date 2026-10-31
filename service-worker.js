@@ -1,5 +1,5 @@
 // Version ko v2 kar diya hai taaki browser force update kare
-const CACHE_NAME = 'upsc-tracker-v2';
+const CACHE_NAME = 'upsc-tracker-v3';
 const PRECACHE_URLS = ['/', '/index.html', '/auth.html', '/app.html'];
 
 self.addEventListener('install', (event) => {
@@ -22,7 +22,13 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
+  event.respondWith(
+    fetch(event.request).catch(async () => {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) return cachedResponse;
+      return new Response('Network error', { status: 408, headers: { 'Content-Type': 'text/plain' } });
+    }),
+  );
 });
 
 // ⬇️ Notification receive karne ka code (Sirf ek baar) ⬇️
