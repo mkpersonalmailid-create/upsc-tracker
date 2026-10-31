@@ -13957,7 +13957,7 @@ ${
               // Permission maango
               const permission = await Notification.requestPermission();
               if (permission !== 'granted') {
-                alert('Notification permission denied.');
+                toast('Notification permission denied.', 'err');
                 btn.remove();
                 return;
               }
@@ -13988,14 +13988,14 @@ ${
                 });
 
                 if (error) throw error;
-                alert('✅ Notifications enabled successfully!');
+                toast('Notifications enabled successfully!', 'ok');
                 btn.remove();
               } else {
-                alert('Please login first to enable notifications.');
+                toast('Please login first to enable notifications.', 'err');
               }
             } catch (err) {
               console.error('Error enabling notifications:', err);
-              alert('Failed to enable notifications: ' + err.message);
+              toast('Failed to enable notifications: ' + err.message, 'err');
               btn.innerText = '🔔 Enable Notifications';
             }
           };
