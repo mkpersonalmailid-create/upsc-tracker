@@ -1201,10 +1201,13 @@
               });
               if (error) throw error;
 
-              // 👈 NAYA: Real Push Notification Trigger
-              await supa.functions.invoke('send-push', {
+              // 👈 NAYA: Real Push Notification Trigger (With Error Check)
+              const { error: pushError } = await supa.functions.invoke('send-push', {
                 body: { title, body: msg, url: '/app', target_type: 'specific', user_ids: [prof.id] },
               });
+              if (pushError) {
+                throw new Error('Push Function Error: ' + pushError.message);
+              }
 
               closeModal();
               toast('✅ Notification sent!', 'ok');
@@ -1832,10 +1835,14 @@
             if (error) throw error;
           }
 
-          // 👈 NAYA: Real Push Notification Trigger for broadcast
-          await supa.functions.invoke('send-push', {
+          // 👈 NAYA: Error catching ke saath
+          const { error: pushError } = await supa.functions.invoke('send-push', {
             body: { title, body: msg, url: '/app', target_type: 'specific', user_ids: filtered.map((u) => u.id) },
           });
+
+          if (pushError) {
+            throw new Error('Push Error: ' + pushError.message);
+          }
 
           document.getElementById('anpBroadcastTitle').value = '';
           document.getElementById('anpBroadcastMsg').value = '';
