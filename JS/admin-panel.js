@@ -1,12 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   UPSC TRACKER — Admin Panel v2
+   UPSC TRACKER — Admin Panel v3 (Original + New Features)
    ─────────────────────────────────────────────────────────────
-   6 Tabs: Overview · Users · Engagement · Revenue · Content · Support
-   Admin-only · Info + Expand buttons · Mobile responsive
+   7 Tabs: Overview · Users · Partners · Engagement · Revenue · Content · Cron · Support
    ═══════════════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[admin-panel] v2 loaded');
+  console.log('[admin-panel] v3 loaded');
 
   let anP = { tab: 'overview' };
   const CHART_REG = {};
@@ -409,18 +408,22 @@
     let profiles = [],
       payments = [],
       subs = [],
-      tickets = [];
+      tickets = [],
+      pushSubs = []; // 👈 NAYA ADD KIYA
     try {
-      const [r1, r2, r3, r4] = await Promise.all([
+      const [r1, r2, r3, r4, r5] = await Promise.all([
+        // 👈 r5 add kiya
         supa.from('profiles').select('id, name, email, is_admin, created_at, last_seen'),
         supa.from('payments').select('user_id, amount, created_at, status'),
         supa.from('subscriptions').select('user_id, plan, status, amount, expiry_date'),
         supa.from('support_tickets').select('id, status'),
+        supa.from('push_subscriptions').select('device_type'), // 👈 NAYA FETCH
       ]);
       profiles = r1.data || [];
       payments = r2.data || [];
       subs = r3.data || [];
       tickets = r4.data || [];
+      pushSubs = r5.data || []; // 👈 NAYA SET
     } catch (e) {
       console.warn('[admin] fetch', e);
     }
@@ -448,6 +451,10 @@
 
     const openTickets = tickets.filter((t) => t.status === 'open').length;
 
+    // 👈 NAYA: Device Tracking KPI
+    const mobilePush = pushSubs.filter((s) => s.device_type === 'mobile').length;
+    const desktopPush = pushSubs.filter((s) => s.device_type === 'desktop' || !s.device_type).length;
+
     /* ── KPI Row ── */
     wrap.appendChild(
       elFrom(`<div class="anp-kpi-grid">
@@ -459,6 +466,8 @@
       ${kpi('This Month', '₹' + (thisMonthRev / 100).toFixed(0), 'revenue', '#EC4899', 'thisMonthRev')}
       ${kpi('Active Subs', activeSubsList.length, `${subs.filter((s) => s.plan === 'yearly').length} yearly`, '#8B5CF6', 'activeSubs')}
       ${kpi('Open Tickets', openTickets, 'need reply', '#EF4444', 'openTickets')}
+      ${kpi('Mobile Push', mobilePush, 'devices', '#F97316', '')}
+      ${kpi('Desktop Push', desktopPush, 'devices', '#06B6D4', '')}
     </div>`),
     );
 
@@ -738,6 +747,12 @@
     const tbody = document.getElementById('anpUsersBody');
     const now = Date.now();
 
+    const premiumIds = new Set(
+      _usersCache.subs
+        .filter((s) => s.status === 'active' && (!s.expiry_date || new Date(s.expiry_date) > new Date()))
+        .map((s) => s.user_id),
+    );
+
     function renderRows() {
       const q = (document.getElementById('anpUserSearch').value || '').toLowerCase().trim();
       const planF = document.getElementById('anpPlanFilter').value;
@@ -751,12 +766,6 @@
           (p) => (p.name || '').toLowerCase().includes(q) || (p.email || '').toLowerCase().includes(q),
         );
 
-      // Plan filter
-      const premiumIds = new Set(
-        _usersCache.subs
-          .filter((s) => s.status === 'active' && (!s.expiry_date || new Date(s.expiry_date) > new Date()))
-          .map((s) => s.user_id),
-      );
       if (planF === 'admin') list = list.filter((p) => p.is_admin === true);
       else if (planF === 'premium') list = list.filter((p) => premiumIds.has(p.id) && !p.is_admin);
       else if (planF === 'free') list = list.filter((p) => !premiumIds.has(p.id) && !p.is_admin);
@@ -926,13 +935,17 @@
           (pay.total / 100).toFixed(2),
         ]);
       });
-      const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-      const blob = new Blob([csv], { type: 'text/csv' });
+
+      // 👈 FIX: Excel Support (\uFEFF) + DOM append for Safari
+      const csv = '\uFEFF' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `users-${daysAgoKey(0)}.csv`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
@@ -1187,6 +1200,12 @@
                 read: false,
               });
               if (error) throw error;
+
+              // 👈 NAYA: Real Push Notification Trigger
+              await supa.functions.invoke('send-push', {
+                body: { title, body: msg, url: '/app', target_type: 'specific', user_ids: [prof.id] },
+              });
+
               closeModal();
               toast('✅ Notification sent!', 'ok');
             } catch (e) {
@@ -1583,13 +1602,17 @@
             p.status || '',
           ]);
         });
-        const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
+
+        // 👈 FIX: Excel Support (\uFEFF) + DOM append
+        const csv = '\uFEFF' + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `payments-${daysAgoKey(0)}.csv`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 1000);
       };
     }
@@ -1809,9 +1832,14 @@
             if (error) throw error;
           }
 
+          // 👈 NAYA: Real Push Notification Trigger for broadcast
+          await supa.functions.invoke('send-push', {
+            body: { title, body: msg, url: '/app', target_type: 'specific', user_ids: filtered.map((u) => u.id) },
+          });
+
           document.getElementById('anpBroadcastTitle').value = '';
           document.getElementById('anpBroadcastMsg').value = '';
-          toast(`✅ Sent to ${filtered.length} users`, 'ok', 4000);
+          toast(`✅ Sent to ${filtered.length} users (App + Push)`, 'ok', 4000);
           if (window.renderAdmin) window.renderAdmin();
         } catch (e) {
           toast('Failed: ' + e.message, 'err');
@@ -1821,6 +1849,86 @@
       };
     }
 
+    return wrap;
+  }
+
+  /* ═══════════════ TAB: CRON (NEW) ═══════════════ */
+  async function renderCron() {
+    const wrap = document.createElement('div');
+    wrap.className = 'anp-wrap';
+    document.body.appendChild(wrap);
+
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('⏰', 'Daily Good Morning Notification', 'Auto-send push notification daily', '')}
+      <div style="padding:12px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:10px;margin-bottom:12px;font-size:.8rem;color:var(--text-2);line-height:1.6">
+        Schedule a cron job to automatically send a "Good Morning" push notification to all users every day. You need to provide your Supabase Service Role Key for this to work securely.
+      </div>
+      
+      <div class="field">
+        <label>Time (IST)</label>
+        <input type="time" id="anpCronTime" value="08:00">
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input type="text" id="anpCronTitle" value="Good Morning! ☀️" maxlength="80">
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea id="anpCronMsg" rows="3" style="min-height:80px" maxlength="200">Aaj ka target set karo aur padhai shuru karein!</textarea>
+      </div>
+      <div class="field">
+        <label>Service Role Key (sb_secret_...)</label>
+        <input type="password" id="anpCronKey" placeholder="sb_secret_...">
+      </div>
+      
+      <button class="btn btn-primary" id="anpCronSave" style="margin-top:8px">💾 Save Cron Job</button>
+    </div>`),
+    );
+
+    document.getElementById('anpCronSave').onclick = async () => {
+      const time = document.getElementById('anpCronTime').value;
+      const title = document.getElementById('anpCronTitle').value.trim();
+      const msg = document.getElementById('anpCronMsg').value.trim();
+      const key = document.getElementById('anpCronKey').value.trim();
+
+      if (!time || !title || !msg || !key) {
+        toast('All fields are required!', 'err');
+        return;
+      }
+
+      const [hour, min] = time.split(':').map(Number);
+      let utcHour = hour - 5;
+      let utcMin = min - 30;
+      if (utcMin < 0) {
+        utcMin += 60;
+        utcHour -= 1;
+      }
+      if (utcHour < 0) {
+        utcHour += 24;
+      }
+      const cronFormat = `${utcMin} ${utcHour} * * *`;
+
+      const btn = document.getElementById('anpCronSave');
+      btn.disabled = true;
+      btn.textContent = '⏳ Saving...';
+
+      try {
+        const { data, error } = await supa.rpc('manage_daily_cron', {
+          p_time_utc: cronFormat,
+          p_title: title,
+          p_body: msg,
+          p_service_key: key,
+        });
+        if (error) throw error;
+        toast('✅ Cron job scheduled successfully!', 'ok');
+      } catch (e) {
+        toast('Failed: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Save Cron Job';
+      }
+    };
     return wrap;
   }
 
@@ -2343,6 +2451,7 @@
         { id: 'engagement', label: 'Engagement', icon: '📈' },
         { id: 'revenue', label: 'Revenue', icon: '💰' },
         { id: 'content', label: 'Content', icon: '📢' },
+        { id: 'cron', label: 'Cron', icon: '⏰' }, // 👈 NAYA TAB
         { id: 'support', label: 'Support', icon: '🆘' },
       ];
       wrap.appendChild(
@@ -2370,6 +2479,8 @@
           else if (anP.tab === 'engagement') content = await renderEngagement();
           else if (anP.tab === 'revenue') content = await renderRevenue();
           else if (anP.tab === 'content') content = await renderContent();
+          else if (anP.tab === 'cron')
+            content = await renderCron(); // 👈 NAYA TAB CALL
           else content = await renderSupport();
           contentArea.innerHTML = '';
           contentArea.appendChild(content);
@@ -2399,25 +2510,32 @@
     console.log('[admin-panel] ✅ renderAdmin overridden');
   }
 
-  /* ═══════════════ INIT ═══════════════ */
-  let attempts = 0;
-  function waitThenStart() {
-    if (
-      typeof window.renderAdmin === 'function' &&
-      typeof window.drawBarChart === 'function' &&
-      typeof window.openModal === 'function'
-    ) {
-      installAdminPanel();
-      try {
-        if (document.querySelector('#view-admin.active') && typeof isAdminUser === 'function' && isAdminUser()) {
-          window.renderAdmin();
-        }
-      } catch (e) {}
-    } else {
-      attempts++;
-      if (attempts > 200) return console.error('[admin-panel] timeout');
-      setTimeout(waitThenStart, 50);
+  /* ═══════════════ BOOT ═══════════════ */
+  function boot() {
+    // Dependencies (supa, openModal, etc.) ready hone ka wait karo
+    const started = Date.now();
+    const tryInstall = () => {
+      const ready =
+        typeof window.supa !== 'undefined' &&
+        typeof window.openModal === 'function' &&
+        typeof window.modalShell === 'function';
+      if (ready || Date.now() - started > 4000) {
+        installAdminPanel();
+        console.log('[admin-panel] ✅ v3 fully booted');
+        return true;
+      }
+      return false;
+    };
+    if (!tryInstall()) {
+      const t = setInterval(() => {
+        if (tryInstall()) clearInterval(t);
+      }, 120);
     }
   }
-  waitThenStart();
-})();
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot);
+  } else {
+    boot();
+  }
+})(); // ← IIFE close
