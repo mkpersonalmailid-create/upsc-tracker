@@ -668,16 +668,18 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
 
     /* ── Fetch ── */
     try {
-      const [r1, r2, r3, r4] = await Promise.all([
+      const [r1, r2, r3, r4, r5] = await Promise.all([
         supa.from('profiles').select('*').order('created_at', { ascending: false }).limit(500),
         supa.from('subscriptions').select('*'),
         supa.from('payments').select('user_id, amount, created_at, status'),
         supa.from('study_sessions').select('user_id, duration_seconds'),
+        supa.from('push_subscriptions').select('user_id, device_type'), // 👈 NAYA FETCH
       ]);
       _usersCache.profiles = r1.data || [];
       _usersCache.subs = r2.data || [];
       _usersCache.payments = r3.data || [];
       _usersCache.sessions = r4.data || [];
+      _usersCache.pushSubs = r5.data || []; // 👈 NAYA DATA SAVE
     } catch (e) {
       console.warn('[admin users]', e);
     }
@@ -942,12 +944,16 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
 
     /* ── Export CSV ── */
     document.getElementById('anpExportUsers').onclick = () => {
-      const rows = [['Name', 'Email', 'Plan', 'Joined', 'Last Seen', 'Study (min)', 'Sessions', 'Total Paid (₹)']];
+      const rows = [
+        ['Name', 'Email', 'Plan', 'Joined', 'Last Seen', 'Study (min)', 'Sessions', 'Total Paid (₹)', 'Device'],
+      ];
       _usersCache.profiles.forEach((p) => {
         const isAdmin = p.is_admin === true;
         const isPremium = premiumIds.has(p.id);
         const ses = sessionMap[p.id] || { sec: 0, count: 0 };
         const pay = payMap[p.id] || { total: 0, count: 0 };
+        const userPush = _usersCache.pushSubs.find((s) => s.user_id === p.id);
+        const deviceType = userPush ? userPush.device_type : 'No Notification';
         rows.push([
           p.name || '',
           p.email || '',
@@ -957,6 +963,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
           Math.round(ses.sec / 60),
           ses.count,
           (pay.total / 100).toFixed(2),
+          deviceType, // 👈 CSV MEIN ADD KAR DIYA
         ]);
       });
 
@@ -1725,6 +1732,9 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
           <option value="active7d">Active in last 7 days</option>
           <option value="inactive7d">Inactive 7+ days</option>
                     <option value="trial">Trial only</option>
+                    <option value="mobile">📱 Mobile Users Only</option>
+          <option value="desktop">💻 Desktop Users Only</option>
+          <option value="tablet">📟 Tablet Users Only</option>
         </select>
       </div>
       <div class="field">
@@ -1841,6 +1851,19 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
             filtered = targets.filter((u) => u.last_seen && now - new Date(u.last_seen).getTime() < 7 * 86400000);
           else if (segment === 'inactive7d')
             filtered = targets.filter((u) => !u.last_seen || now - new Date(u.last_seen).getTime() >= 7 * 86400000);
+          // 👇 NAYA: Device wise filter logic
+          else if (segment === 'mobile') {
+            const ids = new Set((pushData || []).filter((p) => p.device_type === 'mobile').map((p) => p.user_id));
+            filtered = targets.filter((u) => ids.has(u.id));
+          } else if (segment === 'desktop') {
+            const ids = new Set(
+              (pushData || []).filter((p) => p.device_type === 'desktop' || !p.device_type).map((p) => p.user_id),
+            );
+            filtered = targets.filter((u) => ids.has(u.id));
+          } else if (segment === 'tablet') {
+            const ids = new Set((pushData || []).filter((p) => p.device_type === 'tablet').map((p) => p.user_id));
+            filtered = targets.filter((u) => ids.has(u.id));
+          }
 
           if (!filtered.length) throw new Error('No users match this segment');
 
