@@ -4,8 +4,8 @@
   "description": "Track sessions, master syllabus, analyse progress.",
   "start_url": "/app.html",
   "display": "standalone",
-  "background_color": "#0a0612",
-  "theme_color": "#0a0612",
+  "background_color": "#0A0612",
+  "theme_color": "#0A0612",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
