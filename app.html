@@ -13914,6 +13914,60 @@ ${
         // ═══ Update premium nav items ═══
         // updatePremiumNavItems();  // ← Hata diya — login ke baad hi chale}
       }
+      // ═══ DOUBLE BACK TO EXIT LOGIC ═══
+      let backPressCount = 0;
+      let backPressTimeout = null;
+
+      // Push initial state to intercept the first back press
+      if (window.location.pathname.includes('app.html') || window.location.pathname === '/app') {
+        history.pushState({ page: 'app' }, '', window.location.href);
+
+        window.addEventListener('popstate', (event) => {
+          const appEl = document.getElementById('app');
+          // Don't intercept if user is on login screen
+          if (!appEl || appEl.classList.contains('hidden')) return;
+
+          // 1. If a modal is open, close the modal instead of exiting
+          const modalRoot = document.getElementById('modalRoot');
+          if (modalRoot && modalRoot.classList.contains('active')) {
+            if (typeof closeModal === 'function') closeModal();
+            history.pushState({ page: 'app' }, '', window.location.href);
+            return;
+          }
+
+          // 2. If Sidebar is open (mobile), close it
+          const sidebar = document.getElementById('sidebar');
+          const sidebarOverlay = document.getElementById('sidebarOverlay');
+          if (sidebar && sidebar.classList.contains('open')) {
+            sidebar.classList.remove('open');
+            if (sidebarOverlay) sidebarOverlay.classList.remove('active');
+            history.pushState({ page: 'app' }, '', window.location.href);
+            return;
+          }
+
+          // 3. Double Back to Exit Logic
+          if (backPressCount === 0) {
+            backPressCount++;
+            history.pushState({ page: 'app' }, '', window.location.href); // Keep them on page
+
+            // Show toast
+            if (typeof toast === 'function') {
+              toast('Press back again to exit', 'info', 2000);
+            }
+
+            // Reset count after 2 seconds
+            if (backPressTimeout) clearTimeout(backPressTimeout);
+            backPressTimeout = setTimeout(() => {
+              backPressCount = 0;
+            }, 2000);
+          } else {
+            backPressCount = 0;
+            if (backPressTimeout) clearTimeout(backPressTimeout);
+            // Second back press will exit the app naturally
+          }
+        });
+      }
+      // ══════════════════════════════════════
       boot();
     </script>
     <!-- ✅ Subjects Extras — loaded after inline script -->
