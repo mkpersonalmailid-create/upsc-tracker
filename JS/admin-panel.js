@@ -453,6 +453,7 @@
 
     // 👈 NAYA: Device Tracking KPI
     const mobilePush = pushSubs.filter((s) => s.device_type === 'mobile').length;
+    const tabletPush = pushSubs.filter((s) => s.device_type === 'tablet').length;
     const desktopPush = pushSubs.filter((s) => s.device_type === 'desktop' || !s.device_type).length;
 
     /* ── KPI Row ── */
@@ -466,8 +467,9 @@
       ${kpi('This Month', '₹' + (thisMonthRev / 100).toFixed(0), 'revenue', '#EC4899', 'thisMonthRev')}
       ${kpi('Active Subs', activeSubsList.length, `${subs.filter((s) => s.plan === 'yearly').length} yearly`, '#8B5CF6', 'activeSubs')}
       ${kpi('Open Tickets', openTickets, 'need reply', '#EF4444', 'openTickets')}
-      ${kpi('Mobile Push', mobilePush, 'devices', '#F97316', '')}
-      ${kpi('Desktop Push', desktopPush, 'devices', '#06B6D4', '')}
+      ${kpi('Desktop', desktopPush, 'devices', '#06B6D4', '')}
+${kpi('Mobile', mobilePush, 'devices', '#F97316', '')}
+${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
     </div>`),
     );
 

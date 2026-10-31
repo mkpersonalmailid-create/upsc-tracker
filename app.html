@@ -13927,11 +13927,24 @@ ${
     <!-- Phase 2: Notification Subscription Script -->
     <script>
       document.addEventListener('DOMContentLoaded', () => {
-        // ⚠️ YAHAN APNI PUBLIC KEY PASTE KARO (Bina quotes ke, string ke andar)
+        // 👇 Device Detect Function
+        function getDeviceType() {
+          const ua = navigator.userAgent;
+          if (
+            /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/i.test(
+              ua,
+            )
+          )
+            return 'tablet';
+          if (/(mobi|iphone|ipod|android.*mobile|blackberry|iemobile)/i.test(ua)) return 'mobile';
+          return 'desktop';
+        }
+
+        // ⚠️ VAPID PUBLIC KEY
         const VAPID_PUBLIC_KEY =
           'BGbdXX88YxUB44ZZziL0IMRLfWTzTZaD6wVJgUcY-NxxKwbYow1RCdDd1jkcUatKIb2WHUyyBQ77QvY2lgz2eFE';
 
-        // 1. Button banate hain (agar pehle se permission nahi hai)
+        // Button banate hain (agar pehle se permission nahi hai)
         if ('Notification' in window && Notification.permission !== 'granted') {
           const btn = document.createElement('button');
           btn.innerText = '🔔 Enable Notifications';
@@ -13959,7 +13972,6 @@ ${
               });
 
               // Supabase mein save karo
-              // Note: Yahan 'supa' variable use kiya hai, agar tumhara client ka naam kuch aur hai (jaise 'supabase'), toh use change kar lena.
               const {
                 data: { user },
               } = await supa.auth.getUser();
@@ -13972,7 +13984,7 @@ ${
                 const { error } = await supa.from('push_subscriptions').insert({
                   user_id: user.id,
                   subscription: subscription.toJSON(),
-                  device_type: /Mobi|Android/i.test(navigator.userAgent) ? 'mobile' : 'desktop', // 👈 YE LINE ADD KARO
+                  device_type: getDeviceType(),
                 });
 
                 if (error) throw error;
@@ -13990,7 +14002,7 @@ ${
           document.body.appendChild(btn);
         }
 
-        // Helper function (VAPID key convert karne ke liye - Isko mat chhedna)
+        // Helper function (VAPID key convert karne ke liye)
         function urlBase64ToUint8Array(base64String) {
           const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
           const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
