@@ -1,14 +1,15 @@
 (function () {
   'use strict';
-  // 👇 YE LINES SABSE UPAR ADD KARO 👇
+
+  // Setup global variables for the PWA install prompt
   window.deferredPrompt = null;
   window.canInstallPWA = false;
+
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     window.deferredPrompt = e;
     window.canInstallPWA = true;
   });
-  // 👆 YAHAN TAK 👆
 
   function injectCSS() {
     if (document.getElementById('mobileBannerCSS')) return;
@@ -29,7 +30,7 @@
       .install-app-btn {
         background: var(--grad-1); color: #fff; border: none; padding: 10px 18px;
         border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer;
-        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3);
+        box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3); white-space: nowrap;
       }
       
       .mobile-tip-banner { display: none; }
@@ -47,57 +48,28 @@
     document.head.appendChild(style);
   }
 
-  // Main Logic: Har 1 second me check karega ki banner dikhana hai ya nahi
+  // Main Logic: Checks the state and renders the correct banner
   function checkAndInjectBanner() {
-    const isInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const content = document.getElementById('content');
+    if (!content) return; // Wait for the app content to load
 
-    // Agar app load nahi hua hai toh wait karo
-    if (!content) return;
+    // 1. Check if running in standalone mode (installed app)
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+    // 2. Check localStorage for install/dismiss states
+    const isSavedAsInstalled = localStorage.getItem('pwa_installed') === 'true';
+    const isDismissed = localStorage.getItem('pwa_banner_dismissed') === 'true';
 
     const hasInstallBanner = document.getElementById('installAppBanner');
     const hasExpBanner = document.getElementById('mobileTipBanner');
 
-    if (!isInstalled) {
-      // ═══ 1. INSTALL NAHI HAI -> INSTALL BANNER ═══
-      if (!hasInstallBanner) {
-        if (hasExpBanner) hasExpBanner.remove(); // Purana hatao
+    // If app is open in standalone mode OR user dismissed the banner previously
+    if (isStandalone || isDismissed) {
+      if (hasInstallBanner) hasInstallBanner.remove();
 
-        const banner = document.createElement('div');
-        banner.id = 'installAppBanner';
-        banner.className = 'install-app-banner';
-        banner.innerHTML = `
-          <div class="install-app-content">
-            <span class="install-app-icon">📱</span>
-            <div class="install-app-text">
-              <strong>Install UPSC Tracker App in Phone and Laptop </strong>
-              <span>Fast access & daily updates.</span>
-            </div>
-          </div>
-          <button class="install-app-btn" id="installPwaBtn">Install</button>
-        `;
-
-        // Content area me sabse upar lagao
-        content.prepend(banner);
-
-        // Button Click logic
-        document.getElementById('installPwaBtn').onclick = async () => {
-          if (window.deferredPrompt) {
-            window.deferredPrompt.prompt();
-            const { outcome } = await window.deferredPrompt.userChoice;
-            if (outcome === 'accepted') banner.remove();
-            window.deferredPrompt = null;
-          } else {
-            // Agar Chrome ne prompt block kiya hai (kabhi kabhi hota hai)
-            alert("To install, go to the 3 dots (⋮) in your browser and select 'Install App' / 'Add to Home Screen'.");
-          }
-        };
-      }
-    } else {
-      // ═══ 2. INSTALL HAI -> EXPERIENCE BANNER (Mobile) ═══
-      if (!hasExpBanner) {
-        if (hasInstallBanner) hasInstallBanner.remove(); // Purana hatao
-
+      // Show mobile experience tip if in standalone mode
+      if (isStandalone && !hasExpBanner) {
         const banner = document.createElement('div');
         banner.id = 'mobileTipBanner';
         banner.className = 'mobile-tip-banner';
@@ -110,10 +82,55 @@
         `;
         content.prepend(banner);
       }
+      return;
+    }
+
+    // If we are here, it means we need to show the Install/Open App banner
+    if (!hasInstallBanner) {
+      if (hasExpBanner) hasExpBanner.remove(); // Remove mobile tip banner
+
+      // SMART DETECTION: If deferredPrompt is missing, the app is likely already installed (or browser blocked it)
+      const isAlreadyInstalled = isSavedAsInstalled || !window.deferredPrompt;
+      const buttonText = isAlreadyInstalled ? 'Open App' : 'Install';
+      const descriptionText = isAlreadyInstalled ? 'App is already installed.' : 'Fast access & daily updates.';
+
+      const banner = document.createElement('div');
+      banner.id = 'installAppBanner';
+      banner.className = 'install-app-banner';
+      banner.innerHTML = `
+        <div class="install-app-content">
+          <span class="install-app-icon">📱</span>
+          <div class="install-app-text">
+            <strong>UPSC Tracker App</strong>
+            <span>${descriptionText}</span>
+          </div>
+        </div>
+        <button class="install-app-btn" id="installPwaBtn">${buttonText}</button>
+      `;
+
+      content.prepend(banner);
+
+      // Button Click logic
+      document.getElementById('installPwaBtn').onclick = async () => {
+        if (window.deferredPrompt) {
+          // Standard Install Flow
+          window.deferredPrompt.prompt();
+          const { outcome } = await window.deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            localStorage.setItem('pwa_installed', 'true'); // Save state permanently
+            banner.remove();
+          }
+          window.deferredPrompt = null;
+        } else {
+          // Open App Flow (Since browser cannot open the app directly due to security)
+          alert(
+            'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
+          );
+        }
+      };
     }
   }
 
-  // DOM ready hone par CSS inject karo aur check shuru karo
   function boot() {
     injectCSS();
     checkAndInjectBanner();
@@ -125,12 +142,16 @@
     boot();
   }
 
-  // 🚀 MAGIC FIX: Har 1 second me check karega.
-  // Agar app ne screen clear kar di, toh banner wapas lag jayega.
-  setInterval(checkAndInjectBanner, 1000);
+  // 🚀 PERFORMANCE FIX: Removed setInterval.
+  // Using MutationObserver to only trigger when the DOM changes (Much better for battery).
+  const observer = new MutationObserver(() => {
+    checkAndInjectBanner();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-  // Jab user install kar le, toh turant banner change karo
+  // Listen for the install event to immediately update the UI and save state
   window.addEventListener('appinstalled', () => {
+    localStorage.setItem('pwa_installed', 'true');
     checkAndInjectBanner();
   });
 })();
