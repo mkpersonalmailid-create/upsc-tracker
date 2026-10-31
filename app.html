@@ -13924,5 +13924,79 @@ ${
         });
       }
     </script>
+    <!-- Phase 2: Notification Subscription Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // ⚠️ YAHAN APNI PUBLIC KEY PASTE KARO (Bina quotes ke, string ke andar)
+        const VAPID_PUBLIC_KEY =
+          'BGbdXX88YxUB44ZZziL0IMRLfWTzTZaD6wVJgUcY-NxxKwbYow1RCdDd1jkcUatKIb2WHUyyBQ77QvY2lgz2eFE';
+
+        // 1. Button banate hain (agar pehle se permission nahi hai)
+        if ('Notification' in window && Notification.permission !== 'granted') {
+          const btn = document.createElement('button');
+          btn.innerText = '🔔 Enable Notifications';
+          btn.style.cssText =
+            'position:fixed; bottom:20px; right:20px; z-index:9999; padding:10px 16px; background:#8b5cf6; color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);';
+
+          btn.onclick = async () => {
+            btn.innerText = '⏳ Enabling...';
+            try {
+              // Permission maango
+              const permission = await Notification.requestPermission();
+              if (permission !== 'granted') {
+                alert('Notification permission denied.');
+                btn.remove();
+                return;
+              }
+
+              // Service Worker ready hone ka wait karo
+              const registration = await navigator.serviceWorker.ready;
+
+              // Subscribe karo
+              const subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+              });
+
+              // Supabase mein save karo
+              // Note: Yahan 'supa' variable use kiya hai, agar tumhara client ka naam kuch aur hai (jaise 'supabase'), toh use change kar lena.
+              const {
+                data: { user },
+              } = await supa.auth.getUser();
+
+              if (user) {
+                const { error } = await supa.from('push_subscriptions').insert({
+                  user_id: user.id,
+                  subscription: subscription.toJSON(),
+                });
+
+                if (error) throw error;
+                alert('✅ Notifications enabled successfully!');
+                btn.remove();
+              } else {
+                alert('Please login first to enable notifications.');
+              }
+            } catch (err) {
+              console.error('Error enabling notifications:', err);
+              alert('Failed to enable notifications: ' + err.message);
+              btn.innerText = '🔔 Enable Notifications';
+            }
+          };
+          document.body.appendChild(btn);
+        }
+
+        // Helper function (VAPID key convert karne ke liye - Isko mat chhedna)
+        function urlBase64ToUint8Array(base64String) {
+          const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+          const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+          const rawData = window.atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+          }
+          return outputArray;
+        }
+      });
+    </script>
   </body>
 </html>
