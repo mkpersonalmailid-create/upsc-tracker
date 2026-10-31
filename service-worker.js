@@ -1,5 +1,5 @@
 // Version ko v2 kar diya hai taaki browser force update kare
-const CACHE_NAME = 'upsc-tracker-v3';
+const CACHE_NAME = 'upsc-tracker-v4';
 const PRECACHE_URLS = ['/', '/index.html', '/auth.html', '/app.html'];
 
 self.addEventListener('install', (event) => {
