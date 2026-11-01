@@ -1906,7 +1906,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
     return wrap;
   }
 
-  /* ═══════════════ TAB: CRON (NEW UPDATED) ═══════════════ */
+  /* ═══════════════ TAB: CRON (UPDATED) ═══════════════ */
   async function renderCron() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
@@ -2102,7 +2102,6 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
 
     return wrap;
   }
-
   /* ═══════════════ ANNOUNCEMENT EDITOR ═══════════════ */
   function openAnnEditor(current, isEdit) {
     openModal(
