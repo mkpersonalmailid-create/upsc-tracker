@@ -1906,19 +1906,46 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
     return wrap;
   }
 
-  /* ═══════════════ TAB: CRON (NEW) ═══════════════ */
+  /* ═══════════════ TAB: CRON (NEW UPDATED) ═══════════════ */
   async function renderCron() {
     const wrap = document.createElement('div');
     wrap.className = 'anp-wrap';
     document.body.appendChild(wrap);
 
+    // 1. Data Fetch Karein (Jobs aur Notification Stats)
+    let jobs = [];
+    let notifs = [];
+    try {
+      const [r1, r2] = await Promise.all([
+        supa.rpc('get_active_cron_jobs'),
+        supa.from('user_notifications').select('title, read').order('created_at', { ascending: false }).limit(2000),
+      ]);
+      jobs = r1.data || [];
+      notifs = r2.data || [];
+    } catch (e) {
+      console.warn('[cron fetch]', e);
+    }
+
+    // 2. Notification Stats Calculate Karein
+    const notifStats = {};
+    notifs.forEach((n) => {
+      if (!notifStats[n.title]) notifStats[n.title] = { total: 0, read: 0 };
+      notifStats[n.title].total++;
+      if (n.read) notifStats[n.title].read++;
+    });
+
+    // 3. UI: Naya Job Banane ka Form
     wrap.appendChild(
       elFrom(`<div class="anp-card">
-      ${sectionHead('⏰', 'Daily Good Morning Notification', 'Auto-send push notification daily', '')}
+      ${sectionHead('⏰', 'Create New Cron Job', 'Schedule auto push notifications', '')}
       <div style="padding:12px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:10px;margin-bottom:12px;font-size:.8rem;color:var(--text-2);line-height:1.6">
-        Schedule a cron job to automatically send a "Good Morning" push notification to all users every day. You need to provide your Supabase Service Role Key for this to work securely.
+        Schedule a cron job to automatically send push notifications. Give a unique Job Name so it doesn't overwrite previous jobs.
       </div>
       
+      <div class="field">
+        <label>Job Name (Unique)</label>
+        <input type="text" id="anpCronName" value="job_${Date.now()}" maxlength="50">
+      </div>
       <div class="field">
         <label>Time (IST)</label>
         <input type="time" id="anpCronTime" value="08:00">
@@ -1940,13 +1967,100 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
     </div>`),
     );
 
+    // 4. UI: Active Jobs List (Delete option ke sath)
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('📋', 'Active Cron Jobs', `${jobs.length} running`, '')}
+      ${
+        jobs.length === 0
+          ? emptyState('📭', 'No active jobs', 'Create a job above to see it here.')
+          : `<div class="anp-table-scroll">
+            <table class="anp-table">
+              <thead><tr><th>Job Name</th><th>Schedule (UTC)</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>
+                ${jobs
+                  .map(
+                    (j) => `
+                  <tr>
+                    <td><strong style="color:var(--text)">${escHtml(j.jobname)}</strong></td>
+                    <td style="font-family:var(--mono)">${escHtml(j.schedule)}</td>
+                    <td><span class="anp-pill ${j.active ? 'active' : 'closed'}">${j.active ? 'Active' : 'Paused'}</span></td>
+                    <td><button class="btn btn-danger btn-sm" onclick="window.__anpDeleteCron('${escHtml(j.jobname)}')">🗑️ Delete</button></td>
+                  </tr>
+                `,
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`
+      }
+    </div>`),
+    );
+
+    // 5. UI: Notification Stats (Kitne send hue, kitne padhe)
+    const statKeys = Object.keys(notifStats);
+    wrap.appendChild(
+      elFrom(`<div class="anp-card">
+      ${sectionHead('📊', 'Push Notification Stats', 'Sent vs Viewed (Based on Title)', '')}
+      ${
+        statKeys.length === 0
+          ? emptyState('📭', 'No notifications sent yet', 'Stats will appear here once cron sends notifications.')
+          : `<div class="anp-table-scroll">
+            <table class="anp-table">
+              <thead><tr><th>Notification Title</th><th>Total Sent</th><th>Viewed/Read</th><th>View Rate</th></tr></thead>
+              <tbody>
+                ${statKeys
+                  .map((title) => {
+                    const stat = notifStats[title];
+                    const rate = stat.total ? Math.round((stat.read / stat.total) * 100) : 0;
+                    return `
+                  <tr>
+                    <td><strong style="color:var(--text)">${escHtml(title)}</strong></td>
+                    <td>${stat.total}</td>
+                    <td style="color:#34D399;font-weight:bold">${stat.read}</td>
+                    <td>${rate}%</td>
+                  </tr>
+                `;
+                  })
+                  .join('')}
+              </tbody>
+            </table>
+          </div>`
+      }
+    </div>`),
+    );
+
+    // ── Delete Job Logic ──
+    window.__anpDeleteCron = async (jobname) => {
+      const ok = await customConfirm({
+        title: 'Delete Cron Job?',
+        message: `Are you sure you want to delete "${jobname}"? It will stop sending notifications.`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel',
+        icon: '🗑️',
+        type: 'danger',
+      });
+      if (!ok) return;
+
+      try {
+        const { error } = await supa.rpc('delete_cron_job', { p_jobname: jobname });
+        if (error) throw error;
+        toast('✅ Job deleted successfully!', 'ok');
+        window.renderAdmin(); // Refresh page
+      } catch (e) {
+        toast('Failed to delete: ' + e.message, 'err');
+      }
+    };
+
+    // ── Save New Job Logic ──
     document.getElementById('anpCronSave').onclick = async () => {
+      const jobName = document.getElementById('anpCronName').value.trim();
       const time = document.getElementById('anpCronTime').value;
       const title = document.getElementById('anpCronTitle').value.trim();
       const msg = document.getElementById('anpCronMsg').value.trim();
       const key = document.getElementById('anpCronKey').value.trim();
 
-      if (!time || !title || !msg || !key) {
+      if (!jobName || !time || !title || !msg || !key) {
         toast('All fields are required!', 'err');
         return;
       }
@@ -1968,7 +2082,8 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
       btn.textContent = '⏳ Saving...';
 
       try {
-        const { data, error } = await supa.rpc('manage_daily_cron', {
+        const { error } = await supa.rpc('manage_daily_cron', {
+          p_job_name: jobName, // 👈 Yahan naya naam jayega
           p_time_utc: cronFormat,
           p_title: title,
           p_body: msg,
@@ -1976,6 +2091,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
         });
         if (error) throw error;
         toast('✅ Cron job scheduled successfully!', 'ok');
+        window.renderAdmin(); // List refresh hogi
       } catch (e) {
         toast('Failed: ' + e.message, 'err');
       } finally {
@@ -1983,6 +2099,7 @@ ${kpi('Tablet', tabletPush, 'devices', '#8B5CF6', '')}
         btn.textContent = '💾 Save Cron Job';
       }
     };
+
     return wrap;
   }
 
