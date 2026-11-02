@@ -2,12 +2,10 @@
   'use strict';
 
   window.deferredPrompt = null;
-  window.canInstallPWA = false;
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     window.deferredPrompt = e;
-    window.canInstallPWA = true;
   });
 
   function injectCSS() {
@@ -17,11 +15,11 @@
     style.textContent = `
       .install-app-banner {
         display: flex; align-items: center; justify-content: space-between; gap: 12px;
-        padding: 14px 16px; margin-bottom: 16px;
+        padding: 14px 16px; margin-bottom: 16px; position: relative;
         background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(236, 72, 153, 0.08));
         border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 14px; animation: fadeIn 0.4s;
       }
-      .install-app-content { display: flex; align-items: center; gap: 12px; }
+      .install-app-content { display: flex; align-items: center; gap: 12px; padding-right: 20px; }
       .install-app-icon { font-size: 1.8rem; flex-shrink: 0; }
       .install-app-text { display: flex; flex-direction: column; }
       .install-app-text strong { font-size: 0.95rem; font-weight: 800; color: var(--text); line-height: 1.3; }
@@ -31,7 +29,13 @@
         border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer;
         box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3); white-space: nowrap;
       }
-      
+      .banner-close-btn {
+        position: absolute; top: 8px; right: 10px; background: transparent; border: none;
+        color: rgba(255,255,255,0.5); font-size: 1.2rem; cursor: pointer; padding: 2px;
+      }
+      .banner-close-btn:hover { color: #fff; }
+
+      /* Best Experience Banner CSS (Sirf Mobile ke liye) */
       .mobile-tip-banner { display: none; }
       @media (max-width: 700px) {
         .mobile-tip-banner {
@@ -51,45 +55,39 @@
     const content = document.getElementById('content');
     if (!content) return;
 
-    // 🚀 FIXED: Ab yeh Mac, Windows, aur Mobile sabhi PWAs ko detect karega
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      window.matchMedia('(display-mode: fullscreen)').matches ||
-      window.matchMedia('(display-mode: minimal-ui)').matches ||
-      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
-      window.navigator.standalone === true;
-
-    const isSavedAsInstalled = localStorage.getItem('pwa_installed') === 'true';
+    // Check display mode
+    const isBrowser = window.matchMedia('(display-mode: browser)').matches;
     const isDismissed = localStorage.getItem('pwa_banner_dismissed') === 'true';
+    const isSavedAsInstalled = localStorage.getItem('pwa_installed') === 'true';
 
     const hasInstallBanner = document.getElementById('installAppBanner');
     const hasExpBanner = document.getElementById('mobileTipBanner');
 
-    // Agar app installed mode (PWA) mein chal rahi hai, toh banner HATA DO
-    if (isStandalone || isDismissed) {
+    // CASE 1: App ke andar hain (PWA Mode) YA user ne dismiss kar diya hai
+    if (!isBrowser || isDismissed) {
       if (hasInstallBanner) hasInstallBanner.remove();
 
-      // Mobile tip banner (sirf mobile browser ke liye)
-      if (isStandalone && !hasExpBanner && window.innerWidth <= 700) {
-        const banner = document.createElement('div');
-        banner.id = 'mobileTipBanner';
-        banner.className = 'mobile-tip-banner';
-        banner.innerHTML = `
+      // "Best Experience" banner sirf tab dikhao jab mobile size ho
+      if (!isBrowser && !hasExpBanner && window.innerWidth <= 700) {
+        const tipBanner = document.createElement('div');
+        tipBanner.id = 'mobileTipBanner';
+        tipBanner.className = 'mobile-tip-banner';
+        tipBanner.innerHTML = `
           <span class="mobile-tip-icon">💻</span>
           <div class="mobile-tip-text">
             <strong>Best experience on laptop or desktop</strong>
             <span>Access all features and detailed analytics easily on a bigger screen.</span>
           </div>
         `;
-        content.prepend(banner);
+        content.prepend(tipBanner);
       }
-      return; // Yahan se return kar jayega, aage banner nahi banega
+      return;
     }
 
-    // Agar normal browser mein hai, toh Install/Open App banner dikhao
-    if (!hasInstallBanner) {
-      if (hasExpBanner) hasExpBanner.remove();
+    // CASE 2: Normal Web Browser me hain (Desktop ya Mobile Web)
+    if (hasExpBanner) hasExpBanner.remove(); // Tip banner hata do agar dikh raha hai
 
+    if (!hasInstallBanner) {
       const isAlreadyInstalled = isSavedAsInstalled || !window.deferredPrompt;
       const buttonText = isAlreadyInstalled ? 'Open App' : 'Install';
       const descriptionText = isAlreadyInstalled ? 'App is already installed.' : 'Fast access & daily updates.';
@@ -98,6 +96,7 @@
       banner.id = 'installAppBanner';
       banner.className = 'install-app-banner';
       banner.innerHTML = `
+        <button class="banner-close-btn" id="closeBannerBtn" title="Dismiss">✕</button>
         <div class="install-app-content">
           <span class="install-app-icon">📱</span>
           <div class="install-app-text">
@@ -110,6 +109,7 @@
 
       content.prepend(banner);
 
+      // Install / Open App Button
       document.getElementById('installPwaBtn').onclick = async () => {
         if (window.deferredPrompt) {
           window.deferredPrompt.prompt();
@@ -124,6 +124,12 @@
             'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
           );
         }
+      };
+
+      // Close Button
+      document.getElementById('closeBannerBtn').onclick = () => {
+        localStorage.setItem('pwa_banner_dismissed', 'true');
+        banner.remove();
       };
     }
   }
