@@ -3,10 +3,11 @@
 
   window.deferredPrompt = null;
 
+  // Jab browser install ke liye ready ho, toh prompt capture karo
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     window.deferredPrompt = e;
-    checkAndInjectBanner();
+    checkAndInjectBanner(); // Turant UI update karo
   });
 
   function injectCSS() {
@@ -32,7 +33,7 @@
         box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3); white-space: nowrap;
       }
 
-      /* Best Experience Banner (Mobile Only) */
+      /* Best Experience Banner (Mobile PWA Only) */
       .mobile-tip-banner {
         display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
         background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(168, 85, 247, 0.08));
@@ -52,18 +53,16 @@
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const isBrowser = window.matchMedia('(display-mode: browser)').matches;
-
-    // Mac Chrome fix
-    const isAppMode = isStandalone && !isBrowser;
+    const isAppMode = isStandalone && !isBrowser; // Mac Chrome bug fix
 
     const hasInstallBanner = document.getElementById('installAppBanner');
     const hasExpBanner = document.getElementById('mobileTipBanner');
 
     // ==========================================
-    // 1. APP MODE (Mobile PWA)
+    // 1. APP MODE (PWA)
     // ==========================================
     if (isAppMode) {
-      if (hasInstallBanner) hasInstallBanner.remove(); // Web banner hatao
+      if (hasInstallBanner) hasInstallBanner.remove();
 
       if (window.innerWidth <= 700) {
         if (!hasExpBanner) {
@@ -90,45 +89,54 @@
     // ==========================================
     if (hasExpBanner) hasExpBanner.remove();
 
-    if (!hasInstallBanner) {
-      // Logic: Agar prompt nahi hai (!window.deferredPrompt), toh matlab install hai
-      const isAlreadyInstalled = localStorage.getItem('pwa_installed') === 'true' || !window.deferredPrompt;
+    // 🔥 THE REAL FIX: Sirf aur sirf deferredPrompt par bharosa karo
+    const canInstall = !!window.deferredPrompt;
 
-      const buttonText = isAlreadyInstalled ? 'Open App' : 'Install';
-      const descriptionText = isAlreadyInstalled ? 'App is already installed.' : 'Fast access & daily updates.';
+    // Agar install ho sakta hai toh "Install", warna "Open App"
+    const buttonText = canInstall ? 'Install' : 'Open App';
+    const descriptionText = canInstall ? 'Fast access & daily updates.' : 'App is already installed.';
 
-      const banner = document.createElement('div');
+    let banner = document.getElementById('installAppBanner');
+
+    // Agar banner nahi hai, toh banao
+    if (!banner) {
+      banner = document.createElement('div');
       banner.id = 'installAppBanner';
       banner.className = 'install-app-banner';
-      banner.innerHTML = `
-        <div class="install-app-content">
-          <span class="install-app-icon">📱</span>
-          <div class="install-app-text">
-            <strong>UPSC Tracker App</strong>
-            <span>${descriptionText}</span>
-          </div>
-        </div>
-        <button class="install-app-btn" id="installPwaBtn">${buttonText}</button>
-      `;
-
       content.prepend(banner);
-
-      document.getElementById('installPwaBtn').onclick = async () => {
-        if (window.deferredPrompt) {
-          window.deferredPrompt.prompt();
-          const { outcome } = await window.deferredPrompt.userChoice;
-          if (outcome === 'accepted') {
-            localStorage.setItem('pwa_installed', 'true');
-            banner.remove();
-          }
-          window.deferredPrompt = null;
-        } else {
-          alert(
-            'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
-          );
-        }
-      };
     }
+
+    // Har baar innerHTML update karo taaki text sahi rahe
+    banner.innerHTML = `
+      <div class="install-app-content">
+        <span class="install-app-icon">📱</span>
+        <div class="install-app-text">
+          <strong>UPSC Tracker App</strong>
+          <span>${descriptionText}</span>
+        </div>
+      </div>
+      <button class="install-app-btn" id="installPwaBtn">${buttonText}</button>
+    `;
+
+    // Button Click Logic
+    document.getElementById('installPwaBtn').onclick = async () => {
+      if (window.deferredPrompt) {
+        // Install Flow
+        window.deferredPrompt.prompt();
+        const { outcome } = await window.deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          localStorage.setItem('pwa_installed', 'true');
+          banner.remove();
+        }
+        window.deferredPrompt = null; // Prompt clear karo
+        setTimeout(checkAndInjectBanner, 100); // UI wapas check karo
+      } else {
+        // Open App Alert Flow
+        alert(
+          'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
+        );
+      }
+    };
   }
 
   function boot() {
@@ -149,6 +157,7 @@
 
   window.addEventListener('appinstalled', () => {
     localStorage.setItem('pwa_installed', 'true');
+    window.deferredPrompt = null; // Clear prompt
     checkAndInjectBanner();
   });
 })();
