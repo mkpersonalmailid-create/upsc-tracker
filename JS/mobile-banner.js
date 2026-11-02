@@ -3,11 +3,11 @@
 
   window.deferredPrompt = null;
 
-  // Jab browser install ke liye ready ho, toh prompt capture karo
+  // Capture the install prompt
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     window.deferredPrompt = e;
-    checkAndInjectBanner(); // Turant UI update karo
+    checkAndInjectBanner(); // Prompt aate hi banner update karo
   });
 
   function injectCSS() {
@@ -33,7 +33,7 @@
         box-shadow: 0 4px 14px rgba(168, 85, 247, 0.3); white-space: nowrap;
       }
 
-      /* Best Experience Banner (Mobile PWA Only) */
+      /* Best Experience Banner */
       .mobile-tip-banner {
         display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 14px;
         background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(168, 85, 247, 0.08));
@@ -48,100 +48,83 @@
 
   function checkAndInjectBanner() {
     const content = document.getElementById('content');
-    if (!content) return;
+    if (!content) return; // Agar content load nahi hua, toh wapas jao
 
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     const isBrowser = window.matchMedia('(display-mode: browser)').matches;
-    const isAppMode = isStandalone && !isBrowser; // Mac Chrome bug fix
+    const isAppMode = isStandalone && !isBrowser;
 
     const hasInstallBanner = document.getElementById('installAppBanner');
     const hasExpBanner = document.getElementById('mobileTipBanner');
 
-    // ==========================================
-    // 1. APP MODE (PWA)
-    // ==========================================
+    // 1. APP MODE (Mobile PWA)
     if (isAppMode) {
       if (hasInstallBanner) hasInstallBanner.remove();
 
-      if (window.innerWidth <= 700) {
-        if (!hasExpBanner) {
-          const banner = document.createElement('div');
-          banner.id = 'mobileTipBanner';
-          banner.className = 'mobile-tip-banner';
-          banner.innerHTML = `
-            <span class="mobile-tip-icon">💻</span>
-            <div class="mobile-tip-text">
-              <strong>Best experience on laptop or desktop</strong>
-              <span>Access all features and detailed analytics easily on a bigger screen.</span>
-            </div>
-          `;
-          content.prepend(banner);
-        }
-      } else {
-        if (hasExpBanner) hasExpBanner.remove();
+      if (window.innerWidth <= 700 && !hasExpBanner) {
+        const banner = document.createElement('div');
+        banner.id = 'mobileTipBanner';
+        banner.className = 'mobile-tip-banner';
+        banner.innerHTML = `
+          <span class="mobile-tip-icon">💻</span>
+          <div class="mobile-tip-text">
+            <strong>Best experience on laptop or desktop</strong>
+            <span>Access all features and detailed analytics easily on a bigger screen.</span>
+          </div>
+        `;
+        content.prepend(banner);
       }
       return;
     }
 
-    // ==========================================
     // 2. BROWSER MODE (Web/Laptop)
-    // ==========================================
     if (hasExpBanner) hasExpBanner.remove();
 
-    // 🔥 THE REAL FIX: Sirf aur sirf deferredPrompt par bharosa karo
+    // Agar prompt available hai matlab install nahi hai
     const canInstall = !!window.deferredPrompt;
-
-    // Agar install ho sakta hai toh "Install", warna "Open App"
     const buttonText = canInstall ? 'Install' : 'Open App';
     const descriptionText = canInstall ? 'Fast access & daily updates.' : 'App is already installed.';
 
-    let banner = document.getElementById('installAppBanner');
-
-    // Agar banner nahi hai, toh banao
-    if (!banner) {
-      banner = document.createElement('div');
+    if (!hasInstallBanner) {
+      const banner = document.createElement('div');
       banner.id = 'installAppBanner';
       banner.className = 'install-app-banner';
-      content.prepend(banner);
-    }
-
-    // Har baar innerHTML update karo taaki text sahi rahe
-    banner.innerHTML = `
-      <div class="install-app-content">
-        <span class="install-app-icon">📱</span>
-        <div class="install-app-text">
-          <strong>UPSC Tracker App</strong>
-          <span>${descriptionText}</span>
+      banner.innerHTML = `
+        <div class="install-app-content">
+          <span class="install-app-icon">📱</span>
+          <div class="install-app-text">
+            <strong>UPSC Tracker App</strong>
+            <span>${descriptionText}</span>
+          </div>
         </div>
-      </div>
-      <button class="install-app-btn" id="installPwaBtn">${buttonText}</button>
-    `;
+        <button class="install-app-btn" id="installPwaBtn">${buttonText}</button>
+      `;
+      content.prepend(banner);
 
-    // Button Click Logic
-    document.getElementById('installPwaBtn').onclick = async () => {
-      if (window.deferredPrompt) {
-        // Install Flow
-        window.deferredPrompt.prompt();
-        const { outcome } = await window.deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          localStorage.setItem('pwa_installed', 'true');
-          banner.remove();
+      document.getElementById('installPwaBtn').onclick = async () => {
+        if (window.deferredPrompt) {
+          window.deferredPrompt.prompt();
+          const { outcome } = await window.deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            localStorage.setItem('pwa_installed', 'true');
+            banner.remove();
+          }
+          window.deferredPrompt = null;
+          setTimeout(checkAndInjectBanner, 500); // UI update
+        } else {
+          alert(
+            'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
+          );
         }
-        window.deferredPrompt = null; // Prompt clear karo
-        setTimeout(checkAndInjectBanner, 100); // UI wapas check karo
-      } else {
-        // Open App Alert Flow
-        alert(
-          'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
-        );
-      }
-    };
+      };
+    }
   }
 
   function boot() {
     injectCSS();
-    checkAndInjectBanner();
+    // App load hone ke baad thoda wait karke banner check karo (taaki content render ho jaye)
+    setTimeout(checkAndInjectBanner, 1000);
   }
 
   if (document.readyState === 'loading') {
@@ -150,14 +133,11 @@
     boot();
   }
 
-  const observer = new MutationObserver(() => {
-    checkAndInjectBanner();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  // ❌ MutationObserver hata diya gaya hai taaki app load na atke.
 
   window.addEventListener('appinstalled', () => {
     localStorage.setItem('pwa_installed', 'true');
-    window.deferredPrompt = null; // Clear prompt
+    window.deferredPrompt = null;
     checkAndInjectBanner();
   });
 })();
