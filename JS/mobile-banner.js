@@ -1,7 +1,6 @@
 (function () {
   'use strict';
 
-  // Setup global variables for the PWA install prompt
   window.deferredPrompt = null;
   window.canInstallPWA = false;
 
@@ -48,28 +47,30 @@
     document.head.appendChild(style);
   }
 
-  // Main Logic: Checks the state and renders the correct banner
   function checkAndInjectBanner() {
     const content = document.getElementById('content');
-    if (!content) return; // Wait for the app content to load
+    if (!content) return;
 
-    // 1. Check if running in standalone mode (installed app)
+    // 🚀 FIXED: Ab yeh Mac, Windows, aur Mobile sabhi PWAs ko detect karega
     const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches ||
+      window.matchMedia('(display-mode: window-controls-overlay)').matches ||
+      window.navigator.standalone === true;
 
-    // 2. Check localStorage for install/dismiss states
     const isSavedAsInstalled = localStorage.getItem('pwa_installed') === 'true';
     const isDismissed = localStorage.getItem('pwa_banner_dismissed') === 'true';
 
     const hasInstallBanner = document.getElementById('installAppBanner');
     const hasExpBanner = document.getElementById('mobileTipBanner');
 
-    // If app is open in standalone mode OR user dismissed the banner previously
+    // Agar app installed mode (PWA) mein chal rahi hai, toh banner HATA DO
     if (isStandalone || isDismissed) {
       if (hasInstallBanner) hasInstallBanner.remove();
 
-      // Show mobile experience tip if in standalone mode
-      if (isStandalone && !hasExpBanner) {
+      // Mobile tip banner (sirf mobile browser ke liye)
+      if (isStandalone && !hasExpBanner && window.innerWidth <= 700) {
         const banner = document.createElement('div');
         banner.id = 'mobileTipBanner';
         banner.className = 'mobile-tip-banner';
@@ -82,14 +83,13 @@
         `;
         content.prepend(banner);
       }
-      return;
+      return; // Yahan se return kar jayega, aage banner nahi banega
     }
 
-    // If we are here, it means we need to show the Install/Open App banner
+    // Agar normal browser mein hai, toh Install/Open App banner dikhao
     if (!hasInstallBanner) {
-      if (hasExpBanner) hasExpBanner.remove(); // Remove mobile tip banner
+      if (hasExpBanner) hasExpBanner.remove();
 
-      // SMART DETECTION: If deferredPrompt is missing, the app is likely already installed (or browser blocked it)
       const isAlreadyInstalled = isSavedAsInstalled || !window.deferredPrompt;
       const buttonText = isAlreadyInstalled ? 'Open App' : 'Install';
       const descriptionText = isAlreadyInstalled ? 'App is already installed.' : 'Fast access & daily updates.';
@@ -110,19 +110,16 @@
 
       content.prepend(banner);
 
-      // Button Click logic
       document.getElementById('installPwaBtn').onclick = async () => {
         if (window.deferredPrompt) {
-          // Standard Install Flow
           window.deferredPrompt.prompt();
           const { outcome } = await window.deferredPrompt.userChoice;
           if (outcome === 'accepted') {
-            localStorage.setItem('pwa_installed', 'true'); // Save state permanently
+            localStorage.setItem('pwa_installed', 'true');
             banner.remove();
           }
           window.deferredPrompt = null;
         } else {
-          // Open App Flow (Since browser cannot open the app directly due to security)
           alert(
             'App is already installed! \n\nPlease open it from your Home Screen (Mobile) or Applications folder (Laptop).',
           );
@@ -142,14 +139,11 @@
     boot();
   }
 
-  // 🚀 PERFORMANCE FIX: Removed setInterval.
-  // Using MutationObserver to only trigger when the DOM changes (Much better for battery).
   const observer = new MutationObserver(() => {
     checkAndInjectBanner();
   });
   observer.observe(document.body, { childList: true, subtree: true });
 
-  // Listen for the install event to immediately update the UI and save state
   window.addEventListener('appinstalled', () => {
     localStorage.setItem('pwa_installed', 'true');
     checkAndInjectBanner();
