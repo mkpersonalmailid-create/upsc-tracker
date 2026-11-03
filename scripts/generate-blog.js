@@ -472,17 +472,17 @@ async function main() {
     const readNext = getRecentBlogPosts(slug, 3);
     console.log(`🔗 Read Next: ${readNext.length} posts found`);
 
-    // ⬇️ Hinglish & Human-like PROMPT ⬇️
+    // ⬇️ यहाँ PROMPT बदला गया है (Pure English + Human Tone के लिए) ⬇️
     const PROMPT = `You are a 25-year-old UPSC CSE aspirant from India who has faced failures and is now sharing practical, raw advice with a friend.
 
 Write a detailed blog article on the topic: "${topic}".
 
 CRITICAL INSTRUCTIONS (MUST FOLLOW):
-1. TONE: Write in a conversational Hinglish tone (mix of Hindi and English). Sound like a real human talking to a fellow aspirant. Use phrases like "Mujhe yaad hai jab...", "Sach batau toh...", "Sabse bada mistake jo maine kiya...".
+1. LANGUAGE: STRICTLY write the entire article in English only. DO NOT use Hindi words (like "Mujhe yaad hai", "Sach batau toh"). Use an Indian-English conversational tone. Sound like a real human talking to a fellow aspirant.
 2. NO AI WORDS: NEVER use these AI words: "delve", "moreover", "furthermore", "in the realm of", "tapestry", "crucial", "testament", "it is important to note", "unlock", "elevate".
 3. NO EM-DASHES: NEVER use long em-dashes (—). Use normal commas, brackets, or periods.
 4. FORMATTING: Keep paragraphs very short (2-3 lines max). Use line breaks.
-5. Add a specific section titled "<h2>Meri Personal Struggle</h2>" where you share a realistic, relatable anecdote about the struggle of a UPSC aspirant.
+5. Add a specific section titled "<h2>My Personal Struggle</h2>" where you share a realistic, relatable anecdote about the struggle of a UPSC aspirant.
 6. Include a subtle mention of using a study tracker app (like our app) to stay disciplined.
 7. Output ONLY the article body HTML (headings, paragraphs, lists, etc.). DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags. DO NOT include markdown code fences like \`\`\`html.
 
@@ -494,7 +494,7 @@ Structure your output EXACTLY like this:
 <h2>[Section 1 Title]</h2>
 <p>Content...</p>
 
-<h2>Meri Personal Struggle</h2>
+<h2>My Personal Struggle</h2>
 <p>Share a personal, relatable story here...</p>
 
 <h2>[Section 2 Title]</h2>
