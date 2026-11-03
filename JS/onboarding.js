@@ -23,6 +23,7 @@
   let formData = {
     optional: '',
     year: '',
+    mobile: '', // ⬅️ NAYA FIELD ADD KIYA
     hours: '6',
     stage: 'beginner',
   };
@@ -371,7 +372,6 @@
 
   /* ══════════ STEP 1: Optional + Year ══════════ */
   function renderStep1(card) {
-    // ⚡ Use global OPTIONAL_SUBJECTS from app.html (same as Settings page)
     const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [
       'Agriculture',
       'Animal Husbandry and Veterinary Science',
@@ -494,18 +494,22 @@
     };
   }
 
-  /* ══════════ STEP 2: Hours + Stage ══════════ */
+  /* ══════════ STEP 2: Mobile + Hours + Stage ══════════ */
   function renderStep2(card) {
     const hourOptions = ['2', '4', '6', '8', '10+'];
 
     card.innerHTML = `
       <div class="wiz-hero">
         <div class="wiz-badge">Step 2 of 3</div>
-        <h2 class="wiz-title">How much do you study daily?</h2>
+        <h2 class="wiz-title">A bit more about you</h2>
         <p class="wiz-sub">Be honest — this helps us set realistic targets for you.</p>
       </div>
       <div class="wiz-body">
         <div class="wiz-field">
+          <label class="wiz-label">Mobile Number <span style="color:#A99BC7; font-weight:400; text-transform:none; letter-spacing:0; font-size:11px;">(Optional)</span></label>
+          <input type="tel" class="wiz-input" id="wizMobile" placeholder="e.g. 9876543210 (Leave blank to skip)" maxlength="15" autocomplete="off" />
+        </div>
+        <div class="wiz-field" style="margin-top: 20px;">
           <label class="wiz-label">Daily Study Hours</label>
           <div class="wiz-hours" id="wizHours">
             ${hourOptions.map((h) => `<button class="wiz-hour-btn" data-hours="${h}">${h}h</button>`).join('')}
@@ -535,6 +539,9 @@
       </div>
     `;
 
+    const mobileInput = document.getElementById('wizMobile');
+    if (formData.mobile) mobileInput.value = formData.mobile;
+
     document.querySelectorAll('.wiz-hour-btn').forEach((btn) => {
       if (btn.dataset.hours === formData.hours) btn.classList.add('active');
       btn.onclick = () => {
@@ -554,12 +561,13 @@
     });
 
     document.getElementById('wizNext2').onclick = () => {
+      formData.mobile = mobileInput.value.trim(); // ⬅️ MOBILE SAVE KIYA
       currentStep = 3;
       renderStep();
     };
   }
 
-  /* ══════════ STEP 3: Confirm + Start ══════════ */
+  /* ══════════ STEP 3: Confirm + Emotional Message ══════════ */
   function renderStep3(card) {
     const stageLabel = STAGES.find((s) => s.id === formData.stage)?.label || 'Beginner';
 
@@ -588,9 +596,18 @@
             <span style="color: #fff; font-size: 13px; font-weight: 700;">${stageLabel}</span>
           </div>
         </div>
-        <p style="color: #A1A1AA; font-size: 13px; line-height: 1.6; text-align: center; margin: 20px 0 0;">
-          💡 <strong style="color: #fff;">Pro tip:</strong> Even 2 hours tracked daily beats 10 hours unplanned. Consistency is the game.
-        </p>
+        
+        <!-- ⬇️ NAYA EMOTIONAL MESSAGE YAHAN ADD KIYA HAI ⬇️ -->
+        <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08)); border: 1px solid rgba(236, 72, 153, 0.25); border-radius: 14px; padding: 20px; margin-top: 20px; text-align: center;">
+          <p style="color: #FBCFE8; font-size: 13.5px; line-height: 1.6; margin: 0; font-weight: 500;">
+            ✨ <strong>Every year, over 10 Lakh aspirants start this journey.</strong><br><br>
+            But only a few thousand actually make it. The difference isn't just hard work—it's <strong>tracking it</strong>. 
+            A consistent 2 hours of tracked study beats 10 hours of unplanned effort.<br><br>
+            <em>You just took the bravest step—showing up. Let's turn your dreams into a plan.</em> 💪
+          </p>
+        </div>
+        <!-- ⬆️ MESSAGE END ⬆️ -->
+
       </div>
       <div class="wiz-footer">
         <div class="wiz-progress">
@@ -629,6 +646,7 @@
             .update({
               optional_subject: formData.optional,
               preparation_year: formData.year,
+              phone_number: formData.mobile || null, // ⬅️ MOBILE NUMBER SAVE HO RAHA HAI
             })
             .eq('id', user.id);
 
@@ -656,6 +674,7 @@
             if (s && s.profile) {
               s.profile.optional_subject = formData.optional;
               s.profile.preparation_year = formData.year;
+              if (formData.mobile) s.profile.phone_number = formData.mobile;
             }
           } catch (e) {}
         }
