@@ -134,6 +134,7 @@ function getRecentBlogPosts(excludeSlug = '', limit = 3) {
   }
 }
 
+/* ⬇️ यहाँ Topic Picker अपडेट किया गया है (Smart Modifiers के साथ) ⬇️ */
 function pickTopic() {
   const usedSlugs = getUsedTopicSlugs();
   const available = TOPICS.filter((t) => !usedSlugs.includes(topicToSlug(t)));
@@ -143,8 +144,23 @@ function pickTopic() {
     return available[Math.floor(Math.random() * available.length)];
   }
 
-  console.warn('⚠️ All topics used! Restarting cycle.');
-  return TOPICS[Math.floor(Math.random() * TOPICS.length)];
+  console.warn('⚠️ All 63 topics used! Creating a unique variation to avoid duplicate content.');
+
+  const baseTopic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
+
+  // ये "Modifiers" पुराने टॉपिक को एक नया रूप देंगे ताकि कोई भी ब्लॉग डुप्लीकेट न हो
+  const modifiers = [
+    `Advanced Guide to ${baseTopic}`,
+    `Common Mistakes to Avoid in ${baseTopic}`,
+    `${baseTopic} - A 2026 Perspective`,
+    `5 Secret Tips for ${baseTopic}`,
+    `How to Master ${baseTopic} Quickly`,
+    `Ultimate Checklist for ${baseTopic}`,
+  ];
+
+  const newTopic = modifiers[Math.floor(Math.random() * modifiers.length)];
+  console.log(`🔄 Generated unique variation: ${newTopic}`);
+  return newTopic;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -456,13 +472,19 @@ async function main() {
     const readNext = getRecentBlogPosts(slug, 3);
     console.log(`🔗 Read Next: ${readNext.length} posts found`);
 
-    const PROMPT = `Write a comprehensive, 1500-word blog article on the topic: "${topic}".
+    // ⬇️ Hinglish & Human-like PROMPT ⬇️
+    const PROMPT = `You are a 25-year-old UPSC CSE aspirant from India who has faced failures and is now sharing practical, raw advice with a friend.
 
-CRITICAL INSTRUCTIONS:
-- Output ONLY the article body HTML (headings, paragraphs, lists, etc.)
-- DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags
-- DO NOT include inline CSS or style attributes
-- DO NOT include markdown code fences
+Write a detailed blog article on the topic: "${topic}".
+
+CRITICAL INSTRUCTIONS (MUST FOLLOW):
+1. TONE: Write in a conversational Hinglish tone (mix of Hindi and English). Sound like a real human talking to a fellow aspirant. Use phrases like "Mujhe yaad hai jab...", "Sach batau toh...", "Sabse bada mistake jo maine kiya...".
+2. NO AI WORDS: NEVER use these AI words: "delve", "moreover", "furthermore", "in the realm of", "tapestry", "crucial", "testament", "it is important to note", "unlock", "elevate".
+3. NO EM-DASHES: NEVER use long em-dashes (—). Use normal commas, brackets, or periods.
+4. FORMATTING: Keep paragraphs very short (2-3 lines max). Use line breaks.
+5. Add a specific section titled "<h2>Meri Personal Struggle</h2>" where you share a realistic, relatable anecdote about the struggle of a UPSC aspirant.
+6. Include a subtle mention of using a study tracker app (like our app) to stay disciplined.
+7. Output ONLY the article body HTML (headings, paragraphs, lists, etc.). DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags. DO NOT include markdown code fences like \`\`\`html.
 
 Structure your output EXACTLY like this:
 
@@ -471,7 +493,9 @@ Structure your output EXACTLY like this:
 
 <h2>[Section 1 Title]</h2>
 <p>Content...</p>
-<ul><li>Point 1</li><li>Point 2</li></ul>
+
+<h2>Meri Personal Struggle</h2>
+<p>Share a personal, relatable story here...</p>
 
 <h2>[Section 2 Title]</h2>
 <p>Content...</p>
@@ -499,12 +523,9 @@ Structure your output EXACTLY like this:
 <p>Final thoughts...</p>
 
 RULES:
-- Use natural, helpful, expert tone
-- Write for serious UPSC aspirants
-- Include practical, actionable advice
-- Use <strong> for emphasis where important
-- Total word count: 1500+
-- Use <h2> for main sections, <h3> for subsections only
+- Total word count: 1000-1500 words.
+- Use <h2> for main sections, <h3> for subsections only.
+- Use <strong> for emphasis where important.
 - Do NOT use markdown like ** or ##
 - Output clean HTML only`;
 
@@ -523,7 +544,7 @@ RULES:
           body: JSON.stringify({
             model: model,
             messages: [{ role: 'user', content: PROMPT }],
-            temperature: 0.7,
+            temperature: 0.85, // थोड़ा क्रिएटिविटी बढ़ाने के लिए
             max_tokens: 8000,
           }),
         });
