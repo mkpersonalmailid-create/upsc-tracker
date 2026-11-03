@@ -23,7 +23,7 @@
   let formData = {
     optional: '',
     year: '',
-    mobile: '', // ⬅️ NAYA FIELD ADD KIYA
+    mobile: '',
     hours: '6',
     stage: 'beginner',
   };
@@ -370,7 +370,7 @@
     else if (currentStep === 3) renderStep3(card);
   }
 
-  /* ══════════ STEP 1: Optional + Year ══════════ */
+  /* ══════════ STEP 1: Optional + Year (WITH SEARCH) ══════════ */
   function renderStep1(card) {
     const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [
       'Agriculture',
@@ -434,15 +434,10 @@
       <div class="wiz-body">
         <div class="wiz-field">
           <label class="wiz-label">Optional Subject</label>
-          <div class="wiz-optionals" id="wizOptionalGrid">
-            ${OPTIONAL_SUBJECTS.map(
-              (s) => `
-              <button type="button" class="wiz-optional-btn" data-value="${s}">
-                ${s}
-              </button>
-            `,
-            ).join('')}
-          </div>
+          <!-- ⬇️ NAYA SEARCH BAR YAHAN ADD KIYA HAI ⬇️ -->
+          <input type="text" class="wiz-input" id="wizOptionalSearch" placeholder="🔍 Search subject... (e.g. Sociology)" style="margin-bottom: 12px;" autocomplete="off">
+          
+          <div class="wiz-optionals" id="wizOptionalGrid"></div>
         </div>
         <div class="wiz-field" style="margin-top: 20px;">
           <label class="wiz-label">Target Exam Year</label>
@@ -461,30 +456,53 @@
 
     const year = document.getElementById('wizYear');
     const next = document.getElementById('wizNext1');
+    const searchInput = document.getElementById('wizOptionalSearch');
+    const grid = document.getElementById('wizOptionalGrid');
 
-    // Pre-select if already chosen
-    if (formData.optional) {
+    // ⬇️ NAYA LOGIC: ग्रिड को फ़िल्टर करके रेंडर करने के लिए ⬇️
+    function renderGrid(filterText = '') {
+      const filtered = OPTIONAL_SUBJECTS.filter((s) => s.toLowerCase().includes(filterText.toLowerCase()));
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #A99BC7; padding: 20px; font-size: 13px;">No subject found</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered
+        .map(
+          (s) => `
+        <button type="button" class="wiz-optional-btn ${formData.optional === s ? 'active' : ''}" data-value="${s}">
+          ${s}
+        </button>
+      `,
+        )
+        .join('');
+
+      // Re-attach click events
       document.querySelectorAll('.wiz-optional-btn').forEach((btn) => {
-        if (btn.dataset.value === formData.optional) btn.classList.add('active');
+        btn.onclick = () => {
+          document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          formData.optional = btn.dataset.value;
+          check();
+        };
       });
     }
-    if (formData.year) year.value = formData.year;
 
     function check() {
       next.disabled = !formData.optional || !year.value.trim();
     }
 
-    document.querySelectorAll('.wiz-optional-btn').forEach((btn) => {
-      btn.onclick = () => {
-        document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
-        btn.classList.add('active');
-        formData.optional = btn.dataset.value;
-        check();
-      };
-    });
+    // Initial render
+    renderGrid();
 
-    year.oninput = check;
-    setTimeout(() => year.focus(), 300);
+    // Search input handler
+    searchInput.oninput = (e) => {
+      renderGrid(e.target.value);
+    };
+
+    if (formData.year) year.value = formData.year;
+    setTimeout(() => searchInput.focus(), 300); // Focus on search bar now
     check();
 
     next.onclick = () => {
@@ -561,7 +579,7 @@
     });
 
     document.getElementById('wizNext2').onclick = () => {
-      formData.mobile = mobileInput.value.trim(); // ⬅️ MOBILE SAVE KIYA
+      formData.mobile = mobileInput.value.trim();
       currentStep = 3;
       renderStep();
     };
@@ -597,7 +615,6 @@
           </div>
         </div>
         
-        <!-- ⬇️ NAYA EMOTIONAL MESSAGE YAHAN ADD KIYA HAI ⬇️ -->
         <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.08), rgba(168, 85, 247, 0.08)); border: 1px solid rgba(236, 72, 153, 0.25); border-radius: 14px; padding: 20px; margin-top: 20px; text-align: center;">
           <p style="color: #FBCFE8; font-size: 13.5px; line-height: 1.6; margin: 0; font-weight: 500;">
             ✨ <strong>Every year, over 10 Lakh aspirants start this journey.</strong><br><br>
@@ -606,7 +623,6 @@
             <em>You just took the bravest step—showing up. Let's turn your dreams into a plan.</em> 💪
           </p>
         </div>
-        <!-- ⬆️ MESSAGE END ⬆️ -->
 
       </div>
       <div class="wiz-footer">
@@ -640,13 +656,12 @@
         } = await supa.auth.getUser();
 
         if (user) {
-          // Primary update (with all fields)
           const { error } = await supa
             .from('profiles')
             .update({
               optional_subject: formData.optional,
               preparation_year: formData.year,
-              phone_number: formData.mobile || null, // ⬅️ MOBILE NUMBER SAVE HO RAHA HAI
+              phone_number: formData.mobile || null,
             })
             .eq('id', user.id);
 
@@ -654,7 +669,6 @@
             log('Profile update error:', error.message);
           }
 
-          // Try to save extra fields (best-effort, ignore errors if columns don't exist)
           try {
             await supa
               .from('profiles')
@@ -668,7 +682,6 @@
             log('Extra fields not saved (columns may not exist):', e.message);
           }
 
-          // Update local state
           try {
             const s = typeof getState === 'function' ? getState() : null;
             if (s && s.profile) {
