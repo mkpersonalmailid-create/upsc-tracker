@@ -389,9 +389,6 @@ footer{padding:80px 32px 32px;border-top:1px solid var(--border);background:var(
 }
 </style>
 
-<!-- Adsterra Popunder & Social Bar -->
-  <script data-cfasync="false" src="https://abscloud.org/1/5016c34654d129cdf027ff5c6e145437"></script>
-  <script data-cfasync="false" src="https://bauval.org/14/379a3d7fe4cbff7d51a796e317ec7b36"></script>
 
 </head>
 <body>
@@ -585,22 +582,6 @@ RULES:
     content = content.replace(/<\/?(html|head|body)[^>]*>/gi, '');
 
     content += `
-<div class="callout">
-<div style="margin: 30px 0; padding: 20px; background: var(--card); border: 1px dashed var(--purple); border-radius: 12px; text-align: center;">
-  <h3 style="margin-bottom: 10px; color: var(--text);">🎁 Download Free UPSC Study Material</h3>
-  <p style="color: var(--text-2); margin-bottom: 15px; font-size: 0.9rem;">Get free PDFs, notes, and previous year papers.</p>
-  
-  <!-- Smartlink (Button के पीछे) -->
-  <a href="https://araplhn.org/4/2f323b65ac3e39ea7113f13c2eba50a0" rel="nofollow" target="_blank" style="display: inline-block; background: var(--grad-1); color: white; padding: 10px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">
-    📥 Download PDF Now
-  </a>
-</div>
-
-<!-- Native Banner (विज्ञापन) -->
-<div style="margin: 30px 0; text-align: center;">
-  <div id="container-fd5e69618eb60974f277fe3c234ee784"></div>
-  <script async="async" data-cfasync="false" src="https://bauval.org/21/fd5e69618eb60974f277fe3c234ee784"></script>
-</div>
 
   <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
 </div>`;
