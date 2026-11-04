@@ -68,6 +68,18 @@ export async function onRequestPost({ request, env }) {
       expiryDays,
       subscriptionId = null;
 
+    // Fetch actual payment details directly from Razorpay (Safest way to get amount)
+    const pRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+      headers: { Authorization: 'Basic ' + auth64 },
+    });
+
+    let paymentData = null;
+    if (pRes.ok) {
+      paymentData = await pRes.json();
+      amount = paymentData.amount;
+      currency = paymentData.currency;
+    }
+
     // ============ SUBSCRIPTION VERIFY (monthly UPI autopay) ============
     if (razorpay_subscription_id) {
       const sigBuf = await crypto.subtle.sign(
@@ -89,9 +101,13 @@ export async function onRequestPost({ request, env }) {
       }
       if (sub.notes?.user_id && sub.notes.user_id !== user.id) return json({ error: 'User mismatch' }, 403);
 
-      amount = sub.quantity * (sub.plan?.item?.amount || 0);
-      currency = sub.plan?.item?.currency || 'INR';
-      planName = 'monthly_auto'; // ⬅️ changed from 'monthly'
+      // If payment fetch failed, fallback to subscription amount
+      if (!amount) {
+        amount = sub.plan?.item?.amount || 0;
+        currency = sub.plan?.item?.currency || 'INR';
+      }
+
+      planName = 'monthly_auto';
       subscriptionId = razorpay_subscription_id;
       const currentEnd = sub.current_end ? sub.current_end * 1000 : Date.now() + 30 * 86400000;
       expiryDays = Math.max(1, Math.round((currentEnd - Date.now()) / 86400000));
@@ -103,13 +119,9 @@ export async function onRequestPost({ request, env }) {
       const expected = hex(sigBuf);
       if (!timingSafeEqual(expected, razorpay_signature)) return json({ error: 'Invalid signature' }, 400);
 
-      const pRes = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
-        headers: { Authorization: 'Basic ' + auth64 },
-      });
-      if (!pRes.ok) return json({ error: 'Payment not found' }, 400);
-      const payment = await pRes.json();
-      if (payment.order_id !== razorpay_order_id) return json({ error: 'Order mismatch' }, 400);
-      if (!['captured', 'authorized'].includes(payment.status)) return json({ error: 'Not captured' }, 400);
+      if (!paymentData) return json({ error: 'Payment not found' }, 400);
+      if (paymentData.order_id !== razorpay_order_id) return json({ error: 'Order mismatch' }, 400);
+      if (!['captured', 'authorized'].includes(paymentData.status)) return json({ error: 'Not captured' }, 400);
 
       const oRes = await fetch(`https://api.razorpay.com/v1/orders/${razorpay_order_id}`, {
         headers: { Authorization: 'Basic ' + auth64 },
@@ -117,16 +129,17 @@ export async function onRequestPost({ request, env }) {
       if (!oRes.ok) return json({ error: 'Order not found' }, 400);
       const order = await oRes.json();
 
-      if (payment.amount !== order.amount) {
+      if (paymentData.amount !== order.amount) {
         return json({ error: 'Amount mismatch' }, 400);
       }
 
       const plan = ONE_TIME_PLANS[plan_id];
       if (!plan) return json({ error: 'Invalid plan' }, 400);
-      if (payment.notes?.user_id && payment.notes.user_id !== user.id) return json({ error: 'User mismatch' }, 403);
+      if (paymentData.notes?.user_id && paymentData.notes.user_id !== user.id)
+        return json({ error: 'User mismatch' }, 403);
 
-      amount = payment.amount;
-      currency = payment.currency;
+      amount = paymentData.amount;
+      currency = paymentData.currency;
       planName = plan.plan;
       expiryDays = plan.days;
     } else {
@@ -148,15 +161,12 @@ export async function onRequestPost({ request, env }) {
     const now = new Date();
 
     // ═══════════════ EXPIRY CALCULATION ═══════════════
-    // RULE: For yearly and monthly_once — if user has active same plan, EXTEND from existing expiry
-    //       Otherwise (fresh purchase / expired / different plan) → start from now
     let expiryISO;
     let renewalExtended = false;
 
     const isOneTimePlan = planName === 'yearly' || planName === 'monthly_once';
 
     if (isOneTimePlan) {
-      // Check existing subscription
       const existingRes = await fetch(
         `${env.SUPABASE_URL}/rest/v1/subscriptions?user_id=eq.${user.id}&select=expiry_date,status,plan`,
         {
@@ -176,21 +186,16 @@ export async function onRequestPost({ request, env }) {
           new Date(current.expiry_date) > now;
 
         if (isActiveSamePlan) {
-          // ✅ EXTEND: Add expiryDays to existing future expiry
           const baseDate = new Date(current.expiry_date);
           expiryISO = new Date(baseDate.getTime() + expiryDays * 86400000).toISOString();
           renewalExtended = true;
-          console.log(`✅ ${planName} renewal: extended ${current.expiry_date} → ${expiryISO} (+${expiryDays}d)`);
         } else {
-          // 🔄 FRESH: No active same plan, start from now
           expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
-          console.log(`🆕 Fresh ${planName} purchase: expires ${expiryISO}`);
         }
       } else {
         expiryISO = new Date(now.getTime() + expiryDays * 86400000).toISOString();
       }
     } else {
-      // Subscription (monthly_auto) — use Razorpay's exact current_end (no rounding)
       expiryISO = _subscriptionExpiryISO || new Date(now.getTime() + expiryDays * 86400000).toISOString();
     }
 
@@ -202,7 +207,7 @@ export async function onRequestPost({ request, env }) {
       razorpay_order_id: razorpay_order_id || null,
       razorpay_payment_id,
       razorpay_subscription_id: subscriptionId,
-      amount,
+      amount, // ✅ Now amount will be correctly populated
       currency,
       start_date: now.toISOString(),
       expiry_date: expiryISO,
@@ -220,13 +225,13 @@ export async function onRequestPost({ request, env }) {
       body: JSON.stringify(subPayload),
     });
     if (!subRes.ok) {
-      console.error(await subRes.text());
+      console.error('Sub save failed:', await subRes.text());
       return json({ error: 'Failed to save subscription' }, 500);
     }
 
     // ============ Sync profiles.membership ============
     try {
-      const profileSync = await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
+      await fetch(`${env.SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}`, {
         method: 'PATCH',
         headers: {
           apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -235,20 +240,17 @@ export async function onRequestPost({ request, env }) {
           Prefer: 'return=minimal',
         },
         body: JSON.stringify({
-          membership: premium,
+          membership: 'premium', // ✅ Fixed typo (missing quotes)
           email: user.email,
           updated_at: new Date().toISOString(),
         }),
       });
-      if (!profileSync.ok) {
-        console.warn('profile membership sync failed:', await profileSync.text());
-      }
     } catch (e) {
       console.warn('profile membership sync error:', e.message);
     }
 
     // ============ Log payment ============
-    await fetch(`${env.SUPABASE_URL}/rest/v1/payments`, {
+    const payLogRes = await fetch(`${env.SUPABASE_URL}/rest/v1/payments`, {
       method: 'POST',
       headers: {
         apikey: env.SUPABASE_SERVICE_ROLE_KEY,
@@ -261,12 +263,16 @@ export async function onRequestPost({ request, env }) {
         razorpay_order_id: razorpay_order_id || null,
         razorpay_payment_id,
         razorpay_subscription_id: subscriptionId || null,
-        amount,
+        amount, // ✅ This will now be correct
         currency,
         status: 'captured',
         plan: planName,
       }),
     });
+
+    if (!payLogRes.ok) {
+      console.error('Payment log failed:', await payLogRes.text());
+    }
 
     return json({
       success: true,
