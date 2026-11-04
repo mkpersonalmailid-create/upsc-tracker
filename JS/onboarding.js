@@ -179,7 +179,7 @@
           font-size: 15px;
           font-family: inherit;
           outline: none;
-          transition: all 0.2s;
+          transition: border-color 0.2s;
           box-sizing: border-box;
         }
         #onboarding-wizard .wiz-input:focus {
@@ -200,9 +200,10 @@
         }
         #onboarding-wizard .wiz-optionals::-webkit-scrollbar { width: 6px; }
         #onboarding-wizard .wiz-optionals::-webkit-scrollbar-thumb {
-          background: rgba(168, 85, 247, 0.4);
-          border-radius: 10px;
+          background: rgba(168, 85, 247, 0.4); border-radius: 10px;
         }
+        
+        /* ⬇️ डबल क्लिक फिक्स: hover हटा दिया और tap-highlight हटा दिया ⬇️ */
         #onboarding-wizard .wiz-optional-btn {
           padding: 11px 8px;
           background: #0f0818;
@@ -212,15 +213,11 @@
           font-size: 12px;
           font-weight: 700;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background 0.2s, border-color 0.2s;
           font-family: inherit;
           text-align: center;
           line-height: 1.3;
-        }
-        #onboarding-wizard .wiz-optional-btn:hover {
-          border-color: rgba(168, 85, 247, 0.5);
-          color: #fff;
-          transform: translateY(-1px);
+          -webkit-tap-highlight-color: transparent;
         }
         #onboarding-wizard .wiz-optional-btn.active {
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
@@ -242,12 +239,9 @@
           font-size: 14px;
           font-weight: 800;
           cursor: pointer;
-          transition: all 0.2s;
+          transition: background 0.2s;
           font-family: inherit;
-        }
-        #onboarding-wizard .wiz-hour-btn:hover {
-          border-color: rgba(168, 85, 247, 0.4);
-          color: #fff;
+          -webkit-tap-highlight-color: transparent;
         }
         #onboarding-wizard .wiz-hour-btn.active {
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
@@ -270,12 +264,9 @@
           font-weight: 700;
           cursor: pointer;
           text-align: center;
-          transition: all 0.2s;
+          transition: background 0.2s, border-color 0.2s;
           font-family: inherit;
-        }
-        #onboarding-wizard .wiz-stage:hover {
-          border-color: rgba(168, 85, 247, 0.4);
-          color: #fff;
+          -webkit-tap-highlight-color: transparent;
         }
         #onboarding-wizard .wiz-stage.active {
           background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(236, 72, 153, 0.15));
@@ -309,7 +300,7 @@
           width: 40px;
         }
         
-        /* ⬇️ बटन के लिए नया CSS ⬇️ */
+        /* बटन के लिए CSS */
         #onboarding-wizard .wiz-actions { display: flex; gap: 10px; }
         #onboarding-wizard .wiz-btn-primary {
           padding: 14px 28px;
@@ -321,16 +312,12 @@
           font-weight: 800;
           cursor: pointer;
           font-family: inherit;
-          transition: all 0.3s;
+          transition: transform 0.2s, box-shadow 0.2s;
           box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
+          -webkit-tap-highlight-color: transparent;
         }
-        #onboarding-wizard .wiz-btn-primary:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 32px rgba(236, 72, 153, 0.5);
-        }
-        #onboarding-wizard .wiz-btn-primary:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
+        #onboarding-wizard .wiz-btn-primary:active {
+          transform: scale(0.98);
         }
         #onboarding-wizard .wiz-btn-secondary {
           padding: 14px 20px;
@@ -342,12 +329,11 @@
           font-weight: 700;
           cursor: pointer;
           font-family: inherit;
-          transition: all 0.2s;
+          transition: background 0.2s;
+          -webkit-tap-highlight-color: transparent;
         }
-        #onboarding-wizard .wiz-btn-secondary:hover {
+        #onboarding-wizard .wiz-btn-secondary:active {
           background: rgba(255, 255, 255, 0.05);
-          color: #fff;
-          border-color: rgba(255, 255, 255, 0.2);
         }
 
         #onboarding-wizard .wiz-success-icon {
@@ -470,7 +456,8 @@
           <div class="wiz-dot"></div>
         </div>
         <div class="wiz-actions">
-          <button class="wiz-btn-primary" id="wizNext1" disabled>Next →</button>
+          <!-- Next button ab hamesha enable rahega -->
+          <button class="wiz-btn-primary" id="wizNext1">Next →</button>
         </div>
       </div>
     `;
@@ -499,11 +486,7 @@
         .join('');
     }
 
-    function check() {
-      next.disabled = !formData.optional || !year.value.trim();
-    }
-
-    // ⬇️ नया फिक्स: Event Delegation (डबल क्लिक की समस्या खत्म करने के लिए) ⬇️
+    // Event delegation to fix double click issue
     grid.onclick = (e) => {
       const btn = e.target.closest('.wiz-optional-btn');
       if (!btn) return;
@@ -511,18 +494,23 @@
       document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       formData.optional = btn.dataset.value;
-      check();
     };
 
     renderGrid();
     searchInput.oninput = (e) => renderGrid(e.target.value);
-    year.oninput = check;
 
     if (formData.year) year.value = formData.year;
-    setTimeout(() => searchInput.focus(), 300);
-    check();
 
+    // Validation on Next Click
     next.onclick = () => {
+      if (!formData.optional) {
+        if (typeof toast === 'function') toast('Please select an optional subject.', 'err');
+        return;
+      }
+      if (!year.value.trim()) {
+        if (typeof toast === 'function') toast('Please enter your target exam year.', 'err');
+        return;
+      }
       formData.year = year.value.trim();
       currentStep = 2;
       renderStep();
@@ -570,8 +558,8 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot"></div>
         </div>
-        <!-- ⬇️ Back बटन यहाँ जोड़ दिया है ⬇️ -->
         <div class="wiz-actions">
+          <!-- Back Button Added -->
           <button class="wiz-btn-secondary" id="wizBack2">← Back</button>
           <button class="wiz-btn-primary" id="wizNext2">Next →</button>
         </div>
@@ -599,7 +587,6 @@
       };
     });
 
-    // ⬇️ Back बटन का लॉजिक ⬇️
     document.getElementById('wizBack2').onclick = () => {
       formData.mobile = mobileInput.value.trim();
       currentStep = 1;
@@ -659,15 +646,14 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot active"></div>
         </div>
-        <!-- ⬇️ Back बटन यहाँ जोड़ दिया है ⬇️ -->
         <div class="wiz-actions">
+          <!-- Back Button Added -->
           <button class="wiz-btn-secondary" id="wizBack3">← Back</button>
           <button class="wiz-btn-primary" id="wizFinish">Start Session 🚀</button>
         </div>
       </div>
     `;
 
-    // ⬇️ Back बटन का लॉजिक ⬇️
     document.getElementById('wizBack3').onclick = () => {
       currentStep = 2;
       renderStep();
@@ -677,7 +663,7 @@
   }
 
   /* ═══════════════════════════════════════════════════════
-     FINISH ONBOARDING (बाकी कोड पहले जैसा ही है)
+     FINISH ONBOARDING
      ═══════════════════════════════════════════════════════ */
   async function finishOnboarding() {
     const finishBtn = document.getElementById('wizFinish');
