@@ -100,7 +100,8 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div style="font-size: 12px; color: #888; max-width: 300px;">
           <p style="margin: 0;"><strong>Note:</strong> This is a computer-generated receipt.</p>
-          <p style="margin: 10px 0 0;">For any queries, contact support@upscstudytracker.co.in</p>
+          <p style="margin: 10px 0 0;">For any queries, contact upscstudytracker@gmail.com
+</p>
         </div>
         <div style="text-align: right;">
           <p style="margin: 0; font-size: 14px; color: #666;">Total Paid</p>
