@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════
-   RECEIPT DOWNLOADER — Standalone File (Ultimate Fix)
+   RECEIPT DOWNLOADER — The Ultimate Bulletproof Fix
    File: JS/receipt-downloader.js
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[receipt-downloader] Script Loaded');
+  console.log('[receipt-downloader] Ultimate Script Loaded');
 
-  // 1. html2pdf लाइब्रेरी लोड करें
+  // 1. लाइब्रेरी लोड करें
   if (typeof html2pdf === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -14,48 +14,19 @@
     document.head.appendChild(script);
   }
 
-  // 2. PDF जनरेट करने का फंक्शन
-  window.__generatePDFReceipt = function (payment) {
+  // 2. पीडीएफ जनरेट करने का असली फंक्शन (सीधे Canvas और jsPDF का इस्तेमाल)
+  window.__generatePDFReceipt = async function (payment) {
     if (!payment) return;
-    if (typeof html2pdf === 'undefined') {
-      if (typeof toast === 'function') toast('Please wait, loading PDF engine...', 'info');
-      return setTimeout(() => window.__generatePDFReceipt(payment), 1000);
+
+    // लाइब्रेरी लोड होने का इंतज़ार करें
+    if (typeof window.html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+      if (typeof toast === 'function') toast('Loading PDF engine...', 'info');
+      return setTimeout(() => window.__generatePDFReceipt(payment), 1500);
     }
 
-    // ─── लोडिंग स्क्रीन (Overlay) बनाएं ───
-    const overlay = document.createElement('div');
-    overlay.id = 'pdf-generation-overlay';
-    overlay.style.cssText =
-      'position: fixed; inset: 0; background: rgba(8, 4, 15, 0.95); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px);';
+    if (typeof toast === 'function') toast('Generating PDF...', 'info');
 
-    const spinner = document.createElement('div');
-    spinner.style.cssText =
-      'width: 50px; height: 50px; border: 4px solid rgba(168, 85, 247, 0.3); border-top-color: #A855F7; border-radius: 50%; animation: spin 1s linear infinite;';
-
-    const text = document.createElement('div');
-    text.style.cssText =
-      'color: white; font-family: "Inter", sans-serif; margin-top: 20px; font-weight: 600; font-size: 1.1rem;';
-    text.innerText = 'Generating your receipt...';
-
-    overlay.appendChild(spinner);
-    overlay.appendChild(text);
-
-    // स्पिन एनिमेशन के लिए स्टाइल जोड़ें
-    if (!document.getElementById('spin-style')) {
-      const style = document.createElement('style');
-      style.id = 'spin-style';
-      style.innerHTML = '@keyframes spin { to { transform: rotate(360deg); } }';
-      document.head.appendChild(style);
-    }
-
-    document.body.appendChild(overlay);
-
-    // ─── रसीद (Receipt) का टेम्पलेट बनाएं ───
-    const template = document.createElement('div');
-    // ⚠️ इसे ओवरले के अंदर रखेंगे ताकि यह DOM में रेंडर हो सके और html2canvas इसे पढ़ सके
-    template.style.cssText =
-      'width: 800px; padding: 40px; background: #ffffff; color: #333333; font-family: "Inter", sans-serif; box-sizing: border-box; position: absolute; top: -9999px;'; // स्क्रीन से ऊपर छिपा हुआ, लेकिन DOM में मौजूद
-
+    // ─── डेटा तैयार करें ───
     const pDate = payment.created_at ? new Date(payment.created_at) : new Date();
     const dateStr = pDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     const name = window.state && window.state.profile && window.state.profile.name ? window.state.profile.name : 'User';
@@ -69,7 +40,13 @@
 
     const amt = '₹' + ((payment.amount || 0) / 100).toFixed(2);
 
-    template.innerHTML = `
+    // ─── HTML टेम्पलेट बनाएं ───
+    const tempDiv = document.createElement('div');
+    // ⚠️ यहाँ z-index: 999999 और opacity: 0.01 रखा है ताकि ब्राउज़र इसे रेंडर ज़रूर करे, लेकिन यूज़र को दिखे नहीं
+    tempDiv.style.cssText =
+      'position: fixed; top: 0; left: 0; width: 800px; background: #ffffff; color: #333333; z-index: 999999; opacity: 0.01; pointer-events: none; font-family: "Inter", sans-serif; padding: 40px; box-sizing: border-box;';
+
+    tempDiv.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #A855F7; padding-bottom: 20px; margin-bottom: 30px;">
         <div style="display: flex; align-items: center; gap: 12px;">
           <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo" style="width: 50px; height: 50px; border-radius: 10px;" crossorigin="anonymous">
@@ -127,44 +104,44 @@
       </div>
     `;
 
-    // टेम्पलेट को बॉडी में जोड़ें
-    document.body.appendChild(template);
+    document.body.appendChild(tempDiv);
 
-    // ─── इमेज लोड होने का इंतज़ार करें और PDF जनरेट करें ───
-    const img = template.querySelector('img');
-    const generate = () => {
-      const opt = {
-        margin: 0,
-        filename: `UPSC_Receipt_${payId || Date.now()}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
-        jsPDF: { unit: 'px', format: [800, 1050], orientation: 'portrait' },
-      };
-
-      html2pdf()
-        .set(opt)
-        .from(template)
-        .save()
-        .then(() => {
-          // सफल होने पर सब कुछ साफ करें
-          template.remove();
-          overlay.remove();
-          if (typeof toast === 'function') toast('Receipt downloaded!', 'ok');
-        })
-        .catch((e) => {
-          template.remove();
-          overlay.remove();
-          console.error('PDF Error:', e);
-          if (typeof toast === 'function') toast('Failed to generate PDF', 'err');
+    try {
+      // ─── इमेज लोड होने का इंतज़ार करें ───
+      const img = tempDiv.querySelector('img');
+      if (img && !img.complete) {
+        await new Promise((resolve) => {
+          img.onload = resolve;
+          img.onerror = resolve; // अगर इमेज फेल हो जाए तो भी आगे बढ़ो
         });
-    };
+      }
 
-    // अगर इमेज लोड हो चुकी है तो सीधे जनरेट करें, वरना लोड होने का इंतजार करें
-    if (img && !img.complete) {
-      img.onload = generate;
-      img.onerror = generate;
-    } else {
-      setTimeout(generate, 400); // 400ms का बफर ताकि फॉन्ट और बाकी चीजें लोड हो जाएं
+      // ─── Canvas में बदलें ───
+      const canvas = await window.html2canvas(tempDiv, {
+        scale: 2, // हाई क्वालिटी
+        useCORS: true, // इमेज के लिए
+        backgroundColor: '#ffffff',
+      });
+
+      // ─── PDF बनाएं ───
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'px',
+        format: [800, canvas.height], // कैनवास की ऊंचाई के हिसाब से पेज
+      });
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 800, canvas.height);
+      pdf.save(`UPSC_Receipt_${payId}.pdf`);
+
+      if (typeof toast === 'function') toast('Receipt downloaded!', 'ok');
+    } catch (error) {
+      console.error('PDF Error:', error);
+      if (typeof toast === 'function') toast('Failed to generate PDF', 'err');
+    } finally {
+      // ─── सफाई ───
+      tempDiv.remove();
     }
   };
 
@@ -181,7 +158,7 @@
     }
   }
 
-  // 4. DOM में बटन जोड़ें (MutationObserver)
+  // 4. DOM में बटन जोड़ें
   function setupObserver() {
     const container = document.getElementById('paymentHistory');
     if (!container) return false;
@@ -229,6 +206,7 @@
   const interval = setInterval(() => {
     hijackHistory();
     if (setupObserver()) {
+      // तुरंत बटन लगाने की कोशिश करें
       const container = document.getElementById('paymentHistory');
       if (container && window.__paymentHistoryCache) {
         const children = Array.from(container.children);
