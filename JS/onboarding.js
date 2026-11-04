@@ -308,6 +308,9 @@
           background: linear-gradient(90deg, #8B5CF6, #EC4899);
           width: 40px;
         }
+        
+        /* ⬇️ बटन के लिए नया CSS ⬇️ */
+        #onboarding-wizard .wiz-actions { display: flex; gap: 10px; }
         #onboarding-wizard .wiz-btn-primary {
           padding: 14px 28px;
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
@@ -329,6 +332,24 @@
           opacity: 0.5;
           cursor: not-allowed;
         }
+        #onboarding-wizard .wiz-btn-secondary {
+          padding: 14px 20px;
+          background: transparent;
+          color: #A99BC7;
+          border: 1.5px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.2s;
+        }
+        #onboarding-wizard .wiz-btn-secondary:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #fff;
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
         #onboarding-wizard .wiz-success-icon {
           width: 80px;
           height: 80px;
@@ -344,11 +365,13 @@
         @media (max-width: 540px) {
           #onboarding-wizard .wiz-body { padding: 22px; }
           #onboarding-wizard .wiz-hero { padding: 32px 22px 20px; }
-          #onboarding-wizard .wiz-footer { padding: 16px 22px 22px; }
+          #onboarding-wizard .wiz-footer { padding: 16px 22px 22px; flex-wrap: wrap; gap: 16px; }
           #onboarding-wizard .wiz-title { font-size: 22px; }
           #onboarding-wizard .wiz-optionals { grid-template-columns: repeat(2, 1fr); }
           #onboarding-wizard .wiz-hours { grid-template-columns: repeat(3, 1fr); }
           #onboarding-wizard .wiz-stages { grid-template-columns: 1fr; }
+          #onboarding-wizard .wiz-actions { width: 100%; justify-content: space-between; }
+          #onboarding-wizard .wiz-btn-primary, #onboarding-wizard .wiz-btn-secondary { flex: 1; justify-content: center; }
         }
       </style>
       <div class="wizard-card" id="wizCard"></div>
@@ -423,8 +446,6 @@
       'Literature - English',
     ];
 
-    log('Optional subjects available:', OPTIONAL_SUBJECTS.length);
-
     card.innerHTML = `
       <div class="wiz-hero">
         <div class="wiz-badge">Step 1 of 3</div>
@@ -434,9 +455,7 @@
       <div class="wiz-body">
         <div class="wiz-field">
           <label class="wiz-label">Optional Subject</label>
-          <!-- ⬇️ NAYA SEARCH BAR YAHAN ADD KIYA HAI ⬇️ -->
           <input type="text" class="wiz-input" id="wizOptionalSearch" placeholder="🔍 Search subject... (e.g. Sociology)" style="margin-bottom: 12px;" autocomplete="off">
-          
           <div class="wiz-optionals" id="wizOptionalGrid"></div>
         </div>
         <div class="wiz-field" style="margin-top: 20px;">
@@ -450,7 +469,9 @@
           <div class="wiz-dot"></div>
           <div class="wiz-dot"></div>
         </div>
-        <button class="wiz-btn-primary" id="wizNext1" disabled>Next →</button>
+        <div class="wiz-actions">
+          <button class="wiz-btn-primary" id="wizNext1" disabled>Next →</button>
+        </div>
       </div>
     `;
 
@@ -459,7 +480,6 @@
     const searchInput = document.getElementById('wizOptionalSearch');
     const grid = document.getElementById('wizOptionalGrid');
 
-    // ⬇️ NAYA LOGIC: ग्रिड को फ़िल्टर करके रेंडर करने के लिए ⬇️
     function renderGrid(filterText = '') {
       const filtered = OPTIONAL_SUBJECTS.filter((s) => s.toLowerCase().includes(filterText.toLowerCase()));
 
@@ -477,32 +497,29 @@
       `,
         )
         .join('');
-
-      // Re-attach click events
-      document.querySelectorAll('.wiz-optional-btn').forEach((btn) => {
-        btn.onclick = () => {
-          document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
-          btn.classList.add('active');
-          formData.optional = btn.dataset.value;
-          check();
-        };
-      });
     }
 
     function check() {
       next.disabled = !formData.optional || !year.value.trim();
     }
 
-    // Initial render
-    renderGrid();
+    // ⬇️ नया फिक्स: Event Delegation (डबल क्लिक की समस्या खत्म करने के लिए) ⬇️
+    grid.onclick = (e) => {
+      const btn = e.target.closest('.wiz-optional-btn');
+      if (!btn) return;
 
-    // Search input handler
-    searchInput.oninput = (e) => {
-      renderGrid(e.target.value);
+      document.querySelectorAll('.wiz-optional-btn').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      formData.optional = btn.dataset.value;
+      check();
     };
 
+    renderGrid();
+    searchInput.oninput = (e) => renderGrid(e.target.value);
+    year.oninput = check;
+
     if (formData.year) year.value = formData.year;
-    setTimeout(() => searchInput.focus(), 300); // Focus on search bar now
+    setTimeout(() => searchInput.focus(), 300);
     check();
 
     next.onclick = () => {
@@ -553,7 +570,11 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot"></div>
         </div>
-        <button class="wiz-btn-primary" id="wizNext2">Next →</button>
+        <!-- ⬇️ Back बटन यहाँ जोड़ दिया है ⬇️ -->
+        <div class="wiz-actions">
+          <button class="wiz-btn-secondary" id="wizBack2">← Back</button>
+          <button class="wiz-btn-primary" id="wizNext2">Next →</button>
+        </div>
       </div>
     `;
 
@@ -577,6 +598,13 @@
         formData.stage = btn.dataset.stage;
       };
     });
+
+    // ⬇️ Back बटन का लॉजिक ⬇️
+    document.getElementById('wizBack2').onclick = () => {
+      formData.mobile = mobileInput.value.trim();
+      currentStep = 1;
+      renderStep();
+    };
 
     document.getElementById('wizNext2').onclick = () => {
       formData.mobile = mobileInput.value.trim();
@@ -631,15 +659,25 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot active"></div>
         </div>
-        <button class="wiz-btn-primary" id="wizFinish">Start My First Session 🚀</button>
+        <!-- ⬇️ Back बटन यहाँ जोड़ दिया है ⬇️ -->
+        <div class="wiz-actions">
+          <button class="wiz-btn-secondary" id="wizBack3">← Back</button>
+          <button class="wiz-btn-primary" id="wizFinish">Start Session 🚀</button>
+        </div>
       </div>
     `;
+
+    // ⬇️ Back बटन का लॉजिक ⬇️
+    document.getElementById('wizBack3').onclick = () => {
+      currentStep = 2;
+      renderStep();
+    };
 
     document.getElementById('wizFinish').onclick = finishOnboarding;
   }
 
   /* ═══════════════════════════════════════════════════════
-     FINISH ONBOARDING
+     FINISH ONBOARDING (बाकी कोड पहले जैसा ही है)
      ═══════════════════════════════════════════════════════ */
   async function finishOnboarding() {
     const finishBtn = document.getElementById('wizFinish');
