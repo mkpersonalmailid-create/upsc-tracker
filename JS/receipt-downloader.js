@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════
-   RECEIPT DOWNLOADER — Generates PDF for Payment History
+   RECEIPT DOWNLOADER — Standalone File
    File: JS/receipt-downloader.js
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[receipt-downloader] loaded');
+  console.log('[receipt-downloader] Script Loaded');
 
-  // 1. लाइब्रेरी लोड करें
+  // 1. html2pdf लाइब्रेरी लोड करें
   if (typeof html2pdf === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -14,14 +14,32 @@
     document.head.appendChild(script);
   }
 
-  // 2. छिपा हुआ (Hidden) Receipt Template बनाएं
-  function injectTemplate() {
-    if (document.getElementById('receiptTemplate')) return;
+  // 2. PDF जनरेट करने का फंक्शन
+  window.__generatePDFReceipt = function (payment) {
+    if (!payment) return;
+    if (typeof html2pdf === 'undefined') {
+      if (typeof toast === 'function') toast('Please wait, loading PDF engine...', 'info');
+      return setTimeout(() => window.__generatePDFReceipt(payment), 1000);
+    }
+
+    if (typeof toast === 'function') toast('Generating PDF...', 'info');
 
     const template = document.createElement('div');
-    template.id = 'receiptTemplate';
     template.style.cssText =
-      'display: none; width: 800px; padding: 40px; background: #ffffff; color: #333333; font-family: "Inter", sans-serif; box-sizing: border-box; position: absolute; left: -9999px;';
+      'display: block; width: 800px; padding: 40px; background: #ffffff; color: #333333; font-family: "Inter", sans-serif; box-sizing: border-box; position: absolute; left: -9999px; z-index: -1;';
+
+    const pDate = payment.created_at ? new Date(payment.created_at) : new Date();
+    const dateStr = pDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    const name = window.state && window.state.profile && window.state.profile.name ? window.state.profile.name : 'User';
+    const email = window.state && window.state.user ? window.state.user.email : '';
+    const payId = payment.razorpay_payment_id || '—';
+
+    let planName = 'Premium Plan';
+    if (payment.plan === 'monthly_once') planName = 'Monthly Premium';
+    if (payment.plan === 'yearly') planName = 'Yearly Premium';
+    if (payment.plan === 'monthly_auto') planName = 'Monthly Auto (UPI)';
+
+    const amt = '₹' + ((payment.amount || 0) / 100).toFixed(2);
 
     template.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #A855F7; padding-bottom: 20px; margin-bottom: 30px;">
@@ -34,19 +52,19 @@
         </div>
         <div style="text-align: right;">
           <h2 style="margin: 0; font-size: 20px; color: #A855F7;">PAYMENT RECEIPT</h2>
-          <p style="margin: 5px 0 0; font-size: 13px; color: #666;">Date: <span id="rcptDate"></span></p>
+          <p style="margin: 5px 0 0; font-size: 13px; color: #666;">Date: ${dateStr}</p>
         </div>
       </div>
 
       <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
         <div>
           <h3 style="margin: 0 0 8px; font-size: 14px; color: #888; text-transform: uppercase;">Billed To:</h3>
-          <p style="margin: 0; font-size: 16px; font-weight: 700; color: #111;" id="rcptName"></p>
-          <p style="margin: 4px 0 0; font-size: 14px; color: #555;" id="rcptEmail"></p>
+          <p style="margin: 0; font-size: 16px; font-weight: 700; color: #111;">${name}</p>
+          <p style="margin: 4px 0 0; font-size: 14px; color: #555;">${email}</p>
         </div>
         <div style="text-align: right;">
           <h3 style="margin: 0 0 8px; font-size: 14px; color: #888; text-transform: uppercase;">Payment Details:</h3>
-          <p style="margin: 0; font-size: 14px; color: #555;"><strong>Payment ID:</strong> <span id="rcptPayId"></span></p>
+          <p style="margin: 0; font-size: 14px; color: #555;"><strong>Payment ID:</strong> ${payId}</p>
           <p style="margin: 4px 0 0; font-size: 14px; color: #555;"><strong>Status:</strong> <span style="color: #10B981; font-weight: bold;">PAID</span></p>
         </div>
       </div>
@@ -61,10 +79,10 @@
         <tbody>
           <tr>
             <td style="padding: 16px 12px; border-bottom: 1px solid #E5E7EB;">
-              <p style="margin: 0; font-size: 15px; font-weight: 600;" id="rcptPlan"></p>
+              <p style="margin: 0; font-size: 15px; font-weight: 600;">${planName}</p>
               <p style="margin: 4px 0 0; font-size: 13px; color: #666;">Premium Subscription Plan</p>
             </td>
-            <td style="padding: 16px 12px; text-align: right; font-size: 15px; font-weight: 600; border-bottom: 1px solid #E5E7EB;" id="rcptAmount"></td>
+            <td style="padding: 16px 12px; text-align: right; font-size: 15px; font-weight: 600; border-bottom: 1px solid #E5E7EB;">${amt}</td>
           </tr>
         </tbody>
       </table>
@@ -76,50 +94,15 @@
         </div>
         <div style="text-align: right;">
           <p style="margin: 0; font-size: 14px; color: #666;">Total Paid</p>
-          <h2 style="margin: 5px 0 0; font-size: 28px; color: #111; font-weight: 900;" id="rcptTotal"></h2>
+          <h2 style="margin: 5px 0 0; font-size: 28px; color: #111; font-weight: 900;">${amt}</h2>
         </div>
       </div>
     `;
     document.body.appendChild(template);
-  }
-
-  // 3. PDF जनरेट करने का फंक्शन
-  window.downloadReceiptPDF = function (payment) {
-    if (typeof html2pdf === 'undefined') {
-      if (typeof toast === 'function') toast('Please wait, generating PDF...', 'info');
-      setTimeout(() => window.downloadReceiptPDF(payment), 1000);
-      return;
-    }
-
-    const pDate = payment.created_at ? new Date(payment.created_at) : new Date();
-    document.getElementById('rcptDate').innerText = pDate.toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-    document.getElementById('rcptName').innerText = window.state?.profile?.name || 'User';
-    document.getElementById('rcptEmail').innerText = window.state?.user?.email || '';
-    document.getElementById('rcptPayId').innerText = payment.razorpay_payment_id || '—';
-
-    let planName = 'Premium Plan';
-    if (payment.plan === 'monthly_once') planName = 'Monthly Premium';
-    if (payment.plan === 'yearly') planName = 'Yearly Premium';
-    if (payment.plan === 'monthly_auto') planName = 'Monthly Auto (UPI)';
-    document.getElementById('rcptPlan').innerText = planName;
-
-    const amt = '₹' + ((payment.amount || 0) / 100).toFixed(2);
-    document.getElementById('rcptAmount').innerText = amt;
-    document.getElementById('rcptTotal').innerText = amt;
-
-    const element = document.getElementById('receiptTemplate');
-    // टेम्प्लेट को दिखाओ ताकि PDF बन सके
-    element.style.display = 'block';
-    element.style.left = '0';
-    element.style.zIndex = '-9999';
 
     const opt = {
       margin: 0,
-      filename: `UPSC_Receipt_${payment.razorpay_payment_id || Date.now()}.pdf`,
+      filename: `UPSC_Receipt_${payId || Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'px', format: [800, 1000], orientation: 'portrait' },
@@ -127,47 +110,55 @@
 
     html2pdf()
       .set(opt)
-      .from(element)
+      .from(template)
       .save()
       .then(() => {
-        element.style.display = 'none';
-        element.style.left = '-9999px';
+        template.remove();
         if (typeof toast === 'function') toast('Receipt downloaded!', 'ok');
       })
       .catch((e) => {
-        element.style.display = 'none';
-        element.style.left = '-9999px';
+        template.remove();
         console.error('PDF Error:', e);
       });
   };
 
-  // 4. DOM में बटन जोड़ने का सबसे पक्का तरीका (MutationObserver)
-  function attachButtons() {
+  // 3. पेमेंट हिस्ट्री का डेटा कैश (Cache) करें
+  let originalLoadPaymentHistory = null;
+  function hijackHistory() {
+    if (typeof window.loadPaymentHistory === 'function' && !originalLoadPaymentHistory) {
+      originalLoadPaymentHistory = window.loadPaymentHistory;
+      window.loadPaymentHistory = async function () {
+        const history = await originalLoadPaymentHistory.apply(this, arguments);
+        window.__paymentHistoryCache = history;
+        return history;
+      };
+      console.log('[receipt-downloader] History hijacked successfully');
+    }
+  }
+
+  // 4. DOM में बटन जोड़ें (MutationObserver के ज़रिए)
+  function setupObserver() {
     const container = document.getElementById('paymentHistory');
-    if (!container) return;
+    if (!container) return false;
+    if (container.dataset.receiptObserver) return true;
+    container.dataset.receiptObserver = 'true';
 
-    // पेमेंट हिस्ट्री का डेटा मंगाओ (ताकि बटन में सही ऑब्जेक्ट जाए)
-    if (typeof window.loadPaymentHistory !== 'function') return;
+    const addButtons = () => {
+      if (!window.__paymentHistoryCache) return;
 
-    window.loadPaymentHistory().then((history) => {
-      if (!history || history.length === 0) return;
+      // कंटेनर के सारे चिल्ड्रन (Rows) ढूंढें
+      const children = Array.from(container.children);
 
-      // पेमेंट हिस्ट्री के सारे रो (Row) ढूंढो
-      const rows = container.querySelectorAll('div[style*="display:flex"]');
+      children.forEach((row, index) => {
+        if (row.querySelector('.pdf-receipt-btn')) return; // पहले से है तो छोड़ दें
+        if (!window.__paymentHistoryCache[index]) return; // डेटा नहीं है तो छोड़ दें
 
-      rows.forEach((row, index) => {
-        // अगर इस रो में पहले से बटन है तो स्किप करो
-        if (row.querySelector('.pdf-receipt-btn')) return;
-        if (!history[index]) return;
-
-        // नया बटन बनाओ
         const btn = document.createElement('button');
-        btn.className = 'pdf-receipt-btn';
+        btn.className = 'btn btn-secondary btn-sm pdf-receipt-btn';
         btn.innerHTML = '📥 PDF';
         btn.style.cssText =
-          'padding: 6px 12px; margin-left: 10px; font-size: 0.75rem; background: rgba(168,85,247,0.15); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 4px;';
+          'padding: 6px 10px; margin-left: auto; font-size: 0.75rem; background: rgba(168,85,247,0.15); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; font-weight: bold; transition: 0.2s;';
 
-        // Hover effect
         btn.onmouseover = () => {
           btn.style.background = 'var(--purple)';
           btn.style.color = 'white';
@@ -177,44 +168,61 @@
           btn.style.color = '#c4b5fd';
         };
 
-        btn.onclick = function (e) {
+        btn.onclick = (e) => {
           e.preventDefault();
-          window.downloadReceiptPDF(history[index]);
+          window.__generatePDFReceipt(window.__paymentHistoryCache[index]);
         };
 
+        // बटन को रो (Row) के आखिर में जोड़ें
         row.appendChild(btn);
       });
+    };
+
+    // जब भी कंटेनर का HTML बदले (यानी नई लिस्ट आए), तो बटन जोड़ो
+    const observer = new MutationObserver(() => {
+      addButtons();
     });
+
+    observer.observe(container, { childList: true });
+    console.log('[receipt-downloader] Observer attached');
+    return true;
   }
 
-  // 5. Installer (MutationObserver लगाओ)
-  function install() {
-    injectTemplate();
+  // 5. Main Loop (हर 500ms में चेक करेगा)
+  let attempts = 0;
+  const interval = setInterval(() => {
+    hijackHistory();
 
-    // जब भी 'paymentHistory' डिब्बा बने या उसमें कुछ बदले, तब बटन लगाओ
-    let attempts = 0;
-    const interval = setInterval(() => {
+    if (setupObserver()) {
+      // अगर ऑब्जर्वर लग गया है, तो तुरंत भी बटन जोड़ने की कोशिश करो (अगर डेटा पहले से है)
       const container = document.getElementById('paymentHistory');
-      if (container) {
-        clearInterval(interval);
-
-        // जैसे ही डिब्बा खाली से भरेगा, observer पकड़ लेगा
-        const observer = new MutationObserver(() => {
-          attachButtons();
+      if (container && window.__paymentHistoryCache) {
+        const children = Array.from(container.children);
+        children.forEach((row, index) => {
+          if (row.querySelector('.pdf-receipt-btn')) return;
+          if (!window.__paymentHistoryCache[index]) return;
+          const btn = document.createElement('button');
+          btn.className = 'btn btn-secondary btn-sm pdf-receipt-btn';
+          btn.innerHTML = '📥 PDF';
+          btn.style.cssText =
+            'padding: 6px 10px; margin-left: auto; font-size: 0.75rem; background: rgba(168,85,247,0.15); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; font-weight: bold; transition: 0.2s;';
+          btn.onmouseover = () => {
+            btn.style.background = 'var(--purple)';
+            btn.style.color = 'white';
+          };
+          btn.onmouseout = () => {
+            btn.style.background = 'rgba(168,85,247,0.15)';
+            btn.style.color = '#c4b5fd';
+          };
+          btn.onclick = (e) => {
+            e.preventDefault();
+            window.__generatePDFReceipt(window.__paymentHistoryCache[index]);
+          };
+          row.appendChild(btn);
         });
-        observer.observe(container, { childList: true, subtree: true });
-
-        // एक बार शुरुआत में भी चला दो
-        setTimeout(attachButtons, 500);
       }
+    }
 
-      if (++attempts > 20) clearInterval(interval);
-    }, 500);
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', install);
-  } else {
-    install();
-  }
+    if (++attempts > 20) clearInterval(interval);
+  }, 500);
 })();
