@@ -5,12 +5,9 @@
 (function () {
   'use strict';
 
-  const ONBOARDED_KEY = 'upsc_onboarded_v1';
-  const DEBUG = true;
+  console.log('%c🎉 [Onboarding] V3 Loaded - With Back Buttons', 'color:#10B981;font-weight:700');
 
-  function log(...args) {
-    if (DEBUG) console.log('%c🎉 [Onboarding]', 'color:#10B981;font-weight:700', ...args);
-  }
+  const ONBOARDED_KEY = 'upsc_onboarded_v1';
 
   const STAGES = [
     { id: 'beginner', label: 'Just started', emoji: '🌱' },
@@ -28,9 +25,6 @@
     stage: 'beginner',
   };
 
-  /* ═══════════════════════════════════════════════════════
-     CHECK IF USER NEEDS ONBOARDING
-     ═══════════════════════════════════════════════════════ */
   async function needsOnboarding() {
     try {
       if (localStorage.getItem(ONBOARDED_KEY) === 'true') return false;
@@ -51,26 +45,18 @@
         .eq('id', user.id)
         .maybeSingle();
 
-      // Admin skip
       if (profile?.is_admin === true) {
-        try {
-          localStorage.setItem(ONBOARDED_KEY, 'true');
-        } catch (e) {}
+        localStorage.setItem(ONBOARDED_KEY, 'true');
         return false;
       }
 
-      // Already setup
       if (profile?.optional_subject && profile?.preparation_year) {
-        try {
-          localStorage.setItem(ONBOARDED_KEY, 'true');
-        } catch (e) {}
+        localStorage.setItem(ONBOARDED_KEY, 'true');
         return false;
       }
 
       if (profile?.onboarding_completed === true) {
-        try {
-          localStorage.setItem(ONBOARDED_KEY, 'true');
-        } catch (e) {}
+        localStorage.setItem(ONBOARDED_KEY, 'true');
         return false;
       }
 
@@ -80,9 +66,6 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     INJECT WIZARD
-     ═══════════════════════════════════════════════════════ */
   function injectWizard() {
     if (document.getElementById('onboarding-wizard')) return;
 
@@ -203,7 +186,6 @@
           background: rgba(168, 85, 247, 0.4); border-radius: 10px;
         }
         
-        /* ⬇️ डबल क्लिक फिक्स: hover हटा दिया और tap-highlight हटा दिया ⬇️ */
         #onboarding-wizard .wiz-optional-btn {
           padding: 11px 8px;
           background: #0f0818;
@@ -300,9 +282,10 @@
           width: 40px;
         }
         
-        /* बटन के लिए CSS */
-        #onboarding-wizard .wiz-actions { display: flex; gap: 10px; }
-        #onboarding-wizard .wiz-btn-primary {
+        /* ⬇️ नए और यूनिक क्लास नाम ताकि app.html का CSS इन्हें खराब न करे ⬇️ */
+        #onboarding-wizard .onb-actions { display: flex; gap: 10px; }
+        
+        #onboarding-wizard .onb-btn-next {
           padding: 14px 28px;
           background: linear-gradient(135deg, #8B5CF6, #EC4899);
           color: #fff;
@@ -315,11 +298,11 @@
           transition: transform 0.2s, box-shadow 0.2s;
           box-shadow: 0 8px 24px rgba(168, 85, 247, 0.4);
           -webkit-tap-highlight-color: transparent;
+          display: inline-block !important;
         }
-        #onboarding-wizard .wiz-btn-primary:active {
-          transform: scale(0.98);
-        }
-        #onboarding-wizard .wiz-btn-secondary {
+        #onboarding-wizard .onb-btn-next:active { transform: scale(0.98); }
+        
+        #onboarding-wizard .onb-btn-back {
           padding: 14px 20px;
           background: transparent;
           color: #A99BC7;
@@ -331,10 +314,9 @@
           font-family: inherit;
           transition: background 0.2s;
           -webkit-tap-highlight-color: transparent;
+          display: inline-block !important;
         }
-        #onboarding-wizard .wiz-btn-secondary:active {
-          background: rgba(255, 255, 255, 0.05);
-        }
+        #onboarding-wizard .onb-btn-back:active { background: rgba(255, 255, 255, 0.05); }
 
         #onboarding-wizard .wiz-success-icon {
           width: 80px;
@@ -356,8 +338,8 @@
           #onboarding-wizard .wiz-optionals { grid-template-columns: repeat(2, 1fr); }
           #onboarding-wizard .wiz-hours { grid-template-columns: repeat(3, 1fr); }
           #onboarding-wizard .wiz-stages { grid-template-columns: 1fr; }
-          #onboarding-wizard .wiz-actions { width: 100%; justify-content: space-between; }
-          #onboarding-wizard .wiz-btn-primary, #onboarding-wizard .wiz-btn-secondary { flex: 1; justify-content: center; }
+          #onboarding-wizard .onb-actions { width: 100%; justify-content: space-between; }
+          #onboarding-wizard .onb-btn-next, #onboarding-wizard .onb-btn-back { flex: 1; justify-content: center; }
         }
       </style>
       <div class="wizard-card" id="wizCard"></div>
@@ -367,9 +349,6 @@
     renderStep();
   }
 
-  /* ═══════════════════════════════════════════════════════
-     RENDER CURRENT STEP
-     ═══════════════════════════════════════════════════════ */
   function renderStep() {
     const card = document.getElementById('wizCard');
     if (!card) return;
@@ -379,7 +358,6 @@
     else if (currentStep === 3) renderStep3(card);
   }
 
-  /* ══════════ STEP 1: Optional + Year (WITH SEARCH) ══════════ */
   function renderStep1(card) {
     const OPTIONAL_SUBJECTS = window.OPTIONAL_SUBJECTS || [
       'Agriculture',
@@ -455,9 +433,8 @@
           <div class="wiz-dot"></div>
           <div class="wiz-dot"></div>
         </div>
-        <div class="wiz-actions">
-          <!-- Next button ab hamesha enable rahega -->
-          <button class="wiz-btn-primary" id="wizNext1">Next →</button>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn-next" id="wizNext1">Next →</button>
         </div>
       </div>
     `;
@@ -486,8 +463,8 @@
         .join('');
     }
 
-    // Event delegation to fix double click issue
     grid.onclick = (e) => {
+      e.preventDefault(); // Fix double click
       const btn = e.target.closest('.wiz-optional-btn');
       if (!btn) return;
 
@@ -501,8 +478,8 @@
 
     if (formData.year) year.value = formData.year;
 
-    // Validation on Next Click
-    next.onclick = () => {
+    next.onclick = (e) => {
+      e.preventDefault(); // Fix double click
       if (!formData.optional) {
         if (typeof toast === 'function') toast('Please select an optional subject.', 'err');
         return;
@@ -517,7 +494,6 @@
     };
   }
 
-  /* ══════════ STEP 2: Mobile + Hours + Stage ══════════ */
   function renderStep2(card) {
     const hourOptions = ['2', '4', '6', '8', '10+'];
 
@@ -535,7 +511,7 @@
         <div class="wiz-field" style="margin-top: 20px;">
           <label class="wiz-label">Daily Study Hours</label>
           <div class="wiz-hours" id="wizHours">
-            ${hourOptions.map((h) => `<button class="wiz-hour-btn" data-hours="${h}">${h}h</button>`).join('')}
+            ${hourOptions.map((h) => `<button type="button" class="wiz-hour-btn" data-hours="${h}">${h}h</button>`).join('')}
           </div>
         </div>
         <div class="wiz-field" style="margin-top: 20px;">
@@ -543,7 +519,7 @@
           <div class="wiz-stages" id="wizStages">
             ${STAGES.map(
               (s) => `
-              <button class="wiz-stage" data-stage="${s.id}">
+              <button type="button" class="wiz-stage" data-stage="${s.id}">
                 <span class="wiz-stage-emoji">${s.emoji}</span>
                 ${s.label}
               </button>
@@ -558,10 +534,9 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot"></div>
         </div>
-        <div class="wiz-actions">
-          <!-- Back Button Added -->
-          <button class="wiz-btn-secondary" id="wizBack2">← Back</button>
-          <button class="wiz-btn-primary" id="wizNext2">Next →</button>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn-back" id="wizBack2">← Back</button>
+          <button type="button" class="onb-btn-next" id="wizNext2">Next →</button>
         </div>
       </div>
     `;
@@ -571,7 +546,8 @@
 
     document.querySelectorAll('.wiz-hour-btn').forEach((btn) => {
       if (btn.dataset.hours === formData.hours) btn.classList.add('active');
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.preventDefault(); // Fix double click
         document.querySelectorAll('.wiz-hour-btn').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         formData.hours = btn.dataset.hours;
@@ -580,27 +556,29 @@
 
     document.querySelectorAll('.wiz-stage').forEach((btn) => {
       if (btn.dataset.stage === formData.stage) btn.classList.add('active');
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        e.preventDefault(); // Fix double click
         document.querySelectorAll('.wiz-stage').forEach((b) => b.classList.remove('active'));
         btn.classList.add('active');
         formData.stage = btn.dataset.stage;
       };
     });
 
-    document.getElementById('wizBack2').onclick = () => {
+    document.getElementById('wizBack2').onclick = (e) => {
+      e.preventDefault();
       formData.mobile = mobileInput.value.trim();
       currentStep = 1;
       renderStep();
     };
 
-    document.getElementById('wizNext2').onclick = () => {
+    document.getElementById('wizNext2').onclick = (e) => {
+      e.preventDefault();
       formData.mobile = mobileInput.value.trim();
       currentStep = 3;
       renderStep();
     };
   }
 
-  /* ══════════ STEP 3: Confirm + Emotional Message ══════════ */
   function renderStep3(card) {
     const stageLabel = STAGES.find((s) => s.id === formData.stage)?.label || 'Beginner';
 
@@ -646,25 +624,25 @@
           <div class="wiz-dot active"></div>
           <div class="wiz-dot active"></div>
         </div>
-        <div class="wiz-actions">
-          <!-- Back Button Added -->
-          <button class="wiz-btn-secondary" id="wizBack3">← Back</button>
-          <button class="wiz-btn-primary" id="wizFinish">Start Session 🚀</button>
+        <div class="onb-actions">
+          <button type="button" class="onb-btn-back" id="wizBack3">← Back</button>
+          <button type="button" class="onb-btn-next" id="wizFinish">Start Session 🚀</button>
         </div>
       </div>
     `;
 
-    document.getElementById('wizBack3').onclick = () => {
+    document.getElementById('wizBack3').onclick = (e) => {
+      e.preventDefault();
       currentStep = 2;
       renderStep();
     };
 
-    document.getElementById('wizFinish').onclick = finishOnboarding;
+    document.getElementById('wizFinish').onclick = (e) => {
+      e.preventDefault();
+      finishOnboarding();
+    };
   }
 
-  /* ═══════════════════════════════════════════════════════
-     FINISH ONBOARDING
-     ═══════════════════════════════════════════════════════ */
   async function finishOnboarding() {
     const finishBtn = document.getElementById('wizFinish');
     if (finishBtn) {
@@ -689,9 +667,7 @@
             })
             .eq('id', user.id);
 
-          if (error) {
-            log('Profile update error:', error.message);
-          }
+          if (error) console.warn('Profile update error:', error.message);
 
           try {
             await supa
@@ -702,9 +678,7 @@
                 onboarding_completed: true,
               })
               .eq('id', user.id);
-          } catch (e) {
-            log('Extra fields not saved (columns may not exist):', e.message);
-          }
+          } catch (e) {}
 
           try {
             const s = typeof getState === 'function' ? getState() : null;
@@ -721,29 +695,18 @@
         localStorage.setItem(ONBOARDED_KEY, 'true');
       } catch (e) {}
 
-      log('✅ Onboarding complete:', formData);
-
       closeWizard();
 
       setTimeout(() => {
-        if (typeof window.toast === 'function') {
+        if (typeof window.toast === 'function')
           window.toast('🎉 Welcome to UPSC Tracker! Start your first session.', 'ok');
-        }
       }, 500);
-
-      setTimeout(() => {
-        const timer = document.querySelector('.timer-card, #timerSection, [data-timer]');
-        if (timer) timer.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 1000);
     } catch (e) {
       console.error('[Onboarding] Save error:', e);
       closeWizard();
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     CLOSE WIZARD
-     ═══════════════════════════════════════════════════════ */
   function closeWizard() {
     const wizard = document.getElementById('onboarding-wizard');
     if (wizard) {
@@ -753,9 +716,6 @@
     }
   }
 
-  /* ═══════════════════════════════════════════════════════
-     INIT
-     ═══════════════════════════════════════════════════════ */
   async function init() {
     let attempts = 0;
     const check = setInterval(async () => {
@@ -770,17 +730,11 @@
           if (user) {
             clearInterval(check);
             const needs = await needsOnboarding();
-            if (needs) {
-              log('Showing onboarding wizard');
-              setTimeout(injectWizard, 1200);
-            } else {
-              log('User already onboarded, skipping');
-            }
+            if (needs) setTimeout(injectWizard, 1200);
             return;
           }
         } catch (e) {}
       }
-
       if (attempts > 60) clearInterval(check);
     }, 500);
   }
@@ -800,6 +754,4 @@
     },
     show: () => injectWizard(),
   };
-
-  log('Module loaded');
 })();
