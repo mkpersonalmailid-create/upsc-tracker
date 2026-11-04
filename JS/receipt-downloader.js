@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   RECEIPT DOWNLOADER — Final Working Version
+   RECEIPT DOWNLOADER — Final Standalone Version
    File: JS/receipt-downloader.js
    ═══════════════════════════════════════════════════════ */
 (function () {
@@ -14,11 +14,10 @@
     document.head.appendChild(script);
   }
 
-  // 2. PDF जनरेट करने का फंक्शन
+  // 2. PDF जनरेट करने का मुख्य फंक्शन
   window.__generatePDFReceipt = function (payment) {
     if (!payment) return;
 
-    // अगर लाइब्रेरी अभी लोड नहीं हुई है, तो इंतज़ार करें
     if (typeof html2pdf === 'undefined') {
       if (typeof toast === 'function') toast('Loading PDF engine...', 'info');
       return setTimeout(() => window.__generatePDFReceipt(payment), 1000);
@@ -29,8 +28,29 @@
     // ─── डेटा तैयार करें ───
     const pDate = payment.created_at ? new Date(payment.created_at) : new Date();
     const dateStr = pDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    const name = window.state && window.state.profile && window.state.profile.name ? window.state.profile.name : 'User';
-    const email = window.state && window.state.user ? window.state.user.email : '';
+
+    // ⬇️ स्मार्ट नाम और ईमेल लॉजिक ⬇️
+    let name = 'User';
+    let email = 'N/A';
+    try {
+      const s = typeof state !== 'undefined' ? state : window.state || null;
+      if (s) {
+        if (s.user && s.user.email) {
+          email = s.user.email;
+        }
+
+        let rawName = s.profile?.name || s.user?.user_metadata?.full_name;
+
+        if (rawName && rawName.trim() !== '') {
+          name = rawName; // अगर नाम डाला है
+        } else if (email !== 'N/A') {
+          name = email.split('@')[0]; // अगर नाम नहीं डाला, तो ईमेल से नाम बनाओ
+        }
+      }
+    } catch (e) {
+      console.warn('User details fetch error:', e);
+    }
+
     const payId = payment.razorpay_payment_id || '—';
 
     let planName = 'Premium Plan';
@@ -40,14 +60,12 @@
 
     const amt = '₹' + ((payment.amount || 0) / 100).toFixed(2);
 
-    // ─── एक छिपा हुआ (Hidden) कंटेनर बनाएं जो स्क्रीन पर रेंडर हो, लेकिन दिखे नहीं ───
+    // ─── एक छिपा हुआ (Hidden Overlay) कंटेनर बनाएं ───
     const wrapper = document.createElement('div');
-    // इसे स्क्रीन के ऊपर रखेंगे लेकिन पारदर्शी (transparent) रखेंगे ताकि लाइब्रेरी इसे पढ़ सके
     wrapper.style.cssText =
       'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; pointer-events: none;';
 
     const receiptDiv = document.createElement('div');
-    // ⚠️ सफेद बैकग्राउंड ताकि PDF में साफ दिखे
     receiptDiv.style.cssText =
       'width: 800px; background: #ffffff; color: #333333; padding: 40px; box-sizing: border-box; font-family: "Inter", sans-serif;';
 
@@ -69,7 +87,7 @@
       <div style="display: flex; justify-content: space-between; margin-bottom: 40px;">
         <div>
           <h3 style="margin: 0 0 8px; font-size: 14px; color: #888; text-transform: uppercase;">Billed To:</h3>
-          <p style="margin: 0; font-size: 16px; font-weight: 700; color: #111;">${name}</p>
+          <p style="margin: 0; font-size: 16px; font-weight: 700; color: #111; text-transform: capitalize;">${name}</p>
           <p style="margin: 4px 0 0; font-size: 14px; color: #555;">${email}</p>
         </div>
         <div style="text-align: right;">
@@ -100,8 +118,8 @@
       <div style="display: flex; justify-content: space-between; align-items: flex-end;">
         <div style="font-size: 12px; color: #888; max-width: 300px;">
           <p style="margin: 0;"><strong>Note:</strong> This is a computer-generated receipt.</p>
-          <p style="margin: 10px 0 0;">For any queries, contact upscstudytracker@gmail.com
-</p>
+          <!-- ⬇️ यहाँ सपोर्ट ईमेल बदल दिया गया है ⬇️ -->
+          <p style="margin: 10px 0 0;">For any queries, contact us at <strong>upscstudytracker@gmail.com</strong></p>
         </div>
         <div style="text-align: right;">
           <p style="margin: 0; font-size: 14px; color: #666;">Total Paid</p>
@@ -113,7 +131,7 @@
     wrapper.appendChild(receiptDiv);
     document.body.appendChild(wrapper);
 
-    // इमेज (Logo) लोड होने का इंतज़ार करें
+    // ─── इमेज लोड होने का इंतज़ार करें और PDF बनाएं ───
     const img = receiptDiv.querySelector('img');
     const doPDF = () => {
       const opt = {
@@ -123,12 +141,11 @@
         html2canvas: {
           scale: 2,
           useCORS: true,
-          backgroundColor: '#ffffff', // सफेद बैकग्राउंड फोर्स करें
+          backgroundColor: '#ffffff',
         },
         jsPDF: { unit: 'px', format: [800, 1000], orientation: 'portrait' },
       };
 
-      // html2pdf का सही तरीका इस्तेमाल करें
       html2pdf()
         .set(opt)
         .from(receiptDiv)
@@ -208,7 +225,7 @@
     return true;
   }
 
-  // 5. Main Loop
+  // 5. Main Loop (लगातार चेक करेगा कि ऐप लोड हुआ या नहीं)
   let attempts = 0;
   const interval = setInterval(() => {
     hijackHistory();
