@@ -1,12 +1,12 @@
 /* ═══════════════════════════════════════════════════════
-   RECEIPT DOWNLOADER — The Ultimate Bulletproof Fix
+   RECEIPT DOWNLOADER — Final Working Version
    File: JS/receipt-downloader.js
    ═══════════════════════════════════════════════════════ */
 (function () {
   'use strict';
-  console.log('[receipt-downloader] Ultimate Script Loaded');
+  console.log('[receipt-downloader] Final Script Loaded');
 
-  // 1. लाइब्रेरी लोड करें
+  // 1. लाइब्रेरी लोड करें (अगर पहले से नहीं है)
   if (typeof html2pdf === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -14,14 +14,14 @@
     document.head.appendChild(script);
   }
 
-  // 2. पीडीएफ जनरेट करने का असली फंक्शन (सीधे Canvas और jsPDF का इस्तेमाल)
-  window.__generatePDFReceipt = async function (payment) {
+  // 2. PDF जनरेट करने का फंक्शन
+  window.__generatePDFReceipt = function (payment) {
     if (!payment) return;
 
-    // लाइब्रेरी लोड होने का इंतज़ार करें
-    if (typeof window.html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+    // अगर लाइब्रेरी अभी लोड नहीं हुई है, तो इंतज़ार करें
+    if (typeof html2pdf === 'undefined') {
       if (typeof toast === 'function') toast('Loading PDF engine...', 'info');
-      return setTimeout(() => window.__generatePDFReceipt(payment), 1500);
+      return setTimeout(() => window.__generatePDFReceipt(payment), 1000);
     }
 
     if (typeof toast === 'function') toast('Generating PDF...', 'info');
@@ -40,13 +40,18 @@
 
     const amt = '₹' + ((payment.amount || 0) / 100).toFixed(2);
 
-    // ─── HTML टेम्पलेट बनाएं ───
-    const tempDiv = document.createElement('div');
-    // ⚠️ यहाँ z-index: 999999 और opacity: 0.01 रखा है ताकि ब्राउज़र इसे रेंडर ज़रूर करे, लेकिन यूज़र को दिखे नहीं
-    tempDiv.style.cssText =
-      'position: fixed; top: 0; left: 0; width: 800px; background: #ffffff; color: #333333; z-index: 999999; opacity: 0.01; pointer-events: none; font-family: "Inter", sans-serif; padding: 40px; box-sizing: border-box;';
+    // ─── एक छिपा हुआ (Hidden) कंटेनर बनाएं जो स्क्रीन पर रेंडर हो, लेकिन दिखे नहीं ───
+    const wrapper = document.createElement('div');
+    // इसे स्क्रीन के ऊपर रखेंगे लेकिन पारदर्शी (transparent) रखेंगे ताकि लाइब्रेरी इसे पढ़ सके
+    wrapper.style.cssText =
+      'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; pointer-events: none;';
 
-    tempDiv.innerHTML = `
+    const receiptDiv = document.createElement('div');
+    // ⚠️ सफेद बैकग्राउंड ताकि PDF में साफ दिखे
+    receiptDiv.style.cssText =
+      'width: 800px; background: #ffffff; color: #333333; padding: 40px; box-sizing: border-box; font-family: "Inter", sans-serif;';
+
+    receiptDiv.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #A855F7; padding-bottom: 20px; margin-bottom: 30px;">
         <div style="display: flex; align-items: center; gap: 12px;">
           <img src="https://i.ibb.co/vxGqtDqg/upsc-study-tracker-logo-1.png" alt="Logo" style="width: 50px; height: 50px; border-radius: 10px;" crossorigin="anonymous">
@@ -104,44 +109,45 @@
       </div>
     `;
 
-    document.body.appendChild(tempDiv);
+    wrapper.appendChild(receiptDiv);
+    document.body.appendChild(wrapper);
 
-    try {
-      // ─── इमेज लोड होने का इंतज़ार करें ───
-      const img = tempDiv.querySelector('img');
-      if (img && !img.complete) {
-        await new Promise((resolve) => {
-          img.onload = resolve;
-          img.onerror = resolve; // अगर इमेज फेल हो जाए तो भी आगे बढ़ो
+    // इमेज (Logo) लोड होने का इंतज़ार करें
+    const img = receiptDiv.querySelector('img');
+    const doPDF = () => {
+      const opt = {
+        margin: 0,
+        filename: `UPSC_Receipt_${payId}.pdf`,
+        image: { type: 'jpeg', quality: 1.0 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff', // सफेद बैकग्राउंड फोर्स करें
+        },
+        jsPDF: { unit: 'px', format: [800, 1000], orientation: 'portrait' },
+      };
+
+      // html2pdf का सही तरीका इस्तेमाल करें
+      html2pdf()
+        .set(opt)
+        .from(receiptDiv)
+        .save()
+        .then(() => {
+          wrapper.remove();
+          if (typeof toast === 'function') toast('Receipt downloaded successfully!', 'ok');
+        })
+        .catch((err) => {
+          console.error('PDF Gen Error:', err);
+          wrapper.remove();
+          if (typeof toast === 'function') toast('Failed to generate PDF', 'err');
         });
-      }
+    };
 
-      // ─── Canvas में बदलें ───
-      const canvas = await window.html2canvas(tempDiv, {
-        scale: 2, // हाई क्वालिटी
-        useCORS: true, // इमेज के लिए
-        backgroundColor: '#ffffff',
-      });
-
-      // ─── PDF बनाएं ───
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [800, canvas.height], // कैनवास की ऊंचाई के हिसाब से पेज
-      });
-
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      pdf.addImage(imgData, 'JPEG', 0, 0, 800, canvas.height);
-      pdf.save(`UPSC_Receipt_${payId}.pdf`);
-
-      if (typeof toast === 'function') toast('Receipt downloaded!', 'ok');
-    } catch (error) {
-      console.error('PDF Error:', error);
-      if (typeof toast === 'function') toast('Failed to generate PDF', 'err');
-    } finally {
-      // ─── सफाई ───
-      tempDiv.remove();
+    if (img && !img.complete) {
+      img.onload = () => setTimeout(doPDF, 200);
+      img.onerror = () => setTimeout(doPDF, 200);
+    } else {
+      setTimeout(doPDF, 300);
     }
   };
 
@@ -158,7 +164,7 @@
     }
   }
 
-  // 4. DOM में बटन जोड़ें
+  // 4. DOM में बटन जोड़ें (MutationObserver)
   function setupObserver() {
     const container = document.getElementById('paymentHistory');
     if (!container) return false;
@@ -206,7 +212,6 @@
   const interval = setInterval(() => {
     hijackHistory();
     if (setupObserver()) {
-      // तुरंत बटन लगाने की कोशिश करें
       const container = document.getElementById('paymentHistory');
       if (container && window.__paymentHistoryCache) {
         const children = Array.from(container.children);
