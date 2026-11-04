@@ -21,7 +21,7 @@
     const template = document.createElement('div');
     template.id = 'receiptTemplate';
     template.style.cssText =
-      'display: none; width: 800px; padding: 40px; background: #ffffff; color: #333333; font-family: "Inter", sans-serif; box-sizing: border-box;';
+      'display: none; width: 800px; padding: 40px; background: #ffffff; color: #333333; font-family: "Inter", sans-serif; box-sizing: border-box; position: absolute; left: -9999px;';
 
     template.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #A855F7; padding-bottom: 20px; margin-bottom: 30px;">
@@ -87,7 +87,7 @@
   window.downloadReceiptPDF = function (payment) {
     if (typeof html2pdf === 'undefined') {
       if (typeof toast === 'function') toast('Please wait, generating PDF...', 'info');
-      setTimeout(() => window.downloadReceiptPDF(payment), 1500);
+      setTimeout(() => window.downloadReceiptPDF(payment), 1000);
       return;
     }
 
@@ -112,13 +112,16 @@
     document.getElementById('rcptTotal').innerText = amt;
 
     const element = document.getElementById('receiptTemplate');
+    // टेम्प्लेट को दिखाओ ताकि PDF बन सके
     element.style.display = 'block';
+    element.style.left = '0';
+    element.style.zIndex = '-9999';
 
     const opt = {
       margin: 0,
       filename: `UPSC_Receipt_${payment.razorpay_payment_id || Date.now()}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2 },
+      html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'px', format: [800, 1000], orientation: 'portrait' },
     };
 
@@ -128,83 +131,84 @@
       .save()
       .then(() => {
         element.style.display = 'none';
+        element.style.left = '-9999px';
         if (typeof toast === 'function') toast('Receipt downloaded!', 'ok');
       })
       .catch((e) => {
         element.style.display = 'none';
+        element.style.left = '-9999px';
         console.error('PDF Error:', e);
       });
   };
 
-  // 4. Payment History में बटन जोड़ने का सबसे पक्का तरीका
-  function patchPaymentHistory() {
-    if (typeof window.renderPaymentHistoryInto !== 'function' || window.__receiptPatched) return;
+  // 4. DOM में बटन जोड़ने का सबसे पक्का तरीका (MutationObserver)
+  function attachButtons() {
+    const container = document.getElementById('paymentHistory');
+    if (!container) return;
 
-    const originalRender = window.renderPaymentHistoryInto;
+    // पेमेंट हिस्ट्री का डेटा मंगाओ (ताकि बटन में सही ऑब्जेक्ट जाए)
+    if (typeof window.loadPaymentHistory !== 'function') return;
 
-    window.renderPaymentHistoryInto = async function (sel) {
-      // पहले पुराना फंक्शन चलाओ (जो लिस्ट बनाता है)
-      await originalRender(sel);
+    window.loadPaymentHistory().then((history) => {
+      if (!history || history.length === 0) return;
 
-      // फिर उसमें बटन जोड़ो
-      setTimeout(async () => {
-        const el = document.querySelector(sel);
-        if (!el) return;
+      // पेमेंट हिस्ट्री के सारे रो (Row) ढूंढो
+      const rows = container.querySelectorAll('div[style*="display:flex"]');
 
-        // डेटा फिर से मंगाओ ताकि बटन में क्लिक करने पर सही पेमेंट आईडी जाए
-        const history = await window.loadPaymentHistory();
-        if (!history || !history.length) return;
+      rows.forEach((row, index) => {
+        // अगर इस रो में पहले से बटन है तो स्किप करो
+        if (row.querySelector('.pdf-receipt-btn')) return;
+        if (!history[index]) return;
 
-        // डोम में जो रो (Row) बने हैं उन्हें ढूंढो
-        const rows = el.querySelectorAll('div[style*="display:flex;align-items:center;gap:14px"]');
+        // नया बटन बनाओ
+        const btn = document.createElement('button');
+        btn.className = 'pdf-receipt-btn';
+        btn.innerHTML = '📥 PDF';
+        btn.style.cssText =
+          'padding: 6px 12px; margin-left: 10px; font-size: 0.75rem; background: rgba(168,85,247,0.15); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 4px;';
 
-        rows.forEach((row, index) => {
-          if (history[index]) {
-            // अगर पहले से बटन है तो दोबारा मत लगाओ
-            if (row.querySelector('.pdf-btn')) return;
+        // Hover effect
+        btn.onmouseover = () => {
+          btn.style.background = 'var(--purple)';
+          btn.style.color = 'white';
+        };
+        btn.onmouseout = () => {
+          btn.style.background = 'rgba(168,85,247,0.15)';
+          btn.style.color = '#c4b5fd';
+        };
 
-            const btn = document.createElement('button');
-            btn.className = 'btn btn-secondary btn-sm pdf-btn';
-            btn.innerHTML = '📥 PDF';
-            btn.title = 'Download Receipt';
-            btn.style.cssText =
-              'padding: 6px 12px; margin-left: 10px; font-size: 0.75rem; background: rgba(168,85,247,0.15); color: #c4b5fd; border: 1px solid rgba(168,85,247,0.3); border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold;';
+        btn.onclick = function (e) {
+          e.preventDefault();
+          window.downloadReceiptPDF(history[index]);
+        };
 
-            // Hover effect
-            btn.onmouseover = () => {
-              btn.style.background = 'var(--purple)';
-              btn.style.color = 'white';
-            };
-            btn.onmouseout = () => {
-              btn.style.background = 'rgba(168,85,247,0.15)';
-              btn.style.color = '#c4b5fd';
-            };
-
-            btn.onclick = function (e) {
-              e.preventDefault();
-              window.downloadReceiptPDF(history[index]);
-            };
-
-            row.appendChild(btn);
-          }
-        });
-      }, 200); // 200ms का इंतज़ार ताकि DOM पूरी तरह से लोड हो जाए
-    };
-
-    window.__receiptPatched = true;
-    console.log('[receipt-downloader] Payment history patched successfully');
+        row.appendChild(btn);
+      });
+    });
   }
 
-  // 5. Installer
+  // 5. Installer (MutationObserver लगाओ)
   function install() {
     injectTemplate();
+
+    // जब भी 'paymentHistory' डिब्बा बने या उसमें कुछ बदले, तब बटन लगाओ
     let attempts = 0;
     const interval = setInterval(() => {
-      if (typeof window.state !== 'undefined' && window.state.user) {
-        patchPaymentHistory();
+      const container = document.getElementById('paymentHistory');
+      if (container) {
         clearInterval(interval);
+
+        // जैसे ही डिब्बा खाली से भरेगा, observer पकड़ लेगा
+        const observer = new MutationObserver(() => {
+          attachButtons();
+        });
+        observer.observe(container, { childList: true, subtree: true });
+
+        // एक बार शुरुआत में भी चला दो
+        setTimeout(attachButtons, 500);
       }
-      if (++attempts > 10) clearInterval(interval);
+
+      if (++attempts > 20) clearInterval(interval);
     }, 500);
   }
 
