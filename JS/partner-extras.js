@@ -435,6 +435,14 @@ function getState() {
         `;
       }
 
+      // Naya Logic: Preview names nikalne ke liye
+      const previewNames = discoverable
+        .slice(0, 2)
+        .map((u) => u.name || 'User')
+        .join(', ');
+      const remainingCount = discoverable.length - 2;
+      const previewText = remainingCount > 0 ? `${previewNames} and ${remainingCount} others` : previewNames;
+
       // ═══ USERS FOUND ═══
       const usersHtml = discoverable
         .slice(0, 30)
