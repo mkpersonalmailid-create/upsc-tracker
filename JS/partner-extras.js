@@ -100,7 +100,7 @@ function getState() {
         return;
       }
     } catch (e) {}
-    tmsg('Study Partner is a Premium feature.', 'info');
+    tmsg('Study with Partner is a Premium feature.', 'info');
   }
 
   // ═══════════════ 1. INJECT SIDEBAR TAB ═══════════════
