@@ -459,18 +459,23 @@ function getState() {
 
       return `
         <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(168,85,247,.06),rgba(236,72,153,.02));border:1px solid rgba(168,85,247,.25)">
-          <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px">
+          <!-- Header jispe click karke bhi toggle ho sakta hai -->
+          <div class="card-header" id="discoverHeaderToggle" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;cursor:pointer;">
             <div style="flex:1;min-width:200px">
               <span class="card-title-lg">🔍 Discover Users</span>
               <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
                 Match: <strong style="color:var(--purple)">${filterLabel}</strong> · ${discoverable.length} found
               </div>
             </div>
-            <button class="btn btn-primary btn-sm" id="discoverRefreshBtn">
-              🔄 Find Now
-            </button>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-primary btn-sm" id="discoverRefreshBtn" onclick="event.stopPropagation()">
+                🔄 Find Now
+              </button>
+              <button class="btn btn-secondary btn-sm" id="discoverToggleBtn">▼ Show List</button>
+            </div>
           </div>
-          <div class="list">${usersHtml}</div>
+          <!-- List by default hidden rahegi (display:none) -->
+          <div class="list" id="discoverListWrapper" style="display:none;">${usersHtml}</div>
         </div>
       `;
     } catch (e) {
@@ -653,14 +658,32 @@ function getState() {
     // ═══ WIRE: ADD BUTTONS ═══
     document.getElementById('pAddBtn')?.addEventListener('click', openAddPartnerModal);
 
-    // ═══ WIRE: DISCOVER REFRESH BUTTON ═══
-    const refreshBtn = el.querySelector('#discoverRefreshBtn');
-    if (refreshBtn) {
-      refreshBtn.onclick = () => {
-        refreshBtn.disabled = true;
-        refreshBtn.textContent = '⏳ Searching…';
-        renderPartnerView();
+    // ═══ WIRE: DISCOVER TOGGLE BUTTON (EXPAND/COLLAPSE) ═══
+    const toggleBtn = el.querySelector('#discoverToggleBtn');
+    const listWrapper = el.querySelector('#discoverListWrapper');
+    const headerToggle = el.querySelector('#discoverHeaderToggle');
+
+    if (toggleBtn && listWrapper) {
+      const toggleList = () => {
+        if (listWrapper.style.display === 'none') {
+          listWrapper.style.display = 'block';
+          toggleBtn.textContent = '▲ Hide List';
+        } else {
+          listWrapper.style.display = 'none';
+          toggleBtn.textContent = '▼ Show List';
+        }
       };
+
+      // Button click par toggle
+      toggleBtn.onclick = (e) => {
+        e.stopPropagation(); // Header click ko rokne ke liye
+        toggleList();
+      };
+
+      // Header par bhi click karne se toggle ho
+      if (headerToggle) {
+        headerToggle.onclick = toggleList;
+      }
     }
 
     // ═══ WIRE: SEND REQUEST FROM DISCOVER ═══
