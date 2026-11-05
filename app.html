@@ -7060,7 +7060,18 @@
         updatePremiumNavItems();
       }
       /* ═══════════════ PREMIUM NAV VISUAL ═══════════════ */
-      const PREMIUM_VIEWS_LIST = ['calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'insights'];
+      const PREMIUM_VIEWS_LIST = [
+        'calendar',
+        'analytics',
+        'history',
+        'goals',
+        'tasks',
+        'planner',
+        'insights',
+        'revision',
+        'notes',
+        'tests',
+      ];
       const PREMIUM_ORIGINAL_ICONS = {
         calendar: '🗓',
         analytics: '📊',
@@ -7069,6 +7080,9 @@
         tasks: '✓',
         planner: '📅',
         insights: '✨',
+        revision: '🔁', // <-- यह जोड़ें
+        notes: '✎', // <-- यह जोड़ें
+        tests: '📋', // <-- यह जोड़ें
       };
 
       function updatePremiumNavItems() {
@@ -8467,7 +8481,18 @@ ${
       }
 
       /* ═══════════════ VIEWS ═══════════════ */
-      const PREMIUM_VIEWS = new Set(['calendar', 'analytics', 'history', 'goals', 'tasks', 'planner', 'insights']);
+      const PREMIUM_VIEWS = new Set([
+        'calendar',
+        'analytics',
+        'history',
+        'goals',
+        'tasks',
+        'planner',
+        'insights',
+        'revision',
+        'notes',
+        'tests',
+      ]);
       function switchView(name) {
         if (PREMIUM_VIEWS.has(name) && !isPremiumUser()) {
           openUpgradeModal(name.charAt(0).toUpperCase() + name.slice(1) + ' is Premium');
