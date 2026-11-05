@@ -388,7 +388,7 @@ function getState() {
       if (!myOptional || !myYear) return '';
 
       const { data: matches } = await supa
-        .from('profiles')
+        .from('partner_profiles')
         .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
         .eq('discoverable', true)
         .eq('optional_subject', myOptional)
@@ -802,7 +802,7 @@ function getState() {
     if (!supa) return null;
     try {
       const { data } = await supa
-        .from('profiles')
+        .from('partner_profiles')
         .select('id, name, email, optional_subject')
         .eq('id', userId)
         .maybeSingle();
@@ -878,7 +878,8 @@ function getState() {
     }
 
     try {
-      const { data: found } = await supa.from('profiles').select('id, name, email').ilike('email', email).maybeSingle();
+      const { data: rpcData, error: rpcError } = await supa.rpc('search_user_by_email', { search_email: email });
+      const found = rpcData && rpcData.length > 0 ? rpcData[0] : null;
 
       if (found) {
         // Check ANY entry between both users
