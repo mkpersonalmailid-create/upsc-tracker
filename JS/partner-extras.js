@@ -463,8 +463,19 @@ function getState() {
           <div class="card-header" id="discoverHeaderToggle" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;cursor:pointer;">
             <div style="flex:1;min-width:200px">
               <span class="card-title-lg">🔍 Discover Users</span>
-              <div style="font-size:.78rem;color:var(--text-3);margin-top:4px">
-                Match: <strong style="color:var(--purple)">${filterLabel}</strong> · ${discoverable.length} found
+              <div style="font-size:.85rem;color:var(--text-2);margin-top:6px;display:flex;flex-direction:column;gap:4px;">
+                <div>
+                  Match: <strong style="color:var(--purple); font-weight:700;">${filterLabel}</strong> · 
+                  <strong style="color:var(--text-1); font-weight:800; font-size:0.95rem;">${discoverable.length} found</strong>
+                </div>
+                ${
+                  discoverable.length > 0
+                    ? `
+                <div style="font-size:.8rem;color:var(--text-3); font-weight:500; background:var(--bg-2); padding:4px 8px; border-radius:6px; display:inline-block; width:fit-content;">
+                   <span style="font-weight:700; color:var(--text-2);">👥 Users:</span> ${esc(previewText)}
+                </div>`
+                    : ''
+                }
               </div>
             </div>
             <div style="display:flex;gap:8px;align-items:center;">
