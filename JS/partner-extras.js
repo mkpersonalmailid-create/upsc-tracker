@@ -686,7 +686,7 @@ function getState() {
           </div>
           <div class="row-info">
             <div class="row-title">${esc(profile?.name || 'User')}</div>
-            <div class="row-meta">${esc(profile?.email || '')}</div>
+            <div class="row-meta">Wants to be your study partner</div> <!-- Yahan kuch aur text likh do -->
           </div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-success btn-sm" data-pa-accept="${link.id}">✓ Accept</button>
@@ -803,7 +803,7 @@ function getState() {
     try {
       const { data } = await supa
         .from('partner_profiles')
-        .select('id, name, email, optional_subject')
+        .select('id, name, optional_subject')
         .eq('id', userId)
         .maybeSingle();
       return data;
@@ -858,7 +858,6 @@ function getState() {
       },
     );
   }
-
   // ═══════════════ 8. SEND REQUEST (BY EMAIL) ═══════════════
   async function sendPartnerRequest(email) {
     const supa = getSupa();
@@ -878,68 +877,40 @@ function getState() {
     }
 
     try {
-      const { data: rpcData, error: rpcError } = await supa.rpc('search_user_by_email', { search_email: email });
-      const found = rpcData && rpcData.length > 0 ? rpcData[0] : null;
+      // 1. Naya RPC call karo
+      const { data: rpcData, error: rpcError } = await supa.rpc('send_partner_request_by_email', {
+        target_email: email,
+      });
 
-      if (found) {
-        // Check ANY entry between both users
-        const { data: existing } = await supa
-          .from('partner_links')
-          .select('id, status')
-          .or(
-            `and(requester_id.eq.${user.id},partner_id.eq.${found.id}),and(requester_id.eq.${found.id},partner_id.eq.${user.id})`,
-          )
-          .maybeSingle();
+      if (rpcError) throw rpcError;
 
-        if (existing) {
-          // Block if pending or accepted
-          if (existing.status === 'pending' || existing.status === 'accepted') {
-            tmsg('A request already exists with this user', 'info');
-            if (btn) {
-              btn.disabled = false;
-              btn.textContent = 'Send Request';
-            }
-            return;
-          }
-
-          // Revive if removed or rejected
-          const { error: updateErr } = await supa
-            .from('partner_links')
-            .update({
-              requester_id: user.id,
-              partner_id: found.id,
-              status: 'pending',
-              accepted_at: null,
-              created_at: new Date().toISOString(),
-            })
-            .eq('id', existing.id);
-          if (updateErr) throw updateErr;
-        } else {
-          // Insert new
-          const { error: insertErr } = await supa.from('partner_links').insert({
-            requester_id: user.id,
-            partner_id: found.id,
-            status: 'pending',
-          });
-          if (insertErr) throw insertErr;
-        }
-
+      if (rpcData.success) {
+        // Request successfully bhej di gayi
         if (typeof window.closeModal === 'function') window.closeModal();
-        tmsg(`✅ Request sent to ${found.name || found.email}!`, 'ok');
+        tmsg(`✅ ${rpcData.message}`, 'ok');
         renderPartnerView();
       } else {
-        // User not found → invite link
-        const { data: invite, error: invErr } = await supa
-          .from('partner_invites')
-          .insert({ requester_id: user.id, invitee_email: email, status: 'pending' })
-          .select()
-          .single();
-        if (invErr) throw invErr;
+        // Agar user database mein nahi mila, toh invite link banao
+        if (rpcData.message === 'User not found with this email.') {
+          const { data: invite, error: invErr } = await supa
+            .from('partner_invites')
+            .insert({ requester_id: user.id, invitee_email: email, status: 'pending' })
+            .select()
+            .single();
+          if (invErr) throw invErr;
 
-        if (typeof window.closeModal === 'function') window.closeModal();
-        tmsg('📨 Invite link ready!', 'ok');
-        openShareModal(invite);
-        renderPartnerView();
+          if (typeof window.closeModal === 'function') window.closeModal();
+          tmsg('📨 Invite link ready!', 'ok');
+          openShareModal(invite);
+          renderPartnerView();
+        } else {
+          // Koi aur error (jaise khud ko request, ya pehle se friend ho)
+          tmsg(rpcData.message, 'err');
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Send Request';
+          }
+        }
       }
     } catch (e) {
       console.warn('[Partner] send error:', e);
