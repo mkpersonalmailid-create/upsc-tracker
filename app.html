@@ -8495,7 +8495,9 @@ ${
       ]);
       function switchView(name) {
         if (PREMIUM_VIEWS.has(name) && !isPremiumUser()) {
-          openUpgradeModal(name.charAt(0).toUpperCase() + name.slice(1) + ' is Premium');
+          // पहला अक्षर बड़ा करें और ' is Premium' हटा दें
+          const featureName = name.charAt(0).toUpperCase() + name.slice(1);
+          openUpgradeModal(featureName);
           return;
         }
         if (name === 'admin' && !isAdminUser()) {
