@@ -3,7 +3,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/</loc>
-    <lastmod>2026-11-11</lastmod>
+    <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,12 +11,18 @@
   <!-- Blog Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/blog/</loc>
-    <lastmod>2026-11-11</lastmod>
+    <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog Posts (74) -->
+  <!-- Blog Posts (75) -->
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/5-secret-tips-for-environment-and-ecology-preparation-for-upsc-20261112.html</loc>
+    <lastmod>2026-11-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://upscstudytracker.co.in/blog/5-secret-tips-for-common-patterns-in-upsc-prelims-questions-20261111.html</loc>
     <lastmod>2026-11-11</lastmod>
