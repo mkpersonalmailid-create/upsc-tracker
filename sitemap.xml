@@ -3,7 +3,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -11,12 +11,18 @@
   <!-- Blog Homepage -->
   <url>
     <loc>https://upscstudytracker.co.in/blog/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- Blog Posts (76) -->
+  <!-- Blog Posts (77) -->
+  <url>
+    <loc>https://upscstudytracker.co.in/blog/ultimate-checklist-for-role-of-examples-in-upsc-answer-writing-20261114.html</loc>
+    <lastmod>2026-11-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://upscstudytracker.co.in/blog/5-secret-tips-for-essay-writing-strategy-for-upsc-20261113.html</loc>
     <lastmod>2026-11-13</lastmod>
