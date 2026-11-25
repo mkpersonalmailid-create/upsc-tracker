@@ -4,16 +4,10 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML
+  // 1. Home View का HTML (Notice Section हटा दिया गया है)
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
-      <!-- Notice Board Section -->
-      <div id="homeNoticeBanner" style="display: none; background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05)); border: 1px solid rgba(251, 191, 36, 0.3); border-left: 4px solid var(--amber); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; align-items: center; gap: 12px;">
-        <span style="background: var(--amber); color: #000; font-size: 0.7rem; font-weight: 900; padding: 3px 8px; border-radius: 4px; text-transform: uppercase;">Notice</span>
-        <span id="homeNoticeText" style="font-size: 0.9rem; color: var(--text-2); font-weight: 600;"></span>
-      </div>
-
       <!-- Welcome Section -->
       <div class="hero" style="background: var(--card); text-align: center; padding: 40px 20px; border-radius: var(--r-xl); border: 1px solid var(--border);">
         <h1 style="font-size: clamp(2rem, 4vw, 2.5rem); margin-bottom: 10px; background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -128,32 +122,7 @@
     }
   }
 
-  // 4. Supabase से Notice (Announcement) लाने का फंक्शन
-  async function loadNotice() {
-    if (!window.supa) return;
-    try {
-      const { data } = await window.supa
-        .from('site_announcements')
-        .select('*')
-        .eq('active', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (data && data.message) {
-        const banner = document.getElementById('homeNoticeBanner');
-        const text = document.getElementById('homeNoticeText');
-        if (banner && text) {
-          text.innerText = data.message;
-          banner.style.display = 'flex';
-        }
-      }
-    } catch (e) {
-      console.warn('Notice load error:', e);
-    }
-  }
-
-  // 5. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
+  // 4. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
   function injectHomePage() {
     const content = document.getElementById('content');
     const nav = document.querySelector('.nav');
@@ -223,7 +192,6 @@
       if (window.location.hash !== '#timer') {
         homeBtn.click();
       }
-      loadNotice();
       updateUserName();
     }, 800);
 
@@ -237,7 +205,7 @@
     }
   }
 
-  // 6. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
+  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
   let attempts = 0;
   const checkInterval = setInterval(() => {
     attempts++;
@@ -251,7 +219,4 @@
 
     if (attempts > 600) clearInterval(checkInterval);
   }, 500);
-
-  // Global access
-  window.reloadHomeNotice = loadNotice;
 })();
