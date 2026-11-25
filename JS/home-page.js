@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (Notice Section हटा दिया गया है)
+  // 1. Home View का HTML
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
@@ -53,12 +53,18 @@
 
   // 2. Topbar के आइकन्स को ऊपर-नीचे (Vertical) करने और उनके नीचे नाम लिखने का फंक्शन
   function styleTopbarIcons() {
+    // 'Plan' वाले बटन को पूरी तरह छिपा दें
+    const planBtn = document.getElementById('planBadgeBtn');
+    if (planBtn) {
+      planBtn.style.display = 'none';
+    }
+
+    // बाकी आइकन्स की लिस्ट (Plan को हटा दिया गया है)
     const iconConfigs = [
       { id: 'logoutBtn', label: 'Logout', color: '#fca5a5' },
       { id: 'settingsBtn', label: 'Settings' },
       { id: 'notifBtn', label: 'Alerts' },
       { id: 'themeBtn', label: 'Theme' },
-      { id: 'planBadgeBtn', label: 'Plan' },
     ];
 
     iconConfigs.forEach((cfg) => {
