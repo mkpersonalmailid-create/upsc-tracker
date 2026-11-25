@@ -51,20 +51,21 @@
     </section>
   `;
 
-  // 2. Topbar के आइकन्स को ऊपर-नीचे (Vertical) करने और उनके नीचे नाम लिखने का फंक्शन
+  // 2. Topbar के आइकन्स को नया लुक देना और टॉगल स्विच जोड़ना
   function styleTopbarIcons() {
-    // 'Plan' वाले बटन को पूरी तरह छिपा दें
+    // 'Plan' वाले बटन को छिपा दें
     const planBtn = document.getElementById('planBadgeBtn');
-    if (planBtn) {
-      planBtn.style.display = 'none';
-    }
+    if (planBtn) planBtn.style.display = 'none';
 
-    // बाकी आइकन्स की लिस्ट (Plan को हटा दिया गया है)
+    // पुराने थीम बटन को छिपा दें (क्योंकि अब हम नया टॉगल लगा रहे हैं)
+    const oldThemeBtn = document.getElementById('themeBtn');
+    if (oldThemeBtn) oldThemeBtn.style.display = 'none';
+
+    // बाकी आइकन्स की लिस्ट (Theme को हटा दिया गया है)
     const iconConfigs = [
       { id: 'logoutBtn', label: 'Logout', color: '#fca5a5' },
       { id: 'settingsBtn', label: 'Settings' },
       { id: 'notifBtn', label: 'Alerts' },
-      { id: 'themeBtn', label: 'Theme' },
     ];
 
     iconConfigs.forEach((cfg) => {
@@ -72,26 +73,78 @@
       if (btn && !btn.querySelector('.custom-topbar-label')) {
         const originalEmoji = btn.innerText;
 
-        // बटन को flex-column बनाएं ताकि आइकन ऊपर और टेक्स्ट नीचे आए
         btn.style.cssText =
           'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; height: auto; min-width: 55px; background: transparent; border: none;';
 
-        // आइकन और टेक्स्ट को सेट करें
         btn.innerHTML = `
             <span style="font-size: 1.1rem; line-height: 1;">${originalEmoji}</span>
-            <span class="custom-topbar-label" style="font-size: 0.6rem; font-weight: 700; color: ${cfg.color || 'var(--text-2)'}; text-transform: capitalize;">${cfg.label}</span>
+            <span class="custom-topbar-label" style="font-size: 0.6rem; font-weight: 700; color: ${cfg.color || 'var(--text)'}; text-transform: capitalize;">${cfg.label}</span>
         `;
       }
     });
 
-    // अवतार (Avatar) और नाम को भी ऊपर-नीचे करें
+    // === नया टॉगल स्विच बनाएं ===
+    const topbarRight = document.querySelector('.topbar-right');
+    if (topbarRight && !document.getElementById('customThemeToggleWrap')) {
+      // पहले से मौजूद थीम (Light/Dark) चेक करें
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const isLight = currentTheme === 'light';
+
+      const toggleWrap = document.createElement('div');
+      toggleWrap.id = 'customThemeToggleWrap';
+      toggleWrap.style.cssText =
+        'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; min-width: 55px;';
+
+      toggleWrap.innerHTML = `
+        <label class="theme-switch" style="position: relative; display: inline-block; width: 34px; height: 18px;">
+          <input type="checkbox" id="customThemeToggleInput" ${isLight ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+          <span class="theme-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #3d2c5e; transition: .4s; border-radius: 34px;"></span>
+        </label>
+        <span style="font-size: 0.6rem; font-weight: 700; color: var(--text);">Theme</span>
+      `;
+
+      // स्टाइल्स (CSS) इंजेक्ट करें
+      if (!document.getElementById('themeToggleStyles')) {
+        const style = document.createElement('style');
+        style.id = 'themeToggleStyles';
+        style.innerHTML = `
+          .theme-slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+          input:checked + .theme-slider { background-color: var(--amber); }
+          input:checked + .theme-slider:before { transform: translateX(16px); }
+        `;
+        document.head.appendChild(style);
+      }
+
+      // टॉगल बटन को टॉपबार में जोड़ें (अवतार से ठीक पहले)
+      const topAvatar = document.getElementById('topAvatar');
+      if (topAvatar) {
+        topbarRight.insertBefore(toggleWrap, topAvatar);
+      } else {
+        topbarRight.appendChild(toggleWrap);
+      }
+
+      // टॉगल करने का लॉजिक
+      document.getElementById('customThemeToggleInput').addEventListener('change', (e) => {
+        const newTheme = e.target.checked ? 'light' : 'dark';
+
+        // app.html वाले फंक्शन को कॉल करें
+        if (typeof applyTheme === 'function') {
+          applyTheme(newTheme);
+        } else {
+          // अगर ग्लोबल फंक्शन न मिले तो मैन्युअली बदलें
+          document.documentElement.setAttribute('data-theme', newTheme);
+          if (typeof state !== 'undefined' && state.settings) state.settings.theme = newTheme;
+        }
+      });
+    }
+
+    // अवतार (Avatar) और नाम को ऊपर-नीचे करें
     const topAvatar = document.getElementById('topAvatar');
     const nameEl = document.getElementById('topbarUserName');
 
     if (topAvatar && nameEl && !document.getElementById('customAvatarContainer')) {
       const container = document.createElement('div');
       container.id = 'customAvatarContainer';
-      // ड्रॉपडाउन/कॉलम स्टाइल
       container.style.cssText =
         'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-left: 8px;';
 
@@ -99,12 +152,10 @@
       container.appendChild(topAvatar);
       container.appendChild(nameEl);
 
-      // अवतार का साइज़ थोड़ा छोटा करें ताकि बाकी आइकन्स के साथ मैच हो जाए
       topAvatar.style.width = '32px';
       topAvatar.style.height = '32px';
       topAvatar.style.fontSize = '0.85rem';
 
-      // नाम की स्टाइलिंग (आइकन के नीचे)
       nameEl.style.cssText =
         'font-size: 0.65rem; font-weight: 800; color: var(--text); margin: 0; display: block !important; text-align: center;';
     }
@@ -136,10 +187,8 @@
     if (!content || !nav) return;
     if (document.getElementById('view-home')) return;
 
-    // 1. Home View इंजेक्ट करें
     content.insertAdjacentHTML('afterbegin', homeHTML);
 
-    // 2. Sidebar में Home बटन बनाएं
     const homeBtn = document.createElement('button');
     homeBtn.className = 'nav-item';
     homeBtn.dataset.view = 'home';
@@ -152,7 +201,6 @@
       nav.insertAdjacentElement('afterbegin', homeBtn);
     }
 
-    // 3. Home बटन पर क्लिक करने का लॉजिक
     homeBtn.addEventListener('click', () => {
       document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
       const homeView = document.getElementById('view-home');
@@ -170,14 +218,12 @@
       updateUserName();
     });
 
-    // बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
     document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
       otherBtn.addEventListener('click', () => {
         homeBtn.classList.remove('active');
       });
     });
 
-    // === 4. TOPBAR MEIN NAAM ADD KARNA ===
     const topbarRight = document.querySelector('.topbar-right');
     const topAvatar = document.getElementById('topAvatar');
 
@@ -186,14 +232,11 @@
       userNameSpan.id = 'topbarUserName';
       userNameSpan.innerText = 'Loading...';
 
-      // अवतार के ठीक पहले डालें
       topbarRight.insertBefore(userNameSpan, topAvatar);
     }
 
-    // === 5. TOPBAR ICONS KO REDESIGN KARNA ===
     styleTopbarIcons();
 
-    // 6. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
     setTimeout(() => {
       if (window.location.hash !== '#timer') {
         homeBtn.click();
@@ -201,7 +244,6 @@
       updateUserName();
     }, 800);
 
-    // 7. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
     const sbUserName = document.getElementById('sbUserName');
     if (sbUserName) {
       const observer = new MutationObserver(() => {
