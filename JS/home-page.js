@@ -96,9 +96,11 @@
         
         <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
           <div>
-            <h2 style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Why go Premium?</h2>
+            <h2 style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Unlock the ultimate edge.</h2>
             <p style="font-size: 0.95rem; color: #b8a8d9; line-height: 1.6;">
-              Other apps charge ₹300+ per month. We charge <strong>less than the price of two cups of chai.</strong> Get all advanced tools to completely dominate your preparation.
+              Other apps charge you ₹300+ per month. We believe in keeping it accessible for serious aspirants. Upgrade for <strong>just ₹99 per month</strong>—which is literally the cost of <strong style="color: var(--amber); font-size: 1.1rem;">two cups of ☕ chai</strong>.
+              <br><br>
+              Invest that small amount to completely dominate your preparation.
             </p>
           </div>
 
@@ -118,23 +120,23 @@
             </div>
             <div style="display: flex; gap: 10px; align-items: flex-start;">
               <span style="color: var(--green); font-size: 1.1rem;">✔</span>
-              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Data Exports:</strong> Download your progress anytime.</div>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Data Exports:</strong> Download progress anytime.</div>
             </div>
           </div>
 
           <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
-              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Yearly Plan</div>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹799<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/year</span></div>
+              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Monthly Plan</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹99<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/month</span></div>
             </div>
             <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); transition: transform 0.2s;">
-              Upgrade Now →
+              Upgrade for ₹99 →
             </button>
           </div>
         </div>
       </div>
-
+      
     </section>
   `;
 
