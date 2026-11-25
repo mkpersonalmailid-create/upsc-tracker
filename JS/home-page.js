@@ -4,50 +4,105 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML
+  // 1. Home View का HTML (New Premium SaaS Copywriting)
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
-      <!-- Welcome Section -->
-      <div class="hero" style="background: var(--card); text-align: center; padding: 40px 20px; border-radius: var(--r-xl); border: 1px solid var(--border);">
-        <h1 style="font-size: clamp(2rem, 4vw, 2.5rem); margin-bottom: 10px; background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-          Hi <span id="homeUserName">Student</span> 👋
-        </h1>
-        <div style="display: inline-block; background: rgba(168, 85, 247, 0.15); color: var(--text-2); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; margin-bottom: 20px;">
-          ⏱️ 2 min read for long-term benefit
+      <!-- HERO SECTION (Emotional Connection) -->
+      <div class="hero" style="background: var(--card); text-align: center; padding: 50px 20px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden;">
+        <!-- Background Glow -->
+        <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: rgba(168, 85, 247, 0.2); filter: blur(80px); border-radius: 50%;"></div>
+        
+        <div style="position: relative; z-index: 1;">
+          <div style="display: inline-block; background: rgba(168, 85, 247, 0.15); color: var(--purple); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">
+            Hi <span id="homeUserName">Student</span> 👋
+          </div>
+          <h1 style="font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 16px; font-weight: 900; line-height: 1.2; background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em;">
+            It's not about studying 12 hours.<br>It's about knowing where those 12 hours went.
+          </h1>
+          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 550px; margin: 0 auto; line-height: 1.6; font-weight: 500;">
+            Stop guessing your progress. UPSC Tracker is the operating system for your preparation—built to keep you consistent, organised, and in control.
+          </p>
         </div>
-        <p style="color: var(--text-2); font-size: 1.05rem; max-width: 600px; margin: 0 auto; line-height: 1.6;">
-          Whether you are a <strong>beginner</strong> or at an <strong>advanced level</strong> of preparation, this app is going to change your preparation in a positive manner.
-        </p>
       </div>
 
-      <!-- How to use Section -->
+      <!-- PROBLEM & SOLUTION (Problem Awareness & Value) -->
       <div class="card" style="margin-top: 20px;">
-        <div class="card-header"><span class="card-title-lg">🧭 How to use this app?</span></div>
+        <div class="card-header"><span class="card-title-lg">Why most aspirants feel stuck</span></div>
         <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2);">
-          If you haven't understood the <strong style="color: var(--pink);">UPSC syllabus</strong> yet, please do that first. It will help you navigate the sections of this app much better. 
-          <br><br>
-          Long-term preparation needs everyday logging. After interviewing and asking <strong>1000+ students</strong>, we found that tracking your daily hours is the biggest problem. That's why we created this app—to keep you accountable every single day.
+          The UPSC syllabus is vast. Without a proper system, preparation feels like walking in the dark. You sit at your desk for hours, but when someone asks what you actually covered, you draw a blank. <br><br>
+          <strong>You don't need more motivation. You need a system.</strong> This app was built after interviewing 1000+ aspirants who struggled with the exact same problem: tracking daily hours and maintaining consistency. That ends today.
         </p>
       </div>
 
-      <!-- Premium Info Section -->
+      <!-- FEATURES BREAKDOWN (Solution) -->
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-header"><span class="card-title-lg">Your Daily UPSC Operating System</span></div>
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
+          
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="background: rgba(168, 85, 247, 0.15); color: var(--purple); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">⏱️</div>
+            <div>
+              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Track Every Minute</div>
+              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Use the built-in timer to log exactly what you study. No more guessing.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="background: rgba(236, 72, 153, 0.15); color: var(--pink); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">📖</div>
+            <div>
+              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Master the Syllabus</div>
+              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Tick off topics, plan revisions, and never lose track of what's pending.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="background: rgba(20, 184, 166, 0.15); color: var(--teal); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">📊</div>
+            <div>
+              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Analyze Your Reality</div>
+              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Find out when you are most productive and where you are lagging.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PREMIUM FEATURES (Desire & Value) -->
       <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05)); border-color: rgba(168, 85, 247, 0.3);">
-        <div class="card-header"><span class="card-title-lg">💎 Free vs Premium</span></div>
-        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2);">
-          Some sections of this app are <strong>Free forever</strong>. For advanced features, we have a Premium plan.
-          <br><br>
-          In the industry, these types of apps charge you ₹300/month. But understanding the requirement of students, we are charging <strong style="color: var(--amber);">less than ₹100</strong>—which is just the cost of a few cups of tea! 
-          <br>
-          <em>If you are dedicated to your preparation, we suggest you go for the Yearly Plan to save more.</em>
+        <div class="card-header"><span class="card-title-lg">Elevate your preparation with Premium</span></div>
+        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2); margin-bottom: 16px;">
+          Free is great to get started, but Premium gives you the ultimate edge:
         </p>
-        <p style="color: var(--text); font-weight: bold; margin-top: 15px; margin-bottom: 8px;">Premium features include:</p>
-        <ul style="font-size: 0.9rem; line-height: 1.7; color: var(--text-2); padding-left: 20px; margin-top: 0;">
-          <li><strong>Study with Partner:</strong> Choose a partner with the same Optional Subject and Target Year. If they accept your request, you can study together. You can also add a friend by email—if they are on this platform, we will send them an invite link!</li>
-          <li>Advanced Analytics & Calendar</li>
-          <li>Unlimited Notes & Tests</li>
+        
+        <ul style="font-size: 0.9rem; line-height: 1.7; color: var(--text-2); padding-left: 20px; margin-top: 0; display: flex; flex-direction: column; gap: 12px;">
+          <li>
+            <strong style="color: var(--text);">Study With Partner:</strong> Don't prepare alone. Get matched with aspirants who share your <strong>exact Optional Subject and Target Year</strong>. Compare stats, stay accountable, and grow together.
+          </li>
+          <li>
+            <strong style="color: var(--text);">Advanced Analytics:</strong> Dive deep into your study patterns. Identify your most productive hours and fix your weak spots.
+          </li>
+          <li>
+            <strong style="color: var(--text);">Advanced Calendar & Planner:</strong> Map out your entire month, schedule revisions, and track your test scores.
+          </li>
+          <li>
+            <strong style="color: var(--text);">Unlimited Notes & Exports:</strong> Build your personal library of short notes and export your data anytime.
+          </li>
         </ul>
       </div>
+
+      <!-- PRICING / VALUE PERCEPTION -->
+      <div class="card" style="margin-top: 20px; text-align: center;">
+        <div class="card-header" style="justify-content: center;"><span class="card-title-lg">Less than the cost of two cups of tea.</span></div>
+        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2);">
+          Other prep apps charge you ₹300+ every month. We know the budget constraints of a serious aspirant. That's why Premium costs <strong style="color: var(--amber);">less than ₹100/month</strong>. 
+          <br><br>
+          If you are dedicated to cracking this exam, we highly recommend the <strong>Yearly Plan</strong> to save even more.
+        </p>
+        <button onclick="if(typeof switchView === 'function') switchView('premium');" style="margin-top: 16px; background: var(--grad-1); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);">
+          View Premium Plans →
+        </button>
+      </div>
+
     </section>
   `;
 
@@ -61,7 +116,7 @@
     const oldThemeBtn = document.getElementById('themeBtn');
     if (oldThemeBtn) oldThemeBtn.style.display = 'none';
 
-    // बाकी आइकन्स की लिस्ट (Theme को हटा दिया गया है)
+    // बाकी आइकन्स की लिस्ट
     const iconConfigs = [
       { id: 'logoutBtn', label: 'Logout', color: '#fca5a5' },
       { id: 'settingsBtn', label: 'Settings' },
@@ -86,7 +141,6 @@
     // === नया टॉगल स्विच बनाएं ===
     const topbarRight = document.querySelector('.topbar-right');
     if (topbarRight && !document.getElementById('customThemeToggleWrap')) {
-      // पहले से मौजूद थीम (Light/Dark) चेक करें
       const currentTheme = document.documentElement.getAttribute('data-theme');
       const isLight = currentTheme === 'light';
 
@@ -115,7 +169,7 @@
         document.head.appendChild(style);
       }
 
-      // टॉगल बटन को टॉपबार में जोड़ें (अवतार से ठीक पहले)
+      // टॉगल बटन को टॉपबार में जोड़ें
       const topAvatar = document.getElementById('topAvatar');
       if (topAvatar) {
         topbarRight.insertBefore(toggleWrap, topAvatar);
@@ -126,12 +180,9 @@
       // टॉगल करने का लॉजिक
       document.getElementById('customThemeToggleInput').addEventListener('change', (e) => {
         const newTheme = e.target.checked ? 'light' : 'dark';
-
-        // app.html वाले फंक्शन को कॉल करें
         if (typeof applyTheme === 'function') {
           applyTheme(newTheme);
         } else {
-          // अगर ग्लोबल फंक्शन न मिले तो मैन्युअली बदलें
           document.documentElement.setAttribute('data-theme', newTheme);
           if (typeof state !== 'undefined' && state.settings) state.settings.theme = newTheme;
         }
@@ -187,8 +238,10 @@
     if (!content || !nav) return;
     if (document.getElementById('view-home')) return;
 
+    // 1. Home View इंजेक्ट करें
     content.insertAdjacentHTML('afterbegin', homeHTML);
 
+    // 2. Sidebar में Home बटन बनाएं
     const homeBtn = document.createElement('button');
     homeBtn.className = 'nav-item';
     homeBtn.dataset.view = 'home';
@@ -201,6 +254,7 @@
       nav.insertAdjacentElement('afterbegin', homeBtn);
     }
 
+    // 3. Home बटन पर क्लिक करने का लॉजिक
     homeBtn.addEventListener('click', () => {
       document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
       const homeView = document.getElementById('view-home');
@@ -218,12 +272,14 @@
       updateUserName();
     });
 
+    // बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
     document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
       otherBtn.addEventListener('click', () => {
         homeBtn.classList.remove('active');
       });
     });
 
+    // === 4. TOPBAR MEIN NAAM ADD KARNA ===
     const topbarRight = document.querySelector('.topbar-right');
     const topAvatar = document.getElementById('topAvatar');
 
@@ -235,8 +291,10 @@
       topbarRight.insertBefore(userNameSpan, topAvatar);
     }
 
+    // === 5. TOPBAR ICONS KO REDESIGN KARNA ===
     styleTopbarIcons();
 
+    // 6. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
     setTimeout(() => {
       if (window.location.hash !== '#timer') {
         homeBtn.click();
@@ -244,6 +302,7 @@
       updateUserName();
     }, 800);
 
+    // 7. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
     const sbUserName = document.getElementById('sbUserName');
     if (sbUserName) {
       const observer = new MutationObserver(() => {
