@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (Centered Hero with Main Action Buttons)
+  // 1. Home View का HTML
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
@@ -90,15 +90,33 @@
 
       </div>
 
+      <!-- EXPERT SESSION BANNER (NEW) -->
+      <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(6, 182, 212, 0.05)); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: var(--r-md); padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(20, 184, 166, 0.2); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">🧑‍🏫</div>
+          <div style="flex: 1; min-width: 250px;">
+            <h2 style="font-size: 1.3rem; font-weight: 900; color: var(--text); margin-bottom: 6px; line-height: 1.2;">Want to take a complete look at the app?</h2>
+            <p style="font-size: 0.95rem; color: var(--text-2); line-height: 1.6; margin: 0;">
+              If you want to take a complete look at the UPSC study app, you can book a <strong style="color: var(--teal);">30-minute session with an expert</strong> to manage your time effectively and learn how to use this app to its full potential.
+            </p>
+          </div>
+        </div>
+        <a href="https://calendar.app.google/QoHPZWeBaWxyi9p2A" target="_blank" style="text-decoration: none; background: var(--teal); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3); transition: transform 0.2s;">
+          📅 Book Your Free Session Now →
+        </a>
+      </div>
+
       <!-- PREMIUM UPGRADE SECTION -->
       <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em; z-index: 10;">PREMIUM</div>
         
         <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
           <div>
-            <h2 style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Why go Premium?</h2>
+            <h2 style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Unlock the ultimate edge.</h2>
             <p style="font-size: 0.95rem; color: #b8a8d9; line-height: 1.6;">
-              Other apps charge ₹300+ per month. We charge <strong>less than the price of two cups of chai.</strong> Get all advanced tools to completely dominate your preparation.
+              Other apps charge you ₹300+ per month. We believe in keeping it accessible for serious aspirants. Upgrade for <strong>just ₹99 per month</strong>—which is literally the cost of <strong style="color: var(--amber); font-size: 1.1rem;">two cups of ☕ chai</strong>.
+              <br><br>
+              Invest that small amount to completely dominate your preparation.
             </p>
           </div>
 
@@ -118,18 +136,18 @@
             </div>
             <div style="display: flex; gap: 10px; align-items: flex-start;">
               <span style="color: var(--green); font-size: 1.1rem;">✔</span>
-              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Data Exports:</strong> Download your progress anytime.</div>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Data Exports:</strong> Download progress anytime.</div>
             </div>
           </div>
 
           <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
-              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Yearly Plan</div>
-              <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹799<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/year</span></div>
+              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Monthly Plan</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹99<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/month</span></div>
             </div>
             <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); transition: transform 0.2s;">
-              Upgrade Now →
+              Upgrade for ₹99 →
             </button>
           </div>
         </div>
