@@ -4,7 +4,7 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (Centered Hero with Main Action Buttons)
+  // 1. Home View का HTML
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
@@ -88,6 +88,22 @@
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Don't prepare alone. Match with aspirants sharing your exact Optional & Target Year.</div>
         </div>
 
+      </div>
+
+      <!-- EXPERT SESSION BANNER (NEW) -->
+      <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(6, 182, 212, 0.05)); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: var(--r-md); padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+          <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(20, 184, 166, 0.2); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">🧑‍🏫</div>
+          <div style="flex: 1; min-width: 250px;">
+            <h2 style="font-size: 1.3rem; font-weight: 900; color: var(--text); margin-bottom: 6px; line-height: 1.2;">Want to take a complete look at the app?</h2>
+            <p style="font-size: 0.95rem; color: var(--text-2); line-height: 1.6; margin: 0;">
+              If you want to take a complete look at the UPSC study app, you can book a <strong style="color: var(--teal);">30-minute session with an expert</strong> to manage your time effectively and learn how to use this app to its full potential.
+            </p>
+          </div>
+        </div>
+        <a href="https://calendar.app.google/QoHPZWeBaWxyi9p2A" target="_blank" style="text-decoration: none; background: var(--teal); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.3); transition: transform 0.2s;">
+          📅 Book Your Free Session Now →
+        </a>
       </div>
 
       <!-- PREMIUM UPGRADE SECTION -->
