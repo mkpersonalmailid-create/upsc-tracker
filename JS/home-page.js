@@ -6,7 +6,7 @@
 
   // 1. Home View का HTML
   const homeHTML = `
-    <section class="view" id="view-home" style="display: none; animation: fadeIn 0.3s ease;">
+    <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
       <!-- Notice Board Section -->
       <div id="homeNoticeBanner" style="display: none; background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05)); border: 1px solid rgba(251, 191, 36, 0.3); border-left: 4px solid var(--amber); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; align-items: center; gap: 12px;">
