@@ -1,5 +1,5 @@
 /* ============================================
-   NEW HOME PAGE INJECTOR & TOPBAR NAME FIX
+   NEW HOME PAGE INJECTOR & TOPBAR ICONS REDESIGN
    ============================================ */
 (function () {
   'use strict';
@@ -57,7 +57,60 @@
     </section>
   `;
 
-  // 2. यूज़र का नाम अपडेट करने का फंक्शन
+  // 2. Topbar के आइकन्स को ऊपर-नीचे (Vertical) करने और उनके नीचे नाम लिखने का फंक्शन
+  function styleTopbarIcons() {
+    const iconConfigs = [
+      { id: 'logoutBtn', label: 'Logout', color: '#fca5a5' },
+      { id: 'settingsBtn', label: 'Settings' },
+      { id: 'notifBtn', label: 'Alerts' },
+      { id: 'themeBtn', label: 'Theme' },
+      { id: 'planBadgeBtn', label: 'Plan' },
+    ];
+
+    iconConfigs.forEach((cfg) => {
+      const btn = document.getElementById(cfg.id);
+      if (btn && !btn.querySelector('.custom-topbar-label')) {
+        const originalEmoji = btn.innerText;
+
+        // बटन को flex-column बनाएं ताकि आइकन ऊपर और टेक्स्ट नीचे आए
+        btn.style.cssText =
+          'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; height: auto; min-width: 55px; background: transparent; border: none;';
+
+        // आइकन और टेक्स्ट को सेट करें
+        btn.innerHTML = `
+            <span style="font-size: 1.1rem; line-height: 1;">${originalEmoji}</span>
+            <span class="custom-topbar-label" style="font-size: 0.6rem; font-weight: 700; color: ${cfg.color || 'var(--text-2)'}; text-transform: capitalize;">${cfg.label}</span>
+        `;
+      }
+    });
+
+    // अवतार (Avatar) और नाम को भी ऊपर-नीचे करें
+    const topAvatar = document.getElementById('topAvatar');
+    const nameEl = document.getElementById('topbarUserName');
+
+    if (topAvatar && nameEl && !document.getElementById('customAvatarContainer')) {
+      const container = document.createElement('div');
+      container.id = 'customAvatarContainer';
+      // ड्रॉपडाउन/कॉलम स्टाइल
+      container.style.cssText =
+        'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; margin-left: 8px;';
+
+      topAvatar.parentNode.insertBefore(container, topAvatar);
+      container.appendChild(topAvatar);
+      container.appendChild(nameEl);
+
+      // अवतार का साइज़ थोड़ा छोटा करें ताकि बाकी आइकन्स के साथ मैच हो जाए
+      topAvatar.style.width = '32px';
+      topAvatar.style.height = '32px';
+      topAvatar.style.fontSize = '0.85rem';
+
+      // नाम की स्टाइलिंग (आइकन के नीचे)
+      nameEl.style.cssText =
+        'font-size: 0.65rem; font-weight: 800; color: var(--text); margin: 0; display: block !important; text-align: center;';
+    }
+  }
+
+  // 3. यूज़र का नाम अपडेट करने का फंक्शन
   function updateUserName() {
     const nameEl = document.getElementById('sbUserName');
     const homeNameEl = document.getElementById('homeUserName');
@@ -65,26 +118,17 @@
 
     if (nameEl) {
       const rawName = nameEl.innerText.trim();
-      // अगर नाम "Loading..." या खाली है, तो अपडेट मत करो
       if (rawName && rawName !== 'Loading...' && rawName !== 'Student') {
-        // होम पेज पर नाम
         if (homeNameEl) homeNameEl.innerText = rawName.split(/\s+/)[0];
 
-        // टॉपबार में नाम (सिर्फ पहला नाम)
         if (topbarNameEl) {
           topbarNameEl.innerText = rawName.split(/\s+/)[0];
-          // मोबाइल पर जगह कम होती है, इसलिए वहाँ नाम छिपा दें, डेस्कटॉप पर दिखाएं
-          if (window.innerWidth > 700) {
-            topbarNameEl.style.display = 'inline-block';
-          } else {
-            topbarNameEl.style.display = 'none';
-          }
         }
       }
     }
   }
 
-  // 3. Supabase से Notice (Announcement) लाने का फंक्शन
+  // 4. Supabase से Notice (Announcement) लाने का फंक्शन
   async function loadNotice() {
     if (!window.supa) return;
     try {
@@ -109,7 +153,7 @@
     }
   }
 
-  // 4. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
+  // 5. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
   function injectHomePage() {
     const content = document.getElementById('content');
     const nav = document.querySelector('.nav');
@@ -158,25 +202,23 @@
       });
     });
 
-    // === 4. TOPBAR MEIN AVATAR KE PEHLE NAAM ADD KARNA ===
+    // === 4. TOPBAR MEIN NAAM ADD KARNA ===
     const topbarRight = document.querySelector('.topbar-right');
     const topAvatar = document.getElementById('topAvatar');
 
     if (topbarRight && topAvatar && !document.getElementById('topbarUserName')) {
-      // अवतार के ठीक पहले नाम दिखाने के लिए स्पैन बनाएं
       const userNameSpan = document.createElement('span');
       userNameSpan.id = 'topbarUserName';
-
-      // स्टाइल दें ताकि यह आइकन्स और अवतार के बीच में अच्छा दिखे
-      userNameSpan.style.cssText =
-        'font-weight: 700; font-size: 0.9rem; color: var(--text); margin-right: 10px; margin-left: 10px; display: none;';
       userNameSpan.innerText = 'Loading...';
 
-      // नाम को अवतार (Avatar) से ठीक पहले डालें (सारे आइकन्स के बाद)
+      // अवतार के ठीक पहले डालें
       topbarRight.insertBefore(userNameSpan, topAvatar);
     }
 
-    // 5. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
+    // === 5. TOPBAR ICONS KO REDESIGN KARNA ===
+    styleTopbarIcons();
+
+    // 6. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
     setTimeout(() => {
       if (window.location.hash !== '#timer') {
         homeBtn.click();
@@ -185,7 +227,7 @@
       updateUserName();
     }, 800);
 
-    // 6. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
+    // 7. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
     const sbUserName = document.getElementById('sbUserName');
     if (sbUserName) {
       const observer = new MutationObserver(() => {
@@ -195,7 +237,7 @@
     }
   }
 
-  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
+  // 6. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
   let attempts = 0;
   const checkInterval = setInterval(() => {
     attempts++;
