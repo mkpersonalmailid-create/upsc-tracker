@@ -140,14 +140,14 @@
             </div>
           </div>
 
-          <!-- Pricing Highlight Box -->
+                    <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
-              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Monthly Plan</div>
+              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Plan starts from</div>
               <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹99<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/month</span></div>
             </div>
             <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); transition: transform 0.2s;">
-              Upgrade for ₹99 →
+              Upgrade
             </button>
           </div>
         </div>
