@@ -57,90 +57,26 @@
     </section>
   `;
 
-  // 2. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
-  function injectHomePage() {
-    const content = document.getElementById('content');
-    const nav = document.querySelector('.nav');
-
-    if (!content || !nav) return; // अगर एलिमेंट्स नहीं मिले तो रुक जाएं
-
-    // अगर पहले से इंजेक्ट हो चुका है तो दोबारा न करें
-    if (document.getElementById('view-home')) return;
-
-    // 1. Home View इंजेक्ट करें
-    content.insertAdjacentHTML('afterbegin', homeHTML);
-
-    // 2. Sidebar में Home बटन बनाएं
-    const homeBtn = document.createElement('button');
-    homeBtn.className = 'nav-item'; // active क्लास बाद में लगाएंगे
-    homeBtn.dataset.view = 'home';
-    homeBtn.innerHTML = `<span class="nav-icon">🏠</span><span class="nav-label">Home</span>`;
-
-    // इसे "Study" बटन के ठीक ऊपर लगाएं
-    const studyBtn = nav.querySelector('.nav-item[data-view="study"]');
-    if (studyBtn) {
-      nav.insertBefore(homeBtn, studyBtn);
-    } else {
-      nav.insertAdjacentElement('afterbegin', homeBtn);
-    }
-
-    // 3. Home बटन पर क्लिक करने का लॉजिक (बिना switchView को छेड़े)
-    homeBtn.addEventListener('click', () => {
-      // सारे व्यूज़ छिपा दें
-      document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
-      // Home व्यू दिखाएं
-      document.getElementById('view-home').classList.add('active');
-
-      // साइडबार में सिर्फ Home को active करें
-      document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
-      homeBtn.classList.add('active');
-
-      // State अपडेट करें (अगर ग्लोबल है तो)
-      try {
-        if (typeof state !== 'undefined') state.view = 'home';
-        if (window.state) window.state.view = 'home';
-      } catch (e) {}
-
-      document.getElementById('content').scrollTop = 0;
-
-      // नाम अपडेट करें
-      updateUserName();
-    });
-
-    // 4. बाकी बटन्स (जैसे Timer, Dashboard) पर क्लिक करने पर Home से active क्लास हटाना
-    document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
-      otherBtn.addEventListener('click', () => {
-        homeBtn.classList.remove('active');
-      });
-    });
-
-    // 5. डिफ़ॉल्ट रूप से Home पेज खोलें (जब ऐप पहली बार लोड हो)
-    setTimeout(() => {
-      // अगर यूज़र पहले से किसी और पेज पर नहीं गया है
-      if (window.location.hash !== '#timer') {
-        homeBtn.click();
-      }
-      updateUserName();
-      loadNotice();
-    }, 1000);
-  }
-
-  // 3. यूज़र का नाम अपडेट करने का फंक्शन
+  // 2. यूज़र का नाम अपडेट करने का फंक्शन
   function updateUserName() {
     const nameEl = document.getElementById('sbUserName');
     const homeNameEl = document.getElementById('homeUserName');
+
     if (nameEl && homeNameEl) {
-      // सिर्फ पहला नाम (First Name) निकालें
-      const firstName = nameEl.innerText.trim().split(' ')[0];
-      homeNameEl.innerText = firstName;
+      const rawName = nameEl.innerText.trim();
+      // अगर नाम "Loading..." या खाली है, तो अपडेट मत करो
+      if (rawName && rawName !== 'Loading...' && rawName !== 'Student') {
+        const firstName = rawName.split(/\s+/)[0];
+        homeNameEl.innerText = firstName;
+      }
     }
   }
 
-  // 4. Supabase से Notice (Announcement) लाने का फंक्शन
+  // 3. Supabase से Notice (Announcement) लाने का फंक्शन
   async function loadNotice() {
     if (!window.supa) return;
     try {
-      const { data, error } = await window.supa
+      const { data } = await window.supa
         .from('site_announcements')
         .select('*')
         .eq('active', true)
@@ -161,23 +97,91 @@
     }
   }
 
-  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं (ताकि कोई एरर न आए)
+  // 4. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
+  function injectHomePage() {
+    const content = document.getElementById('content');
+    const nav = document.querySelector('.nav');
+
+    if (!content || !nav) return;
+    if (document.getElementById('view-home')) return; // अगर पहले से है तो रुकें
+
+    // 1. Home View इंजेक्ट करें
+    content.insertAdjacentHTML('afterbegin', homeHTML);
+
+    // 2. Sidebar में Home बटन बनाएं
+    const homeBtn = document.createElement('button');
+    homeBtn.className = 'nav-item';
+    homeBtn.dataset.view = 'home';
+    homeBtn.innerHTML = `<span class="nav-icon">🏠</span><span class="nav-label">Home</span>`;
+
+    // इसे "Study" बटन के ठीक ऊपर लगाएं
+    const studyBtn = nav.querySelector('.nav-item[data-view="study"]');
+    if (studyBtn) {
+      nav.insertBefore(homeBtn, studyBtn);
+    } else {
+      nav.insertAdjacentElement('afterbegin', homeBtn);
+    }
+
+    // 3. Home बटन पर क्लिक करने का लॉजिक
+    homeBtn.addEventListener('click', () => {
+      document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
+      const homeView = document.getElementById('view-home');
+      if (homeView) homeView.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
+      homeBtn.classList.add('active');
+
+      try {
+        if (typeof state !== 'undefined') state.view = 'home';
+        if (window.state) window.state.view = 'home';
+      } catch (e) {}
+
+      const contentEl = document.getElementById('content');
+      if (contentEl) contentEl.scrollTop = 0;
+
+      updateUserName();
+    });
+
+    // 4. बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
+    document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
+      otherBtn.addEventListener('click', () => {
+        homeBtn.classList.remove('active');
+      });
+    });
+
+    // 5. डिफ़ॉल्ट रूप से Home पेज खोलें
+    setTimeout(() => {
+      if (window.location.hash !== '#timer') {
+        homeBtn.click();
+      }
+      loadNotice();
+    }, 800);
+
+    // ✅ नया सुधार: साइडबार में नाम आते ही उसे अपने आप होम पेज पर अपडेट कर दें
+    const sbUserName = document.getElementById('sbUserName');
+    if (sbUserName) {
+      const observer = new MutationObserver(() => {
+        updateUserName();
+      });
+      observer.observe(sbUserName, { childList: true, characterData: true, subtree: true });
+    }
+  }
+
+  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
   let attempts = 0;
   const checkInterval = setInterval(() => {
     attempts++;
     const content = document.getElementById('content');
     const nav = document.querySelector('.nav');
 
-    // जब content और nav दोनों मिल जाएं
     if (content && nav && nav.children.length > 0) {
       clearInterval(checkInterval);
       injectHomePage();
     }
 
-    // 5 मिनट बाद ट्राई करना बंद कर दें
     if (attempts > 600) clearInterval(checkInterval);
   }, 500);
 
-  // Export to window so other scripts can reload notice if needed
+  // Global access
   window.reloadHomeNotice = loadNotice;
 })();
