@@ -4,103 +4,106 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (New Premium SaaS Copywriting)
+  // 1. Home View का HTML (New Premium Dashboard Vibe)
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
-      <!-- HERO SECTION (Emotional Connection) -->
-      <div class="hero" style="background: var(--card); text-align: center; padding: 50px 20px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden;">
+      <!-- HERO SECTION -->
+      <div class="hero" style="background: linear-gradient(135deg, var(--card), rgba(168, 85, 247, 0.1)); text-align: left; padding: 40px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px;">
         <!-- Background Glow -->
-        <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 200px; height: 200px; background: rgba(168, 85, 247, 0.2); filter: blur(80px); border-radius: 50%;"></div>
+        <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: rgba(236, 72, 153, 0.15); filter: blur(80px); border-radius: 50%;"></div>
         
         <div style="position: relative; z-index: 1;">
-          <div style="display: inline-block; background: rgba(168, 85, 247, 0.15); color: var(--purple); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">
-            Hi <span id="homeUserName">Student</span> 👋
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: var(--text); padding: 6px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; margin-bottom: 20px;">
+            <span style="display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite;"></span>
+            Welcome back, <span id="homeUserName" style="color: var(--amber); font-size: 1rem;">Student</span>
           </div>
-          <h1 style="font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 16px; font-weight: 900; line-height: 1.2; background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em;">
-            It's not about studying 12 hours.<br>It's about knowing where those 12 hours went.
-          </h1>
-          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 550px; margin: 0 auto; line-height: 1.6; font-weight: 500;">
-            Stop guessing your progress. UPSC Tracker is the operating system for your preparation—built to keep you consistent, organised, and in control.
-          </p>
-        </div>
-      </div>
-
-      <!-- PROBLEM & SOLUTION (Problem Awareness & Value) -->
-      <div class="card" style="margin-top: 20px;">
-        <div class="card-header"><span class="card-title-lg">Why most aspirants feel stuck</span></div>
-        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2);">
-          The UPSC syllabus is vast. Without a proper system, preparation feels like walking in the dark. You sit at your desk for hours, but when someone asks what you actually covered, you draw a blank. <br><br>
-          <strong>You don't need more motivation. You need a system.</strong> This app was built after interviewing 1000+ aspirants who struggled with the exact same problem: tracking daily hours and maintaining consistency. That ends today.
-        </p>
-      </div>
-
-      <!-- FEATURES BREAKDOWN (Solution) -->
-      <div class="card" style="margin-top: 20px;">
-        <div class="card-header"><span class="card-title-lg">Your Daily UPSC Operating System</span></div>
-        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 10px;">
           
-          <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <div style="background: rgba(168, 85, 247, 0.15); color: var(--purple); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">⏱️</div>
-            <div>
-              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Track Every Minute</div>
-              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Use the built-in timer to log exactly what you study. No more guessing.</div>
-            </div>
-          </div>
+          <h1 style="font-size: clamp(2.2rem, 5vw, 3.5rem); margin-bottom: 12px; font-weight: 900; line-height: 1.1; color: var(--text); letter-spacing: -0.03em;">
+            Don't just study hard.<br>
+            <span style="background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Study with a system.</span>
+          </h1>
+          
+          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 500px; line-height: 1.6; font-weight: 500; margin-bottom: 24px;">
+            UPSC is not about who studies the most. It's about who tracks, revises, and analyzes better. Take control of your preparation today.
+          </p>
 
-          <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <div style="background: rgba(236, 72, 153, 0.15); color: var(--pink); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">📖</div>
-            <div>
-              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Master the Syllabus</div>
-              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Tick off topics, plan revisions, and never lose track of what's pending.</div>
-            </div>
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); display: flex; align-items: center; gap: 8px;">
+              ⏱️ Start Timer
+            </button>
+            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              💎 Go Premium
+            </button>
           </div>
-
-          <div style="display: flex; gap: 12px; align-items: flex-start;">
-            <div style="background: rgba(20, 184, 166, 0.15); color: var(--teal); padding: 8px; border-radius: 10px; font-size: 1.2rem; flex-shrink: 0;">📊</div>
-            <div>
-              <div style="font-weight: 800; color: var(--text); font-size: 0.95rem;">Analyze Your Reality</div>
-              <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.6;">Find out when you are most productive and where you are lagging.</div>
-            </div>
-          </div>
-
         </div>
       </div>
 
-      <!-- PREMIUM FEATURES (Desire & Value) -->
-      <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(236, 72, 153, 0.05)); border-color: rgba(168, 85, 247, 0.3);">
-        <div class="card-header"><span class="card-title-lg">Elevate your preparation with Premium</span></div>
-        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2); margin-bottom: 16px;">
-          Free is great to get started, but Premium gives you the ultimate edge:
-        </p>
+      <!-- FEATURE HIGHLIGHTS (Grid Boxes) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 20px;">
         
-        <ul style="font-size: 0.9rem; line-height: 1.7; color: var(--text-2); padding-left: 20px; margin-top: 0; display: flex; flex-direction: column; gap: 12px;">
-          <li>
-            <strong style="color: var(--text);">Study With Partner:</strong> Don't prepare alone. Get matched with aspirants who share your <strong>exact Optional Subject and Target Year</strong>. Compare stats, stay accountable, and grow together.
-          </li>
-          <li>
-            <strong style="color: var(--text);">Advanced Analytics:</strong> Dive deep into your study patterns. Identify your most productive hours and fix your weak spots.
-          </li>
-          <li>
-            <strong style="color: var(--text);">Advanced Calendar & Planner:</strong> Map out your entire month, schedule revisions, and track your test scores.
-          </li>
-          <li>
-            <strong style="color: var(--text);">Unlimited Notes & Exports:</strong> Build your personal library of short notes and export your data anytime.
-          </li>
-        </ul>
+        <!-- Box 1 -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.2);">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📊</div>
+          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Real Analytics</div>
+          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Find out exactly where your hours are going and when you are most productive.</div>
+        </div>
+
+        <!-- Box 2 -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2);">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🤝</div>
+          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Study With Partner</div>
+          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Don't prepare alone. Match with aspirants having the same Optional & Year.</div>
+        </div>
+
+        <!-- Box 3 -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(20, 184, 166, 0.05); border-color: rgba(20, 184, 166, 0.2);">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(20, 184, 166, 0.15); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📖</div>
+          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Syllabus Mastery</div>
+          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Track every topic, plan revisions, and never lose sight of the finish line.</div>
+        </div>
+
       </div>
 
-      <!-- PRICING / VALUE PERCEPTION -->
-      <div class="card" style="margin-top: 20px; text-align: center;">
-        <div class="card-header" style="justify-content: center;"><span class="card-title-lg">Less than the cost of two cups of tea.</span></div>
-        <p style="font-size: 0.95rem; line-height: 1.7; color: var(--text-2);">
-          Other prep apps charge you ₹300+ every month. We know the budget constraints of a serious aspirant. That's why Premium costs <strong style="color: var(--amber);">less than ₹100/month</strong>. 
-          <br><br>
-          If you are dedicated to cracking this exam, we highly recommend the <strong>Yearly Plan</strong> to save even more.
-        </p>
-        <button onclick="if(typeof switchView === 'function') switchView('premium');" style="margin-top: 16px; background: var(--grad-1); color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 6px 18px rgba(168, 85, 247, 0.4);">
-          View Premium Plans →
-        </button>
+      <!-- PREMIUM UPGRADE SECTION (The Hook) -->
+      <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #171026 0%, #2d1b4e 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em;">PREMIUM</div>
+        
+        <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Why go Premium?</h2>
+            <p style="font-size: 0.95rem; color: var(--text-2); line-height: 1.6;">
+              Other apps charge ₹300+ per month for basic features. We charge <strong>less than the price of two cups of chai.</strong> You get all advanced tools to completely dominate your preparation.
+            </p>
+          </div>
+
+          <!-- Premium Benefits List -->
+          <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
+              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Unlimited Access:</strong> No limits on Notes, Tests, and Data Exports.</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
+              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Deep Analytics:</strong> Discover hidden patterns in your study routine.</div>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
+              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Partner Matching:</strong> Find the perfect study buddy to stay accountable.</div>
+            </div>
+          </div>
+
+          <!-- Pricing Highlight Box -->
+          <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
+            <div>
+              <div style="font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Yearly Plan</div>
+              <div style="font-size: 1.8rem; font-weight: 900; color: var(--amber); line-height: 1;">₹799<span style="font-size: 0.9rem; color: var(--text-2); font-weight: 600;">/year</span></div>
+            </div>
+            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);">
+              Upgrade Now →
+            </button>
+          </div>
+        </div>
       </div>
 
     </section>
