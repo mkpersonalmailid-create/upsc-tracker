@@ -4,68 +4,86 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (Premium SaaS UI & Punchy Copy)
+  // 1. Home View का HTML (Centered Hero with Main Action Buttons)
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
-      <!-- HERO SECTION -->
-      <div class="hero" style="background: var(--card); text-align: left; padding: 40px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px; box-shadow: var(--shadow-md);">
+      <!-- HERO SECTION (Centered & Premium) -->
+      <div class="hero" style="background: var(--card); text-align: center; padding: 50px 20px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
         
         <!-- Glow Effect -->
-        <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: rgba(236, 72, 153, 0.15); filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
+        <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; background: rgba(168, 85, 247, 0.15); filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
         
-        <div style="position: relative; z-index: 1;">
+        <div style="position: relative; z-index: 1; max-width: 750px;">
           <!-- Social Proof Badge -->
           <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--green); padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; font-weight: 800; margin-bottom: 20px;">
             <span style="display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite;"></span>
             500+ Serious Aspirants already inside
           </div>
           
-          <h1 style="font-size: clamp(2.2rem, 5vw, 3.2rem); margin-bottom: 12px; font-weight: 900; line-height: 1.1; color: var(--text); letter-spacing: -0.03em;">
+          <h1 style="font-size: clamp(2.2rem, 5vw, 3.2rem); margin-bottom: 16px; font-weight: 900; line-height: 1.1; color: var(--text); letter-spacing: -0.03em;">
             Don't just study hard.<br>
             <span style="background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Study with a system.</span>
           </h1>
           
-          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 550px; line-height: 1.6; font-weight: 500; margin-bottom: 24px;">
+          <p style="color: var(--text-2); font-size: 1.05rem; line-height: 1.6; font-weight: 500; margin-bottom: 32px;">
             Hi <span id="homeUserName" style="color: var(--amber); font-weight: 800;">Student</span>, UPSC is not about who studies the most. It's about who tracks, revises, and analyzes better. Take control of your preparation today.
           </p>
 
-          <!-- Bigger CTA Button -->
-          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 16px 40px; border-radius: 14px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
+          <!-- Main Action Buttons (Centered Grid) -->
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            
+            <!-- Timer Button (Primary) -->
+            <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 16px 36px; border-radius: 12px; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4); display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
               ⏱️ Start Timer
             </button>
+            
+            <!-- Partner Button -->
+            <button onclick="if(window.__partner && typeof window.__partner.open === 'function') window.__partner.open(); else if(typeof switchView === 'function') switchView('partner');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='var(--card)'; this.style.borderColor='var(--purple)';" onmouseout="this.style.background='var(--card-2)'; this.style.borderColor='var(--border)';">
+              🤝 Study Partner
+            </button>
+            
+            <!-- Calendar Button -->
+            <button onclick="if(typeof switchView === 'function') switchView('calendar');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='var(--card)'; this.style.borderColor='var(--purple)';" onmouseout="this.style.background='var(--card-2)'; this.style.borderColor='var(--border)';">
+              🗓️ Calendar
+            </button>
+            
+            <!-- Upgrade Button -->
+            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.4); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(251, 191, 36, 0.25)';" onmouseout="this.style.background='rgba(251, 191, 36, 0.15)';">
+              💎 Upgrade
+            </button>
+
           </div>
         </div>
       </div>
 
-      <!-- FEATURE HIGHLIGHTS (Punchy Grid) -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px;">
+      <!-- FEATURE HIGHLIGHTS (Colorful Grid) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px;">
         
-        <!-- Box 1: Syllabus -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📖</div>
+        <!-- Box 1: Syllabus (Purple) -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(168, 85, 247, 0.03)); border: 1px solid rgba(168, 85, 247, 0.3); transition: transform 0.2s;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(168, 85, 247, 0.2); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📖</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Pre-integrated UPSC Syllabus</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Every paper, subject, and topic is already mapped. Zero manual setup required.</div>
         </div>
 
-        <!-- Box 2: State PCS -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(20, 184, 166, 0.15); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📝</div>
+        <!-- Box 2: State PCS (Teal) -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(20, 184, 166, 0.03)); border: 1px solid rgba(20, 184, 166, 0.3); transition: transform 0.2s;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(20, 184, 166, 0.2); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📝</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Custom Subjects (State PCS)</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Preparing for State PCS simultaneously? Add any custom subject you want to learn.</div>
         </div>
 
-        <!-- Box 3: GoalMax -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(249, 115, 22, 0.15); color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🔄</div>
+        <!-- Box 3: GoalMax (Orange) -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(249, 115, 22, 0.03)); border: 1px solid rgba(249, 115, 22, 0.3); transition: transform 0.2s;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(249, 115, 22, 0.2); color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🔄</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">GoalMax Revision Cycle</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Set how many revisions you need (3, 4, 5...). The app auto-tracks and schedules them.</div>
         </div>
 
-        <!-- Box 4: Partner -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
-          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(236, 72, 153, 0.15); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🤝</div>
+        <!-- Box 4: Partner (Pink) -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(236, 72, 153, 0.03)); border: 1px solid rgba(236, 72, 153, 0.3); transition: transform 0.2s;">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(236, 72, 153, 0.2); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🤝</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Study With Partner</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Don't prepare alone. Match with aspirants sharing your exact Optional & Target Year.</div>
         </div>
@@ -147,7 +165,6 @@
       }
     });
 
-    // === नया टॉगल स्विच बनाएं ===
     const topbarRight = document.querySelector('.topbar-right');
     if (topbarRight && !document.getElementById('customThemeToggleWrap')) {
       const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -195,7 +212,6 @@
       });
     }
 
-    // अवतार और नाम
     const topAvatar = document.getElementById('topAvatar');
     const nameEl = document.getElementById('topbarUserName');
 
