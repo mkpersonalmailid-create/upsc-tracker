@@ -4,102 +4,113 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML (New Premium Dashboard Vibe)
+  // 1. Home View का HTML (Premium SaaS UI & Punchy Copy)
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
       <!-- HERO SECTION -->
-      <div class="hero" style="background: linear-gradient(135deg, var(--card), rgba(168, 85, 247, 0.1)); text-align: left; padding: 40px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px;">
-        <!-- Background Glow -->
-        <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: rgba(236, 72, 153, 0.15); filter: blur(80px); border-radius: 50%;"></div>
+      <div class="hero" style="background: var(--card); text-align: left; padding: 40px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 20px; box-shadow: var(--shadow-md);">
+        
+        <!-- Glow Effect -->
+        <div style="position: absolute; top: -50px; right: -50px; width: 250px; height: 250px; background: rgba(236, 72, 153, 0.15); filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
         
         <div style="position: relative; z-index: 1;">
-          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(168, 85, 247, 0.15); border: 1px solid rgba(168, 85, 247, 0.3); color: var(--text); padding: 6px 16px; border-radius: 30px; font-size: 0.85rem; font-weight: 800; margin-bottom: 20px;">
+          <!-- Social Proof Badge -->
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--green); padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; font-weight: 800; margin-bottom: 20px;">
             <span style="display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite;"></span>
-            Welcome back, <span id="homeUserName" style="color: var(--amber); font-size: 1rem;">Student</span>
+            500+ Serious Aspirants already inside
           </div>
           
-          <h1 style="font-size: clamp(2.2rem, 5vw, 3.5rem); margin-bottom: 12px; font-weight: 900; line-height: 1.1; color: var(--text); letter-spacing: -0.03em;">
+          <h1 style="font-size: clamp(2.2rem, 5vw, 3.2rem); margin-bottom: 12px; font-weight: 900; line-height: 1.1; color: var(--text); letter-spacing: -0.03em;">
             Don't just study hard.<br>
             <span style="background: var(--grad-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Study with a system.</span>
           </h1>
           
-          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 500px; line-height: 1.6; font-weight: 500; margin-bottom: 24px;">
-            UPSC is not about who studies the most. It's about who tracks, revises, and analyzes better. Take control of your preparation today.
+          <p style="color: var(--text-2); font-size: 1.05rem; max-width: 550px; line-height: 1.6; font-weight: 500; margin-bottom: 24px;">
+            Hi <span id="homeUserName" style="color: var(--amber); font-weight: 800;">Student</span>, UPSC is not about who studies the most. It's about who tracks, revises, and analyzes better. Take control of your preparation today.
           </p>
 
+          <!-- Bigger CTA Button -->
           <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-            <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 6px 20px rgba(168, 85, 247, 0.4); display: flex; align-items: center; gap: 8px;">
+            <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 16px 40px; border-radius: 14px; font-weight: 900; font-size: 1.1rem; cursor: pointer; box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5); display: flex; align-items: center; gap: 10px; transition: transform 0.2s;">
               ⏱️ Start Timer
-            </button>
-            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-              💎 Go Premium
             </button>
           </div>
         </div>
       </div>
 
-      <!-- FEATURE HIGHLIGHTS (Grid Boxes) -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-top: 20px;">
+      <!-- FEATURE HIGHLIGHTS (Punchy Grid) -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 24px;">
         
-        <!-- Box 1 -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.2);">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📊</div>
-          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Real Analytics</div>
-          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Find out exactly where your hours are going and when you are most productive.</div>
+        <!-- Box 1: Syllabus -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(168, 85, 247, 0.15); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📖</div>
+          <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Pre-integrated UPSC Syllabus</div>
+          <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Every paper, subject, and topic is already mapped. Zero manual setup required.</div>
         </div>
 
-        <!-- Box 2 -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(236, 72, 153, 0.05); border-color: rgba(236, 72, 153, 0.2);">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(236, 72, 153, 0.15); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🤝</div>
-          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Study With Partner</div>
-          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Don't prepare alone. Match with aspirants having the same Optional & Year.</div>
+        <!-- Box 2: State PCS -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(20, 184, 166, 0.15); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📝</div>
+          <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Custom Subjects (State PCS)</div>
+          <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Preparing for State PCS simultaneously? Add any custom subject you want to learn.</div>
         </div>
 
-        <!-- Box 3 -->
-        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 10px; background: rgba(20, 184, 166, 0.05); border-color: rgba(20, 184, 166, 0.2);">
-          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(20, 184, 166, 0.15); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📖</div>
-          <div style="font-weight: 900; font-size: 1.05rem; color: var(--text);">Syllabus Mastery</div>
-          <div style="font-size: 0.85rem; color: var(--text-2); line-height: 1.5;">Track every topic, plan revisions, and never lose sight of the finish line.</div>
+        <!-- Box 3: GoalMax -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(249, 115, 22, 0.15); color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🔄</div>
+          <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">GoalMax Revision Cycle</div>
+          <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Set how many revisions you need (3, 4, 5...). The app auto-tracks and schedules them.</div>
+        </div>
+
+        <!-- Box 4: Partner -->
+        <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--card); border: 1px solid var(--border);">
+          <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(236, 72, 153, 0.15); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🤝</div>
+          <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Study With Partner</div>
+          <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Don't prepare alone. Match with aspirants sharing your exact Optional & Target Year.</div>
         </div>
 
       </div>
 
-      <!-- PREMIUM UPGRADE SECTION (The Hook) -->
-      <div class="card" style="margin-top: 20px; background: linear-gradient(135deg, #171026 0%, #2d1b4e 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden;">
-        <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em;">PREMIUM</div>
+      <!-- PREMIUM UPGRADE SECTION -->
+      <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+        <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em; z-index: 10;">PREMIUM</div>
         
         <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
           <div>
-            <h2 style="font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Why go Premium?</h2>
-            <p style="font-size: 0.95rem; color: var(--text-2); line-height: 1.6;">
-              Other apps charge ₹300+ per month for basic features. We charge <strong>less than the price of two cups of chai.</strong> You get all advanced tools to completely dominate your preparation.
+            <h2 style="font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 8px;">Why go Premium?</h2>
+            <p style="font-size: 0.95rem; color: #b8a8d9; line-height: 1.6;">
+              Other apps charge ₹300+ per month. We charge <strong>less than the price of two cups of chai.</strong> Get all advanced tools to completely dominate your preparation.
             </p>
           </div>
 
           <!-- Premium Benefits List -->
-          <div style="display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="display: flex; gap: 12px; align-items: flex-start;">
-              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
-              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Unlimited Access:</strong> No limits on Notes, Tests, and Data Exports.</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--green); font-size: 1.1rem;">✔</span>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Deep Analytics:</strong> Find hidden patterns.</div>
             </div>
-            <div style="display: flex; gap: 12px; align-items: flex-start;">
-              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
-              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Deep Analytics:</strong> Discover hidden patterns in your study routine.</div>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--green); font-size: 1.1rem;">✔</span>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Unlimited Access:</strong> No limits on Notes & Tests.</div>
             </div>
-            <div style="display: flex; gap: 12px; align-items: flex-start;">
-              <span style="color: var(--emerald); font-size: 1.2rem;">✔</span>
-              <div style="font-size: 0.9rem; color: #e2d9f3;"><strong style="color: #fff;">Partner Matching:</strong> Find the perfect study buddy to stay accountable.</div>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--green); font-size: 1.1rem;">✔</span>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Advanced Planner:</strong> Map your entire month.</div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: flex-start;">
+              <span style="color: var(--green); font-size: 1.1rem;">✔</span>
+              <div style="font-size: 0.85rem; color: #e2d9f3;"><strong style="color: #fff;">Data Exports:</strong> Download your progress anytime.</div>
             </div>
           </div>
 
           <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
-              <div style="font-size: 0.8rem; color: var(--text-2); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Yearly Plan</div>
-              <div style="font-size: 1.8rem; font-weight: 900; color: var(--amber); line-height: 1;">₹799<span style="font-size: 0.9rem; color: var(--text-2); font-weight: 600;">/year</span></div>
+              <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Yearly Plan</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1;">₹799<span style="font-size: 0.9rem; color: #b8a8d9; font-weight: 600;">/year</span></div>
             </div>
-            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 900; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);">
+            <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: var(--amber); color: #000; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 900; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4); transition: transform 0.2s;">
               Upgrade Now →
             </button>
           </div>
@@ -111,15 +122,12 @@
 
   // 2. Topbar के आइकन्स को नया लुक देना और टॉगल स्विच जोड़ना
   function styleTopbarIcons() {
-    // 'Plan' वाले बटन को छिपा दें
     const planBtn = document.getElementById('planBadgeBtn');
     if (planBtn) planBtn.style.display = 'none';
 
-    // पुराने थीम बटन को छिपा दें (क्योंकि अब हम नया टॉगल लगा रहे हैं)
     const oldThemeBtn = document.getElementById('themeBtn');
     if (oldThemeBtn) oldThemeBtn.style.display = 'none';
 
-    // बाकी आइकन्स की लिस्ट
     const iconConfigs = [
       { id: 'logoutBtn', label: 'Logout', color: '#fca5a5' },
       { id: 'settingsBtn', label: 'Settings' },
@@ -130,10 +138,8 @@
       const btn = document.getElementById(cfg.id);
       if (btn && !btn.querySelector('.custom-topbar-label')) {
         const originalEmoji = btn.innerText;
-
         btn.style.cssText =
           'display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 6px; height: auto; min-width: 55px; background: transparent; border: none;';
-
         btn.innerHTML = `
             <span style="font-size: 1.1rem; line-height: 1;">${originalEmoji}</span>
             <span class="custom-topbar-label" style="font-size: 0.6rem; font-weight: 700; color: ${cfg.color || 'var(--text)'}; text-transform: capitalize;">${cfg.label}</span>
@@ -160,7 +166,6 @@
         <span style="font-size: 0.6rem; font-weight: 700; color: var(--text);">Theme</span>
       `;
 
-      // स्टाइल्स (CSS) इंजेक्ट करें
       if (!document.getElementById('themeToggleStyles')) {
         const style = document.createElement('style');
         style.id = 'themeToggleStyles';
@@ -172,7 +177,6 @@
         document.head.appendChild(style);
       }
 
-      // टॉगल बटन को टॉपबार में जोड़ें
       const topAvatar = document.getElementById('topAvatar');
       if (topAvatar) {
         topbarRight.insertBefore(toggleWrap, topAvatar);
@@ -180,7 +184,6 @@
         topbarRight.appendChild(toggleWrap);
       }
 
-      // टॉगल करने का लॉजिक
       document.getElementById('customThemeToggleInput').addEventListener('change', (e) => {
         const newTheme = e.target.checked ? 'light' : 'dark';
         if (typeof applyTheme === 'function') {
@@ -192,7 +195,7 @@
       });
     }
 
-    // अवतार (Avatar) और नाम को ऊपर-नीचे करें
+    // अवतार और नाम
     const topAvatar = document.getElementById('topAvatar');
     const nameEl = document.getElementById('topbarUserName');
 
@@ -225,10 +228,7 @@
       const rawName = nameEl.innerText.trim();
       if (rawName && rawName !== 'Loading...' && rawName !== 'Student') {
         if (homeNameEl) homeNameEl.innerText = rawName.split(/\s+/)[0];
-
-        if (topbarNameEl) {
-          topbarNameEl.innerText = rawName.split(/\s+/)[0];
-        }
+        if (topbarNameEl) topbarNameEl.innerText = rawName.split(/\s+/)[0];
       }
     }
   }
@@ -241,10 +241,8 @@
     if (!content || !nav) return;
     if (document.getElementById('view-home')) return;
 
-    // 1. Home View इंजेक्ट करें
     content.insertAdjacentHTML('afterbegin', homeHTML);
 
-    // 2. Sidebar में Home बटन बनाएं
     const homeBtn = document.createElement('button');
     homeBtn.className = 'nav-item';
     homeBtn.dataset.view = 'home';
@@ -257,7 +255,6 @@
       nav.insertAdjacentElement('afterbegin', homeBtn);
     }
 
-    // 3. Home बटन पर क्लिक करने का लॉजिक
     homeBtn.addEventListener('click', () => {
       document.querySelectorAll('.view').forEach((v) => v.classList.remove('active'));
       const homeView = document.getElementById('view-home');
@@ -275,14 +272,12 @@
       updateUserName();
     });
 
-    // बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
     document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
       otherBtn.addEventListener('click', () => {
         homeBtn.classList.remove('active');
       });
     });
 
-    // === 4. TOPBAR MEIN NAAM ADD KARNA ===
     const topbarRight = document.querySelector('.topbar-right');
     const topAvatar = document.getElementById('topAvatar');
 
@@ -290,14 +285,11 @@
       const userNameSpan = document.createElement('span');
       userNameSpan.id = 'topbarUserName';
       userNameSpan.innerText = 'Loading...';
-
       topbarRight.insertBefore(userNameSpan, topAvatar);
     }
 
-    // === 5. TOPBAR ICONS KO REDESIGN KARNA ===
     styleTopbarIcons();
 
-    // 6. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
     setTimeout(() => {
       if (window.location.hash !== '#timer') {
         homeBtn.click();
@@ -305,7 +297,6 @@
       updateUserName();
     }, 800);
 
-    // 7. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
     const sbUserName = document.getElementById('sbUserName');
     if (sbUserName) {
       const observer = new MutationObserver(() => {
