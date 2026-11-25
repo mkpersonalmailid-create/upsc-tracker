@@ -1,5 +1,5 @@
 /* ============================================
-   NEW HOME PAGE INJECTOR
+   NEW HOME PAGE INJECTOR & TOPBAR NAME FIX
    ============================================ */
 (function () {
   'use strict';
@@ -61,13 +61,25 @@
   function updateUserName() {
     const nameEl = document.getElementById('sbUserName');
     const homeNameEl = document.getElementById('homeUserName');
+    const topbarNameEl = document.getElementById('topbarUserName');
 
-    if (nameEl && homeNameEl) {
+    if (nameEl) {
       const rawName = nameEl.innerText.trim();
       // अगर नाम "Loading..." या खाली है, तो अपडेट मत करो
       if (rawName && rawName !== 'Loading...' && rawName !== 'Student') {
-        const firstName = rawName.split(/\s+/)[0];
-        homeNameEl.innerText = firstName;
+        // होम पेज पर नाम
+        if (homeNameEl) homeNameEl.innerText = rawName.split(/\s+/)[0];
+
+        // टॉपबार में नाम (सिर्फ पहला नाम)
+        if (topbarNameEl) {
+          topbarNameEl.innerText = rawName.split(/\s+/)[0];
+          // मोबाइल पर जगह कम होती है, इसलिए वहाँ नाम छिपा दें, डेस्कटॉप पर दिखाएं
+          if (window.innerWidth > 700) {
+            topbarNameEl.style.display = 'inline-block';
+          } else {
+            topbarNameEl.style.display = 'none';
+          }
+        }
       }
     }
   }
@@ -89,7 +101,7 @@
         const text = document.getElementById('homeNoticeText');
         if (banner && text) {
           text.innerText = data.message;
-          banner.style.display = 'flex'; // बैनर दिखाएं
+          banner.style.display = 'flex';
         }
       }
     } catch (e) {
@@ -103,7 +115,7 @@
     const nav = document.querySelector('.nav');
 
     if (!content || !nav) return;
-    if (document.getElementById('view-home')) return; // अगर पहले से है तो रुकें
+    if (document.getElementById('view-home')) return;
 
     // 1. Home View इंजेक्ट करें
     content.insertAdjacentHTML('afterbegin', homeHTML);
@@ -114,7 +126,6 @@
     homeBtn.dataset.view = 'home';
     homeBtn.innerHTML = `<span class="nav-icon">🏠</span><span class="nav-label">Home</span>`;
 
-    // इसे "Study" बटन के ठीक ऊपर लगाएं
     const studyBtn = nav.querySelector('.nav-item[data-view="study"]');
     if (studyBtn) {
       nav.insertBefore(homeBtn, studyBtn);
@@ -136,28 +147,45 @@
         if (window.state) window.state.view = 'home';
       } catch (e) {}
 
-      const contentEl = document.getElementById('content');
-      if (contentEl) contentEl.scrollTop = 0;
-
+      if (content) content.scrollTop = 0;
       updateUserName();
     });
 
-    // 4. बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
+    // बाकी बटन्स पर क्लिक करने पर Home से active क्लास हटाना
     document.querySelectorAll('.nav-item:not([data-view="home"])').forEach((otherBtn) => {
       otherBtn.addEventListener('click', () => {
         homeBtn.classList.remove('active');
       });
     });
 
-    // 5. डिफ़ॉल्ट रूप से Home पेज खोलें
+    // === 4. TOPBAR MEIN AVATAR KE PEHLE NAAM ADD KARNA ===
+    const topbarRight = document.querySelector('.topbar-right');
+    const topAvatar = document.getElementById('topAvatar');
+
+    if (topbarRight && topAvatar && !document.getElementById('topbarUserName')) {
+      // अवतार के ठीक पहले नाम दिखाने के लिए स्पैन बनाएं
+      const userNameSpan = document.createElement('span');
+      userNameSpan.id = 'topbarUserName';
+
+      // स्टाइल दें ताकि यह आइकन्स और अवतार के बीच में अच्छा दिखे
+      userNameSpan.style.cssText =
+        'font-weight: 700; font-size: 0.9rem; color: var(--text); margin-right: 10px; margin-left: 10px; display: none;';
+      userNameSpan.innerText = 'Loading...';
+
+      // नाम को अवतार (Avatar) से ठीक पहले डालें (सारे आइकन्स के बाद)
+      topbarRight.insertBefore(userNameSpan, topAvatar);
+    }
+
+    // 5. डिफ़ॉल्ट रूप से Home पेज खोलें और नाम अपडेट करें
     setTimeout(() => {
       if (window.location.hash !== '#timer') {
         homeBtn.click();
       }
       loadNotice();
+      updateUserName();
     }, 800);
 
-    // ✅ नया सुधार: साइडबार में नाम आते ही उसे अपने आप होम पेज पर अपडेट कर दें
+    // 6. साइडबार में नाम आते ही उसे टॉपबार में भी अपडेट कर दें
     const sbUserName = document.getElementById('sbUserName');
     if (sbUserName) {
       const observer = new MutationObserver(() => {
