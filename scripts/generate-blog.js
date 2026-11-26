@@ -484,7 +484,7 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW):
 2. NO AI WORDS: NEVER use these AI words: "delve", "moreover", "furthermore", "in the realm of", "tapestry", "crucial", "testament".
 3. NO EM-DASHES: NEVER use long em-dashes (—). Use normal commas or periods.
 4. FORMATTING: Keep paragraphs very short (2-3 lines max). Use line breaks.
-5. Add a specific section titled "<h2>My Personal Struggle</h2>" where you share a realistic, relatable anecdote about the struggle of a UPSC aspirant.
+5. DO NOT invent fake personal experiences or stories. Write from a neutral, third-person perspective. NEVER use phrases like "I remember" or "When I was preparing". 
 6. Include a subtle mention of using a study tracker app to stay disciplined.
 7. Output ONLY the article body HTML. DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags. DO NOT include markdown code fences like \`\`\`html.
 
@@ -583,8 +583,9 @@ RULES:
 
     content += `
 
-  <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
-</div>`;
+  <div style="background: linear-gradient(135deg, rgba(168,85,247,.1), rgba(236,72,153,.06)); border: 1px solid rgba(168,85,247,.3); border-left: 4px solid var(--purple); border-radius: 12px; padding: 20px 24px; margin: 28px 0; color: var(--text-2);">
+    <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html" style="color: var(--purple); font-weight: 700;">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
+  </div>`;
 
     const descMatch = content.match(/<p[^>]*>([^<]+)<\/p>/i);
     const description = descMatch
