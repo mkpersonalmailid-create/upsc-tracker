@@ -413,11 +413,14 @@ ${NAVBAR_HTML}
 
     ${readNextHtml}
 
-    <div class="cta-box">
-      <h3>🎯 Start Tracking Your UPSC Prep Today</h3>
-      <p>Free UPSC Study Tracker — timer, syllabus, revisions, PYQs — all in one place.</p>
-      <a href="/app.html" class="cta-btn">🚀 Start Free Now</a>
-    </div>
+            <div class="cta-box">
+          <h3>🎯 Start Tracking Your UPSC Prep Today</h3>
+          <p>Free UPSC Study Tracker — timer, syllabus, revisions, PYQs — all in one place.</p>
+          <a href="/app.html" class="cta-btn">🚀 Start Free Now</a>
+        </div>
+
+      </div>
+    </article>
 
   </div>
 </article>
