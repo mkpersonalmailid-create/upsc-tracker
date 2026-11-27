@@ -15,46 +15,218 @@ const MODELS = [
 ];
 
 /* ═══════════════════════════════════════════════════════════
-   TOPICS — 60+ across 8 categories
+   TOPICS: library across 24 categories
+
+   Notes:
+   - Topics from the earlier version of this file are kept word for word,
+     so already-published posts are still recognised by the duplicate check.
+   - Every topic should answer one distinct question or learning need.
+   - Avoid quotes, ampersands and apostrophes in titles (they go into
+     HTML attributes and URL slugs).
    ═══════════════════════════════════════════════════════════ */
 const TOPICS = [
+  // ── 1. UPSC Preparation Strategy ──
   'Effective Time Management for UPSC Preparation',
   'How to Reduce Screen Time During UPSC Prep',
-  'Balancing Job and UPSC Preparation',
   'Daily Study Timetable for UPSC Aspirants',
-  'How to Avoid Burnout During Long UPSC Preparation',
   'Early Morning Study Routine for UPSC CSE',
   'How to Stay Consistent in UPSC Preparation',
-  'Weekend Study Strategy for Working Aspirants',
-  'How to Prepare Indian Polity for UPSC Prelims',
-  'Best Approach to Study Modern Indian History for UPSC',
-  'How to Master Geography for UPSC CSE',
-  'Economics Preparation Strategy for UPSC Prelims',
-  'Environment and Ecology Preparation for UPSC',
-  'Science and Technology for UPSC Prelims',
-  'How to Prepare International Relations for UPSC Mains',
-  'Indian Society and Social Justice Preparation',
-  'Internal Security Preparation Strategy for UPSC',
-  'Ethics and Integrity Preparation for UPSC Mains',
-  'UPSC Mains Answer Writing Tips for Beginners',
-  'How to Structure UPSC Mains Answers Effectively',
-  'Common Mistakes in UPSC Mains Answer Writing',
-  'How to Improve Answer Writing Speed for UPSC Mains',
-  'Using Diagrams in UPSC Mains Answers',
-  'Essay Writing Strategy for UPSC',
-  'How to Write Introductions in UPSC Mains',
-  'Role of Examples in UPSC Answer Writing',
-  'How to Analyze UPSC Previous Year Questions',
-  'Why PYQs Are Essential for UPSC Preparation',
-  'How to Use UPSC PYQs for Revision',
-  'Subject-wise PYQ Analysis for UPSC Prelims',
-  'Common Patterns in UPSC Prelims Questions',
-  'How to Track UPSC PYQ Progress Effectively',
   'Best Books for UPSC Prelims 2026',
   'Best Books for UPSC Mains GS Papers',
   'Standard Reference Books for UPSC Preparation',
   'Free Online Resources for UPSC Aspirants',
   'How to Choose the Right UPSC Coaching',
+  'Understanding the UPSC Civil Services Exam Pattern and Stages',
+  'How to Read the UPSC Syllabus Line by Line',
+  'How to Start UPSC Preparation from Scratch',
+  'How Many Hours Should You Study for UPSC',
+  'Making a Realistic One Year UPSC Study Plan',
+  'How to Plan the Last Three Months Before Prelims',
+  'How to Divide Time Between Prelims and Mains Preparation',
+  'How to Read NCERT Books Efficiently for UPSC',
+  'How to Avoid Resource Hoarding in UPSC Preparation',
+  'How to Set Monthly Targets and Review Your UPSC Progress',
+  'How to Prepare for the UPSC Interview and Personality Test',
+  'How to Fill the Detailed Application Form for the UPSC Interview',
+
+  // ── 2. Indian Polity and Constitution ──
+  'How to Prepare Indian Polity for UPSC Prelims',
+  'Fundamental Rights in the Indian Constitution',
+  'Directive Principles of State Policy and Fundamental Rights',
+  'Fundamental Duties and Their Relevance',
+  'The Preamble of the Indian Constitution Explained',
+  'Basic Structure Doctrine and Landmark Supreme Court Cases',
+  'How Parliament Works in India',
+  'Parliamentary Committees and Their Role',
+  'Powers and Limitations of the President of India',
+  'Role of the Governor in the Indian States',
+  'Centre State Relations in India',
+  'Emergency Provisions in the Indian Constitution',
+  'Constitutional Amendment Procedure Under Article 368',
+  'Panchayati Raj and the 73rd Constitutional Amendment',
+  'Urban Local Government and the 74th Constitutional Amendment',
+  'Structure of the Indian Judiciary',
+  'Judicial Review, Judicial Activism and Judicial Overreach',
+  'Constitutional Bodies and Statutory Bodies Compared',
+  'Election Commission of India and Electoral Reforms',
+  'Anti Defection Law and the Tenth Schedule',
+  'Writs in the Indian Constitution',
+  'Finance Commission and Fiscal Federalism',
+  'Comptroller and Auditor General of India',
+
+  // ── 3. Modern Indian History ──
+  'Best Approach to Study Modern Indian History for UPSC',
+  'Revolt of 1857: Causes, Nature and Consequences',
+  'Formation of the Indian National Congress and the Early Nationalists',
+  'Moderates and Extremists in the Freedom Struggle',
+  'Swadeshi Movement and the Partition of Bengal',
+  'Gandhi in Champaran, Kheda and Ahmedabad',
+  'Non Cooperation Movement and the Khilafat Issue',
+  'Civil Disobedience Movement and the Dandi March',
+  'Quit India Movement of 1942',
+  'Constitutional Developments in British India from 1909 to 1935',
+  'Cabinet Mission Plan and the Partition of India',
+  'Social and Religious Reform Movements of the Nineteenth Century',
+
+  // ── 4. Ancient and Medieval Indian History ──
+  'Indus Valley Civilisation: Features and Decline',
+  'Early and Later Vedic Society',
+  'Mauryan Administration and Ashoka Dhamma',
+  'Gupta Period: Polity, Economy and Culture',
+  'Buddhism and Jainism: Origins and Teachings',
+  'Chola Administration and Maritime Trade',
+  'Delhi Sultanate: Dynasties and Administration',
+  'Mughal Administration: Mansabdari and Land Revenue',
+  'Bhakti and Sufi Movements Compared',
+  'Vijayanagara Empire and the Bahmani Kingdom',
+
+  // ── 5. Art and Culture ──
+  'Indian Temple Architecture: Nagara, Dravida and Vesara Styles',
+  'Classical Dances of India for UPSC',
+  'Indian Painting Traditions from Mural to Miniature',
+  'Buddhist Architecture: Stupas, Chaityas and Viharas',
+  'Indo Islamic Architecture in India',
+  'Hindustani and Carnatic Music for UPSC',
+  'UNESCO World Heritage Sites in India',
+  'Intangible Cultural Heritage of India',
+  'Geographical Indications and Handicrafts of India',
+
+  // ── 6. Indian Geography ──
+  'How to Master Geography for UPSC CSE',
+  'Physiographic Divisions of India',
+  'Himalayan Rivers and Peninsular Rivers Compared',
+  'Indian Monsoon: Mechanism and Onset',
+  'ENSO and the Indian Ocean Dipole and Their Effect on the Monsoon',
+  'Soils of India and Their Classification',
+  'Natural Vegetation and Forest Types of India',
+  'Seasons and Regional Climate Variations in India',
+  'Mineral and Energy Resources of India',
+  'Population Distribution and Census Concepts in India',
+  'Industrial Regions and Location Factors in India',
+  'Ports and Transport Networks of India',
+
+  // ── 7. World Geography ──
+  'Plate Tectonics, Earthquakes and Volcanoes',
+  'Atmospheric Circulation, Winds and Cyclones',
+  'Ocean Currents and Their Effects on Climate',
+  'Climatic Regions of the World',
+  'Major Mountains, Deserts and Rivers of the World',
+  'How to Prepare World Geography Maps for UPSC Prelims',
+  'Straits, Seas and Strategic Locations in the News',
+
+  // ── 8. Indian Economy ──
+  'Economics Preparation Strategy for UPSC Prelims',
+  'Basic Macroeconomic Concepts: GDP, GNP and Growth',
+  'Inflation in India: Types, Causes and Measurement',
+  'Monetary Policy and the Reserve Bank of India',
+  'Fiscal Policy and the Union Budget Explained',
+  'Banking in India and the Problem of NPAs',
+  'Financial Inclusion in India',
+  'Balance of Payments and Exchange Rates',
+  'Goods and Services Tax: Structure and Challenges',
+  'Poverty and Unemployment Measurement in India',
+  'From Planning Commission to NITI Aayog',
+  'Capital Market and the Role of SEBI',
+  'How to Read the Economic Survey and Union Budget for UPSC',
+
+  // ── 9. Environment and Ecology ──
+  'Environment and Ecology Preparation for UPSC',
+  'Biodiversity Hotspots and Conservation Strategies',
+  'Protected Areas in India: National Parks and Sanctuaries',
+  'Climate Change Negotiations: UNFCCC and the Paris Agreement',
+  'Types of Pollution and Control Measures in India',
+  'Environmental Laws and Institutions in India',
+  'How to Prepare Species in News for Prelims',
+  'Ecosystems, Food Chains and Biogeochemical Cycles',
+  'Wetlands and Ramsar Sites in India',
+  'Environmental Impact Assessment in India',
+
+  // ── 10. Science and Technology ──
+  'Science and Technology for UPSC Prelims',
+  'Space Technology and ISRO Missions for UPSC',
+  'Biotechnology Basics for UPSC',
+  'Defence Technology and DRDO Programmes',
+  'Artificial Intelligence: Applications and Governance Issues',
+  'Intellectual Property Rights in India',
+  'Health and Diseases for UPSC Prelims',
+  'Nuclear Energy and the Indian Nuclear Programme',
+
+  // ── 11. International Relations ──
+  'How to Prepare International Relations for UPSC Mains',
+  'The Neighbourhood First Policy of India',
+  'India and China Relations: Issues and Approaches',
+  'India and the United States: Strategic Partnership',
+  'India and Russia Relations: Past and Present',
+  'Quad and the Indo Pacific Strategy',
+  'BRICS, SCO and G20 and the Role of India',
+  'United Nations and the Debate on Its Reform',
+  'India Act East Policy and ASEAN',
+  'India and West Asia: Energy, Diaspora and Strategy',
+  'From Non Alignment to Multi Alignment in Indian Foreign Policy',
+
+  // ── 12. Internal Security ──
+  'Internal Security Preparation Strategy for UPSC',
+  'Left Wing Extremism in India',
+  'Cyber Security Challenges and the Indian Framework',
+  'Border Management and Security Challenges',
+  'Terrorism and Counter Terrorism Architecture in India',
+  'Insurgency in North East India',
+  'Money Laundering and Organised Crime',
+  'Coastal and Maritime Security of India',
+
+  // ── 13. Ethics and Integrity ──
+  'Ethics and Integrity Preparation for UPSC Mains',
+  'GS Paper 4 Syllabus Decoded Topic by Topic',
+  'How to Approach Ethics Case Studies Step by Step',
+  'Attitude, Aptitude and Emotional Intelligence',
+  'Probity in Governance and Public Service Values',
+  'Thinkers and Philosophers for the Ethics Paper',
+  'Utilitarianism, Deontology and Virtue Ethics in Answers',
+
+  // ── 14. Essay Writing ──
+  'Essay Writing Strategy for UPSC',
+  'How to Choose the Right Topic in the UPSC Essay Paper',
+  'Essay Structure: Introduction, Body and Conclusion',
+  'How to Write Philosophical and Abstract Essays',
+  'Building a Content Bank for the UPSC Essay',
+  'Time Management in the Essay Paper',
+
+  // ── 15. Mains Answer Writing ──
+  'UPSC Mains Answer Writing Tips for Beginners',
+  'How to Structure UPSC Mains Answers Effectively',
+  'Common Mistakes in UPSC Mains Answer Writing',
+  'How to Improve Answer Writing Speed for UPSC Mains',
+  'Using Diagrams in UPSC Mains Answers',
+  'How to Write Introductions in UPSC Mains',
+  'Role of Examples in UPSC Answer Writing',
+  'How to Write Conclusions in UPSC Mains Answers',
+  'Understanding Directive Words in UPSC Questions',
+  'Answer Writing Differences Between GS1, GS2, GS3 and GS4',
+  'Using Flowcharts and Maps in Mains Answers',
+  'How to Self Evaluate Your Mains Answers',
+  'Using Data and Committee Reports in Mains Answers',
+
+  // ── 16. Current Affairs Preparation ──
   'Newspaper Reading Strategy for UPSC',
   'Role of Current Affairs in UPSC CSE',
   'How to Prepare Current Affairs for UPSC 2026',
@@ -62,24 +234,108 @@ const TOPICS = [
   'How to Make Notes from Current Affairs',
   'Monthly Current Affairs Compilation Strategy',
   'Current Affairs Revision Techniques',
+  'Linking the Static Syllabus with Current Affairs',
+  'How to Read The Hindu Editorials for UPSC',
+  'Using PIB and Government Websites for Current Affairs',
+  'Reports and Indices Important for UPSC',
+  'Using Yojana and Kurukshetra Effectively',
+
+  // ── 17. UPSC Prelims Strategy ──
+  'How to Analyze UPSC Previous Year Questions',
+  'Why PYQs Are Essential for UPSC Preparation',
+  'How to Use UPSC PYQs for Revision',
+  'Subject-wise PYQ Analysis for UPSC Prelims',
+  'Common Patterns in UPSC Prelims Questions',
+  'How to Track UPSC PYQ Progress Effectively',
+  'UPSC Prelims Exam Pattern and Cut Off Trends',
+  'Elimination Techniques for Prelims MCQs',
+  'Negative Marking Strategy in UPSC Prelims',
+  'How to Solve Statement Based Questions in Prelims',
+  'Last Month Revision Plan for UPSC Prelims',
+  'Exam Day Strategy for UPSC Prelims',
+  'Common Factual Traps in UPSC Prelims',
+
+  // ── 18. CSAT Preparation ──
+  'CSAT Syllabus and the Qualifying Standard',
+  'CSAT Reading Comprehension Strategy',
+  'CSAT Basic Numeracy and Data Interpretation',
+  'Logical Reasoning and Analytical Ability in CSAT',
+  'CSAT Preparation for Aspirants Without a Maths Background',
+
+  // ── 19. Optional Subject Preparation ──
   'UPSC Optional Subject Selection Guide',
   'How to Prepare Sociology Optional for UPSC',
   'Political Science Optional Strategy for UPSC',
   'History Optional Preparation Guide',
   'Geography Optional Strategy for UPSC',
   'How to Score High in Optional Subject',
+  'Public Administration Optional Strategy',
+  'Anthropology Optional Preparation',
+  'Philosophy Optional Preparation',
+  'Law Optional Preparation for UPSC',
+  'Overlap Between Optional Subjects and GS Papers',
+  'How Your Educational Background Should Influence Optional Choice',
+
+  // ── 20. Revision and Mock Tests ──
   'Importance of Revision in UPSC Preparation',
   'How to Use Mock Tests for UPSC Prelims',
   'Full-Length Test Strategy for UPSC',
   'Spaced Repetition for UPSC Revision',
   'How to Analyze Mock Test Performance',
   'Best Time to Start Mock Tests',
+  'Building a Revision Cycle for the UPSC Syllabus',
+  'How to Make Short Notes for Revision',
+  'Active Recall Versus Re Reading',
+  'How to Use a Mains Test Series',
+  'Weekly Review Method for UPSC Aspirants',
+
+  // ── 21. Working Aspirants ──
+  'Balancing Job and UPSC Preparation',
+  'Weekend Study Strategy for Working Aspirants',
+  'Studying for UPSC After a Nine to Five Job',
+  'Should You Quit Your Job for UPSC Preparation',
+  'Using Commute Time for UPSC Preparation',
+  'UPSC Preparation with Shift Duty Jobs',
+  'Planning Leave for Prelims and Mains',
+  'Managing Energy After Work Hours for UPSC Study',
+
+  // ── 22. Mental Health and Preparation Challenges ──
+  'How to Avoid Burnout During Long UPSC Preparation',
   'Handling Failure in UPSC Preparation',
   'How to Stay Motivated During UPSC Journey',
   'Mental Health Tips for UPSC Aspirants',
   'Dealing with Peer Pressure During UPSC Prep',
   'How to Handle Family Expectations in UPSC',
   'Building Resilience for Long UPSC Preparation',
+  'Handling Anxiety Before UPSC Prelims',
+  'Dealing with Comparison and Social Media During Preparation',
+  'How to Overcome Procrastination in UPSC Preparation',
+  'Sleep and Memory in UPSC Preparation',
+  'Dealing with Isolation During UPSC Preparation',
+  'How to Review Your Result and Plan the Next Attempt',
+
+  // ── 23. Government Schemes and Governance ──
+  'How to Study Government Schemes for UPSC',
+  'E Governance and Digital India',
+  'Good Governance and Citizen Charters',
+  'Right to Information Act: Provisions and Limitations',
+  'Role of Civil Society and NGOs in Governance',
+  'Direct Benefit Transfer and the JAM Trinity',
+  'Public Health System and Ayushman Bharat',
+  'Welfare Schemes for Vulnerable Sections',
+
+  // ── 24. Agriculture and Social Issues ──
+  'Indian Society and Social Justice Preparation',
+  'Indian Agriculture: Cropping Patterns and Irrigation',
+  'Minimum Support Price and Agricultural Marketing',
+  'Land Reforms in India',
+  'Food Processing and Storage Challenges in India',
+  'Women Empowerment and Gender Issues in India',
+  'Communalism, Regionalism and Secularism in India',
+  'Caste and Social Stratification in India',
+  'National Education Policy 2020 and UPSC',
+  'Disaster Management in India',
+  'Urbanisation and Its Challenges in India',
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -134,33 +390,29 @@ function getRecentBlogPosts(excludeSlug = '', limit = 3) {
   }
 }
 
-/* ⬇️ यहाँ Topic Picker अपडेट किया गया है (Smart Modifiers के साथ) ⬇️ */
+/* Topic picker: only unused topics. When the library is exhausted it returns
+   null and the script stops safely instead of inventing variations. */
 function pickTopic() {
+  // Warn about accidental duplicate topics in the library (same slug)
+  const seen = new Set();
+  TOPICS.forEach((t) => {
+    const s = topicToSlug(t);
+    if (seen.has(s)) console.warn(`⚠️ Duplicate topic slug in TOPICS: ${s}`);
+    seen.add(s);
+  });
+
   const usedSlugs = getUsedTopicSlugs();
   const available = TOPICS.filter((t) => !usedSlugs.includes(topicToSlug(t)));
 
-  if (available.length > 0) {
-    console.log(`📊 ${available.length}/${TOPICS.length} topics unused`);
-    return available[Math.floor(Math.random() * available.length)];
+  if (available.length === 0) {
+    console.log(`🛑 All ${TOPICS.length} topics in the library already have a published post.`);
+    console.log('   No article was generated, to avoid duplicate or low-value content.');
+    console.log('   Add new, distinct topics to the TOPICS array to continue.');
+    return null;
   }
 
-  console.warn('⚠️ All 63 topics used! Creating a unique variation to avoid duplicate content.');
-
-  const baseTopic = TOPICS[Math.floor(Math.random() * TOPICS.length)];
-
-  // ये "Modifiers" पुराने टॉपिक को एक नया रूप देंगे ताकि कोई भी ब्लॉग डुप्लीकेट न हो
-  const modifiers = [
-    `Advanced Guide to ${baseTopic}`,
-    `Common Mistakes to Avoid in ${baseTopic}`,
-    `${baseTopic} - A 2026 Perspective`,
-    `5 Secret Tips for ${baseTopic}`,
-    `How to Master ${baseTopic} Quickly`,
-    `Ultimate Checklist for ${baseTopic}`,
-  ];
-
-  const newTopic = modifiers[Math.floor(Math.random() * modifiers.length)];
-  console.log(`🔄 Generated unique variation: ${newTopic}`);
-  return newTopic;
+  console.log(`📊 ${available.length}/${TOPICS.length} topics unused`);
+  return available[Math.floor(Math.random() * available.length)];
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -459,11 +711,439 @@ document.querySelectorAll('.faq-item').forEach(item => {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   PROMPT
+   ═══════════════════════════════════════════════════════════ */
+function buildPrompt(topic) {
+  return `You are a senior Indian UPSC educator and editorial writer. You are writing an article for the blog of a UPSC study resource. The readers are UPSC Civil Services Examination aspirants, many of them beginners and many of them working professionals.
+
+Write one original, accurate and genuinely useful article on this topic: "${topic}".
+
+VOICE
+- Natural Indian English. Conversational but knowledgeable, like a thoughtful senior explaining a subject to another aspirant.
+- Practical, honest and specific. Explain difficult ideas in simple language.
+- Vary sentence length. Keep paragraphs short, generally 2 to 4 sentences.
+- Do not sound like a coaching advertisement or a motivational speaker.
+- Use examples from Indian society, governance, economy, geography, history and the UPSC exam itself.
+- Do not repeat obvious advice. Every paragraph should give the reader something they can use or understand better.
+- Do not insert deliberate typos, slang or awkward sentences.
+
+WORDS AND PUNCTUATION TO AVOID
+- Never use these: delve, moreover, furthermore, crucial, testament, tapestry, game-changer, "in today's fast-paced world", "in the realm of", "unlock your potential", "it is important to note", "embark on a journey", "let's dive deep", "this comprehensive guide will explore". Do not replace them with equally stock phrases.
+- Do not begin the conclusion with "In conclusion".
+- Never use the em dash character, and do not use the en dash as a dash. Use commas, full stops or brackets. A hyphen inside a compound word is fine.
+- Avoid heavy motivational language such as "never give up", "believe in yourself" or "chase your dreams".
+
+NO FABRICATED EXPERIENCE (very important)
+- Write in the third person, or address the reader as "you". Never write in the first person singular. Do not use "I", "my" or "me".
+- Do not invent personal stories, preparation attempts, failures, results, conversations with friends or teachers, testimonials, success stories, toppers' quotes, or claims of having cleared UPSC.
+- Do not attribute a quote to any person unless it is a very well known line that you are certain of.
+
+ACCURACY (more important than word count)
+- Follow the actual UPSC CSE syllabus. Keep GS-I, GS-II, GS-III and GS-IV topics correctly separated.
+- Use correct article numbers, schedules, case names, law names, institution names, committees and schemes. If you are not sure of a number, year or name, leave it out or describe it in general terms.
+- Do not invent statistics, dates, reports, scheme names, official recommendations or citations. Do not write phrases like "studies show" or "according to a recent survey". Do not give percentages about aspirants or toppers.
+- Do not present possibly outdated information as current. Where something changes often (exam notification details, cut-offs, scheme allocations, latest reports and rankings), say so and ask the reader to check the latest official source such as the UPSC notification, the concerned ministry or PIB.
+- Separate official facts from editorial opinion, and make it clear when something is opinion (for example, "A sensible approach is...").
+- Point out common misconceptions and the limits of the topic where they exist.
+
+MAKE THE ARTICLE SPECIFIC TO THE TOPIC
+Fit the article to the nature of the topic. Do not write a generic study-tips article with the topic name pasted on top.
+- Polity and governance: relevant Articles, Parts, Schedules, amendments, landmark cases, institutions, limitations, and the usual Prelims and Mains angles.
+- History: a chronological flow, key personalities, causes, events, consequences, and the kind of questions the exam asks.
+- Geography and environment: mechanisms and processes, causes, regional examples, map-based points and terms the exam likes to test.
+- Economy: define concepts clearly, show how they connect, use Indian examples and say which institution does what.
+- Art and culture: features, regional examples, distinguishing points and ways to remember them.
+- Science and technology: the basic idea, Indian applications, issues and policy angles, without jargon.
+- International relations: historical background, key interests, current frameworks and balanced analysis.
+- Ethics: key concepts, a practical approach to a case study, and a short worked example of how to structure an answer.
+- Essay and answer writing: actual structures, sample outlines or opening lines, and a worked example that shows the technique.
+- Strategy, revision, CSAT, optional subjects, working aspirants and mental health: concrete routines, realistic schedules, trade-offs, common mistakes and what to do differently.
+- Current affairs: how to link news to the syllabus, with an example of turning a news item into notes.
+Each article needs its own structure, examples and practical value.
+
+PRODUCT MENTIONS
+- The page already carries a call to action, so add no promotion. Do not name any product, brand, website or app, and add no links. If it genuinely helps one point, you may say once, in plain words, that a study tracker or a simple spreadsheet can help track revision or progress. Otherwise do not mention it.
+
+OUTPUT FORMAT
+- Output only the article body as HTML. No <!DOCTYPE>, <html>, <head>, <body>, <style> or <script> tags, no <h1>, no markdown, no code fences, and no commentary before or after the article.
+- Allowed tags only: h2, h3, p, ul, ol, li, strong, em, blockquote. No attributes, classes, links or images.
+- English only.
+- Length: about 1000 to 1300 words. Do not add filler to reach the count.
+
+REQUIRED STRUCTURE
+Use exactly these seven h2 headings in this order. Replace the two bracketed titles with specific headings that suit this topic (never use the words "Section 1" or "Section 2").
+
+<h2>Introduction</h2>
+Two short paragraphs. Say what the topic is, why it matters for UPSC and which stage or paper it belongs to, and what the reader will get from the article. No dramatic hook, no cliches.
+
+<h2>[Relevant Section 1 Title]</h2>
+The core of the topic. Use h3 subsections, lists or a blockquote where they help the reader.
+
+<h2>My Personal Struggle</h2>
+An empathetic editorial section about a recognisable challenge aspirants face with this topic or this part of preparation. For example, an aspirant with a full-time job may find it hard to stay consistent after returning home tired. Describe it as a common pattern ("Many aspirants...", "Consider an aspirant who...") and never as the author's own experience. Be honest and relatable, then lead into what actually helps. Two to four short paragraphs, no first person.
+
+<h2>[Relevant Section 2 Title]</h2>
+Practical application: how to study or revise this topic, how to answer questions on it, a sample structure or example, common mistakes, and good sources.
+
+<h2>Pro Tips</h2>
+An <ol> with five to seven specific tips for this topic. Each tip is one or two sentences and must not be generic advice that could fit any topic.
+
+<h2>Frequently Asked Questions</h2>
+Exactly three questions that an aspirant would really search for on this topic. Use this pattern only:
+<h3>Question?</h3>
+<p>Answer in two or three sentences.</p>
+
+<h2>Conclusion</h2>
+One or two short paragraphs that end with one concrete next step for the reader. Do not introduce new facts. Do not start with "In conclusion".`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CONTENT CLEANING + QUALITY CONTROL
+   ═══════════════════════════════════════════════════════════ */
+const MAX_ATTEMPTS = 4;
+
+function sanitizeContent(raw) {
+  let content = String(raw)
+    .replace(/^```html\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+
+  if (content.includes('<body')) {
+    const match = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (match) content = match[1];
+  }
+  content = content.replace(/<head[\s\S]*?<\/head>/gi, '');
+  content = content.replace(/<style[\s\S]*?<\/style>/gi, '');
+  content = content.replace(/<script[\s\S]*?<\/script>/gi, '');
+  content = content.replace(/<!DOCTYPE[^>]*>/gi, '');
+  content = content.replace(/<\/?(html|head|body)[^>]*>/gi, '');
+
+  // Drop any chatter the model wrote before the first heading
+  const firstH2 = content.search(/<h2[\s>]/i);
+  if (firstH2 > 0) content = content.slice(firstH2);
+
+  // No em dashes (and no spaced en dashes used as dashes)
+  content = content
+    .replace(/\s*(?:\u2014|&mdash;|&#8212;|&#x2014;)\s*/gi, ', ')
+    .replace(/\s+\u2013\s+/g, ', ')
+    .replace(/,\s*,/g, ',');
+
+  return content.trim();
+}
+
+function stripTags(html) {
+  return html
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function countWords(html) {
+  const t = stripTags(html);
+  return t ? t.split(' ').length : 0;
+}
+
+function getSection(html, startHeading, endHeading) {
+  const startTag = `<h2>${startHeading}</h2>`;
+  const start = html.indexOf(startTag);
+  if (start === -1) return '';
+  const from = start + startTag.length;
+  const end = endHeading ? html.indexOf(`<h2>${endHeading}</h2>`, from) : -1;
+  return end === -1 ? html.slice(from) : html.slice(from, end);
+}
+
+const AP = "['\u2019]"; // straight or curly apostrophe
+
+const BANNED_PHRASES = [
+  /\bdelv(?:e|es|ed|ing)\b/i,
+  /\bmoreover\b/i,
+  /\bfurthermore\b/i,
+  new RegExp(`in today${AP}?s fast[- ]paced world`, 'i'),
+  /in the realm of/i,
+  /unlock(?:ing)? your (?:full )?potential/i,
+  /game[- ]?changer/i,
+  /it is important to note/i,
+  /\btapestry\b/i,
+  /\btestament\b/i,
+  /\bcrucial(?:ly)?\b/i,
+  /embark(?:ing)? on (?:a|your|this|the) journey/i,
+  new RegExp(`let${AP}?s dive`, 'i'),
+  /this comprehensive guide/i,
+  /comprehensive guide will/i,
+  /<p>\s*in conclusion\b/i,
+];
+
+const FIRST_PERSON_PATTERNS = [
+  new RegExp(`\\bI${AP}(?:m|ve|d|ll)\\b`),
+  /\bI (?:am|was|have|had|will|would|think|believe|feel|felt|remember|recall|failed|cleared|studied|started|used|learned|learnt|made|saw|met|spoke|joined|gave|attempted|know|suggest|recommend|can|did|got|took|tried|realised|realized|wrote|read|prepared|appeared|scored|quit|left|cried|panicked)\b/,
+  /\b(?:my|our) (?:friend|friends|mentor|teacher|teachers|coach|colleague|batchmate|roommate|senior|brother|sister|parents|first attempt|second attempt|third attempt|journey|experience|story|struggle|preparation|result|score)\b/i,
+  /\bwhen I\b/,
+  /\b(?:he|she|they) told me\b/i,
+  /\bas an aspirant myself\b/i,
+  /\bI myself\b/,
+];
+
+const UNSUPPORTED_CLAIM_CRITICAL = [
+  /\b\d{1,3}\s?(?:%|percent)\s+of\s+(?:the\s+)?(?:aspirants|candidates|toppers|students|selected)/i,
+  /\b(?:most|many|majority of|all)\s+(?:the\s+)?(?:toppers|rank holders|successful candidates)\s+(?:say|said|follow|swear|recommend|use)/i,
+];
+
+const UNSUPPORTED_CLAIM_WARN = [
+  /\b(?:studies|research|surveys?|data|statistics)\s+(?:show|shows|have shown|suggest|suggests|indicate|indicates|reveal|reveals)\b/i,
+  /\baccording to (?:a|an|one) (?:recent |latest )?(?:study|survey|report|analysis)\b/i,
+];
+
+const MOTIVATIONAL_PATTERNS = [
+  /never give up/i,
+  /believe in yourself/i,
+  /\byour dreams?\b/i,
+  /dreams? (?:big|come true)/i,
+  /hard work (?:always )?pays off/i,
+  /stay positive/i,
+  /you(?:'|\u2019)ve got this/i,
+  /keep going/i,
+  /every setback/i,
+  /success (?:is|comes) (?:not|to)/i,
+];
+
+const ALLOWED_TAGS = ['h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'blockquote', 'br'];
+const BALANCED_TAGS = ['h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'blockquote'];
+
+/* Returns { critical: [...], warnings: [...] }.
+   Critical problems block publishing. Warnings trigger one retry, then are logged. */
+function validateArticle(content, finishReason) {
+  const critical = [];
+  const warnings = [];
+
+  if (!content || !content.trim()) {
+    critical.push('The article is empty.');
+    return { critical, warnings };
+  }
+
+  const words = countWords(content);
+  if (words < 700) {
+    critical.push(`The article is too short (${words} words). Write about 1000 to 1300 words of real content.`);
+  } else if (words < 900 || words > 1500) {
+    warnings.push(`The article has ${words} words. Aim for 1000 to 1300 words without filler.`);
+  }
+  if (words > 2000) critical.push(`The article is far too long (${words} words). Aim for 1000 to 1300 words.`);
+
+  if (finishReason === 'length') {
+    critical.push('The response was cut off before the end. Write a tighter article that finishes properly.');
+  }
+
+  // Markdown, code fences, document tags
+  if (/```/.test(content)) critical.push('Remove markdown code fences.');
+  if (/<\/?(?:html|head|body|style|script|h1)\b|<!doctype/i.test(content)) {
+    critical.push('Remove full-document tags and the h1 tag. Output only the article body.');
+  }
+  if (/^\s{0,3}#{1,6}\s/m.test(content) || /\*\*[^*\n]+\*\*/.test(content)) {
+    critical.push('Remove markdown syntax. Use HTML tags only.');
+  }
+  if (/[\u0900-\u097F]/.test(content)) critical.push('Write in English only, with no Devanagari text.');
+
+  // Tags, attributes and balance
+  const tagNames = [...content.matchAll(/<\/?([a-z][a-z0-9]*)\b/gi)].map((m) => m[1].toLowerCase());
+  const badTags = [...new Set(tagNames.filter((t) => !ALLOWED_TAGS.includes(t)))];
+  if (badTags.length)
+    critical.push(`Remove these disallowed tags: ${badTags.join(', ')}. Allowed: ${ALLOWED_TAGS.join(', ')}.`);
+  if (/<[a-z][a-z0-9]*\s+[^>]*>/i.test(content)) {
+    critical.push('Remove all HTML attributes, classes, links and images. Use plain tags only.');
+  }
+  if (/faq-item|faq-a/i.test(content)) critical.push('Do not use the faq-item or faq-a classes.');
+  for (const t of BALANCED_TAGS) {
+    const opens = (content.match(new RegExp(`<${t}>`, 'gi')) || []).length;
+    const closes = (content.match(new RegExp(`</${t}>`, 'gi')) || []).length;
+    if (opens !== closes) critical.push(`Unbalanced <${t}> tags (${opens} opening, ${closes} closing).`);
+  }
+  if (!/<\/(?:p|ol|ul|blockquote)>\s*$/i.test(content)) {
+    critical.push('The article does not end with a complete paragraph or list.');
+  }
+
+  // Required headings, in order
+  const h2s = [...content.matchAll(/<h2>([\s\S]*?)<\/h2>/gi)].map((m) => m[1].trim());
+  const fixed = {
+    0: 'Introduction',
+    2: 'My Personal Struggle',
+    4: 'Pro Tips',
+    5: 'Frequently Asked Questions',
+    6: 'Conclusion',
+  };
+  if (h2s.length !== 7) {
+    critical.push(`Use exactly 7 h2 headings in the required order (found ${h2s.length}).`);
+  } else {
+    for (const [i, name] of Object.entries(fixed)) {
+      if (h2s[i] !== name) critical.push(`h2 number ${Number(i) + 1} must be exactly "${name}" (found "${h2s[i]}").`);
+    }
+    for (const i of [1, 3]) {
+      if (/[\[\]]|^section\b/i.test(h2s[i]) || Object.values(fixed).includes(h2s[i])) {
+        critical.push(`h2 number ${i + 1} must be a specific, topic-relevant title, not a placeholder.`);
+      }
+    }
+    if (new Set(h2s.map((h) => h.toLowerCase())).size !== h2s.length) critical.push('Two h2 headings are identical.');
+  }
+
+  // Pro tips
+  const tipsSection = getSection(content, 'Pro Tips', 'Frequently Asked Questions');
+  const tipCount = (tipsSection.match(/<li>/gi) || []).length;
+  if (h2s.includes('Pro Tips') && tipCount < 4)
+    critical.push('Pro Tips must be a list of five to seven specific tips.');
+
+  // FAQs: exactly three h3 + p pairs
+  const faqSection = getSection(content, 'Frequently Asked Questions', 'Conclusion');
+  const faqH3 = (faqSection.match(/<h3>/gi) || []).length;
+  const faqPairs = (faqSection.match(/<h3>[\s\S]*?<\/h3>\s*<p>[\s\S]*?<\/p>/gi) || []).length;
+  if (h2s.includes('Frequently Asked Questions') && (faqH3 !== 3 || faqPairs !== 3)) {
+    critical.push('The FAQ section needs exactly three questions, each an h3 followed by one p answer.');
+  }
+
+  // Conclusion present
+  const conclusion = getSection(content, 'Conclusion', null);
+  if (h2s.includes('Conclusion') && countWords(conclusion) < 25) {
+    critical.push('The Conclusion is missing or too short.');
+  }
+
+  // Banned phrases
+  const foundBanned = BANNED_PHRASES.map((re) => (content.match(re) || [null])[0]).filter(Boolean);
+  if (foundBanned.length) {
+    critical.push(
+      `Remove these banned phrases and do not replace them with similar stock phrases: ${[...new Set(foundBanned.map((s) => s.replace(/<p>\s*/i, '').trim()))].join(', ')}.`,
+    );
+  }
+  if (/[\u2014]|&mdash;/.test(content)) critical.push('Remove em dashes.');
+
+  // Fake personal experience
+  const personalHits = FIRST_PERSON_PATTERNS.map((re) => (content.match(re) || [null])[0]).filter(Boolean);
+  if (personalHits.length) {
+    critical.push(
+      `Remove all first-person or invented personal experience (found: "${personalHits.slice(0, 3).join('", "')}"). Write in the third person or address the reader as "you".`,
+    );
+  }
+
+  // Unsupported claims
+  const claimHits = UNSUPPORTED_CLAIM_CRITICAL.map((re) => (content.match(re) || [null])[0]).filter(Boolean);
+  if (claimHits.length)
+    critical.push(`Remove unsupported statistics or claims about toppers and aspirants (found: "${claimHits[0]}").`);
+  const warnClaims = UNSUPPORTED_CLAIM_WARN.map((re) => (content.match(re) || [null])[0]).filter(Boolean);
+  if (warnClaims.length)
+    warnings.push(`Avoid vague appeals to unnamed studies or surveys (found: "${warnClaims[0]}").`);
+  const percentCount = (content.match(/\d\s?%/g) || []).length;
+  if (percentCount > 4) warnings.push('Too many percentage figures. Keep only figures you are certain are accurate.');
+
+  // Repeated paragraphs and sentences
+  const paras = [...content.matchAll(/<p>([\s\S]*?)<\/p>/gi)].map((m) => stripTags(m[1]).toLowerCase());
+  const seenParas = new Set();
+  let dupPara = false;
+  for (const p of paras) {
+    if (p.length > 30 && seenParas.has(p)) dupPara = true;
+    seenParas.add(p);
+  }
+  if (dupPara) critical.push('The article repeats a paragraph. Every paragraph must be different.');
+  const sentences = stripTags(content)
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => s.length > 50);
+  if (new Set(sentences).size < sentences.length) warnings.push('Some sentences are repeated. Remove repetition.');
+
+  // Product promotion
+  const productMentions = (content.match(/study tracker|upscstudytracker|upsc tracker/gi) || []).length;
+  if (productMentions > 1)
+    critical.push('Do not promote any product. Mention a study tracker at most once, in plain words.');
+  if (/UPSC Study Tracker/.test(content)) warnings.push('Do not use the brand name. Say "a study tracker" if needed.');
+  if (
+    /start free now|try (?:it )?(?:free|now)|sign up (?:for|now|today)|download (?:our|the) app|our (?:free )?(?:app|tool|platform)/i.test(
+      content,
+    )
+  ) {
+    critical.push('Remove promotional language. The page already has a call to action.');
+  }
+
+  // Style warnings
+  const motivational = MOTIVATIONAL_PATTERNS.filter((re) => re.test(content)).length;
+  if (motivational >= 3)
+    warnings.push('Too much generic motivational language. Replace it with specific, practical content.');
+  const longParas = paras.filter((p) => (p.match(/[.!?](?:\s|$)/g) || []).length > 5).length;
+  if (longParas > 2) warnings.push('Several paragraphs are too long. Keep paragraphs to 2 to 4 sentences.');
+  const openers = {};
+  sentences.forEach((s) => {
+    const k = s.split(' ').slice(0, 2).join(' ');
+    openers[k] = (openers[k] || 0) + 1;
+  });
+  if (Object.values(openers).some((n) => n >= 5))
+    warnings.push('Too many sentences start the same way. Vary the sentence openings.');
+
+  return { critical, warnings };
+}
+
+function buildCorrection(issues) {
+  return `The draft above cannot be published because of these problems:
+${issues.map((i) => `- ${i}`).join('\n')}
+
+Rewrite the complete article from the beginning and fix every problem. Keep the exact required structure and all the earlier rules. Output only the article body HTML, with no code fences and no commentary.`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   GROQ REQUEST (same endpoint, same model fallback order)
+   ═══════════════════════════════════════════════════════════ */
+async function requestCompletion(messages) {
+  let lastError = null;
+
+  for (const model of MODELS) {
+    try {
+      console.log(`🔄 Trying: ${model}`);
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: messages,
+          temperature: 0.7,
+          max_tokens: 8000,
+        }),
+        signal: AbortSignal.timeout(180000),
+      });
+
+      if (!response.ok) {
+        console.log(`❌ Failed: ${response.status}`);
+        lastError = `${model}: ${response.status}`;
+        continue;
+      }
+
+      const data = await response.json();
+      const choice = data && data.choices && data.choices[0];
+      const text = choice && choice.message && choice.message.content;
+      if (typeof text !== 'string' || !text.trim()) {
+        console.log(`❌ Empty response from ${model}`);
+        lastError = `${model}: empty response`;
+        continue;
+      }
+
+      console.log(`✅ Success: ${model}`);
+      return { text, finishReason: choice.finish_reason, model };
+    } catch (e) {
+      console.log(`❌ Error: ${e.message}`);
+      lastError = e.message;
+    }
+  }
+
+  throw new Error(`All models failed. Last: ${lastError}`);
+}
+
+/* ═══════════════════════════════════════════════════════════
    MAIN
    ═══════════════════════════════════════════════════════════ */
 async function main() {
   try {
+    if (!API_KEY) throw new Error('GROQ_API_KEY environment variable is not set.');
+
     const topic = pickTopic();
+    if (!topic) return; // library exhausted: stop safely (exit code 0)
+
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
     const dateSlug = dateStr.replace(/-/g, '');
@@ -477,11 +1157,13 @@ async function main() {
     const readNext = getRecentBlogPosts(slug, 3);
     console.log(`🔗 Read Next: ${readNext.length} posts found`);
 
-    // ⬇️ यहाँ PROMPT बदला गया है (Simple Unexpandable FAQ के लिए) ⬇️
-    const PROMPT = `You are a 25-year-old UPSC CSE aspirant from India who has faced failures and is now sharing practical, raw advice with a friend.
+    const PROMPT = buildPrompt(topic);
 
-Write a detailed blog article on the topic: "${topic}".
+    // Generate, check, and retry with corrective feedback if needed
+    let messages = [{ role: 'user', content: PROMPT }];
+    let best = null;
 
+<<<<<<< HEAD
 CRITICAL INSTRUCTIONS (MUST FOLLOW):
 1. LANGUAGE: STRICTLY write the entire article in English only. Use an Indian-English conversational tone. Sound like a real human talking to a fellow aspirant.
 2. NO AI WORDS: NEVER use these AI words: "delve", "moreover", "furthermore", "in the realm of", "tapestry", "crucial", "testament".
@@ -490,94 +1172,59 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW):
 5. DO NOT invent fake personal experiences or stories. Write from a neutral, third-person perspective. NEVER use phrases like "I remember" or "When I was preparing". 
 6. Include a subtle mention of using a study tracker app to stay disciplined.
 7. Output ONLY the article body HTML. DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags. DO NOT include markdown code fences like \`\`\`html.
+=======
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      console.log(`✍️ Generation attempt ${attempt}/${MAX_ATTEMPTS}`);
+      const result = await requestCompletion(messages);
+      const candidate = sanitizeContent(result.text);
+      const { critical, warnings } = validateArticle(candidate, result.finishReason);
+>>>>>>> dev
 
-Structure your output EXACTLY like this:
+      console.log(`🔎 Quality check: ${critical.length} critical, ${warnings.length} warnings`);
+      critical.forEach((c) => console.log(`   ✖ ${c}`));
+      warnings.forEach((w) => console.log(`   ⚠ ${w}`));
 
-<h2>Introduction</h2>
-<p>Opening paragraph that hooks the reader...</p>
+      const better =
+        !best ||
+        critical.length < best.critical.length ||
+        (critical.length === best.critical.length && warnings.length < best.warnings.length);
+      if (better) best = { content: candidate, critical, warnings };
 
-<h2>[Section 1 Title]</h2>
-<p>Content...</p>
+      if (critical.length === 0 && (warnings.length === 0 || attempt >= 2)) break;
 
-<h2>My Personal Struggle</h2>
-<p>Share a personal, relatable story here...</p>
-
-<h2>[Section 2 Title]</h2>
-<p>Content...</p>
-
-<h2>Pro Tips</h2>
-<ol><li>Tip 1</li><li>Tip 2</li></ol>
-
-<h2>Frequently Asked Questions</h2>
-<h3>Question 1?</h3>
-<p>Answer 1.</p>
-<h3>Question 2?</h3>
-<p>Answer 2.</p>
-<h3>Question 3?</h3>
-<p>Answer 3.</p>
-
-<h2>Conclusion</h2>
-<p>Final thoughts...</p>
-
-RULES:
-- Total word count: 1000-1500 words.
-- Use <h2> for main sections, <h3> for subsections only.
-- Do NOT use the div classes "faq-item" or "faq-a". Just use simple <h3> and <p> tags for FAQs.
-- Output clean HTML only`;
-
-    let response = null;
-    let lastError = null;
-
-    for (const model of MODELS) {
-      try {
-        console.log(`🔄 Trying: ${model}`);
-        response = await fetch(API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: model,
-            messages: [{ role: 'user', content: PROMPT }],
-            temperature: 0.85, // थोड़ा क्रिएटिविटी बढ़ाने के लिए
-            max_tokens: 8000,
-          }),
-        });
-
-        if (response.ok) {
-          console.log(`✅ Success: ${model}`);
-          break;
-        } else {
-          const errText = await response.text();
-          console.log(`❌ Failed: ${response.status}`);
-          lastError = `${model}: ${response.status}`;
-          response = null;
-        }
-      } catch (e) {
-        console.log(`❌ Error: ${e.message}`);
-        lastError = e.message;
-        response = null;
-      }
+      messages = [
+        { role: 'user', content: PROMPT },
+        { role: 'assistant', content: result.text },
+        { role: 'user', content: buildCorrection(critical.concat(warnings)) },
+      ];
     }
 
-    if (!response || !response.ok) {
-      throw new Error(`All models failed. Last: ${lastError}`);
+    if (!best || best.critical.length > 0) {
+      throw new Error(
+        `Article failed quality checks after ${MAX_ATTEMPTS} attempts, so nothing was published. Remaining problems: ${
+          best ? best.critical.join(' | ') : 'no usable output'
+        }`,
+      );
+    }
+    if (best.warnings.length > 0) {
+      console.log('⚠️ Publishing with minor style warnings (see above).');
     }
 
-    const data = await response.json();
-    let content = data.choices[0].message.content;
+    let content = best.content;
 
-    content = content
-      .replace(/^```html\s*/i, '')
-      .replace(/^```\s*/i, '')
-      .replace(/```\s*$/i, '')
-      .trim();
+    // Kept from the original generator: closes the article container before Read Next / CTA.
+    content += `\n\n</div>`;
 
-    if (content.includes('<body')) {
-      const match = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-      if (match) content = match[1];
+    const descMatch = best.content.match(/<p[^>]*>([^<]+)<\/p>/i);
+    let description = descMatch ? descMatch[1].replace(/\s+/g, ' ').trim() : '';
+    if (description.length > 155) {
+      description =
+        description
+          .slice(0, 155)
+          .replace(/\s+\S*$/, '')
+          .trim() + '...';
     }
+<<<<<<< HEAD
     content = content.replace(/<head[\s\S]*?<\/head>/gi, '');
     content = content.replace(/<style[\s\S]*?<\/style>/gi, '');
     content = content.replace(/<script[\s\S]*?<\/script>/gi, '');
@@ -594,6 +1241,11 @@ RULES:
     const description = descMatch
       ? descMatch[1].slice(0, 155).trim() + '...'
       : `Complete guide on ${topic} for UPSC aspirants.`;
+=======
+    if (!description) description = `Complete guide on ${topic} for UPSC aspirants.`;
+    // Description goes inside HTML attributes, so escape it
+    description = description.replace(/&(?!(?:amp|lt|gt|quot|#\d+);)/g, '&amp;').replace(/"/g, '&quot;');
+>>>>>>> dev
 
     const finalHtml = buildHtmlTemplate({
       title: topic,
