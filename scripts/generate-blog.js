@@ -12,6 +12,7 @@ const MODELS = [
   'openai/gpt-oss-120b',
   'llama-3.1-8b-instant',
   'gemma2-9b-it',
+  'openai/gpt-oss-20b', // added: current Groq model, used if the older ones are retired
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -714,87 +715,58 @@ document.querySelectorAll('.faq-item').forEach(item => {
    PROMPT
    ═══════════════════════════════════════════════════════════ */
 function buildPrompt(topic) {
-  return `You are a senior Indian UPSC educator and editorial writer. You are writing an article for the blog of a UPSC study resource. The readers are UPSC Civil Services Examination aspirants, many of them beginners and many of them working professionals.
+  return `You are a senior Indian UPSC educator and editorial writer for a UPSC study blog. Readers are UPSC CSE aspirants, many of them beginners and working professionals.
 
-Write one original, accurate and genuinely useful article on this topic: "${topic}".
+Write one original, accurate, useful article on: "${topic}".
 
 VOICE
-- Natural Indian English. Conversational but knowledgeable, like a thoughtful senior explaining a subject to another aspirant.
-- Practical, honest and specific. Explain difficult ideas in simple language.
-- Vary sentence length. Keep paragraphs short, generally 2 to 4 sentences.
-- Do not sound like a coaching advertisement or a motivational speaker.
-- Use examples from Indian society, governance, economy, geography, history and the UPSC exam itself.
-- Do not repeat obvious advice. Every paragraph should give the reader something they can use or understand better.
-- Do not insert deliberate typos, slang or awkward sentences.
+- Natural Indian English, conversational but knowledgeable, like a thoughtful senior explaining to another aspirant. Practical, honest, specific. Simple language for hard ideas.
+- Vary sentence length. Paragraphs of 2 to 4 sentences. No coaching-ad tone, no motivational-speaker tone, no repeated obvious advice.
+- Use Indian examples from society, governance, economy, geography, history and the exam itself. No deliberate typos or slang.
 
-WORDS AND PUNCTUATION TO AVOID
-- Never use these: delve, moreover, furthermore, crucial, testament, tapestry, game-changer, "in today's fast-paced world", "in the realm of", "unlock your potential", "it is important to note", "embark on a journey", "let's dive deep", "this comprehensive guide will explore". Do not replace them with equally stock phrases.
-- Do not begin the conclusion with "In conclusion".
-- Never use the em dash character, and do not use the en dash as a dash. Use commas, full stops or brackets. A hyphen inside a compound word is fine.
-- Avoid heavy motivational language such as "never give up", "believe in yourself" or "chase your dreams".
+NEVER USE
+- These words and phrases: delve, moreover, furthermore, crucial, testament, tapestry, game-changer, "in today's fast-paced world", "in the realm of", "unlock your potential", "it is important to note", "embark on a journey", "let's dive deep", "this comprehensive guide will explore". Do not start the conclusion with "In conclusion". Avoid stock replacements too.
+- The em dash character, or an en dash used as a dash. Use commas, full stops or brackets.
+- Heavy motivational language ("never give up", "believe in yourself", "chase your dreams").
 
-NO FABRICATED EXPERIENCE (very important)
-- Write in the third person, or address the reader as "you". Never write in the first person singular. Do not use "I", "my" or "me".
-- Do not invent personal stories, preparation attempts, failures, results, conversations with friends or teachers, testimonials, success stories, toppers' quotes, or claims of having cleared UPSC.
-- Do not attribute a quote to any person unless it is a very well known line that you are certain of.
+NO FABRICATED EXPERIENCE
+- Write in the third person or address the reader as "you". Never use "I", "my" or "me".
+- Do not invent personal stories, attempts, failures, results, talks with friends or teachers, testimonials, success stories, toppers' quotes, or claims of clearing UPSC. Do not attribute quotes to anyone unless it is a famous line you are certain of.
 
-ACCURACY (more important than word count)
-- Follow the actual UPSC CSE syllabus. Keep GS-I, GS-II, GS-III and GS-IV topics correctly separated.
-- Use correct article numbers, schedules, case names, law names, institution names, committees and schemes. If you are not sure of a number, year or name, leave it out or describe it in general terms.
-- Do not invent statistics, dates, reports, scheme names, official recommendations or citations. Do not write phrases like "studies show" or "according to a recent survey". Do not give percentages about aspirants or toppers.
-- Do not present possibly outdated information as current. Where something changes often (exam notification details, cut-offs, scheme allocations, latest reports and rankings), say so and ask the reader to check the latest official source such as the UPSC notification, the concerned ministry or PIB.
-- Separate official facts from editorial opinion, and make it clear when something is opinion (for example, "A sensible approach is...").
-- Point out common misconceptions and the limits of the topic where they exist.
+ACCURACY (more important than length)
+- Follow the real UPSC CSE syllabus and keep GS-I, II, III, IV topics separate.
+- Use correct article numbers, schedules, case names, laws, institutions, committees and schemes. If unsure of a number, year or name, leave it out or stay general.
+- Never invent statistics, dates, reports, scheme names or citations. No "studies show" or "according to a recent survey". No percentages about aspirants or toppers.
+- For anything that changes often (notification details, cut-offs, scheme allocations, latest reports), say so and point to the official source (UPSC notification, concerned ministry, PIB).
+- Mark opinion as opinion. Mention common misconceptions and limits of the topic.
 
-MAKE THE ARTICLE SPECIFIC TO THE TOPIC
-Fit the article to the nature of the topic. Do not write a generic study-tips article with the topic name pasted on top.
-- Polity and governance: relevant Articles, Parts, Schedules, amendments, landmark cases, institutions, limitations, and the usual Prelims and Mains angles.
-- History: a chronological flow, key personalities, causes, events, consequences, and the kind of questions the exam asks.
-- Geography and environment: mechanisms and processes, causes, regional examples, map-based points and terms the exam likes to test.
-- Economy: define concepts clearly, show how they connect, use Indian examples and say which institution does what.
-- Art and culture: features, regional examples, distinguishing points and ways to remember them.
-- Science and technology: the basic idea, Indian applications, issues and policy angles, without jargon.
-- International relations: historical background, key interests, current frameworks and balanced analysis.
-- Ethics: key concepts, a practical approach to a case study, and a short worked example of how to structure an answer.
-- Essay and answer writing: actual structures, sample outlines or opening lines, and a worked example that shows the technique.
-- Strategy, revision, CSAT, optional subjects, working aspirants and mental health: concrete routines, realistic schedules, trade-offs, common mistakes and what to do differently.
-- Current affairs: how to link news to the syllabus, with an example of turning a news item into notes.
-Each article needs its own structure, examples and practical value.
+BE TOPIC-SPECIFIC
+Do not write generic study tips with the topic name pasted on. Match the topic type:
+- Polity, governance: Articles, Parts, Schedules, amendments, landmark cases, institutions, limitations, Prelims and Mains angles.
+- History: chronology, personalities, causes, events, consequences. Geography, environment: mechanisms, causes, regional examples, map points.
+- Economy: clear concepts, links between them, Indian examples, who does what. Art and culture: features, regional examples, ways to tell things apart.
+- Science and technology: basic idea, Indian applications, policy issues. International relations: background, interests, frameworks, balanced analysis.
+- Ethics: key concepts, a step-by-step case study approach, a short worked example.
+- Essay and answer writing: real structures, sample outlines or opening lines, a worked example.
+- Strategy, revision, CSAT, optional, working aspirants, mental health: concrete routines, realistic schedules, trade-offs, common mistakes.
+- Current affairs: how to link news to the syllabus, with one example of turning a news item into notes.
 
-PRODUCT MENTIONS
-- The page already carries a call to action, so add no promotion. Do not name any product, brand, website or app, and add no links. If it genuinely helps one point, you may say once, in plain words, that a study tracker or a simple spreadsheet can help track revision or progress. Otherwise do not mention it.
+PRODUCT
+The page already has a call to action. Do not name any product, brand, website or app and add no links. At most once, in plain words, you may say a study tracker or spreadsheet can help track progress.
 
 OUTPUT FORMAT
-- Output only the article body as HTML. No <!DOCTYPE>, <html>, <head>, <body>, <style> or <script> tags, no <h1>, no markdown, no code fences, and no commentary before or after the article.
-- Allowed tags only: h2, h3, p, ul, ol, li, strong, em, blockquote. No attributes, classes, links or images.
-- English only.
-- Length: about 1000 to 1300 words. Do not add filler to reach the count.
+- Output only the article body as HTML. No DOCTYPE, html, head, body, style, script or h1 tags, no markdown, no code fences, no commentary.
+- Allowed tags only: h2, h3, p, ul, ol, li, strong, em, blockquote. No attributes, classes, links or images. English only.
+- About 1000 to 1300 words, no filler.
 
-REQUIRED STRUCTURE
-Use exactly these seven h2 headings in this order. Replace the two bracketed titles with specific headings that suit this topic (never use the words "Section 1" or "Section 2").
-
-<h2>Introduction</h2>
-Two short paragraphs. Say what the topic is, why it matters for UPSC and which stage or paper it belongs to, and what the reader will get from the article. No dramatic hook, no cliches.
-
-<h2>[Relevant Section 1 Title]</h2>
-The core of the topic. Use h3 subsections, lists or a blockquote where they help the reader.
-
-<h2>My Personal Struggle</h2>
-An empathetic editorial section about a recognisable challenge aspirants face with this topic or this part of preparation. For example, an aspirant with a full-time job may find it hard to stay consistent after returning home tired. Describe it as a common pattern ("Many aspirants...", "Consider an aspirant who...") and never as the author's own experience. Be honest and relatable, then lead into what actually helps. Two to four short paragraphs, no first person.
-
-<h2>[Relevant Section 2 Title]</h2>
-Practical application: how to study or revise this topic, how to answer questions on it, a sample structure or example, common mistakes, and good sources.
-
-<h2>Pro Tips</h2>
-An <ol> with five to seven specific tips for this topic. Each tip is one or two sentences and must not be generic advice that could fit any topic.
-
-<h2>Frequently Asked Questions</h2>
-Exactly three questions that an aspirant would really search for on this topic. Use this pattern only:
-<h3>Question?</h3>
-<p>Answer in two or three sentences.</p>
-
-<h2>Conclusion</h2>
-One or two short paragraphs that end with one concrete next step for the reader. Do not introduce new facts. Do not start with "In conclusion".`;
+REQUIRED STRUCTURE: exactly these 7 h2 headings in this order. Replace the two bracketed titles with specific headings for this topic (never "Section 1" or "Section 2").
+<h2>Introduction</h2> Two short paragraphs: what the topic is, why it matters for UPSC and which stage or paper, what the reader gets. No dramatic hook.
+<h2>[Relevant Section 1 Title]</h2> The core of the topic, with h3 subsections, lists or a blockquote where useful.
+<h2>My Personal Struggle</h2> An empathetic editorial section on a recognisable challenge aspirants face with this topic or this part of preparation (for example, a working aspirant who struggles to stay consistent after coming home tired). Present it as a common pattern ("Many aspirants...", "Consider an aspirant who..."), never as the author's own experience. Honest and relatable, then lead to what helps. Two to four short paragraphs.
+<h2>[Relevant Section 2 Title]</h2> Practical application: how to study or revise it, how to answer questions on it, a sample structure or example, common mistakes, good sources.
+<h2>Pro Tips</h2> An <ol> of five to seven specific tips for this topic, one or two sentences each.
+<h2>Frequently Asked Questions</h2> Exactly three real questions, each as <h3>Question?</h3> followed by <p>answer in two or three sentences</p>.
+<h2>Conclusion</h2> One or two short paragraphs ending with one concrete next step. No new facts. Do not start with "In conclusion".`;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1078,10 +1050,10 @@ function validateArticle(content, finishReason) {
 }
 
 function buildCorrection(issues) {
-  return `The draft above cannot be published because of these problems:
+  return `A previous draft of this article was rejected for these problems:
 ${issues.map((i) => `- ${i}`).join('\n')}
 
-Rewrite the complete article from the beginning and fix every problem. Keep the exact required structure and all the earlier rules. Output only the article body HTML, with no code fences and no commentary.`;
+Write the complete article again from the beginning. Fix every problem, keep the exact required structure, and follow all the rules above. Output only the article body HTML.`;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -1093,23 +1065,37 @@ async function requestCompletion(messages) {
   for (const model of MODELS) {
     try {
       console.log(`🔄 Trying: ${model}`);
+      const body = {
+        model: model,
+        messages: messages,
+        temperature: 0.7,
+        // Keeps prompt + output within per-minute token limits (a 1300 word article needs about 2500 tokens)
+        max_tokens: 5000,
+      };
+      // gpt-oss models spend tokens on reasoning; keep it low so the article is not cut off
+      if (model.startsWith('openai/gpt-oss')) body.reasoning_effort = 'low';
+
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${API_KEY}`,
         },
-        body: JSON.stringify({
-          model: model,
-          messages: messages,
-          temperature: 0.7,
-          max_tokens: 8000,
-        }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(180000),
       });
 
       if (!response.ok) {
-        console.log(`❌ Failed: ${response.status}`);
+        let detail = '';
+        try {
+          const err = await response.json();
+          detail = String((err && err.error && err.error.message) || '')
+            .replace(/\s+/g, ' ')
+            .slice(0, 200);
+        } catch (_) {
+          /* ignore body parse errors */
+        }
+        console.log(`❌ Failed: ${response.status}${detail ? ' - ' + detail : ''}`);
         lastError = `${model}: ${response.status}`;
         continue;
       }
@@ -1181,11 +1167,8 @@ async function main() {
 
       if (critical.length === 0 && (warnings.length === 0 || attempt >= 2)) break;
 
-      messages = [
-        { role: 'user', content: PROMPT },
-        { role: 'assistant', content: result.text },
-        { role: 'user', content: buildCorrection(critical.concat(warnings)) },
-      ];
+      // Resend only the prompt plus the problem list (not the old draft), to stay under token limits
+      messages = [{ role: 'user', content: PROMPT + '\n\n' + buildCorrection(critical.concat(warnings)) }];
     }
 
     if (!best || best.critical.length > 0) {
