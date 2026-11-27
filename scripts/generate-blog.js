@@ -1163,22 +1163,11 @@ async function main() {
     let messages = [{ role: 'user', content: PROMPT }];
     let best = null;
 
-<<<<<<< HEAD
-CRITICAL INSTRUCTIONS (MUST FOLLOW):
-1. LANGUAGE: STRICTLY write the entire article in English only. Use an Indian-English conversational tone. Sound like a real human talking to a fellow aspirant.
-2. NO AI WORDS: NEVER use these AI words: "delve", "moreover", "furthermore", "in the realm of", "tapestry", "crucial", "testament".
-3. NO EM-DASHES: NEVER use long em-dashes (—). Use normal commas or periods.
-4. FORMATTING: Keep paragraphs very short (2-3 lines max). Use line breaks.
-5. DO NOT invent fake personal experiences or stories. Write from a neutral, third-person perspective. NEVER use phrases like "I remember" or "When I was preparing". 
-6. Include a subtle mention of using a study tracker app to stay disciplined.
-7. Output ONLY the article body HTML. DO NOT include <!DOCTYPE>, <html>, <head>, <body>, <style>, or <script> tags. DO NOT include markdown code fences like \`\`\`html.
-=======
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
       console.log(`✍️ Generation attempt ${attempt}/${MAX_ATTEMPTS}`);
       const result = await requestCompletion(messages);
       const candidate = sanitizeContent(result.text);
       const { critical, warnings } = validateArticle(candidate, result.finishReason);
->>>>>>> dev
 
       console.log(`🔎 Quality check: ${critical.length} critical, ${warnings.length} warnings`);
       critical.forEach((c) => console.log(`   ✖ ${c}`));
@@ -1224,28 +1213,9 @@ CRITICAL INSTRUCTIONS (MUST FOLLOW):
           .replace(/\s+\S*$/, '')
           .trim() + '...';
     }
-<<<<<<< HEAD
-    content = content.replace(/<head[\s\S]*?<\/head>/gi, '');
-    content = content.replace(/<style[\s\S]*?<\/style>/gi, '');
-    content = content.replace(/<script[\s\S]*?<\/script>/gi, '');
-    content = content.replace(/<!DOCTYPE[^>]*>/gi, '');
-    content = content.replace(/<\/?(html|head|body)[^>]*>/gi, '');
-
-    content += `
-
-  <div style="background: linear-gradient(135deg, rgba(168,85,247,.1), rgba(236,72,153,.06)); border: 1px solid rgba(168,85,247,.3); border-left: 4px solid var(--purple); border-radius: 12px; padding: 20px 24px; margin: 28px 0; color: var(--text-2);">
-    <strong>💡 Pro Tip:</strong> Track your UPSC preparation with our free <a href="/app.html" style="color: var(--purple); font-weight: 700;">UPSC Study Tracker app</a> — includes timer, syllabus tracker, revision scheduler, PYQ tracker, and more.
-  </div>`;
-
-    const descMatch = content.match(/<p[^>]*>([^<]+)<\/p>/i);
-    const description = descMatch
-      ? descMatch[1].slice(0, 155).trim() + '...'
-      : `Complete guide on ${topic} for UPSC aspirants.`;
-=======
     if (!description) description = `Complete guide on ${topic} for UPSC aspirants.`;
     // Description goes inside HTML attributes, so escape it
     description = description.replace(/&(?!(?:amp|lt|gt|quot|#\d+);)/g, '&amp;').replace(/"/g, '&quot;');
->>>>>>> dev
 
     const finalHtml = buildHtmlTemplate({
       title: topic,
