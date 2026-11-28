@@ -14181,7 +14181,7 @@ ${
       }); // 👈 YAHAN YE BHI ADD KARO (document.addEventListener ko band karne ke liye)
 
       /* ============================================
-   ANIMATED DOODLE & EMOTIONAL MESSAGE SYSTEM
+   ANIMATED SVG DOODLE & ENGLISH EMOTIONAL MESSAGES
    ============================================ */
       (function () {
         'use strict';
@@ -14189,83 +14189,115 @@ ${
         // 1. CSS इंजेक्ट करें (एनिमेशन के लिए)
         const style = document.createElement('style');
         style.textContent = `
-    @keyframes doodleFloat {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-12px) rotate(3deg); }
-    }
-    @keyframes bubblePop {
-      0% { transform: scale(0.8); opacity: 0; }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .doodle-wrapper {
-      text-align: center;
-      margin-bottom: 15px;
+    .doodle-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-bottom: 20px;
       animation: fadeIn 0.5s ease;
+      flex-wrap: wrap;
     }
-    .doodle-emoji {
-      font-size: 5rem;
-      display: inline-block;
-      animation: doodleFloat 3s ease-in-out infinite;
-      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3));
-      cursor: pointer;
-      transition: transform 0.2s;
+
+    /* The SVG Character */
+    .doodle-svg {
+      width: 90px;
+      height: 90px;
+      filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+      animation: float 3s ease-in-out infinite;
     }
-    .doodle-emoji:hover {
-      transform: scale(1.1) rotate(-5deg);
+
+    /* Animations for SVG parts */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
     }
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.1); }
+    }
+    @keyframes wave {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(-25deg); }
+    }
+    @keyframes talk {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(0.5); }
+    }
+
+    .doodle-eye { animation: blink 4s infinite; transform-origin: center; }
+    .doodle-mouth { animation: talk 1.5s infinite; transform-origin: center; }
+    .doodle-hand-right { animation: wave 2s infinite ease-in-out; transform-origin: bottom left; }
+    .doodle-hand-left { animation: wave 2s infinite ease-in-out reverse; transform-origin: bottom right; }
+
+    /* Speech Bubble */
     .doodle-message {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 800;
       color: #fff;
-      margin-top: 15px;
       background: linear-gradient(135deg, #8b5cf6, #ec4899);
       padding: 12px 24px;
-      border-radius: 30px;
-      display: inline-block;
-      box-shadow: 0 10px 25px rgba(236,72,153,0.4);
-      border: 1px solid rgba(255,255,255,0.2);
-      animation: bubblePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-width: 90%;
+      border-radius: 20px;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 10px 25px rgba(236,72,153,0.3);
+      border: 1px solid rgba(255,255,255,0.15);
+      max-width: 320px;
       line-height: 1.4;
+      position: relative;
+    }
+    .doodle-message::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -10px;
+      width: 0;
+      height: 0;
+      border: 10px solid transparent;
+      border-right-color: #8b5cf6;
+      border-bottom: 0;
+      border-left: 0;
+    }
+    
+    @media (max-width: 600px) {
+      .doodle-container { flex-direction: column; gap: 10px; }
+      .doodle-message::before { display: none; }
+      .doodle-message { border-bottom-left-radius: 20px; text-align: center; }
     }
   `;
         document.head.appendChild(style);
 
-        // 2. मैसेजेस की लिस्ट (इमोशन के हिसाब से)
+        // 2. मैसेजेस की लिस्ट (100% English)
         const MESSAGES = {
           zero: [
-            { emoji: '😴', text: 'Kya baat hai? Aaj tak bed se nahi uthe? Bad habit! Chalo shuru karein.' },
-            { emoji: '🥱', text: "Aaj padhai bilkul nahi ki? UPSC tumse naraz ho jayega. Let's start!" },
-            { emoji: '🧸', text: 'Aaram acha hai, par sapne pure karne ke liye uthna bhi zaroori hai. Start Timer!' },
+            "You haven't started studying yet? Bad habit! Let's turn things around today.",
+            "Zero study today? Your goals are waiting for you. Let's begin now!",
+            "A new day, a new opportunity. Don't let it slip away. Start your timer!",
           ],
           low: [
-            { emoji: '💪', text: 'Thoda aur push karo, tum mein dum hai! Target se peeche ho aaj.' },
-            { emoji: '🏃‍♂️', text: 'Aaj ka target aadha bhi nahi hua. Focus karo aur wapas lag jao!' },
-            { emoji: '😤', text: 'Consistency hi king hai. Aaj thoda aur padhna padega, chalo!' },
+            "You're falling behind your target. Dig deep and push harder!",
+            "Halfway there! Don't give up now, you have so much potential.",
+            'A little more effort today builds a much better tomorrow. Keep going!',
           ],
           onTrack: [
-            { emoji: '🔥', text: 'Bahut badhiya! You are on fire. Aise hi lage raho.' },
-            { emoji: '🌟', text: 'Great going! Tum sahi raste par ho, bas pace banaye rakho.' },
-            { emoji: '🚀', text: 'Looking solid! Thoda aur push karke aaj ka goal complete karte hain.' },
+            'Great job! You are right on track. Keep this momentum going.',
+            "You're doing amazing! Consistency is your superpower.",
+            "Solid progress! Let's crush the rest of the day together.",
           ],
           over: [
-            { emoji: '🦁', text: 'Beast mode ON! Tumne aaj kamaal kar diya. Thoda rest bhi le lo.' },
-            { emoji: '🧠', text: 'Bohot zyada padh liya! Dimag ko refresh karne ke liye 10 min break lo.' },
-            { emoji: '👑', text: 'Overachiever! UPSC tumse darr raha hai. Keep it up!' },
+            'Beast mode activated! You crushed your goals today.',
+            'Wow, you studied a lot! Remember to take a break and relax.',
+            'Overachiever! You are making UPSC look easy. Keep it up!',
           ],
         };
 
         // 3. फंक्शन: आज की पढ़ाई का समय निकालें और मैसेज दिखाएं
         function injectDoodle() {
           const greetingEl = document.querySelector('.greeting');
-          if (!greetingEl) return; // अगर एलिमेंट नहीं मिला तो रुक जाओ
-          if (document.getElementById('doodle-container')) return; // अगर पहले से लगा है तो दोबारा मत लगाओ
+          if (!greetingEl) return;
+          if (document.getElementById('doodle-wrapper-id')) return;
 
-          // आज की तारीख (YYYY-MM-DD फॉर्मेट में)
           const todayStr = new Date().toISOString().split('T')[0];
 
-          // state.sessions से आज का टोटल स्टडी टाइम (सेकंड्स में) निकालें
           let todaySeconds = 0;
           if (typeof state !== 'undefined' && state.sessions) {
             todaySeconds = state.sessions
@@ -14274,58 +14306,85 @@ ${
           }
 
           const todayMinutes = todaySeconds / 60;
-          const goalMinutes = state.settings && state.settings.dailyGoal ? state.settings.dailyGoal : 480; // डिफ़ॉल्ट 8 घंटे
+          const goalMinutes = state.settings && state.settings.dailyGoal ? state.settings.dailyGoal : 480;
 
           let category = 'zero';
-          if (todayMinutes === 0) {
-            category = 'zero';
-          } else if (todayMinutes < goalMinutes * 0.5) {
-            category = 'low';
-          } else if (todayMinutes >= goalMinutes * 0.5 && todayMinutes <= goalMinutes) {
-            category = 'onTrack';
-          } else {
-            category = 'over';
-          }
+          if (todayMinutes === 0) category = 'zero';
+          else if (todayMinutes < goalMinutes * 0.5) category = 'low';
+          else if (todayMinutes >= goalMinutes * 0.5 && todayMinutes <= goalMinutes) category = 'onTrack';
+          else category = 'over';
 
-          // रैंडम मैसेज चुनें
           const list = MESSAGES[category];
-          const selected = list[Math.floor(Math.random() * list.length)];
+          const selectedText = list[Math.floor(Math.random() * list.length)];
 
-          // HTML इंजेक्ट करें (Greeting के अंदर सबसे ऊपर)
+          // The Animated SVG Character (Gender Neutral Blob)
+          const svgCharacter = `
+      <svg class="doodle-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8b5cf6" />
+            <stop offset="100%" stop-color="#ec4899" />
+          </linearGradient>
+        </defs>
+        
+        <!-- Hands -->
+        <circle class="doodle-hand-left" cx="40" cy="130" r="15" fill="url(#bodyGrad)" stroke="#fff" stroke-width="3"/>
+        <circle class="doodle-hand-right" cx="160" cy="130" r="15" fill="url(#bodyGrad)" stroke="#fff" stroke-width="3"/>
+
+        <!-- Main Body -->
+        <rect x="45" y="50" width="110" height="110" rx="55" fill="url(#bodyGrad)" stroke="#fff" stroke-width="4"/>
+        
+        <!-- Eyes (Blinking) -->
+        <g class="doodle-eye">
+          <circle cx="80" cy="90" r="12" fill="#fff"/>
+          <circle cx="80" cy="90" r="6" fill="#1a1a1a"/>
+        </g>
+        <g class="doodle-eye" style="animation-delay: 0.1s;">
+          <circle cx="120" cy="90" r="12" fill="#fff"/>
+          <circle cx="120" cy="90" r="6" fill="#1a1a1a"/>
+        </g>
+
+        <!-- Mouth (Talking) -->
+        <path class="doodle-mouth" d="M 85 120 Q 100 140 115 120" stroke="#1a1a1a" stroke-width="5" fill="none" stroke-linecap="round"/>
+        
+        <!-- Cheeks (Cute blush) -->
+        <circle cx="65" cy="115" r="8" fill="#fca5a5" opacity="0.6"/>
+        <circle cx="135" cy="115" r="8" fill="#fca5a5" opacity="0.6"/>
+      </svg>
+    `;
+
+          // HTML इंजेक्ट करें
           const doodleHTML = `
-      <div id="doodle-container" class="doodle-wrapper">
-        <div class="doodle-emoji" onclick="this.style.transform='scale(1.2) rotate(10deg)'; setTimeout(()=>this.style.transform='', 200)">
-          ${selected.emoji}
-        </div>
-        <div class="doodle-message">${selected.text}</div>
+      <div id="doodle-wrapper-id" class="doodle-container">
+        ${svgCharacter}
+        <div class="doodle-message">${selectedText}</div>
       </div>
     `;
 
           greetingEl.insertAdjacentHTML('afterbegin', doodleHTML);
 
-          // ग्रीटिंग का साइज़ थोड़ा कम कर दें ताकि डूडल फिट हो जाए
+          // ग्रीटिंग को एडजस्ट करें
           const greetingHi = greetingEl.querySelector('.greeting-hi');
           const greetingName = greetingEl.querySelector('.greeting-name');
           const greetingSub = greetingEl.querySelector('.greeting-sub');
 
-          if (greetingHi) greetingHi.style.display = 'none'; // Good morning हटा दें
+          if (greetingHi) greetingHi.style.display = 'none';
           if (greetingName) {
             greetingName.innerHTML = `Hi <span style="color:var(--amber)">${state.profile?.name?.split(' ')[0] || 'Aspirant'}</span> 👋`;
-            greetingName.style.fontSize = '1.8rem'; // थोड़ा छोटा
+            greetingName.style.fontSize = '1.8rem';
           }
           if (greetingSub) greetingSub.style.display = 'none';
         }
 
-        // 4. जब पेज लोड हो और डेटा आ जाए, तब डूडल लगाएं
+        // 4. चेक करें कि डेटा लोड हुआ या नहीं
         let attempts = 0;
         const checkInterval = setInterval(() => {
           attempts++;
-          // चेक करें कि स्टेट और डेटा लोड हो गया है या नहीं
           if (typeof state !== 'undefined' && state.user && document.querySelector('.greeting')) {
             injectDoodle();
             clearInterval(checkInterval);
           }
-          if (attempts > 100) clearInterval(checkInterval); // 50 सेकंड बाद रुक जाए
+          if (attempts > 100) clearInterval(checkInterval);
         }, 500);
       })();
     </script>
