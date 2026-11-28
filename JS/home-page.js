@@ -4,18 +4,14 @@
 (function () {
   'use strict';
 
-  // 1. Home View का HTML
   const homeHTML = `
     <section class="view" id="view-home" style="animation: fadeIn 0.3s ease;">
       
-      <!-- HERO SECTION (Centered & Premium) -->
       <div class="hero" style="background: var(--card); text-align: center; padding: 50px 20px; border-radius: var(--r-xl); border: 1px solid var(--border); position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--shadow-md);">
         
-        <!-- Glow Effect -->
         <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; background: rgba(168, 85, 247, 0.15); filter: blur(80px); border-radius: 50%; pointer-events: none;"></div>
         
         <div style="position: relative; z-index: 1; max-width: 750px;">
-          <!-- Social Proof Badge -->
           <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--green); padding: 6px 14px; border-radius: 30px; font-size: 0.8rem; font-weight: 800; margin-bottom: 20px;">
             <span style="display: inline-block; width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite;"></span>
             500+ Serious Aspirants already inside
@@ -30,25 +26,20 @@
             Hi <span id="homeUserName" style="color: var(--amber); font-weight: 800;">Student</span>, UPSC is not about who studies the most. It's about who tracks, revises, and analyzes better. Take control of your preparation today.
           </p>
 
-          <!-- Main Action Buttons (Centered Grid) -->
           <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
             
-            <!-- Timer Button (Primary) -->
             <button onclick="if(typeof switchView === 'function') switchView('study');" style="background: var(--grad-1); color: #fff; border: none; padding: 16px 36px; border-radius: 12px; font-weight: 900; font-size: 1.05rem; cursor: pointer; box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4); display: flex; align-items: center; gap: 8px; transition: transform 0.2s;">
               ⏱️ Start Timer
             </button>
             
-            <!-- Partner Button -->
             <button onclick="if(window.__partner && typeof window.__partner.open === 'function') window.__partner.open(); else if(typeof switchView === 'function') switchView('partner');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='var(--card)'; this.style.borderColor='var(--purple)';" onmouseout="this.style.background='var(--card-2)'; this.style.borderColor='var(--border)';">
               🤝 Study Partner
             </button>
             
-            <!-- Calendar Button -->
             <button onclick="if(typeof switchView === 'function') switchView('calendar');" style="background: var(--card-2); color: var(--text); border: 1px solid var(--border); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='var(--card)'; this.style.borderColor='var(--purple)';" onmouseout="this.style.background='var(--card-2)'; this.style.borderColor='var(--border)';">
               🗓️ Calendar
             </button>
             
-            <!-- Upgrade Button -->
             <button onclick="if(typeof switchView === 'function') switchView('premium');" style="background: rgba(251, 191, 36, 0.15); color: var(--amber); border: 1px solid rgba(251, 191, 36, 0.4); padding: 16px 24px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='rgba(251, 191, 36, 0.25)';" onmouseout="this.style.background='rgba(251, 191, 36, 0.15)';">
               💎 Upgrade
             </button>
@@ -57,31 +48,26 @@
         </div>
       </div>
 
-      <!-- FEATURE HIGHLIGHTS (Colorful Grid) -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-top: 24px;">
         
-        <!-- Box 1: Syllabus (Purple) -->
         <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(168, 85, 247, 0.03)); border: 1px solid rgba(168, 85, 247, 0.3); transition: transform 0.2s;">
           <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(168, 85, 247, 0.2); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📖</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Pre-integrated UPSC Syllabus</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Every paper, subject, and topic is already mapped. Zero manual setup required.</div>
         </div>
 
-        <!-- Box 2: State PCS (Teal) -->
         <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(20, 184, 166, 0.03)); border: 1px solid rgba(20, 184, 166, 0.3); transition: transform 0.2s;">
           <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(20, 184, 166, 0.2); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">📝</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Custom Subjects (State PCS)</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Preparing for State PCS simultaneously? Add any custom subject you want to learn.</div>
         </div>
 
-        <!-- Box 3: GoalMax (Orange) -->
         <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(249, 115, 22, 0.03)); border: 1px solid rgba(249, 115, 22, 0.3); transition: transform 0.2s;">
           <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(249, 115, 22, 0.2); color: var(--orange); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🔄</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">GoalMax Revision Cycle</div>
           <div style="font-size: 0.9rem; color: var(--text-2); line-height: 1.5;">Set how many revisions you need (3, 4, 5...). The app auto-tracks and schedules them.</div>
         </div>
 
-        <!-- Box 4: Partner (Pink) -->
         <div class="card" style="padding: 20px; display: flex; flex-direction: column; gap: 12px; background: linear-gradient(135deg, rgba(236, 72, 153, 0.12), rgba(236, 72, 153, 0.03)); border: 1px solid rgba(236, 72, 153, 0.3); transition: transform 0.2s;">
           <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(236, 72, 153, 0.2); color: var(--pink); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;">🤝</div>
           <div style="font-weight: 900; font-size: 1.1rem; color: var(--text);">Study With Partner</div>
@@ -90,7 +76,6 @@
 
       </div>
 
-      <!-- EXPERT SESSION BANNER (NEW) -->
       <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(6, 182, 212, 0.05)); border: 1px solid rgba(20, 184, 166, 0.3); border-radius: var(--r-md); padding: 24px; display: flex; flex-direction: column; gap: 16px; align-items: flex-start;">
         <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
           <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(20, 184, 166, 0.2); color: var(--teal); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0; box-shadow: 0 4px 15px rgba(20, 184, 166, 0.2);">🧑‍🏫</div>
@@ -106,12 +91,6 @@
         </a>
       </div>
 
-<<<<<<< HEAD
-            <!-- PREMIUM UPGRADE SECTION -->
-=======
-      <!-- PREMIUM UPGRADE SECTION -->
-      <!-- 👇 Yahan ID add ki gayi hai: id="premiumUpgradeBox" 👇 -->
->>>>>>> dev
       <div id="premiumUpgradeBox" class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em; z-index: 10;">PREMIUM</div>
         
@@ -125,7 +104,6 @@
             </p>
           </div>
 
-          <!-- Premium Benefits List -->
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <div style="display: flex; gap: 10px; align-items: flex-start;">
               <span style="color: var(--green); font-size: 1.1rem;">✔</span>
@@ -145,7 +123,6 @@
             </div>
           </div>
 
-          <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
               <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Plan starts from</div>
@@ -161,7 +138,6 @@
     </section>
   `;
 
-  // 2. Topbar के आइकन्स को नया लुक देना और टॉगल स्विच जोड़ना
   function styleTopbarIcons() {
     const planBtn = document.getElementById('planBadgeBtn');
     if (planBtn) planBtn.style.display = 'none';
@@ -257,7 +233,6 @@
     }
   }
 
-  // 3. यूज़र का नाम अपडेट करने का फंक्शन
   function updateUserName() {
     const nameEl = document.getElementById('sbUserName');
     const homeNameEl = document.getElementById('homeUserName');
@@ -272,7 +247,6 @@
     }
   }
 
-  // 4. पेज में HTML और बटन इंजेक्ट करने का फंक्शन
   function injectHomePage() {
     const content = document.getElementById('content');
     const nav = document.querySelector('.nav');
@@ -344,52 +318,21 @@
       observer.observe(sbUserName, { childList: true, characterData: true, subtree: true });
     }
   }
-  // 4.5 Premium Box Hide/Show Logic
-  function checkUserPlanAndHideBox() {
-    const premiumBox = document.getElementById('premiumUpgradeBox');
-    if (!premiumBox) return;
 
-<<<<<<< HEAD
-    // अगर state या state.profile अभी लोड नहीं हुआ है, तो 1 सेकंड बाद फिर चेक करें
-    if (typeof state === 'undefined' || !state.profile) {
-=======
-  // 5. Premium Box Hide/Show Logic (Admin Panel ke hisaab se)
   async function checkUserPlanAndHideBox() {
     const premiumBox = document.getElementById('premiumUpgradeBox');
     if (!premiumBox) return;
 
-    // Agar state ya user load nahi hua hai, toh 1 second baad wapas check karein
     if (typeof state === 'undefined' || !state.user || !state.profile) {
->>>>>>> dev
       setTimeout(checkUserPlanAndHideBox, 1000);
       return;
     }
 
-<<<<<<< HEAD
-    // यहाँ अपने Supabase के हिसाब से कंडीशन चेक करें
-    // मैंने उदाहरण के लिए is_admin, plan, और is_premium दिया है
-    const isPremiumOrAdmin =
-      state.profile.is_admin === true ||
-      state.profile.plan === 'premium' ||
-      state.profile.plan === 'pro' ||
-      state.profile.is_premium === true ||
-      (state.profile.trial_ends_at && new Date(state.profile.trial_ends_at) > new Date());
-
-    if (isPremiumOrAdmin) {
-      premiumBox.style.display = 'none'; // एडमिन और प्रीमियम यूज़र के लिए छिपा दें
-    } else {
-      premiumBox.style.display = 'block'; // फ्री यूज़र के लिए दिखाएं
-    }
-  }
-  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
-=======
-    // 1. Agar Admin hai, toh box chhipa dein
     if (state.profile.is_admin === true) {
       premiumBox.style.display = 'none';
       return;
     }
 
-    // 2. Agar state mein pehle se subscription info hai
     if (
       state.sub &&
       state.sub.status === 'active' &&
@@ -399,7 +342,6 @@
       return;
     }
 
-    // 3. Fallback: Supabase se seedha check karein (Admin Panel ki tarah)
     try {
       const { data: subs } = await supa
         .from('subscriptions')
@@ -413,17 +355,15 @@
       const isPremium = activeSub && (!activeSub.expiry_date || new Date(activeSub.expiry_date) > new Date());
 
       if (isPremium) {
-        premiumBox.style.display = 'none'; // Premium/Trial user hai
+        premiumBox.style.display = 'none';
       } else {
-        premiumBox.style.display = 'block'; // Free user hai
+        premiumBox.style.display = 'block';
       }
     } catch (err) {
-      premiumBox.style.display = 'block'; // Error aane par free user maankar box dikha dein
+      premiumBox.style.display = 'block';
     }
   }
 
-  // 6. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
->>>>>>> dev
   let attempts = 0;
   const checkInterval = setInterval(() => {
     attempts++;
@@ -433,8 +373,6 @@
     if (content && nav && nav.children.length > 0) {
       clearInterval(checkInterval);
       injectHomePage();
-
-      // HTML load hone ke baad plan check karein
       setTimeout(checkUserPlanAndHideBox, 1500);
     }
 
