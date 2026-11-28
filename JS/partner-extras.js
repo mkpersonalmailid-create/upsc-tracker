@@ -387,14 +387,13 @@ function getState() {
 
       if (!myOptional || !myYear) return '';
 
-      const { data: matches } = await supa
-        .from('partner_profiles')
-        .select('id, name, optional_subject, preparation_year, discoverable, is_admin')
-        .eq('discoverable', true)
-        .eq('optional_subject', myOptional)
-        .eq('preparation_year', myYear)
-        .neq('id', user.id)
-        .limit(50);
+      // ✅ नया कोड: RPC से डेटा माँगें
+      const { data: matches, error: matchErr } = await supa.rpc('get_discoverable_partners', {
+        p_optional_subject: myOptional,
+        p_preparation_year: myYear,
+        p_user_id: user.id,
+      });
+      if (matchErr) console.warn('Discover RPC error:', matchErr);
 
       const filterLabel = `${esc(myOptional)} · ${esc(myYear)}`;
 
@@ -843,13 +842,12 @@ function getState() {
     const supa = getSupa();
     if (!supa) return null;
     try {
-      const { data } = await supa
-        .from('partner_profiles')
-        .select('id, name, optional_subject')
-        .eq('id', userId)
-        .maybeSingle();
-      return data;
+      // ✅ नया कोड: RPC से प्रोफाइल माँगें
+      const { data, error } = await supa.rpc('get_partner_profile', { p_user_id: userId });
+      if (error) throw error;
+      return data && data.length > 0 ? data[0] : null;
     } catch (e) {
+      console.warn('[Partner] fetchProfile error:', e);
       return null;
     }
   }
