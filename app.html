@@ -14289,11 +14289,58 @@ ${
   .buddy-svg.boy .g-boy{display:inline}
   .buddy-svg.boy .g-girl{display:none}
 
-  @media (max-width:760px){
-    .buddy-stage{flex-direction:column;gap:10px;padding-top:30px}
-    .buddy-bubble{border-bottom-left-radius:18px;border-top-left-radius:5px;text-align:center;max-width:96%}
-    .buddy-bubble::before{bottom:auto;top:-10px;left:50%;transform:translateX(-50%) rotate(90deg)}
-    .buddy-svg{width:92px}
+    @media (max-width:760px){
+    .buddy-stage{
+      flex-direction:column;
+      gap:12px;
+      padding:40px 12px 20px; /* Added more top padding for the switch, bottom padding for spacing */
+      min-height:0;
+      justify-content:flex-start;
+    }
+    .buddy-actor{
+      margin-bottom:4px;
+      transform: scale(0.9); /* Slightly smaller character on mobile */
+    }
+    .buddy-svg{
+      width:84px;
+    }
+    
+    /* FIX: Prevent the bubble from stretching vertically */
+    .buddy-bubble{
+      flex: 0 0 auto; /* Do not grow or shrink */
+      width:100%;
+      max-width:100%;
+      min-height:auto; /* Remove min-height so it hugs the text */
+      padding:14px 18px;
+      font-size:.85rem;
+      line-height:1.45;
+      text-align:center;
+      border-radius:16px;
+    }
+    
+    /* Adjust the speech bubble arrow to point up */
+    .buddy-bubble::before{
+      bottom:auto;
+      left:50%;
+      top:-10px;
+      border:10px solid transparent;
+      border-bottom-color:#8b5cf6;
+      border-top:0;
+      border-right-color:transparent;
+      transform:translateX(-50%);
+    }
+    
+    /* Move the gender switch to the top center so it doesn't overlap the character */
+    .buddy-switch{
+      top:6px;
+      left:50%;
+      right:auto;
+      transform:translateX(-50%);
+    }
+    .buddy-switch button{
+      padding:4px 12px;
+      font-size:.7rem;
+    }
   }
   @media (prefers-reduced-motion:reduce){.buddy-svg *{animation:none!important}}
   `;
