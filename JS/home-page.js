@@ -106,8 +106,8 @@
         </a>
       </div>
 
-      <!-- PREMIUM UPGRADE SECTION -->
-      <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <!-- PREMIUM UPGRADE SECTION -->
+      <div id="premiumUpgradeBox" class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em; z-index: 10;">PREMIUM</div>
         
         <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
@@ -339,7 +339,32 @@
       observer.observe(sbUserName, { childList: true, characterData: true, subtree: true });
     }
   }
+  // 4.5 Premium Box Hide/Show Logic
+  function checkUserPlanAndHideBox() {
+    const premiumBox = document.getElementById('premiumUpgradeBox');
+    if (!premiumBox) return;
 
+    // अगर state या state.profile अभी लोड नहीं हुआ है, तो 1 सेकंड बाद फिर चेक करें
+    if (typeof state === 'undefined' || !state.profile) {
+      setTimeout(checkUserPlanAndHideBox, 1000);
+      return;
+    }
+
+    // यहाँ अपने Supabase के हिसाब से कंडीशन चेक करें
+    // मैंने उदाहरण के लिए is_admin, plan, और is_premium दिया है
+    const isPremiumOrAdmin =
+      state.profile.is_admin === true ||
+      state.profile.plan === 'premium' ||
+      state.profile.plan === 'pro' ||
+      state.profile.is_premium === true ||
+      (state.profile.trial_ends_at && new Date(state.profile.trial_ends_at) > new Date());
+
+    if (isPremiumOrAdmin) {
+      premiumBox.style.display = 'none'; // एडमिन और प्रीमियम यूज़र के लिए छिपा दें
+    } else {
+      premiumBox.style.display = 'block'; // फ्री यूज़र के लिए दिखाएं
+    }
+  }
   // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
   let attempts = 0;
   const checkInterval = setInterval(() => {
