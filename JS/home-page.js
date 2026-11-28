@@ -107,7 +107,8 @@
       </div>
 
       <!-- PREMIUM UPGRADE SECTION -->
-      <div class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+      <!-- 👇 Yahan ID add ki gayi hai: id="premiumUpgradeBox" 👇 -->
+      <div id="premiumUpgradeBox" class="card" style="margin-top: 24px; background: linear-gradient(135deg, rgba(23, 16, 38, 1) 0%, rgba(45, 27, 78, 1) 100%); border: 1px solid rgba(251, 191, 36, 0.4); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
         <div style="position: absolute; top: 0; right: 0; background: var(--amber); color: #000; font-size: 0.75rem; font-weight: 900; padding: 6px 16px; border-bottom-left-radius: 12px; letter-spacing: 0.05em; z-index: 10;">PREMIUM</div>
         
         <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 10px;">
@@ -140,7 +141,7 @@
             </div>
           </div>
 
-                    <!-- Pricing Highlight Box -->
+          <!-- Pricing Highlight Box -->
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; background: rgba(251, 191, 36, 0.1); border: 1px dashed rgba(251, 191, 36, 0.5); padding: 16px; border-radius: 12px;">
             <div>
               <div style="font-size: 0.8rem; color: #b8a8d9; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em;">Plan starts from</div>
@@ -340,7 +341,57 @@
     }
   }
 
-  // 5. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
+  // 5. Premium Box Hide/Show Logic (Admin Panel ke hisaab se)
+  async function checkUserPlanAndHideBox() {
+    const premiumBox = document.getElementById('premiumUpgradeBox');
+    if (!premiumBox) return;
+
+    // Agar state ya user load nahi hua hai, toh 1 second baad wapas check karein
+    if (typeof state === 'undefined' || !state.user || !state.profile) {
+      setTimeout(checkUserPlanAndHideBox, 1000);
+      return;
+    }
+
+    // 1. Agar Admin hai, toh box chhipa dein
+    if (state.profile.is_admin === true) {
+      premiumBox.style.display = 'none';
+      return;
+    }
+
+    // 2. Agar state mein pehle se subscription info hai
+    if (
+      state.sub &&
+      state.sub.status === 'active' &&
+      (!state.sub.expiry_date || new Date(state.sub.expiry_date) > new Date())
+    ) {
+      premiumBox.style.display = 'none';
+      return;
+    }
+
+    // 3. Fallback: Supabase se seedha check karein (Admin Panel ki tarah)
+    try {
+      const { data: subs } = await supa
+        .from('subscriptions')
+        .select('status, expiry_date')
+        .eq('user_id', state.user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const activeSub = subs && subs[0];
+      const isPremium = activeSub && (!activeSub.expiry_date || new Date(activeSub.expiry_date) > new Date());
+
+      if (isPremium) {
+        premiumBox.style.display = 'none'; // Premium/Trial user hai
+      } else {
+        premiumBox.style.display = 'block'; // Free user hai
+      }
+    } catch (err) {
+      premiumBox.style.display = 'block'; // Error aane par free user maankar box dikha dein
+    }
+  }
+
+  // 6. बार-बार चेक करें कि पेज लोड हो गया है या नहीं
   let attempts = 0;
   const checkInterval = setInterval(() => {
     attempts++;
@@ -350,6 +401,9 @@
     if (content && nav && nav.children.length > 0) {
       clearInterval(checkInterval);
       injectHomePage();
+
+      // HTML load hone ke baad plan check karein
+      setTimeout(checkUserPlanAndHideBox, 1500);
     }
 
     if (attempts > 600) clearInterval(checkInterval);
